@@ -45,15 +45,38 @@
         }
         
         .btn-primary {
-            @apply bg-blue-500 text-white hover:bg-blue-600 focus:ring-4 focus:ring-blue-300;
+            background-color: #3b82f6; /* Tailwind bg-blue-500 */
+            color: #fff; /* Tailwind text-white */
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* Tailwind hover:bg-blue-600 */
+        }
+        .btn-primary:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px #93c5fd; /* Tailwind focus:ring-4 focus:ring-blue-300 */
         }
 
         .btn-secondary {
-            @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-4 focus:ring-gray-200;
+            background-color: #e5e7eb; /* Tailwind bg-gray-200 */
+            color: #1f2937; /* Tailwind text-gray-800 */
+            transition: background-color 0.2s;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db; /* Tailwind hover:bg-gray-300 */
+        }
+        .btn-secondary:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px #e5e7eb; /* Tailwind focus:ring-4 focus:ring-gray-200 */
         }
         
         .btn-ghost {
-            @apply bg-transparent text-gray-600 hover:bg-gray-100;
+            background-color: transparent; /* Tailwind bg-transparent */
+            color: #4b5563; /* Tailwind text-gray-600 */
+            transition: background-color 0.2s;
+        }
+        .btn-ghost:hover {
+            background-color: #f3f4f6; /* Tailwind hover:bg-gray-100 */
         }
         
         .hidden {

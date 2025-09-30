@@ -599,18 +599,19 @@ const firebaseConfig = {
         DB_KEY: 'financeAppDB_v10', // Este será o "arquivo" principal no seu banco de dados
         loadData: async function() {
             const snapshot = await database.ref(this.DB_KEY).get();
-            if (snapshot.exists()) {
+            if (snapshot.exists() && snapshot.val() !== null) {
                 const data = snapshot.val();
-                if (data.settings && !data.settings.goals) {
-                    data.settings.goals = [];
-                }
+                // Garante que a estrutura mínima exista
+                if (!data.settings) data.settings = {};
+                if (!data.settings.goals) data.settings.goals = [];
+                if (!data.data) data.data = {};
                 console.log("Dados carregados do Firebase.");
                 return data;
             } else {
                 console.log("Nenhum dado encontrado no Firebase. Inicializando com dados padrão.");
                 const initialData = this.getInitialData();
-                this.propagateInitialInstallments(initialData);
-                await this.saveData(initialData); // Salva os dados iniciais no Firebase
+                // Não propaga parcelas aqui, pois não há dados iniciais de transação
+                await this.saveData(initialData); // Salva a estrutura inicial no Firebase
                 return initialData;
             }
         },
@@ -645,21 +646,8 @@ const firebaseConfig = {
             };
         },
         propagateInitialInstallments(initialData) {
-            if (!initialData.data["2025"] || !initialData.data["2025"]["09"]) return;
-            const expensesWithInstallments = initialData.data["2025"]["09"].expenses.filter(e => e.installmentId);
-            expensesWithInstallments.forEach(expense => {
-                let startDate = new Date(2025, 8, 1);
-                for (let i = expense.currentInstallment + 1; i <= expense.totalInstallments; i++) {
-                    let futureDate = new Date(startDate);
-                    futureDate.setMonth(startDate.getMonth() + (i - expense.currentInstallment));
-                    const year = futureDate.getFullYear();
-                    const month = String(futureDate.getMonth() + 1).padStart(2, '0');
-                    if (!initialData.data[year]) initialData.data[year] = {};
-                    if (!initialData.data[year][month]) initialData.data[year][month] = { incomes: [], expenses: [], savings: [] };
-                    const newInstallment = { ...expense, id: App.generateUUID(), currentInstallment: i, isPaid: false };
-                    initialData.data[year][month].expenses.push(newInstallment);
-                }
-            });
+            // Esta função não é mais necessária na inicialização, pois começamos com dados vazios.
+            // Ela será usada quando novas parcelas forem criadas.
         }
     };
     

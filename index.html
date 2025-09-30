@@ -1188,11 +1188,12 @@
                 let barColor = 'bg-green-500';
 
                 if(goal.type === 'Reserva') {
-                    if (percentageOfGoal < 90) barColor = 'bg-yellow-500';
-                    if (percentageOfGoal < 50) barColor = 'bg-red-500';
+                    if (percentageOfGoal >= 90) barColor = 'bg-green-500';
+                    else if (percentageOfGoal >= 50) barColor = 'bg-yellow-500';
+                    else barColor = 'bg-red-500';
                 } else {
-                    if(percentageOfGoal > 90) barColor = 'bg-yellow-500';
                     if(percentageOfGoal > 100) barColor = 'bg-red-500';
+                    else if(percentageOfGoal > 90) barColor = 'bg-yellow-500';
                 }
 
                 const visualHTML = `

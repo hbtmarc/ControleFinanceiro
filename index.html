@@ -54,11 +54,10 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(0, 0, 0, 0.08);
-            transition: all 0.25s ease-in-out;
+            transition: box-shadow 0.25s ease-in-out;
         }
 
         .card:hover {
-            transform: scale(1.02);
             box-shadow: 0 10px 20px rgba(0,0,0,0.05);
         }
         
@@ -80,16 +79,16 @@
         dialog[open] { animation: slideInUp 0.3s ease-out forwards; }
         
         .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
+            animation: fadeIn 0.3s ease-out forwards;
         }
         
         tbody tr.animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
+            animation: fadeIn 0.3s ease-out forwards;
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         .tab-active {
@@ -522,7 +521,7 @@
     <script>
     // AQUI COMEÇA O CÓDIGO JAVASCRIPT COMPLETO
     const storage = {
-        DB_KEY: 'financeAppDB_v10', // Changed DB_KEY to invalidate old corrupted data
+        DB_KEY: 'financeAppDB_v10',
         loadData: function() {
             const data = localStorage.getItem(this.DB_KEY);
             if (data) {
@@ -639,7 +638,9 @@
                 'goal-form', 'goals-container'
             ];
             ids.forEach(id => {
-                this.ui[id.replace(/-./g, m => m[1].toUpperCase())] = document.getElementById(id);
+                if (document.getElementById(id)) {
+                    this.ui[id.replace(/-./g, m => m[1].toUpperCase())] = document.getElementById(id);
+                }
             });
             this.ui.modalTypeToggles = document.querySelectorAll('.modal-type-toggle');
         },

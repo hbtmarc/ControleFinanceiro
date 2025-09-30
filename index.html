@@ -579,6 +579,7 @@
     <script>
     // ETAPA 2: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI
     // Substitua o conteúdo abaixo pelas credenciais do seu projeto Firebase.
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBRce273SxZo3EMFAoTQ5I0j82eDyIrYC4",
   authDomain: "fluxofinanceiro-marc35.firebaseapp.com",
@@ -596,32 +597,44 @@ const firebaseConfig = {
     const database = firebase.database();
 
     const storage = {
-        DB_KEY: 'financeAppDB_v10', // Este será o "arquivo" principal no seu banco de dados
+        DB_KEY: 'financeAppDB_v10',
         loadData: async function() {
-            const snapshot = await database.ref(this.DB_KEY).get();
-            if (snapshot.exists() && snapshot.val() !== null) {
-                const data = snapshot.val();
-                // Garante que a estrutura mínima exista
-                if (!data.settings) data.settings = {};
-                if (!data.settings.goals) data.settings.goals = [];
-                if (!data.data) data.data = {};
-                console.log("Dados carregados do Firebase.");
-                return data;
-            } else {
-                console.log("Nenhum dado encontrado no Firebase. Inicializando com dados padrão.");
+            try {
+                // Tenta buscar na chave padrão
+                let snapshot = await database.ref(this.DB_KEY).get();
+                let data = snapshot.exists() ? snapshot.val() : null;
+                // Se não encontrar, tenta buscar na raiz
+                if (!data) {
+                    let rootSnap = await database.ref('/').get();
+                    let rootVal = rootSnap.val();
+                    // Se a estrutura já for {settings, data} na raiz, usa ela
+                    if (rootVal && rootVal.settings && rootVal.data) {
+                        data = rootVal;
+                    }
+                }
+                if (data) {
+                    if (!data.settings) data.settings = {};
+                    if (!data.settings.goals) data.settings.goals = [];
+                    if (!data.data) data.data = {};
+                    console.log("Dados carregados do Firebase:", data);
+                    return data;
+                } else {
+                    console.log("Nenhum dado encontrado no Firebase. Inicializando com dados padrão.");
+                    const initialData = this.getInitialData();
+                    await this.saveData(initialData);
+                    return initialData;
+                }
+            } catch (err) {
+                console.error("Erro ao carregar dados do Firebase:", err);
                 const initialData = this.getInitialData();
-                // Não propaga parcelas aqui, pois não há dados iniciais de transação
-                await this.saveData(initialData); // Salva a estrutura inicial no Firebase
                 return initialData;
             }
         },
         saveData: function(data) {
-            console.log("Salvando dados no Firebase...");
-            return database.ref(this.DB_KEY).set(data);
+            console.log("Salvando dados no Firebase...", data);
+            return database.ref(this.DB_KEY).set(data).catch(e => console.error("Erro ao salvar no Firebase:", e));
         },
         getInitialData: function() {
-            // Os dados que antes estavam aqui agora virão do database.json na primeira carga
-            // Esta função permanece como um fallback caso o fetch falhe.
             return {
                 settings: {
                     goals: [],
@@ -642,13 +655,10 @@ const firebaseConfig = {
                         { id: 'F', text: "O saldo deste mês ficou negativo. Vamos repensar a estratégia." }
                     ]
                 },
-                data: {} // Começa sem dados de transações
+                data: {}
             };
         },
-        propagateInitialInstallments(initialData) {
-            // Esta função não é mais necessária na inicialização, pois começamos com dados vazios.
-            // Ela será usada quando novas parcelas forem criadas.
-        }
+        propagateInitialInstallments(initialData) {}
     };
     
     const App = {

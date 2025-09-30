@@ -18,6 +18,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
+    <!-- Confetti.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
     <style>
         :root {
             --background-color: #f8f8fa;
@@ -129,6 +132,57 @@
         tbody tr:hover {
             background-color: #f0f0f5;
         }
+
+        /* Responsive Tables - Mobile First */
+        @media (max-width: 639px) {
+            .responsive-table thead {
+                display: none;
+            }
+            .responsive-table tbody, .responsive-table tr {
+                display: block;
+            }
+            .responsive-table tr {
+                border: 1px solid #e5e7eb;
+                border-radius: 0.75rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid #f3f4f6;
+                text-align: right;
+            }
+            .responsive-table td:last-child {
+                border-bottom: none;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                text-align: left;
+                padding-right: 1rem;
+                color: var(--text-secondary);
+            }
+            /* Specific adjustments for certain columns */
+            .responsive-table td.actions-cell {
+                justify-content: flex-end; /* Aligns buttons to the right */
+            }
+            .responsive-table td.actions-cell::before {
+                display: none; /* No label for actions */
+            }
+            .responsive-table td.checkbox-cell {
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+            .responsive-table td.checkbox-cell::before {
+                display: none;
+            }
+            .responsive-table td.checkbox-cell input {
+                margin-left: auto; /* Pushes checkbox to the right */
+            }
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -136,7 +190,7 @@
     <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <!-- Cabeçalho -->
         <header class="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 <span>Fluxo</span>
             </h1>
@@ -153,7 +207,7 @@
                     <button id="prev-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_left</span>
                     </button>
-                    <span id="current-month-display" class="w-40 text-center font-semibold text-gray-700">Setembro 2025</span>
+                    <span id="current-month-display" class="w-32 text-center font-semibold text-gray-700">Setembro 2025</span>
                     <button id="next-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_right</span>
                     </button>
@@ -204,7 +258,7 @@
                                 <h2 class="text-xl font-semibold">Movimentações do Mês</h2>
                                 <button id="add-transaction-btn" class="btn-primary font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-transform active:scale-95">
                                     <span class="material-symbols-outlined">add</span>
-                                    <span>Nova Transação</span>
+                                    <span class="hidden sm:inline">Nova Transação</span>
                                 </button>
                             </div>
                         </div>
@@ -213,7 +267,7 @@
                         <div class="card p-6 rounded-xl">
                             <h2 class="text-xl font-semibold mb-4">Entradas</h2>
                              <div class="overflow-x-auto">
-                                <table class="w-full text-left">
+                                <table class="w-full text-left responsive-table">
                                     <thead><tr class="border-b border-gray-200">
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Descrição</th>
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Valor</th>
@@ -231,7 +285,7 @@
                                 <input type="search" id="search-description" placeholder="Pesquisar despesas..." class="bg-gray-100 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/3 p-2.5">
                              </div>
                              <div class="overflow-x-auto">
-                                <table class="w-full text-left">
+                                <table class="w-full text-left responsive-table">
                                     <thead id="expenses-table-head"><tr class="border-b border-gray-200">
                                         <th class="py-2 px-3"><span class="material-symbols-outlined text-gray-500 text-base">done</span></th>
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500 sortable-header" data-sort="description">Descrição <span class="sort-icon material-symbols-outlined"></span></th>
@@ -249,7 +303,7 @@
                         <div class="card p-6 rounded-xl">
                             <h2 class="text-xl font-semibold mb-4">Reservas e Investimentos</h2>
                             <div class="overflow-x-auto">
-                                <table class="w-full text-left">
+                                <table class="w-full text-left responsive-table">
                                     <thead><tr class="border-b border-gray-200">
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Descrição</th>
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Categoria</th>
@@ -879,9 +933,9 @@
             row.dataset.id = income.id;
             row.className = 'border-b border-gray-200 hover:bg-gray-50 animate-fade-in';
             row.innerHTML = `
-                <td class="py-3 px-3">${income.description} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
-                <td class="py-3 px-3 text-green-600 font-medium">${this.formatCurrency(income.amount)}</td>
-                <td class="py-3 px-3 text-right">
+                <td class="py-3 px-3" data-label="Descrição">${income.description} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
+                <td class="py-3 px-3 text-green-600 font-medium" data-label="Valor">${this.formatCurrency(income.amount)}</td>
+                <td class="py-3 px-3 text-right actions-cell">
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>
@@ -893,12 +947,12 @@
             row.dataset.id = expense.id;
             row.className = `border-b border-gray-200 hover:bg-gray-50 animate-fade-in ${expense.isPaid ? 'opacity-60' : ''}`;
             row.innerHTML = `
-                <td class="py-3 px-3"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
-                <td class="py-3 px-3">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/${expense.totalInstallments})</span>` : ''}</td>
-                <td class="py-3 px-3 text-gray-600">${expense.payment}</td>
-                <td class="py-3 px-3 text-gray-600">${expense.category}</td>
-                <td class="py-3 px-3 text-red-600 font-medium">${this.formatCurrency(expense.amount)}</td>
-                <td class="py-3 px-3 text-right">
+                <td class="py-3 px-3 checkbox-cell" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
+                <td class="py-3 px-3" data-label="Descrição">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/${expense.totalInstallments})</span>` : ''}</td>
+                <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
+                <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>
+                <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${this.formatCurrency(expense.amount)}</td>
+                <td class="py-3 px-3 text-right actions-cell">
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>
@@ -910,10 +964,10 @@
             row.dataset.id = saving.id;
             row.className = 'border-b border-gray-200 hover:bg-gray-50 animate-fade-in';
             row.innerHTML = `
-                <td class="py-3 px-3">${saving.description} ${saving.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
-                <td class="py-3 px-3 text-gray-600">${saving.category}</td>
-                <td class="py-3 px-3 font-medium text-indigo-600">${this.formatCurrency(saving.amount)}</td>
-                <td class="py-3 px-3 text-right">
+                <td class="py-3 px-3" data-label="Descrição">${saving.description} ${saving.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
+                <td class="py-3 px-3 text-gray-600" data-label="Categoria">${saving.category}</td>
+                <td class="py-3 px-3 font-medium text-indigo-600" data-label="Valor">${this.formatCurrency(saving.amount)}</td>
+                <td class="py-3 px-3 text-right actions-cell">
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>
@@ -1348,10 +1402,37 @@
             if (id) {
                 const index = this.state.appData.settings.goals.findIndex(g => g.id === id);
                 if (index > -1) {
-                    this.state.appData.settings.goals[index] = { ...this.state.appData.settings.goals[index], name, amount };
+                    const goal = this.state.appData.settings.goals[index];
+                    const oldGoalCategoryName = `Meta: ${goal.name}`;
+                    const newGoalCategoryName = `Meta: ${name}`;
+
+                    // Atualiza as reservas associadas se o nome da meta mudar
+                    if (oldGoalCategoryName !== newGoalCategoryName) {
+                        Object.values(this.state.appData.data).forEach(year => {
+                            Object.values(year).forEach(month => {
+                                if (month.savings) {
+                                    month.savings.forEach(saving => {
+                                        if (saving.category === oldGoalCategoryName) {
+                                            saving.category = newGoalCategoryName;
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    }
+
+                    const allSavings = Object.values(this.state.appData.data).flatMap(y => Object.values(y).flatMap(m => m.savings || []));
+                    const savedForGoal = allSavings.filter(s => s.category === newGoalCategoryName).reduce((sum, s) => sum + s.amount, 0);
+
+                    goal.name = name;
+                    goal.amount = amount;
+                    // Se o novo valor da meta for maior que o já salvo, a meta volta a não estar completa
+                    if (savedForGoal < amount) {
+                        goal.isCompleted = false;
+                    }
                 }
             } else {
-                this.state.appData.settings.goals.push({ id: this.generateUUID(), name, amount });
+                this.state.appData.settings.goals.push({ id: this.generateUUID(), name, amount, isCompleted: false });
             }
             storage.saveData(this.state.appData);
             this.renderGoals();
@@ -1377,6 +1458,29 @@
                     .reduce((sum, s) => sum + s.amount, 0);
 
                 const progress = goal.amount > 0 ? Math.min(100, (savedForGoal / goal.amount) * 100) : 0;
+
+                if (progress >= 100 && !goal.isCompleted) {
+                    goal.isCompleted = true;
+                    storage.saveData(this.state.appData);
+                    
+                    // Lança os confetes para comemorar!
+                    const duration = 3 * 1000;
+                    const animationEnd = Date.now() + duration;
+                    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+                    function randomInRange(min, max) {
+                        return Math.random() * (max - min) + min;
+                    }
+
+                    const interval = setInterval(function() {
+                        const timeLeft = animationEnd - Date.now();
+                        if (timeLeft <= 0) return clearInterval(interval);
+                        
+                        const particleCount = 50 * (timeLeft / duration);
+                        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+                    }, 250);
+                }
 
                 container.innerHTML += `
                     <div>

@@ -453,7 +453,7 @@
     <dialog id="monthly-report-modal" class="report-modal p-8 rounded-2xl shadow-2xl card w-full max-w-4xl overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">Relatório Mensal - <span id="monthly-report-title"></span></h2>
-            <button id="close-monthly-report-btn" class="p-2 rounded-full hover:bg-gray-200">
+            <button type="button" id="close-monthly-report-btn" class="p-2 rounded-full hover:bg-gray-200">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
@@ -488,7 +488,7 @@
     <dialog id="annual-report-modal" class="report-modal p-8 rounded-2xl shadow-2xl card w-full max-w-4xl overflow-y-auto">
          <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">Relatório Anual - <span id="annual-report-title"></span></h2>
-            <button id="close-annual-report-btn" class="p-2 rounded-full hover:bg-gray-200">
+            <button type="button" id="close-annual-report-btn" class="p-2 rounded-full hover:bg-gray-200">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
@@ -650,8 +650,11 @@
             this.ui.nextMonthBtn.addEventListener('click', () => this.changeMonth(1));
             this.ui.todayBtn.addEventListener('click', () => this.goToDate(new Date()));
             this.ui.addTransactionBtn.addEventListener('click', () => this.openModal('expenses'));
-            this.ui.closeTransactionModalBtn.addEventListener('click', () => this.closeModal('transactionModal'));
-            this.ui.transactionModal.addEventListener('click', (e) => { if(e.target === this.ui.transactionModal) this.closeModal('transactionModal'); });
+            this.ui.closeTransactionModalBtn.addEventListener('click', () => this.closeModal('transaction-modal'));
+            this.ui.transactionModal.addEventListener('click', (e) => { if(e.target === this.ui.transactionModal) this.closeModal('transaction-modal'); });
+            this.ui.goalModal.addEventListener('click', (e) => { if(e.target === this.ui.goalModal) this.closeModal('goal-modal'); });
+            this.ui.monthlyReportModal.addEventListener('click', (e) => { if(e.target === this.ui.monthlyReportModal) this.closeModal('monthly-report-modal'); });
+            this.ui.annualReportModal.addEventListener('click', (e) => { if(e.target === this.ui.annualReportModal) this.closeModal('annual-report-modal'); });
             this.ui.transactionForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
             this.ui.modalTypeToggles.forEach(btn => btn.addEventListener('click', (e) => this.toggleTransactionType(e.target.dataset.type)));
             
@@ -669,10 +672,10 @@
 
             this.ui.monthlyReportBtn.addEventListener('click', () => this.openMonthlyReport());
             this.ui.annualReportBtn.addEventListener('click', () => this.openAnnualReport());
-            this.ui.closeMonthlyReportBtn.addEventListener('click', () => this.closeModal('monthlyReportModal'));
-            this.ui.closeAnnualReportBtn.addEventListener('click', () => this.closeModal('annualReportModal'));
+            this.ui.closeMonthlyReportBtn.addEventListener('click', () => this.closeModal('monthly-report-modal'));
+            this.ui.closeAnnualReportBtn.addEventListener('click', () => this.closeModal('annual-report-modal'));
             this.ui.addGoalBtn.addEventListener('click', () => this.openGoalModal());
-            this.ui.closeGoalModalBtn.addEventListener('click', () => this.closeModal('goalModal'));
+            this.ui.closeGoalModalBtn.addEventListener('click', () => this.closeModal('goal-modal'));
             this.ui.goalForm.addEventListener('submit', (e) => this.handleGoalFormSubmit(e));
             this.ui.searchDescription.addEventListener('input', (e) => {
                 this.state.filters.searchTerm = e.target.value;
@@ -960,9 +963,19 @@
                         this.ui.categoryExpense.value = transaction.category;
                         this.ui.paymentMethod.value = transaction.payment;
                         this.ui.expenseType.value = transaction.type;
+                        if (transaction.installmentId) {
+                            document.getElementById('amount').disabled = true;
+                            this.ui.advancedOptions.classList.add('hidden');
+                        } else {
+                            document.getElementById('amount').disabled = false;
+                            this.ui.advancedOptions.classList.remove('hidden');
+                        }
                     }
                     if (type === 'savings') this.ui.categorySaving.value = transaction.category;
                 }
+            } else {
+                document.getElementById('amount').disabled = false;
+                this.ui.advancedOptions.classList.remove('hidden');
             }
             this.ui.transactionModal.showModal();
         },
@@ -974,7 +987,11 @@
         populateSelectsInModal() {
             this.ui.paymentMethod.innerHTML = this.state.appData.settings.paymentMethods.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
             this.ui.categoryExpense.innerHTML = this.state.appData.settings.expenseCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-            this.ui.categorySaving.innerHTML = this.state.appData.settings.savingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            const savingCategories = this.state.appData.settings.savingCategories;
+            const goalCategories = this.state.appData.settings.goals.map(g => `Meta: ${g.name}`);
+            const allSavingOptions = [...savingCategories, ...goalCategories];
+            this.ui.categorySaving.innerHTML = allSavingOptions.map(c => `<option value="${c}">${c}</option>`).join('');
         },
 
         toggleTransactionType(type) {
@@ -1024,12 +1041,12 @@
                     }
                     if (type === 'expenses') {
                         const pm = this.state.appData.settings.paymentMethods.find(p => p.name === transactionData.payment);
-                        transactionData.isPaid = pm?.type === 'credit_card';
+                        transactionData.isPaid = pm?.type === 'debit'; // CORREÇÃO: Transações de débito são pagas imediatamente.
                     }
                     this.createTransaction(type, transactionData);
                 }
             }
-            this.closeModal('transactionModal');
+            this.closeModal('transaction-modal');
         },
 
         createTransaction(type, data) {
@@ -1074,8 +1091,8 @@
         deleteTransaction(type, id) {
              const transaction = this.getCurrentMonthData()[type].find(t => t.id === id);
              let msg = 'Tem certeza que deseja excluir esta transação?';
-             if(transaction?.installmentId) msg = 'Esta é uma parcela. Deseja excluir esta e TODAS as parcelas futuras?';
-             else if (transaction?.isRecurring) msg = 'Esta é recorrente. Deseja excluir esta e TODAS as futuras recorrências?';
+             if(transaction?.installmentId) msg = 'Esta é uma parcela. Deseja excluir esta e TODAS as parcelas futuras desta compra?';
+             else if (transaction?.isRecurring) msg = 'Esta é uma transação recorrente. Deseja excluir a ocorrência deste mês e de TODOS os meses futuros?';
 
              if(confirm(msg)) {
                  if (transaction.installmentId) this.deleteFutureInstallments(transaction.installmentId, transaction.currentInstallment);
@@ -1091,7 +1108,7 @@
             const installmentValue = baseData.amount / totalInstallments;
             let date = new Date(this.state.currentDate);
             for (let i = 1; i <= totalInstallments; i++) {
-                const data = { ...baseData, id: this.generateUUID(), amount: installmentValue, installmentId, currentInstallment: i, totalInstallments, isPaid: (i === 1), isRecurring: false };
+                const data = { ...baseData, id: this.generateUUID(), amount: installmentValue, installmentId, currentInstallment: i, totalInstallments, isPaid: false, isRecurring: false };
                 this.getCurrentMonthData(date).expenses.push(data);
                 date.setMonth(date.getMonth() + 1);
             }
@@ -1166,49 +1183,52 @@
             const { spendingGoals, feedbackMessages } = this.state.appData.settings;
             visualContainer.innerHTML = '';
             
-            if (totalIncome === 0 && paidExpenses.length === 0) {
+            let essentialPercent = 0, nonEssentialPercent = 0, reservePercent = 0;
+
+            if (totalIncome > 0) {
+                const totalEssential = paidExpenses.filter(e => e.type === 'Essenciais').reduce((s, e) => s + e.amount, 0);
+                const totalNonEssential = paidExpenses.filter(e => e.type === 'Não Essenciais').reduce((s, e) => s + e.amount, 0);
+                essentialPercent = totalEssential / totalIncome;
+                nonEssentialPercent = totalNonEssential / totalIncome;
+                reservePercent = totalSavings / totalIncome;
+
+                spendingGoals.forEach(goal => {
+                    let currentPercent = 0;
+                    let currentValue = 0;
+                    if(goal.type === 'Essenciais') { currentPercent = essentialPercent; currentValue = totalEssential; }
+                    if(goal.type === 'Não Essenciais') { currentPercent = nonEssentialPercent; currentValue = totalNonEssential; }
+                    if(goal.type === 'Reserva') { currentPercent = reservePercent; currentValue = totalSavings; }
+                    
+                    const percentageOfGoal = goal.goal > 0 ? (currentPercent / goal.goal) * 100 : 0;
+                    let barColor = 'bg-green-500';
+
+                    if(goal.type === 'Reserva') {
+                        if (percentageOfGoal >= 90) barColor = 'bg-green-500';
+                        else if (percentageOfGoal >= 50) barColor = 'bg-yellow-500';
+                        else barColor = 'bg-red-500';
+                    } else {
+                        if(percentageOfGoal > 100) barColor = 'bg-red-500';
+                        else if(percentageOfGoal > 90) barColor = 'bg-yellow-500';
+                    }
+
+                    const visualHTML = `
+                        <div>
+                            <div class="flex justify-between items-center text-sm mb-1">
+                                <span class="font-medium text-gray-700">${goal.type}</span>
+                                <span class="text-gray-500">${this.formatCurrency(currentValue)} / ${(goal.goal * 100).toFixed(0)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="${barColor}" style="width: ${Math.min(100, percentageOfGoal)}%;"></div>
+                            </div>
+                        </div>`;
+                    visualContainer.innerHTML += visualHTML;
+                });
+            } else if (totalIncome === 0 && paidExpenses.length === 0) {
                 feedbackEl.textContent = "Comece adicionando suas movimentações.";
                 return;
             }
             
-            const totalEssential = paidExpenses.filter(e => e.type === 'Essenciais').reduce((s, e) => s + e.amount, 0);
-            const totalNonEssential = paidExpenses.filter(e => e.type === 'Não Essenciais').reduce((s, e) => s + e.amount, 0);
-            const essentialPercent = totalIncome > 0 ? totalEssential / totalIncome : 0;
-            const nonEssentialPercent = totalIncome > 0 ? totalNonEssential / totalIncome : 0;
-            const reservePercent = totalIncome > 0 ? totalSavings / totalIncome : 0;
-            
-            spendingGoals.forEach(goal => {
-                let currentPercent = 0;
-                let currentValue = 0;
-                if(goal.type === 'Essenciais') { currentPercent = essentialPercent; currentValue = totalEssential; }
-                if(goal.type === 'Não Essenciais') { currentPercent = nonEssentialPercent; currentValue = totalNonEssential; }
-                if(goal.type === 'Reserva') { currentPercent = reservePercent; currentValue = totalSavings; }
-                
-                const percentageOfGoal = goal.goal > 0 ? (currentPercent / goal.goal) * 100 : 0;
-                let barColor = 'bg-green-500';
-
-                if(goal.type === 'Reserva') {
-                    if (percentageOfGoal >= 90) barColor = 'bg-green-500';
-                    else if (percentageOfGoal >= 50) barColor = 'bg-yellow-500';
-                    else barColor = 'bg-red-500';
-                } else {
-                    if(percentageOfGoal > 100) barColor = 'bg-red-500';
-                    else if(percentageOfGoal > 90) barColor = 'bg-yellow-500';
-                }
-
-                const visualHTML = `
-                    <div>
-                        <div class="flex justify-between items-center text-sm mb-1">
-                            <span class="font-medium text-gray-700">${goal.type}</span>
-                            <span class="text-gray-500">${this.formatCurrency(currentValue)} / ${(goal.goal * 100).toFixed(0)}%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="${barColor}" style="width: ${Math.min(100, percentageOfGoal)}%;"></div>
-                        </div>
-                    </div>`;
-                visualContainer.innerHTML += visualHTML;
-            });
-
+            const totalPaidExpenses = paidExpenses.reduce((s, e) => s + e.amount, 0);
             const balance = totalIncome - totalPaidExpenses - totalSavings;
             let messageId = 'B';
             if (balance < 0) messageId = 'F';
@@ -1335,7 +1355,7 @@
             }
             storage.saveData(this.state.appData);
             this.renderGoals();
-            this.closeModal('goalModal');
+            this.closeModal('goal-modal');
         },
 
         renderGoals() {
@@ -1347,15 +1367,22 @@
                 container.innerHTML = `<p class="text-center text-gray-500 text-sm">Nenhuma meta cadastrada. Comece a planejar seus sonhos!</p>`;
                 return;
             }
-            const totalInvested = Object.values(this.state.appData.data).flatMap(y => Object.values(y).flatMap(m => m.savings || [])).reduce((sum, s) => sum + s.amount, 0);
+            
+            const allSavings = Object.values(this.state.appData.data).flatMap(y => Object.values(y).flatMap(m => m.savings || []));
 
             goals.forEach(goal => {
-                const progress = Math.min(100, (totalInvested / goal.amount) * 100);
+                const goalCategoryName = `Meta: ${goal.name}`;
+                const savedForGoal = allSavings
+                    .filter(s => s.category === goalCategoryName)
+                    .reduce((sum, s) => sum + s.amount, 0);
+
+                const progress = goal.amount > 0 ? Math.min(100, (savedForGoal / goal.amount) * 100) : 0;
+
                 container.innerHTML += `
                     <div>
                         <div class="flex justify-between items-center text-sm mb-1">
                             <span class="font-medium text-gray-700">${goal.name}</span>
-                            <span class="text-gray-500">${this.formatCurrency(totalInvested)} / ${this.formatCurrency(goal.amount)}</span>
+                            <span class="text-gray-500">${this.formatCurrency(savedForGoal)} / ${this.formatCurrency(goal.amount)}</span>
                         </div>
                         <div class="progress-bar">
                             <div class="bg-indigo-500" style="width: ${progress.toFixed(2)}%;"></div>

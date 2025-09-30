@@ -756,12 +756,19 @@ const firebaseConfig = {
         render: function() {
             this.propagateRecurringTransactions();
             this.renderMonthDisplay();
-            const viewRenderers = {
-                'dashboard': this.renderDashboard,
-                'credit-cards': this.renderCreditCardView,
-                'investments': this.renderInvestmentsView
-            };
-            viewRenderers[this.state.currentView].call(this);
+            
+            // Correção: Chamar o método de renderização diretamente para garantir o contexto 'this'.
+            switch (this.state.currentView) {
+                case 'dashboard':
+                    this.renderDashboard();
+                    break;
+                case 'credit-cards':
+                    this.renderCreditCardView();
+                    break;
+                case 'investments':
+                    this.renderInvestmentsView();
+                    break;
+            }
         },
 
         renderDashboard: function() {
@@ -951,7 +958,7 @@ const firebaseConfig = {
             row.className = `border-b border-gray-200 hover:bg-gray-50 animate-fade-in ${expense.isPaid ? 'opacity-60' : ''}`;
             row.innerHTML = `
                 <td class="py-3 px-3 checkbox-cell" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
-                <td class="py-3 px-3" data-label="Descrição">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/${expense.totalInstallments})</span>` : ''}</td>
+                <td class="py-3 px-3" data-label="Descrição">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${expense.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/${exp.totalInstallments})</span>` : ''}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>
                 <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${this.formatCurrency(expense.amount)}</td>

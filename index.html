@@ -1518,13 +1518,16 @@ const firebaseConfig = {
         function renderSpendingGoalsChart() {
             destroyChart('spending-goals-chart');
             const monthData = getCurrentMonthData();
-            const totalIncome = monthData.incomes.reduce((sum, i) => sum + i.amount, 0);
+            const incomes = monthData.incomes || [];
+            const expenses = monthData.expenses || [];
+            const savings = monthData.savings || [];
+            const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
             if (totalIncome === 0) return;
 
             const spending = {
-                'Essenciais': monthData.expenses.filter(e => e.type === 'Essenciais').reduce((s, e) => s + e.amount, 0),
-                'Não Essenciais': monthData.expenses.filter(e => e.type === 'Não Essenciais').reduce((s, e) => s + e.amount, 0),
-                'Reserva': monthData.savings.reduce((s, e) => s + e.amount, 0)
+                'Essenciais': expenses.filter(e => e.type === 'Essenciais').reduce((s, e) => s + e.amount, 0),
+                'Não Essenciais': expenses.filter(e => e.type === 'Não Essenciais').reduce((s, e) => s + e.amount, 0),
+                'Reserva': savings.reduce((s, e) => s + e.amount, 0)
             };
 
             const percentages = {
@@ -1533,7 +1536,7 @@ const firebaseConfig = {
                 'Reserva': (spending['Reserva'] / totalIncome) * 100
             };
 
-            const goals = state.appData.settings.spendingGoals.reduce((obj, item) => ({ ...obj, [item.type]: item.goal * 100 }), {});
+            const goals = (state.appData.settings.spendingGoals || []).reduce((obj, item) => ({ ...obj, [item.type]: item.goal * 100 }), {});
 
             ui.charts['spending-goals-chart'] = new Chart(document.getElementById('spending-goals-chart').getContext('2d'), {
                 type: 'doughnut',
@@ -1550,11 +1553,11 @@ const firebaseConfig = {
 
         function renderCategorySpendingChart() {
             destroyChart('category-spending-chart');
-            const expenses = getCurrentMonthData().expenses;
+            const monthData = getCurrentMonthData();
+            const expenses = monthData.expenses || [];
             const categorySpending = expenses.reduce((acc, exp) => {
                 acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
                 return acc;
-
             }, {});
             ui.charts['category-spending-chart'] = new Chart(document.getElementById('category-spending-chart').getContext('2d'), {
                 type: 'pie',
@@ -1571,7 +1574,8 @@ const firebaseConfig = {
 
         function renderPaymentMethodChart() {
             destroyChart('payment-method-chart');
-            const expenses = getCurrentMonthData().expenses;
+            const monthData = getCurrentMonthData();
+            const expenses = monthData.expenses || [];
             const paymentSpending = expenses.reduce((acc, exp) => {
                 acc[exp.payment] = (acc[exp.payment] || 0) + exp.amount;
                 return acc;
@@ -1596,9 +1600,12 @@ const firebaseConfig = {
             const monthlyTotals = { incomes: [], expenses: [], balance: [] };
 
             months.forEach(month => {
-                const monthData = yearData[month] || { incomes: [], expenses: [], savings: [] };
-                const income = monthData.incomes.reduce((s, t) => s + t.amount, 0);
-                const expense = monthData.expenses.reduce((s, t) => s + t.amount, 0) + monthData.savings.reduce((s, t) => s + t.amount, 0);
+                const monthData = yearData[month] || {};
+                const incomes = monthData.incomes || [];
+                const expenses = monthData.expenses || [];
+                const savings = monthData.savings || [];
+                const income = incomes.reduce((s, t) => s + t.amount, 0);
+                const expense = expenses.reduce((s, t) => s + t.amount, 0) + savings.reduce((s, t) => s + t.amount, 0);
                 monthlyTotals.incomes.push(income);
                 monthlyTotals.expenses.push(expense);
                 monthlyTotals.balance.push(income - expense);

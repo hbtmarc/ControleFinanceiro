@@ -1182,6 +1182,14 @@ const firebaseConfig = {
             } else if (type === 'savings') {
                 Object.assign(transactionData, { category: document.getElementById('category-saving').value });
             }
+            // Adiciona recorrência para incomes
+            if (type === 'incomes' && transactionData.isRecurring && !transactionData.recurringId) {
+                transactionData.recurringId = generateUUID();
+            }
+            // Adiciona recorrência para despesas e reservas (já existente)
+            if ((type === 'expenses' || type === 'savings') && transactionData.isRecurring && !transactionData.recurringId) {
+                transactionData.recurringId = generateUUID();
+            }
             const isInstallment = document.getElementById('is-installment').checked;
             const installmentsCount = parseInt(document.getElementById('installments-count').value, 10);
             if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
@@ -1191,6 +1199,7 @@ const firebaseConfig = {
             }
             closeModal('transaction-modal');
             storage.saveData(state.appData);
+            propagateRecurringTransactions();
             render();
         }
 
@@ -1431,7 +1440,10 @@ const firebaseConfig = {
             });
             ui.expenseFields.classList.toggle('hidden', type !== 'expenses');
             ui.savingFields.classList.toggle('hidden', type !== 'savings');
-            ui.advancedOptions.classList.toggle('hidden', type !== 'expenses');
+            // A opção de recorrência deve aparecer para qualquer tipo
+            ui.advancedOptions.classList.remove('hidden');
+            // A opção de parcelamento só aparece para despesas
+            ui.installmentsSection.classList.toggle('hidden', type !== 'expenses');
         }
 
         function toggleInstallmentSection(paymentMethodName) {

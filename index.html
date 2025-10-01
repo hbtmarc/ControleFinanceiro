@@ -200,6 +200,13 @@
             </h1>
             <div class="flex items-center gap-4">
                  <div class="flex items-center gap-1">
+                    <button id="import-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Importar dados (JSON)">
+                        <span class="material-symbols-outlined text-gray-600">upload</span>
+                    </button>
+                    <button id="export-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Exportar dados (JSON)">
+                        <span class="material-symbols-outlined text-gray-600">download</span>
+                    </button>
+                    <input type="file" id="import-file-input" class="hidden" accept=".json">
                     <button id="monthly-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Relatório Mensal">
                         <span class="material-symbols-outlined text-gray-600">assessment</span>
                     </button>
@@ -577,6 +584,32 @@
     </dialog>
     
     <script>
+    // Função para importar dados do import.json para o Firebase
+    async function importJsonToFirebase() {
+        try {
+            // Busca o arquivo import.json via fetch
+            const response = await fetch('import.json');
+            if (!response.ok) throw new Error('Não foi possível carregar import.json');
+            const json = await response.json();
+            // O arquivo já está no formato correto, basta salvar
+            if (json.financeAppDB_v10) {
+                await storage.saveData(json.financeAppDB_v10);
+                alert('Dados importados com sucesso!');
+                location.reload();
+            } else {
+                alert('Estrutura do import.json inválida.');
+            }
+        } catch (e) {
+            alert('Erro ao importar dados: ' + e.message);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const importBtn = document.getElementById('import-data-btn');
+        if (importBtn) {
+            importBtn.addEventListener('click', importJsonToFirebase);
+        }
+    });
     // ETAPA 2: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI
     // Substitua o conteúdo abaixo pelas credenciais do seu projeto Firebase.
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -585,7 +618,7 @@ const firebaseConfig = {
   authDomain: "fluxofinanceiro-marc35.firebaseapp.com",
   databaseURL: "https://fluxofinanceiro-marc35-default-rtdb.firebaseio.com",
   projectId: "fluxofinanceiro-marc35",
-  storageBucket: "fluxofinanceiro-marc35.firebasestorage.app",
+  storageBucket: "fluxofinanceiro-marc35.appspot.com", // CORRIGIDO
   messagingSenderId: "855674664271",
   appId: "1:855674664271:web:85ad6887626ece0dc8813a",
   measurementId: "G-NKKNQFLP00"
@@ -599,39 +632,34 @@ const firebaseConfig = {
     const storage = {
         DB_KEY: 'financeAppDB_v10',
         loadData: async function() {
+            const initialData = this.getInitialData();
             try {
-                // Tenta buscar na chave padrão
-                let snapshot = await database.ref(this.DB_KEY).get();
-                let data = snapshot.exists() ? snapshot.val() : null;
-                // Se não encontrar, tenta buscar na raiz
-                if (!data) {
-                    let rootSnap = await database.ref('/').get();
-                    let rootVal = rootSnap.val();
-                    // Se a estrutura já for {settings, data} na raiz, usa ela
-                    if (rootVal && rootVal.settings && rootVal.data) {
-                        data = rootVal;
-                    }
-                }
-                if (data) {
-                    if (!data.settings) data.settings = {};
-                    if (!data.settings.goals) data.settings.goals = [];
-                    if (!data.data) data.data = {};
-                    console.log("Dados carregados do Firebase:", data);
-                    return data;
-                } else {
-                    console.log("Nenhum dado encontrado no Firebase. Inicializando com dados padrão.");
-                    const initialData = this.getInitialData();
+                const snapshot = await database.ref(this.DB_KEY).get();
+                if (!snapshot.exists()) {
+                    console.log("Firebase está vazio. Inicializando com dados padrão e salvando no banco.");
                     await this.saveData(initialData);
                     return initialData;
                 }
+                const firebaseData = snapshot.val();
+                // Garante que a estrutura base (settings, data) exista, mesclando com o padrão.
+                // Isso previne erros se os dados no Firebase estiverem incompletos.
+                const mergedData = {
+                    settings: { ...initialData.settings, ...(firebaseData.settings || {}) },
+                    data: firebaseData.data || initialData.data
+                };
+                // Garante que sub-propriedades críticas de settings existam
+                mergedData.settings.goals = mergedData.settings.goals || [];
+                mergedData.settings.paymentMethods = mergedData.settings.paymentMethods || [];
+                
+                console.log("Dados do Firebase carregados e validados com sucesso.");
+                return mergedData;
             } catch (err) {
-                console.error("Erro ao carregar dados do Firebase:", err);
-                const initialData = this.getInitialData();
-                return initialData;
+                console.error("Erro crítico ao carregar dados do Firebase. Usando estrutura de dados inicial.", err);
+                return initialData; // Retorna a estrutura padrão em caso de qualquer erro de conexão/leitura.
             }
         },
         saveData: function(data) {
-            console.log("Salvando dados no Firebase...", data);
+            console.log("Salvando dados no Firebase...");
             return database.ref(this.DB_KEY).set(data).catch(e => console.error("Erro ao salvar no Firebase:", e));
         },
         getInitialData: function() {
@@ -678,10 +706,20 @@ const firebaseConfig = {
         // --- CORE FUNCTIONS ---
 
         async function init() {
+            console.log("App.init() iniciado.");
+            // A nova função `loadData` é robusta e sempre retorna um objeto de estado válido.
+            // O `await` garante que o código abaixo só execute após o carregamento completo.
             state.appData = await storage.loadData();
+            if (!state.appData) {
+                console.error("Falha crítica: não foi possível carregar ou criar os dados da aplicação.");
+                // Idealmente, exibir uma mensagem de erro visível para o usuário aqui.
+                return;
+            }
+            console.log("Dados prontos para uso na aplicação:", state.appData);
             mapUI();
             bindEvents();
             goToDate(new Date());
+            console.log("App.init() finalizado.");
         }
 
         function mapUI() {
@@ -694,6 +732,7 @@ const firebaseConfig = {
                 'installments-fields', 'payment-method', 'is-recurring', 
                 'saving-fields', 'category-expense', 'category-saving', 'transaction-type-input', 
                 'advanced-options', 'expense-type', 'feedback-visual-container', 'feedback-message',
+                'import-data-btn', 'import-file-input', 'export-data-btn',
                 'monthly-report-btn', 'annual-report-btn', 'monthly-report-modal', 'annual-report-modal',
                 'close-monthly-report-btn', 'close-annual-report-btn', 'add-goal-btn', 'goal-modal', 'close-goal-modal-btn',
                 'goal-form', 'goals-container'
@@ -724,11 +763,15 @@ const firebaseConfig = {
             ui.expensesTableBody.addEventListener('click', (e) => handleTableClick(e, 'expenses'));
             ui.savingsTableBody.addEventListener('click', (e) => handleTableClick(e, 'savings'));
 
+            ui.importDataBtn.addEventListener('click', () => ui.importFileInput.click());
+            ui.importFileInput.addEventListener('change', handleImport);
+            ui.exportDataBtn.addEventListener('click', handleExport);
+
             ui.expensesTableHead.addEventListener('click', (e) => {
                 const header = e.target.closest('.sortable-header');
                 if(header) handleSort(header.dataset.sort);
             });
-            document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', (e) => changeView(e.target.dataset.view)));
+            document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
             ui.isInstallment.addEventListener('change', () => ui.installmentsFields.classList.toggle('hidden', !ui.isInstallment.checked));
             ui.paymentMethod.addEventListener('change', (e) => toggleInstallmentSection(e.target.value));
 
@@ -745,11 +788,95 @@ const firebaseConfig = {
             });
         }
 
+        function handleExport() {
+            if (!state.appData) {
+                alert("Não há dados para exportar.");
+                return;
+            }
+
+            // 1. Criar uma cópia profunda para não modificar o estado atual
+            const appDataCopy = JSON.parse(JSON.stringify(state.appData));
+
+            // 2. Transformar a estrutura de dados
+            const transformedData = {};
+            for (const year in appDataCopy.data) {
+                if (Object.prototype.hasOwnProperty.call(appDataCopy.data, year)) {
+                    for (const month in appDataCopy.data[year]) {
+                        if (Object.prototype.hasOwnProperty.call(appDataCopy.data[year], month)) {
+                            const newKey = `${year}-${month}`;
+                            transformedData[newKey] = appDataCopy.data[year][month];
+                        }
+                    }
+                }
+            }
+            appDataCopy.data = transformedData;
+
+            // 3. Montar o objeto final para exportação
+            const exportObject = {
+                financeAppDB_v10: appDataCopy
+            };
+
+            // 4. Criar e baixar o arquivo JSON
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObject, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "import.json");
+            document.body.appendChild(downloadAnchorNode); // required for firefox
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            alert("Dados exportados com sucesso!");
+        }
+
+        function handleImport() {
+            const fileInput = ui.importFileInput;
+            const file = fileInput.files[0];
+            if (!file) {
+                return; // User cancelled file selection
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const json = JSON.parse(event.target.result);
+                    const dataToSave = json.financeAppDB_v10;
+
+                    if (!dataToSave || !dataToSave.data) {
+                        throw new Error('Estrutura do JSON inválida. Chave "financeAppDB_v10" ou "data" não encontrada.');
+                    }
+
+                    // Transform data structure from {"YYYY-MM":...} to {YYYY:{MM:...}}
+                    const transformedData = {};
+                    for (const key in dataToSave.data) {
+                        if (Object.prototype.hasOwnProperty.call(dataToSave.data, key) && key.match(/^\d{4}-\d{2}$/)) {
+                            const [year, month] = key.split('-');
+                            if (!transformedData[year]) {
+                                transformedData[year] = {};
+                            }
+                            transformedData[year][month] = dataToSave.data[key];
+                        }
+                    }
+                    dataToSave.data = transformedData;
+
+                    await storage.saveData(dataToSave);
+                    alert('Dados importados com sucesso!');
+                    location.reload();
+                } catch (e) {
+                    alert('Erro ao importar dados: ' + e.message);
+                    console.error(e);
+                } finally {
+                    fileInput.value = ''; // Reset input
+                }
+            };
+            reader.readAsText(file);
+        }
+
         // --- RENDER FUNCTIONS ---
 
         function render() {
+            // A verificação de `appData` no início da renderização é uma boa prática final.
             if (!state.appData) {
-                console.error("Tentativa de renderizar sem dados carregados.");
+                console.error("Renderização abortada: state.appData não está disponível.");
                 return;
             }
             propagateRecurringTransactions();
@@ -760,6 +887,19 @@ const firebaseConfig = {
                 case 'credit-cards': renderCreditCardView(); break;
                 case 'investments': renderInvestmentsView(); break;
             }
+        }
+
+        function changeView(view) {
+            state.currentView = view;
+            ['dashboard', 'credit-cards', 'investments'].forEach(v => {
+                document.getElementById(`${v}-view`).classList.toggle('hidden', view !== v);
+                document.querySelector(`.tab-button[data-view="${v}"]`).classList.toggle('tab-active', view === v);
+            });
+            const activeView = document.getElementById(`${view}-view`);
+            activeView.classList.remove('animate-fade-in');
+            void activeView.offsetWidth;
+            activeView.classList.add('animate-fade-in');
+            render();
         }
 
         function renderDashboard() {
@@ -774,7 +914,7 @@ const firebaseConfig = {
             const creditCards = state.appData.settings.paymentMethods.filter(p => p.type === 'credit_card');
             const currentMonthData = getCurrentMonthData();
             creditCards.forEach(card => {
-                const cardExpenses = currentMonthData.expenses.filter(e => e.payment === card.name);
+                const cardExpenses = (currentMonthData.expenses || []).filter(e => e.payment === card.name);
                 const totalAmount = cardExpenses.reduce((sum, exp) => sum + exp.amount, 0);
                 const dueDate = new Date(state.currentDate);
                 if (card.dueDay < 15) dueDate.setMonth(dueDate.getMonth() + 1);
@@ -801,8 +941,8 @@ const firebaseConfig = {
             const allData = Object.values(state.appData.data).flatMap(year => Object.values(year));
             const allSavings = allData.flatMap(month => month.savings || []);
             const totalInvested = allSavings.reduce((sum, s) => sum + s.amount, 0);
-            const currentMonthSavings = getCurrentMonthData().savings.reduce((sum, s) => sum + s.amount, 0);
-            const monthsWithSavings = allData.filter(m => (m.savings || []).reduce((s, t) => s + t.amount, 0) > 0);
+            const currentMonthSavings = (getCurrentMonthData().savings || []).reduce((sum, s) => sum + s.amount, 0);
+            const monthsWithSavings = allData.filter(m => ((m.savings || []).reduce((s, t) => s + t.amount, 0)) > 0);
             const avgMonthlyInvestment = monthsWithSavings.length > 0 ? totalInvested / monthsWithSavings.length : 0;
             
             document.getElementById('kpi-total-invested').textContent = formatCurrency(totalInvested);
@@ -832,9 +972,9 @@ const firebaseConfig = {
         }
 
         function renderIncomeTable() {
-            const incomes = getCurrentMonthData().incomes;
+            const incomes = getCurrentMonthData().incomes || [];
             ui.incomeTableBody.innerHTML = '';
-            if (incomes && incomes.length > 0) {
+            if (incomes.length > 0) {
                 incomes.forEach(income => renderIncomeRow(income));
             } else {
                 ui.incomeTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Nenhuma entrada registrada.</td></tr>';
@@ -842,7 +982,7 @@ const firebaseConfig = {
         }
 
         function renderExpenseTable() {
-            let expenses = [...getCurrentMonthData().expenses];
+            let expenses = [...(getCurrentMonthData().expenses || [])];
             if (state.filters.searchTerm) {
                 expenses = expenses.filter(exp => exp.description.toLowerCase().includes(state.filters.searchTerm.toLowerCase()));
             }
@@ -864,9 +1004,9 @@ const firebaseConfig = {
         }
 
         function renderSavingsTable() {
-            const savings = getCurrentMonthData().savings;
+            const savings = getCurrentMonthData().savings || [];
             ui.savingsTableBody.innerHTML = '';
-            if(savings && savings.length > 0) {
+            if(savings.length > 0) {
                 savings.forEach(saving => renderSavingRow(saving));
             } else {
                 ui.savingsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Nenhuma reserva registrada.</td></tr>';
@@ -977,8 +1117,16 @@ const firebaseConfig = {
         function getCurrentMonthData(date = state.currentDate) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
-            if (!state.appData.data[year]) state.appData.data[year] = {};
-            if (!state.appData.data[year][month]) state.appData.data[year][month] = { incomes: [], expenses: [], savings: [] };
+            
+            // Com a nova `loadData`, state.appData.data sempre existirá.
+            // Apenas precisamos garantir que o mês/ano específico exista para evitar erros.
+            if (!state.appData.data[year]) {
+                state.appData.data[year] = {};
+            }
+            if (!state.appData.data[year][month]) {
+                state.appData.data[year][month] = { incomes: [], expenses: [], savings: [] };
+            }
+            
             return state.appData.data[year][month];
         }
         
@@ -1076,8 +1224,75 @@ const firebaseConfig = {
 
         function propagateRecurringTransactions() {
             if (!state.appData || !state.appData.data) return;
+
             let madeChanges = false;
-            // Implementation is complex and correct from previous versions
+            // Mapeia todos os meses existentes para um array plano para facilitar a busca
+            const allMonths = Object.keys(state.appData.data).flatMap(year =>
+                Object.keys(state.appData.data[year]).map(month => ({
+                    year: parseInt(year),
+                    month: parseInt(month),
+                    ...state.appData.data[year][month]
+                }))
+            );
+
+            // Encontra todas as transações marcadas como recorrentes em todos os meses
+            const allRecurringTransactions = allMonths.flatMap(monthData =>
+                ['incomes', 'expenses', 'savings'].flatMap(type =>
+                    (monthData[type] || [])
+                        .filter(t => t.isRecurring && t.recurringId)
+                        .map(t => ({
+                            ...t,
+                            transactionType: type,
+                            // Cria uma data real para ordenação, baseada no ano/mês da transação
+                            date: new Date(monthData.year, monthData.month - 1, 1)
+                        }))
+                )
+            );
+
+            const uniqueRecurringIds = [...new Set(allRecurringTransactions.map(t => t.recurringId))];
+
+            uniqueRecurringIds.forEach(recurringId => {
+                // Para cada ID recorrente, encontra a ocorrência mais recente
+                const transactions = allRecurringTransactions
+                    .filter(t => t.recurringId === recurringId)
+                    .sort((a, b) => b.date - a.date); // Ordena da mais nova para a mais antiga
+
+                if (transactions.length === 0) return;
+
+                const lastTransaction = transactions[0];
+                const lastDate = lastTransaction.date;
+
+                // Começa a verificar a partir do mês seguinte ao da última ocorrência
+                let nextDate = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 1);
+
+                // Propaga a transação para todos os meses entre a última ocorrência e o mês atual
+                while (nextDate <= state.currentDate) {
+                    const monthData = getCurrentMonthData(nextDate); // Garante que o objeto do mês exista
+                    const transactionType = lastTransaction.transactionType;
+
+                    const alreadyExists = monthData[transactionType]?.some(t => t.recurringId === recurringId);
+
+                    if (!alreadyExists) {
+                        const newTransaction = { ...lastTransaction };
+                        // Limpa propriedades temporárias e redefine o estado da nova transação
+                        delete newTransaction.date;
+                        delete newTransaction.transactionType;
+                        newTransaction.id = generateUUID();
+                        if (transactionType === 'expenses') {
+                           newTransaction.isPaid = false; // Despesas recorrentes futuras começam como "não pagas"
+                        }
+                        
+                        monthData[transactionType].push(newTransaction);
+                        madeChanges = true;
+                    }
+                    // Avança para o próximo mês
+                    nextDate.setMonth(nextDate.getMonth() + 1);
+                }
+            });
+
+            if (madeChanges) {
+                storage.saveData(state.appData);
+            }
         }
 
         function createInstallments(baseTransaction, count) {
@@ -1111,7 +1326,7 @@ const firebaseConfig = {
             let madeChanges = false;
             Object.keys(state.appData.data).forEach(year => {
                 Object.keys(state.appData.data[year]).forEach(month => {
-                    const monthData = state.appData.data[year][month];
+                    const monthData = state.appApp.data[year][month];
                     ['incomes', 'expenses', 'savings'].forEach(type => {
                         if (monthData[type]) {
                             const initialLength = monthData[type].length;
@@ -1121,13 +1336,15 @@ const firebaseConfig = {
                     });
                 });
             });
-            if (madeChanges) storage.saveData(state.appData);
+            if (madeChanges) storage.saveData(state.appApp);
         }
 
         function handleGoalFormSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('goal-id').value;
             const name = document.getElementById('goal-name').value;
+
+
             const amount = parseFloat(document.getElementById('goal-amount').value);
             if (!state.appData.settings.goals) state.appData.settings.goals = [];
             if (id) {
@@ -1160,14 +1377,20 @@ const firebaseConfig = {
             const modal = ui.transactionModal;
             ui.transactionForm.reset();
             document.getElementById('transaction-id').value = '';
+            
+            populateDropdowns(); // Garante que os dropdowns estejam populados primeiro
             toggleTransactionType(type);
-            populateDropdowns();
+
             if (id) {
                 document.getElementById('modal-title').textContent = 'Editar Transação';
                 populateModal(type, id);
             } else {
                 document.getElementById('modal-title').textContent = 'Nova Transação';
             }
+
+            // Correção: Garante que a seção de parcelamento seja verificada após a população dos dropdowns
+            toggleInstallmentSection(ui.paymentMethod.value);
+
             modal.showModal();
         }
 
@@ -1230,9 +1453,9 @@ const firebaseConfig = {
 
         function updateKPIs() {
             const monthData = getCurrentMonthData();
-            const totalIncome = monthData.incomes.reduce((sum, t) => sum + t.amount, 0);
-            const totalExpenses = monthData.expenses.filter(t => t.isPaid).reduce((sum, t) => sum + t.amount, 0);
-            const totalSavings = monthData.savings.reduce((sum, t) => sum + t.amount, 0);
+            const totalIncome = (monthData.incomes || []).reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = (monthData.expenses || []).filter(t => t.isPaid).reduce((sum, t) => sum + t.amount, 0);
+            const totalSavings = (monthData.savings || []).reduce((sum, t) => sum + t.amount, 0);
             const balance = totalIncome - totalExpenses - totalSavings;
 
             document.getElementById('kpi-total-income').textContent = formatCurrency(totalIncome);
@@ -1241,7 +1464,7 @@ const firebaseConfig = {
             document.getElementById('kpi-balance').textContent = formatCurrency(balance);
             
             getFeedback(totalIncome, totalExpenses, totalSavings);
-        }
+                             }
         
         function getFeedback(income, expenses, savings) {
             if (!state.appData.settings.spendingGoals) return;
@@ -1251,15 +1474,17 @@ const firebaseConfig = {
             const savingGoal = spendingGoals.find(g => g.type === 'Reserva').goal;
 
             const monthData = getCurrentMonthData();
-            const essentialSpending = monthData.expenses.filter(e => e.type === 'Essenciais').reduce((s, e) => s + e.amount, 0);
-            const nonEssentialSpending = monthData.expenses.filter(e => e.type === 'Não Essenciais').reduce((s, e) => s + e.amount, 0);
+            const essentialSpending = (monthData.expenses || []).filter(e => e.type === 'Essenciais').reduce((s, e) => s + e.amount, 0);
+            const nonEssentialSpending = (monthData.expenses || []).filter(e => e.type === 'Não Essenciais').reduce((s, e) => s + e.amount, 0);
 
             let feedbackId = 'B'; // Default: OK
-            if ((income - expenses - savings) < 0) feedbackId = 'F';
-            else if (savings < income * savingGoal) feedbackId = 'E';
-            else if (nonEssentialSpending > income * nonEssentialGoal) feedbackId = 'C';
-            else if (essentialSpending > income * essentialGoal) feedbackId = 'D';
-            else if (savings > income * savingGoal) feedbackId = 'A';
+            if (income > 0) {
+                if ((income - expenses - savings) < 0) feedbackId = 'F';
+                else if (savings < income * savingGoal) feedbackId = 'E';
+                else if (nonEssentialSpending > income * nonEssentialGoal) feedbackId = 'C';
+                else if (essentialSpending > income * essentialGoal) feedbackId = 'D';
+                else if (savings > income * savingGoal) feedbackId = 'A';
+            }
 
             ui.feedbackMessage.textContent = feedbackMessages.find(m => m.id === feedbackId).text;
         }
@@ -1317,6 +1542,7 @@ const firebaseConfig = {
             const categorySpending = expenses.reduce((acc, exp) => {
                 acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
                 return acc;
+
             }, {});
             ui.charts['category-spending-chart'] = new Chart(document.getElementById('category-spending-chart').getContext('2d'), {
                 type: 'pie',
@@ -1439,7 +1665,7 @@ const firebaseConfig = {
             }, {});
             ui.charts['mr-category-breakdown-chart'] = new Chart(document.getElementById('mr-category-breakdown-chart').getContext('2d'), {
                 type: 'pie',
-                data: { labels: Object.keys(categorySpending), datasets: [{ data: Object.values(categorySpending) }] },
+                data: { labels: Object.keys(categorySpending), datasets: [{ data: Object.values(categorySpending), backgroundColor: ['#EF4444', '#F97316', '#84CC16', '#22C55E', '#14B8A6', '#06B6D4', '#6366F1', '#D946EF'] }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
             ui.monthlyReportModal.showModal();
@@ -1454,13 +1680,17 @@ const firebaseConfig = {
             const categorySpending = {};
 
             months.forEach(month => {
-                const monthData = yearData[month] || { incomes: [], expenses: [], savings: [] };
-                const income = monthData.incomes.reduce((s, t) => s + t.amount, 0);
-                const outcome = monthData.expenses.reduce((s, t) => s + t.amount, 0) + monthData.savings.reduce((s, t) => s + t.amount, 0);
+                const monthData = yearData[month] || {};
+                const incomes = monthData.incomes || [];
+                const expenses = monthData.expenses || [];
+                const savings = monthData.savings || [];
+
+                const income = incomes.reduce((s, t) => s + t.amount, 0);
+                const outcome = expenses.reduce((s, t) => s + t.amount, 0) + savings.reduce((s, t) => s + t.amount, 0);
                 totalIncome += income;
                 totalOutcome += outcome;
                 monthlyBalances.push(income - outcome);
-                monthData.expenses.forEach(exp => {
+                expenses.forEach(exp => {
                     categorySpending[exp.category] = (categorySpending[exp.category] || 0) + exp.amount;
                 });
             });
@@ -1473,7 +1703,7 @@ const firebaseConfig = {
             destroyChart('ar-balance-evolution-chart');
             ui.charts['ar-balance-evolution-chart'] = new Chart(document.getElementById('ar-balance-evolution-chart').getContext('2d'), {
                 type: 'line',
-                data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'], datasets: [{ label: 'Saldo Mensal', data: monthlyBalances }] },
+                data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'], datasets: [{ label: 'Saldo Mensal', data: monthlyBalances, borderColor: '#1D4ED8' }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
 
@@ -1484,7 +1714,7 @@ const firebaseConfig = {
             }, {});
             ui.charts['ar-avg-category-spending-chart'] = new Chart(document.getElementById('ar-avg-category-spending-chart').getContext('2d'), {
                 type: 'bar',
-                data: { labels: Object.keys(avgCategorySpending), datasets: [{ label: 'Média de Gasto Mensal', data: Object.values(avgCategorySpending) }] },
+                data: { labels: Object.keys(avgCategorySpending), datasets: [{ label: 'Média de Gasto Mensal', data: Object.values(avgCategorySpending), backgroundColor: '#BE185D' }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
 
@@ -1494,7 +1724,7 @@ const firebaseConfig = {
         // --- UTILITY FUNCTIONS ---
 
         function generateUUID() {
-            return ([1e7]+-1e3+-4e-3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+            return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
         }
 
         function formatCurrency(value) {

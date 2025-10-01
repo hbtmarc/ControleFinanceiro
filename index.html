@@ -487,6 +487,18 @@
                         <input type="number" id="installments-count" min="2" max="48" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 12">
                     </div>
                 </div>
+                <div id="financing-section" class="hidden">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="is-financing" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">É um financiamento?</span>
+                    </label>
+                    <div id="financing-fields" class="hidden mt-2">
+                        <label for="financing-total" class="block text-sm font-medium text-gray-700">Total de parcelas</label>
+                        <input type="number" id="financing-total" min="2" max="120" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 36">
+                        <label for="financing-current" class="block text-sm font-medium text-gray-700 mt-2">Parcela atual</label>
+                        <input type="number" id="financing-current" min="1" max="120" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 13">
+                    </div>
+                </div>
             </div>
 
             <div class="flex justify-end gap-4 pt-4">
@@ -1192,8 +1204,14 @@ const firebaseConfig = {
             }
             const isInstallment = document.getElementById('is-installment').checked;
             const installmentsCount = parseInt(document.getElementById('installments-count').value, 10);
+            const isFinancing = document.getElementById('is-financing').checked;
+            const financingTotal = parseInt(document.getElementById('financing-total').value, 10);
+            const financingCurrent = parseInt(document.getElementById('financing-current').value, 10);
+
             if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
                 createInstallments(transactionData, installmentsCount);
+            } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
+                createFinancing(transactionData, financingTotal, financingCurrent);
             } else {
                 saveTransaction(transactionData, type, id);
             }
@@ -1201,13 +1219,38 @@ const firebaseConfig = {
             storage.saveData(state.appData);
             propagateRecurringTransactions();
             render();
+        // Cria parcelas de financiamento para BB Débito, permitindo edição futura
+        function createFinancing(baseTransaction, total, current) {
+            const financingId = generateUUID();
+            for (let i = current; i <= total; i++) {
+                const installmentDate = new Date(state.currentDate);
+                installmentDate.setMonth(state.currentDate.getMonth() + (i - current));
+                const futureMonthData = getCurrentMonthData(installmentDate);
+                const newInstallment = {
+                    ...baseTransaction,
+                    id: generateUUID(),
+                    financingId,
+                    currentFinancing: i,
+                    totalFinancing: total
+                };
+                futureMonthData.expenses.push(newInstallment);
+            }
+        }
         }
 
         function saveTransaction(transaction, type, id) {
             const currentMonthData = getCurrentMonthData();
             if (id) {
                 const index = currentMonthData[type].findIndex(t => t.id === id);
-                if (index > -1) currentMonthData[type][index] = transaction;
+                if (index > -1) {
+                    // Se for uma entrada recorrente, pergunta se deseja atualizar os futuros
+                    if (type === 'incomes' && currentMonthData[type][index].recurringId) {
+                        if (confirm('Esta é uma entrada recorrente. Deseja atualizar os valores futuros também?')) {
+                            updateFutureRecurrences(currentMonthData[type][index].recurringId, transaction, type);
+                        }
+                    }
+                    currentMonthData[type][index] = transaction;
+                }
             } else {
                 currentMonthData[type].push(transaction);
             }
@@ -1220,13 +1263,37 @@ const firebaseConfig = {
                 if (!confirm('Esta é uma transação parcelada. Deseja excluir esta e todas as parcelas futuras?')) return;
                 deleteFutureInstallments(transaction.installmentId, transaction.currentInstallment);
             } else if (transaction && transaction.recurringId) {
-                 if (!confirm('Esta é uma transação recorrente. Deseja excluir esta e todas as futuras recorrências?')) return;
-                deleteFutureRecurrences(transaction.recurringId);
+                if (type === 'incomes') {
+                    if (confirm('Esta é uma entrada recorrente. Deseja excluir os valores futuros também?')) {
+                        deleteFutureRecurrences(transaction.recurringId);
+                    }
+                } else {
+                    if (!confirm('Esta é uma transação recorrente. Deseja excluir esta e todas as futuras recorrências?')) return;
+                    deleteFutureRecurrences(transaction.recurringId);
+                }
             } else {
                 if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
                 const index = currentMonthData[type].findIndex(t => t.id === id);
                 if (index > -1) currentMonthData[type].splice(index, 1);
             }
+        // Atualiza valores futuros de recorrência (usado para incomes)
+        function updateFutureRecurrences(recurringId, newTransaction, type) {
+            Object.keys(state.appData.data).forEach(year => {
+                Object.keys(state.appData.data[year]).forEach(month => {
+                    const monthData = state.appData.data[year][month];
+                    if (monthData[type]) {
+                        monthData[type] = monthData[type].map(item => {
+                            if (item.recurringId === recurringId && item.id !== newTransaction.id) {
+                                // Atualiza apenas os futuros (id diferente do editado)
+                                return { ...item, ...newTransaction };
+                            }
+                            return item;
+                        });
+                    }
+                });
+            });
+            storage.saveData(state.appData);
+        }
             storage.saveData(state.appData);
             render();
         }
@@ -1448,7 +1515,13 @@ const firebaseConfig = {
 
         function toggleInstallmentSection(paymentMethodName) {
             const method = state.appData.settings.paymentMethods.find(p => p.name === paymentMethodName);
-            ui.installmentsSection.classList.toggle('hidden', !method || method.type !== 'credit_card');
+            if (ui.installmentsSection) {
+                ui.installmentsSection.classList.toggle('hidden', !method || method.type !== 'credit_card');
+            }
+            // Exibe financiamento apenas para BB Débito
+            if (ui.financingSection) {
+                ui.financingSection.classList.toggle('hidden', paymentMethodName !== 'BB (Débito)');
+            }
         }
 
         function openGoalModal(id = null) {
@@ -1667,18 +1740,21 @@ const firebaseConfig = {
 
         function openMonthlyReport() {
             const monthData = getCurrentMonthData();
-            const totalIncome = monthData.incomes.reduce((s, t) => s + t.amount, 0);
-            const totalOutcome = monthData.expenses.reduce((s, t) => s + t.amount, 0) + monthData.savings.reduce((s, t) => s + t.amount, 0);
+            const incomes = monthData.incomes || [];
+            const expenses = monthData.expenses || [];
+            const savings = monthData.savings || [];
+            const totalIncome = incomes.reduce((s, t) => s + t.amount, 0);
+            const totalOutcome = expenses.reduce((s, t) => s + t.amount, 0) + savings.reduce((s, t) => s + t.amount, 0);
             document.getElementById('monthly-report-title').textContent = state.currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
             document.getElementById('mr-total-income').textContent = formatCurrency(totalIncome);
             document.getElementById('mr-total-outcome').textContent = formatCurrency(totalOutcome);
             document.getElementById('mr-final-balance').textContent = formatCurrency(totalIncome - totalOutcome);
-            
-            const topExpenses = [...monthData.expenses].sort((a, b) => b.amount - a.amount).slice(0, 5);
+
+            const topExpenses = [...expenses].sort((a, b) => b.amount - a.amount).slice(0, 5);
             document.getElementById('mr-top-expenses-list').innerHTML = topExpenses.map(e => `<li><div class="flex justify-between"><span>${e.description}</span><span>${formatCurrency(e.amount)}</span></div></li>`).join('');
 
             destroyChart('mr-category-breakdown-chart');
-            const categorySpending = monthData.expenses.reduce((acc, exp) => {
+            const categorySpending = expenses.reduce((acc, exp) => {
                 acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
                 return acc;
             }, {});

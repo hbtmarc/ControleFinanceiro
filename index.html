@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Financeiro Fluxo</title>
+    <title>Fluxo Financeiro</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -26,6 +26,62 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
     <style>
+/* Animações para KPIs principais */
+.kpi-animate {
+    animation: kpiPulse 0.7s;
+}
+@keyframes kpiPulse {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.15); }
+    60% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+}
+.kpi-animate-up {
+    animation: kpiColorUp 0.7s;
+    color: #16a34a !important; /* verde entradas */
+}
+.kpi-animate-down {
+    animation: kpiColorDown 0.7s;
+    color: #dc2626 !important; /* vermelho */
+}
+@keyframes kpiColorUp {
+    0% { color: #16a34a; }
+    80% { color: #16a34a; }
+    100% { color: #1d1d1f; }
+}
+@keyframes kpiColorDown {
+    0% { color: #dc2626; }
+    80% { color: #dc2626; }
+    100% { color: #1d1d1f; }
+}
+        /* Animações para KPIs principais */
+        .kpi-animate {
+            animation: kpiPulse 0.7s;
+        }
+        @keyframes kpiPulse {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.15); }
+            60% { transform: scale(0.97); }
+            100% { transform: scale(1); }
+        }
+        .kpi-animate-up {
+            animation: kpiColorUp 0.7s;
+            color: #16a34a !important; /* verde entradas */
+        }
+        .kpi-animate-down {
+            animation: kpiColorDown 0.7s;
+            color: #dc2626 !important; /* vermelho */
+        }
+        @keyframes kpiColorUp {
+            0% { color: #16a34a; }
+            80% { color: #16a34a; }
+            100% { color: #1d1d1f; }
+        }
+        @keyframes kpiColorDown {
+            0% { color: #dc2626; }
+            80% { color: #dc2626; }
+            100% { color: #1d1d1f; }
+        }
         :root {
             --background-color: #f8f8fa;
             --card-background: rgba(255, 255, 255, 0.9);
@@ -260,7 +316,7 @@
         <header class="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-                <span>Fluxo</span>
+                <span>Fluxo Financeiro</span>
             </h1>
             <div class="flex items-center gap-4">
                  <div class="flex items-center gap-1">
@@ -282,7 +338,7 @@
                     <button id="prev-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_left</span>
                     </button>
-                    <span id="current-month-display" class="w-32 text-center font-semibold text-gray-700">Setembro 2025</span>
+                    <span id="current-month-display" class="w-40 text-center font-semibold text-gray-700 whitespace-nowrap">Setembro 2025</span>
                     <button id="next-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_right</span>
                     </button>
@@ -420,6 +476,11 @@
                          <div class="card p-6 rounded-xl">
                             <h2 class="text-xl font-semibold mb-4">Resumo Anual</h2>
                             <div class="h-56"><canvas id="annual-summary-chart"></canvas></div>
+                        </div>
+                        <!-- KPI Percentual de cada despesa do mês -->
+                        <div class="card p-4 rounded-lg mb-4 bg-gray-50 border border-gray-200">
+                            <h3 class="text-sm font-medium text-gray-500 mb-2">Percentual de cada despesa do mês</h3>
+                            <div id="kpi-expense-percentuals" class="space-y-1"></div>
                         </div>
                     </div>
                 </div>
@@ -1715,14 +1776,76 @@ const firebaseConfig = {
             const totalSavings = (monthData.savings || []).reduce((sum, t) => sum + t.amount, 0);
             const balance = totalIncome - totalExpenses - totalSavings;
 
-            document.getElementById('kpi-total-income').textContent = formatCurrency(totalIncome);
-            document.getElementById('kpi-total-expenses').textContent = formatCurrency(totalExpenses);
-            document.getElementById('kpi-total-savings').textContent = formatCurrency(totalSavings);
-            document.getElementById('kpi-balance').textContent = formatCurrency(balance);
+            animateKPINumber('kpi-total-income', totalIncome);
+            animateKPINumber('kpi-total-expenses', totalExpenses);
+            animateKPINumber('kpi-total-savings', totalSavings);
+            animateKPINumber('kpi-balance', balance, true);
             // Valor projetado: entradas - todas as despesas (incluindo não pagas)
             const projectedBalance = totalIncome - (monthData.expenses || []).reduce((sum, exp) => sum + exp.amount, 0);
-            document.getElementById('kpi-projected-balance').textContent = formatCurrency(projectedBalance);
-            
+            animateKPINumber('kpi-projected-balance', projectedBalance, true);
+
+            // Função para animar KPIs principais com contagem progressiva/regressiva e cor
+            function animateKPINumber(id, newValue, colorChange = false) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                let last = el._lastValue;
+                if (typeof last !== 'number') {
+                    // Tenta extrair valor inicial do texto
+                    last = parseFloat((el.textContent || '0').replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+                }
+                const duration = 700;
+                const frameRate = 30;
+                const steps = Math.round(duration / (1000 / frameRate));
+                let step = 0;
+                const diff = newValue - last;
+                if (diff === 0) {
+                    el.textContent = formatCurrency(newValue);
+                    return;
+                }
+                // Cor animada
+                if (colorChange) {
+                    if (diff > 0) {
+                        el.classList.add('kpi-animate-up');
+                    } else {
+                        el.classList.add('kpi-animate-down');
+                    }
+                } else {
+                    el.classList.add('kpi-animate');
+                }
+                const start = last;
+                const end = newValue;
+                const animate = () => {
+                    step++;
+                    const val = start + (diff * (step / steps));
+                    el.textContent = formatCurrency(val);
+                    if (step < steps) {
+                        setTimeout(animate, 1000 / frameRate);
+                    } else {
+                        el.textContent = formatCurrency(end);
+                        el._lastValue = end;
+                        el.classList.remove('kpi-animate');
+                        el.classList.remove('kpi-animate-up');
+                        el.classList.remove('kpi-animate-down');
+                    }
+                };
+                animate();
+            }
+
+            // Percentual de cada despesa do mês
+            const expenses = monthData.expenses || [];
+            const totalMonthExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const container = document.getElementById('kpi-expense-percentuals');
+            if (container) {
+                container.innerHTML = '';
+                expenses.forEach(exp => {
+                    const percent = totalMonthExpenses > 0 ? ((exp.amount / totalMonthExpenses) * 100).toFixed(1) : '0.0';
+                    container.innerHTML += `<div class="flex justify-between text-sm"><span>${exp.description}</span><span>${percent}%</span></div>`;
+                });
+                if (expenses.length === 0) {
+                    container.innerHTML = '<span class="text-gray-400 text-xs">Nenhuma despesa registrada.</span>';
+                }
+            }
+
             getFeedback(totalIncome, totalExpenses, totalSavings);
                              }
         

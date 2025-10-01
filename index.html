@@ -138,53 +138,117 @@
         }
 
         /* Responsive Tables - Mobile First */
+        /* Mobile UX - Melhor experiência, sem impactar desktop */
         @media (max-width: 639px) {
+            body {
+                padding: 0 !important;
+                font-size: 15px;
+            }
+            .max-w-7xl {
+                padding: 0.5rem !important;
+            }
+            header {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+                margin-bottom: 1.5rem !important;
+            }
+            h1 {
+                font-size: 1.3rem !important;
+            }
+            .card {
+                border-radius: 1rem !important;
+                box-shadow: none !important;
+                padding: 1rem !important;
+            }
+            .tab-button {
+                font-size: 0.95rem !important;
+                padding: 0.7rem 0 !important;
+            }
+            .grid-cols-4, .sm\:grid-cols-2, .lg\:grid-cols-4 {
+                grid-template-columns: 1fr !important;
+            }
+            #kpi-projected-balance {
+                font-size: 1rem !important;
+            }
             .responsive-table thead {
-                display: none;
+                display: none !important;
             }
             .responsive-table tbody, .responsive-table tr {
-                display: block;
+                display: block !important;
             }
             .responsive-table tr {
                 border: 1px solid #e5e7eb;
-                border-radius: 0.75rem;
-                padding: 1rem;
+                border-radius: 1rem;
+                padding: 0.7rem;
                 margin-bottom: 1rem;
+                background: #fff;
             }
             .responsive-table td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.5rem 0;
-                border-bottom: 1px solid #f3f4f6;
-                text-align: right;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.4rem 0 !important;
+                border-bottom: 1px solid #f3f4f6 !important;
+                text-align: right !important;
+                font-size: 1rem !important;
             }
             .responsive-table td:last-child {
-                border-bottom: none;
+                border-bottom: none !important;
             }
             .responsive-table td::before {
                 content: attr(data-label);
                 font-weight: 600;
                 text-align: left;
-                padding-right: 1rem;
+                padding-right: 0.7rem;
                 color: var(--text-secondary);
+                font-size: 0.95rem;
             }
-            /* Specific adjustments for certain columns */
             .responsive-table td.actions-cell {
-                justify-content: flex-end; /* Aligns buttons to the right */
+                justify-content: flex-end !important;
             }
             .responsive-table td.actions-cell::before {
-                display: none; /* No label for actions */
+                display: none !important;
             }
             .responsive-table td.checkbox-cell {
-                padding-top: 0.5rem;
-                padding-bottom: 0.5rem;
+                padding-top: 0.4rem !important;
+                padding-bottom: 0.4rem !important;
             }
             .responsive-table td.checkbox-cell::before {
-                display: none;
+                display: none !important;
             }
             .responsive-table td.checkbox-cell input {
-                margin-left: auto; /* Pushes checkbox to the right */
+                margin-left: auto !important;
+                width: 1.3em !important;
+                height: 1.3em !important;
+            }
+            .btn-primary, button, input[type="submit"] {
+                font-size: 1rem !important;
+                padding: 0.7rem 1.2rem !important;
+                border-radius: 0.7rem !important;
+            }
+            dialog, .report-modal {
+                max-width: 98vw !important;
+                padding: 0.5rem !important;
+            }
+            .rounded-2xl, .rounded-xl, .rounded-lg {
+                border-radius: 1rem !important;
+            }
+            input, select, textarea {
+                font-size: 1rem !important;
+                padding: 0.7rem !important;
+            }
+            label {
+                font-size: 0.97rem !important;
+            }
+            #feedback-card {
+                margin-top: 0.5rem !important;
+                padding: 1rem !important;
+            }
+            canvas {
+                height: 180px !important;
+            }
+            html, body {
+                overflow-x: hidden !important;
             }
         }
     </style>
@@ -329,6 +393,13 @@
                     </div>
                      <!-- Coluna de Gráficos e Insights -->
                     <div class="lg:col-span-1 space-y-8">
+                        <!-- Valor Projetado do Mês (acima do feedback, visual sóbrio) -->
+                        <div class="card p-2 rounded-lg mb-3 bg-gray-50 border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-500">Projetado</span>
+                                <span id="kpi-projected-balance" class="text-base font-semibold text-gray-700">R$ 0,00</span>
+                            </div>
+                        </div>
                         <div id="feedback-card" class="card p-6 rounded-xl">
                              <h2 class="text-xl font-semibold mb-2">Feedback do Mês</h2>
                              <p id="feedback-message" class="text-gray-600 text-sm mb-4">...</p>
@@ -747,12 +818,15 @@ const firebaseConfig = {
                 'import-data-btn', 'import-file-input', 'export-data-btn',
                 'monthly-report-btn', 'annual-report-btn', 'monthly-report-modal', 'annual-report-modal',
                 'close-monthly-report-btn', 'close-annual-report-btn', 'add-goal-btn', 'goal-modal', 'close-goal-modal-btn',
-                'goal-form', 'goals-container'
+                'goal-form', 'goals-container', 'financing-section'
             ];
             ids.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
-                    ui[id.replace(/-./g, m => m[1].toUpperCase())] = element;
+                    // Mapeia para camelCase, mas garante nomes exatos para os campos críticos
+                    if (id === 'installments-section') ui.installmentsSection = element;
+                    else if (id === 'financing-section') ui.financingSection = element;
+                    else ui[id.replace(/-./g, m => m[1].toUpperCase())] = element;
                 }
             });
             ui.modalTypeToggles = document.querySelectorAll('.modal-type-toggle');
@@ -798,6 +872,25 @@ const firebaseConfig = {
                 state.filters.searchTerm = e.target.value;
                 renderExpenseTable();
             });
+
+            // Automação: se selecionar uma meta como categoria da reserva, preenche descrição automaticamente
+            if (ui.categorySaving) {
+                ui.categorySaving.addEventListener('change', function() {
+                    const selected = this.value;
+                    // Se for uma meta (exatamente igual ao nome de uma meta), preenche descrição
+                    const goals = (state.appData.settings.goals || []).map(g => g.name);
+                    // Se o valor selecionado for igual ao nome de uma meta, ou terminar com ' (Meta)', preenche
+                    let metaName = null;
+                    if (goals.includes(selected)) {
+                        metaName = selected;
+                    } else if (selected.endsWith(' (Meta)')) {
+                        metaName = selected.replace(' (Meta)', '');
+                    }
+                    if (metaName) {
+                        document.getElementById('description').value = metaName;
+                    }
+                });
+            }
         }
 
         function handleExport() {
@@ -1044,7 +1137,7 @@ const firebaseConfig = {
             row.className = `border-b border-gray-200 hover:bg-gray-50 animate-fade-in ${expense.isPaid ? 'opacity-60' : ''}`;
             row.innerHTML = `
                 <td class="py-3 px-3 checkbox-cell" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
-                <td class="py-3 px-3" data-label="Descrição">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/${expense.totalInstallments})</span>` : ''}</td>
+                <td class="py-3 px-3" data-label="Descrição">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/${expense.totalInstallments})</span>` : ''} ${(expense.financingId && expense.totalFinancing) ? `<span class=\"text-xs text-gray-500\">(${expense.currentFinancing}/${expense.totalFinancing})</span>` : ''}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>
                 <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${formatCurrency(expense.amount)}</td>
@@ -1210,7 +1303,7 @@ const firebaseConfig = {
 
             if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
                 createInstallments(transactionData, installmentsCount);
-            } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
+            } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && transactionData.payment === 'BB (Débito)' && !id) {
                 createFinancing(transactionData, financingTotal, financingCurrent);
             } else {
                 saveTransaction(transactionData, type, id);
@@ -1226,6 +1319,7 @@ const firebaseConfig = {
                 const installmentDate = new Date(state.currentDate);
                 installmentDate.setMonth(state.currentDate.getMonth() + (i - current));
                 const futureMonthData = getCurrentMonthData(installmentDate);
+                if (!futureMonthData.expenses) futureMonthData.expenses = [];
                 const newInstallment = {
                     ...baseTransaction,
                     id: generateUUID(),
@@ -1233,6 +1327,11 @@ const firebaseConfig = {
                     currentFinancing: i,
                     totalFinancing: total
                 };
+                // Garante que a primeira parcela registrada tem os campos corretos
+                if (i === current) {
+                    newInstallment.currentFinancing = current;
+                    newInstallment.totalFinancing = total;
+                }
                 futureMonthData.expenses.push(newInstallment);
             }
         }
@@ -1240,6 +1339,7 @@ const firebaseConfig = {
 
         function saveTransaction(transaction, type, id) {
             const currentMonthData = getCurrentMonthData();
+            if (!currentMonthData[type]) currentMonthData[type] = [];
             if (id) {
                 const index = currentMonthData[type].findIndex(t => t.id === id);
                 if (index > -1) {
@@ -1472,6 +1572,9 @@ const firebaseConfig = {
 
         function closeModal(modalId) {
             document.getElementById(modalId).close();
+            // Remove botão de concluir financiamento ao fechar modal
+            const btn = document.getElementById('conclude-financing-btn');
+            if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
         }
 
         function populateModal(type, id) {
@@ -1485,19 +1588,63 @@ const firebaseConfig = {
                 document.getElementById('payment-method').value = transaction.payment;
                 document.getElementById('category-expense').value = transaction.category;
                 document.getElementById('expense-type').value = transaction.type;
+                // Se for financiamento, preenche campos de parcela atual e total
+                if (transaction.financingId) {
+                    document.getElementById('is-financing').checked = true;
+                    document.getElementById('financing-total').value = transaction.totalFinancing || '';
+                    document.getElementById('financing-current').value = transaction.currentFinancing || '';
+                    // Adiciona botão para concluir financiamento
+                    let btn = document.getElementById('conclude-financing-btn');
+                    if (!btn) {
+                        btn = document.createElement('button');
+                        btn.id = 'conclude-financing-btn';
+                        btn.type = 'button';
+                        btn.className = 'bg-green-500 text-white font-medium py-2 px-5 rounded-lg transition-colors mt-2';
+                        btn.textContent = 'Concluir financiamento';
+                        btn.onclick = function() {
+                            if (confirm('Deseja concluir o financiamento e apagar todas as parcelas futuras?')) {
+                                concludeFinancing(transaction.financingId, transaction.currentFinancing);
+                                closeModal('transaction-modal');
+                                render();
+                            }
+                        };
+                        document.getElementById('financing-fields').appendChild(btn);
+                    }
+                } else {
+                    // Remove botão de concluir financiamento se não for financiamento
+                    const btn = document.getElementById('conclude-financing-btn');
+                    if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+                }
             } else if (type === 'savings') {
                 document.getElementById('category-saving').value = transaction.category;
             }
+        // Função para concluir financiamento e apagar parcelas futuras
+        function concludeFinancing(financingId, currentFinancing) {
+            Object.keys(state.appData.data).forEach(year => {
+                Object.keys(state.appData.data[year]).forEach(month => {
+                    const monthData = state.appData.data[year][month];
+                    if (monthData.expenses) {
+                        monthData.expenses = monthData.expenses.filter(item => !(item.financingId === financingId && item.currentFinancing > currentFinancing));
+                    }
+                });
+            });
+            storage.saveData(state.appData);
+        }
         }
 
         function populateDropdowns() {
-            const { paymentMethods, expenseCategories, savingCategories } = state.appData.settings;
+            const { paymentMethods, expenseCategories, savingCategories, goals } = state.appData.settings;
             const paymentSelect = ui.paymentMethod;
             const expenseCatSelect = ui.categoryExpense;
             const savingCatSelect = ui.categorySaving;
             paymentSelect.innerHTML = paymentMethods.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
             expenseCatSelect.innerHTML = expenseCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-            savingCatSelect.innerHTML = savingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+            // Inclui metas como opções de categoria de reserva
+            let savingOptions = savingCategories.map(c => `<option value="${c}">${c}</option>`);
+            if (goals && goals.length > 0) {
+                savingOptions = savingOptions.concat(goals.map(g => `<option value="${g.name}">${g.name} (Meta)</option>`));
+            }
+            savingCatSelect.innerHTML = savingOptions.join('');
         }
 
         function toggleTransactionType(type) {
@@ -1507,10 +1654,25 @@ const firebaseConfig = {
             });
             ui.expenseFields.classList.toggle('hidden', type !== 'expenses');
             ui.savingFields.classList.toggle('hidden', type !== 'savings');
-            // A opção de recorrência deve aparecer para qualquer tipo
             ui.advancedOptions.classList.remove('hidden');
-            // A opção de parcelamento só aparece para despesas
             ui.installmentsSection.classList.toggle('hidden', type !== 'expenses');
+            // Exibe financiamento apenas para despesas e pagamento débito
+            if (type === 'expenses' && ui.paymentMethod.value === 'BB (Débito)') {
+                ui.financingSection.classList.remove('hidden');
+                // Sempre esconde os campos internos
+                document.getElementById('financing-fields').classList.add('hidden');
+                // Se o checkbox for marcado, mostra os campos internos
+                const financingCheckbox = document.getElementById('is-financing');
+                if (financingCheckbox) {
+                    financingCheckbox.onchange = function() {
+                        document.getElementById('financing-fields').classList.toggle('hidden', !this.checked);
+                    };
+                    // Garante que o estado inicial está correto
+                    document.getElementById('financing-fields').classList.toggle('hidden', !financingCheckbox.checked);
+                }
+            } else {
+                ui.financingSection.classList.add('hidden');
+            }
         }
 
         function toggleInstallmentSection(paymentMethodName) {
@@ -1518,9 +1680,19 @@ const firebaseConfig = {
             if (ui.installmentsSection) {
                 ui.installmentsSection.classList.toggle('hidden', !method || method.type !== 'credit_card');
             }
-            // Exibe financiamento apenas para BB Débito
-            if (ui.financingSection) {
-                ui.financingSection.classList.toggle('hidden', paymentMethodName !== 'BB (Débito)');
+            // Exibe financiamento apenas para despesas
+            if (ui.financingSection && ui.transactionTypeInput.value === 'expenses') {
+                ui.financingSection.classList.remove('hidden');
+                document.getElementById('financing-fields').classList.add('hidden');
+                const financingCheckbox = document.getElementById('is-financing');
+                if (financingCheckbox) {
+                    financingCheckbox.onchange = function() {
+                        document.getElementById('financing-fields').classList.toggle('hidden', !this.checked);
+                    };
+                    document.getElementById('financing-fields').classList.toggle('hidden', !financingCheckbox.checked);
+                }
+            } else if (ui.financingSection) {
+                ui.financingSection.classList.add('hidden');
             }
         }
 
@@ -1547,6 +1719,9 @@ const firebaseConfig = {
             document.getElementById('kpi-total-expenses').textContent = formatCurrency(totalExpenses);
             document.getElementById('kpi-total-savings').textContent = formatCurrency(totalSavings);
             document.getElementById('kpi-balance').textContent = formatCurrency(balance);
+            // Valor projetado: entradas - todas as despesas (incluindo não pagas)
+            const projectedBalance = totalIncome - (monthData.expenses || []).reduce((sum, exp) => sum + exp.amount, 0);
+            document.getElementById('kpi-projected-balance').textContent = formatCurrency(projectedBalance);
             
             getFeedback(totalIncome, totalExpenses, totalSavings);
                              }

@@ -1940,28 +1940,58 @@ const firebaseConfig = {
             });
         }
 
-        function updateAllFinancing(financingId, fromCurrentFinancing, newTransaction) {
-            Object.keys(state.appData.data).forEach(year => {
-                Object.keys(state.appData.data[year]).forEach(month => {
-                    const monthData = state.appData.data[year][month];
-                    if (monthData.expenses && Array.isArray(monthData.expenses)) {
-                        monthData.expenses = monthData.expenses.map(item => {
-                            if (item.financingId === financingId && item.currentFinancing >= fromCurrentFinancing) {
-                                return {
-                                    ...item,
-                                    description: newTransaction.description,
-                                    amount: newTransaction.amount,
-                                    payment: newTransaction.payment,
-                                    category: newTransaction.category,
-                                    type: newTransaction.type,
-                                    totalFinancing: newTransaction.totalFinancing
-                                };
-                            }
-                            return item;
-                        });
-                    }
+        // Rebuild future financing installments when the user edits an installment.
+        // This will remove future installments (after the original edited one) and
+        // recreate them starting from the edited installment's month using the
+        // edited currentFinancing and totalFinancing values. This keeps numbering
+        // and dates consistent with user's edit (e.g. changing current installment
+        // to a different number will shift the schedule).
+        function updateAllFinancing(financingId, originalCurrentFinancing, newTransaction) {
+            try {
+                const newCurrent = Number(newTransaction.currentFinancing) || originalCurrentFinancing;
+                const newTotal = Number(newTransaction.totalFinancing) || null;
+                if (!newTotal || newTotal < newCurrent) return;
+
+                // Edited installment month (we edit the transaction in the currently viewed month)
+                const editedMonthStart = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1);
+
+                // 1) Remove any future installments that belong to this financing and are scheduled after the edited month
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const monthStart = new Date(Number(year), Number(month) - 1, 1);
+                        const monthData = state.appData.data[year][month];
+                        if (monthData.expenses && Array.isArray(monthData.expenses)) {
+                            monthData.expenses = monthData.expenses.filter(exp => {
+                                if (exp.financingId !== financingId) return true;
+                                // keep installments that are in or before the edited month; remove those after
+                                return monthStart <= editedMonthStart;
+                            });
+                        }
+                    });
                 });
-            });
+
+                // 2) Recreate installments from newCurrent+1 .. newTotal starting from edited month + 1
+                for (let k = newCurrent + 1; k <= newTotal; k++) {
+                    const monthOffset = k - newCurrent; // 1 => next month
+                    const targetDate = new Date(editedMonthStart);
+                    targetDate.setMonth(editedMonthStart.getMonth() + monthOffset);
+                    const targetMonthData = getCurrentMonthData(targetDate);
+                    if (!Array.isArray(targetMonthData.expenses)) targetMonthData.expenses = [];
+
+                    const newInst = {
+                        ...newTransaction,
+                        id: generateUUID(),
+                        financingId: financingId,
+                        currentFinancing: k,
+                        totalFinancing: newTotal,
+                        isPaid: false
+                    };
+
+                    targetMonthData.expenses.push(newInst);
+                }
+            } catch (e) {
+                console.error('updateAllFinancing (rebuild) error', e);
+            }
         }
         
     async function createInstallments(baseTransaction, count) {

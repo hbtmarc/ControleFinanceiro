@@ -145,6 +145,9 @@
             opacity: 1;
             pointer-events: auto;
         }
+        /* Toast fade transitions */
+        #toast { transition: opacity 0.25s ease, transform 0.2s ease; }
+        #toast[style*="display: none"] { opacity: 0; transform: translateY(6px); }
 
         @keyframes slideInUp {
             from { transform: translateY(20px); opacity: 0; }
@@ -214,6 +217,9 @@
             .max-w-7xl {
                 padding: 0.5rem !important;
             }
+            /* Header icon group: tighter spacing on mobile */
+            header .flex.items-center.gap-4 > div { gap: 0.5rem !important; }
+            #current-month-display { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
             header {
                 flex-direction: column !important;
                 gap: 0.5rem !important;
@@ -250,6 +256,18 @@
                 margin-bottom: 1rem;
                 background: #fff;
             }
+            /* Mobile list/card adjustments */
+            .responsive-table .row-label {
+                color: var(--text-secondary);
+                font-size: 0.9rem !important;
+                font-weight: 600;
+            }
+            .responsive-table .row-value {
+                font-size: 1.05rem !important;
+                font-weight: 700;
+            }
+            .responsive-table .actions-cell button { padding: 0.5rem !important; }
+            .responsive-table td { padding: 0.6rem 0.5rem !important; }
             .responsive-table td {
                 display: flex !important;
                 justify-content: space-between !important;
@@ -296,6 +314,29 @@
             input, select, textarea {
                 font-size: 1.1rem !important;
                 padding: 0.8rem !important;
+            }
+            /* Mobile improvements: spacing, touch targets and mobile infrequent-controls presentation */
+            .card { padding: 1rem !important; }
+            .kpi-label { font-size: 0.9rem !important; }
+            .kpi-value { font-size: 1.25rem !important; font-weight: 700 !important; }
+            .fab { width: 56px !important; height: 56px !important; right: 1rem !important; bottom: 1.2rem !important; }
+            canvas { height: 220px !important; }
+            /* Make the infrequent controls appear as a bottom-sheet on mobile when visible */
+            .infrequent-controls.mobile-visible {
+                position: fixed !important;
+                left: 0.6rem !important;
+                right: 0.6rem !important;
+                bottom: 0.9rem !important;
+                display: flex !important;
+                justify-content: center !important;
+                gap: 0.5rem !important;
+                padding: 0.6rem !important;
+                background: white !important;
+                border-radius: 12px !important;
+                box-shadow: 0 -10px 30px rgba(0,0,0,0.08) !important;
+                z-index: 99999 !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
             }
             label {
                 font-size: 1rem !important;
@@ -350,6 +391,10 @@
                         </button>
                     </div>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
+                    <!-- Mobile toggle for import/export (visible on small screens) -->
+                    <button id="mobile-infrequent-toggle" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors hidden sm:hidden" title="Mais opções" aria-label="Abrir opções">
+                        <span class="material-symbols-outlined text-gray-600">more_horiz</span>
+                    </button>
                     <button id="monthly-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Relatório Mensal">
                         <span class="material-symbols-outlined text-gray-600">assessment</span>
                     </button>
@@ -1082,6 +1127,28 @@ const firebaseConfig = {
                 infrequent.addEventListener('mouseenter', () => { clearTimeout(_hideTimer); infrequent.classList.add('visible'); });
                 infrequent.addEventListener('mouseleave', () => { _hideTimer = setTimeout(() => infrequent.classList.remove('visible'), 250); });
             }
+            // Mobile: toggle infrequent controls with a button (touch-friendly)
+            const mobileToggle = document.getElementById('mobile-infrequent-toggle');
+            if (mobileToggle && infrequent) {
+                // Ensure the button is visible only on small screens
+                mobileToggle.style.display = window.innerWidth <= 639 ? 'inline-flex' : 'none';
+                mobileToggle.addEventListener('click', () => {
+                    const isVisible = infrequent.classList.toggle('mobile-visible');
+                    // Ensure we remove desktop hover-visible if toggling manually
+                    if (isVisible) infrequent.classList.remove('visible');
+                });
+                // React to resize to show/hide the button appropriately
+                window.addEventListener('resize', () => {
+                    mobileToggle.style.display = window.innerWidth <= 639 ? 'inline-flex' : 'none';
+                    if (window.innerWidth > 639) infrequent.classList.remove('mobile-visible');
+                });
+            }
+                // Ensure charts resize on orientation change / resize
+                window.addEventListener('resize', () => {
+                    if (ui && ui.charts) {
+                        Object.values(ui.charts).forEach(c => { try { if (c && typeof c.resize === 'function') c.resize(); } catch(e){} });
+                    }
+                });
             ui.annualReportBtn.addEventListener('click', () => openAnnualReport());
             ui.closeMonthlyReportBtn.addEventListener('click', () => closeModal('monthly-report-modal'));
             ui.closeAnnualReportBtn.addEventListener('click', () => closeModal('annual-report-modal'));

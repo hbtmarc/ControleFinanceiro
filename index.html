@@ -308,6 +308,10 @@
             .responsive-table td.actions-cell {
                 justify-content: flex-end !important;
             }
+            /* Hide top tabs and enable bottom navigation on mobile */
+            #tabs { display: none !important; }
+            #mobile-bottom-nav { display: none; }
+            #mobile-bottom-nav.active { display: flex !important; }
             .responsive-table td.actions-cell::before {
                 display: none !important;
             }
@@ -1165,6 +1169,8 @@ const firebaseConfig = {
                 }
             });
             ui.modalTypeToggles = document.querySelectorAll('.modal-type-toggle');
+            // Map mobile bottom nav
+            ui.mobileBottomNav = document.getElementById('mobile-bottom-nav');
         }
 
         function bindEvents() {
@@ -1204,6 +1210,20 @@ const firebaseConfig = {
                 if(header) handleSort(header.dataset.sort);
             });
             document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
+            // Mobile bottom nav interactions
+            if (ui.mobileBottomNav) {
+                const buttons = ui.mobileBottomNav.querySelectorAll('.mobile-nav-btn');
+                function updateMobileNavVisibility() {
+                    if (window.innerWidth <= 639) {
+                        ui.mobileBottomNav.classList.add('active');
+                    } else {
+                        ui.mobileBottomNav.classList.remove('active');
+                    }
+                }
+                updateMobileNavVisibility();
+                window.addEventListener('resize', updateMobileNavVisibility);
+                buttons.forEach(btn => btn.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
+            }
             ui.isInstallment.addEventListener('change', () => ui.installmentsFields.classList.toggle('hidden', !ui.isInstallment.checked));
             ui.paymentMethod.addEventListener('change', (e) => toggleInstallmentSection(e.target.value));
 
@@ -2877,5 +2897,11 @@ const firebaseConfig = {
     </script>
     <!-- Toasts -->
     <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50 hidden" role="status" aria-live="polite"></div>
+    <!-- Mobile Bottom Navigation -->
+    <nav id="mobile-bottom-nav" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-full shadow-lg px-3 py-2 z-50 gap-3 hidden">
+        <button data-view="dashboard" class="mobile-nav-btn p-2 rounded-full" title="Visão Geral"><span class="material-symbols-outlined">dashboard</span></button>
+        <button data-view="credit-cards" class="mobile-nav-btn p-2 rounded-full" title="Faturas"><span class="material-symbols-outlined">credit_card</span></button>
+        <button data-view="investments" class="mobile-nav-btn p-2 rounded-full" title="Investimentos"><span class="material-symbols-outlined">trending_up</span></button>
+    </nav>
 </body>
 </html>

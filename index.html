@@ -135,6 +135,17 @@
 
         .hidden { display: none !important; }
 
+        /* Infrequent controls (import/export) are hidden by default and shown on hover of the monthly report */
+        .infrequent-controls {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease;
+        }
+        .infrequent-controls.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         @keyframes slideInUp {
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -330,12 +341,14 @@
             </h1>
             <div class="flex items-center gap-4">
                  <div class="flex items-center gap-1">
-                    <button id="import-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Importar dados (JSON)">
-                        <span class="material-symbols-outlined text-gray-600">upload</span>
-                    </button>
-                    <button id="export-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Exportar dados (JSON)">
-                        <span class="material-symbols-outlined text-gray-600">download</span>
-                    </button>
+                    <div id="infrequent-controls" class="infrequent-controls flex items-center gap-1">
+                        <button id="import-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Importar dados (JSON)">
+                            <span class="material-symbols-outlined text-gray-600">upload</span>
+                        </button>
+                        <button id="export-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Exportar dados (JSON)">
+                            <span class="material-symbols-outlined text-gray-600">download</span>
+                        </button>
+                    </div>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
                     <button id="monthly-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Relatório Mensal">
                         <span class="material-symbols-outlined text-gray-600">assessment</span>
@@ -764,6 +777,22 @@
     </dialog>
     
     <script>
+    // Global toast helper para feedback visual (disponível antes do init)
+    function showToast(message, color = 'bg-blue-600') {
+        const toast = document.getElementById('toast');
+        if (!toast) {
+            // Fallback para logs quando o elemento toast não existe
+            console.log('[toast]', message);
+            return;
+        }
+        toast.textContent = message;
+        toast.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white px-4 py-2 rounded shadow-lg z-50 ${color}`;
+        toast.style.display = 'block';
+        toast.style.opacity = '1';
+        if (window.__toastTimeout) clearTimeout(window.__toastTimeout);
+        window.__toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 2500);
+    }
+
     // Função para importar dados do import.json para o Firebase
     async function importJsonToFirebase() {
         try {
@@ -914,14 +943,7 @@ const firebaseConfig = {
     };
     
     const App = (function() {
-    // Toast helper para feedback visual
-    function showToast(message, color = 'bg-blue-600') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white px-4 py-2 rounded shadow-lg z-50 ${color}`;
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 2500);
-    }
+    // showToast is defined globally above so it can be used before App.init()
         // STATE & UI (Private variables)
         const state = {
             currentDate: new Date(),
@@ -1050,6 +1072,16 @@ const firebaseConfig = {
             ui.paymentMethod.addEventListener('change', (e) => toggleInstallmentSection(e.target.value));
 
             ui.monthlyReportBtn.addEventListener('click', () => openMonthlyReport());
+            // Show import/export when hovering the monthly report icon/area
+            const infrequent = document.getElementById('infrequent-controls');
+            if (infrequent && ui.monthlyReportBtn) {
+                let _hideTimer = null;
+                ui.monthlyReportBtn.addEventListener('mouseenter', () => { clearTimeout(_hideTimer); infrequent.classList.add('visible'); });
+                ui.monthlyReportBtn.addEventListener('mouseleave', () => { _hideTimer = setTimeout(() => infrequent.classList.remove('visible'), 250); });
+                // Also keep visible when hovering the controls themselves
+                infrequent.addEventListener('mouseenter', () => { clearTimeout(_hideTimer); infrequent.classList.add('visible'); });
+                infrequent.addEventListener('mouseleave', () => { _hideTimer = setTimeout(() => infrequent.classList.remove('visible'), 250); });
+            }
             ui.annualReportBtn.addEventListener('click', () => openAnnualReport());
             ui.closeMonthlyReportBtn.addEventListener('click', () => closeModal('monthly-report-modal'));
             ui.closeAnnualReportBtn.addEventListener('click', () => closeModal('annual-report-modal'));

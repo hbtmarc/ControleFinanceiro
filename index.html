@@ -786,6 +786,7 @@ const firebaseConfig = {
         loadData: async function() {
             const initialData = this.getInitialData();
             try {
+                console.log('storage.loadData: fetching data from Firebase...');
                 const snapshot = await database.ref(this.DB_KEY).get();
                 if (!snapshot.exists()) {
                     console.log("Firebase está vazio. Inicializando com dados padrão e salvando no banco.");
@@ -2335,9 +2336,40 @@ const firebaseConfig = {
             const financingCurrent = parseInt(document.getElementById('financing-current').value, 10);
 
             try {
+                const currentMonthData = getCurrentMonthData();
+                // If editing an existing expense and user converted it to installments/financing, handle conversion
+                if (id && type === 'expenses') {
+                    const original = currentMonthData.expenses.find(t => t.id === id);
+                    if (original) {
+                        // Convert single expense -> installments
+                        if (isInstallment && installmentsCount > 1 && !original.installmentId && !original.financingId) {
+                            // remove original single transaction
+                            const idx = currentMonthData.expenses.findIndex(t => t.id === id);
+                            if (idx > -1) currentMonthData.expenses.splice(idx, 1);
+                            await createInstallments(transactionData, installmentsCount);
+                            // done
+                            closeModal('transaction-modal');
+                            render();
+                            return;
+                        }
+                        // Convert single expense -> financing
+                        if (isFinancing && financingTotal > 1 && financingCurrent >= 1 && !original.financingId && !original.installmentId) {
+                            const idx = currentMonthData.expenses.findIndex(t => t.id === id);
+                            if (idx > -1) currentMonthData.expenses.splice(idx, 1);
+                            await createFinancing(transactionData, financingTotal, financingCurrent);
+                            closeModal('transaction-modal');
+                            render();
+                            return;
+                        }
+                    }
+                }
+
+                // Default flows for creating new or simple edits
                 if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
+                    console.log('[handleFormSubmit] creating installments (new)', installmentsCount, transactionData);
                     await createInstallments(transactionData, installmentsCount);
                 } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
+                    console.log('[handleFormSubmit] creating financing (new)', financingTotal, financingCurrent, transactionData);
                     await createFinancing(transactionData, financingTotal, financingCurrent);
                 } else {
                     await saveTransaction(transactionData, type, id);

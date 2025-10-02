@@ -1172,6 +1172,7 @@ const firebaseConfig = {
                 const dueDate = new Date(state.currentDate);
                 if (card.dueDay < 15) dueDate.setMonth(dueDate.getMonth() + 1);
                 dueDate.setDate(card.dueDay);
+                // Render each card and convert any installment/financing totals into clickable spans (visually identical)
                 container.innerHTML += `
                     <div class="card p-6 rounded-2xl shadow-sm flex flex-col">
                         <div class="flex-grow">
@@ -1181,13 +1182,24 @@ const firebaseConfig = {
                             </div>
                             <p class="text-3xl font-bold text-blue-600 mb-4">${formatCurrency(totalAmount)}</p>
                             <div class="space-y-2 max-h-48 overflow-y-auto pr-2">
-                                ${cardExpenses.map(exp => `<div class="flex justify-between text-sm items-center"><span class="truncate pr-2">${exp.description} ${exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/${exp.totalInstallments})</span>` : ''}</span><span class="font-medium flex-shrink-0">${formatCurrency(exp.amount)}</span></div>`).join('') || '<p class="text-sm text-gray-500">Nenhum gasto este mês.</p>'}
+                                ${cardExpenses.map(exp => {
+                                    const inst = exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/<span class="last-installment-btn" data-installment-id="${exp.installmentId}" data-total="${exp.totalInstallments}">${exp.totalInstallments}</span>)</span>` : '';
+                                    const fin = (exp.financingId && exp.totalFinancing) ? `<span class="text-xs text-gray-500">(${exp.currentFinancing}/<span class="last-installment-btn" data-financing-id="${exp.financingId}" data-total="${exp.totalFinancing}">${exp.totalFinancing}</span>)</span>` : '';
+                                    return `<div class="flex justify-between text-sm items-center"><span class="truncate pr-2">${exp.description} ${inst} ${fin}</span><span class="font-medium flex-shrink-0">${formatCurrency(exp.amount)}</span></div>`;
+                                }).join('') || '<p class="text-sm text-gray-500">Nenhum gasto este mês.</p>'}
                             </div>
                         </div>
                         <button data-card-name="${card.name}" class="pay-invoice-btn mt-6 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">Pagar Fatura</button>
                     </div>`;
             });
             container.querySelectorAll('.pay-invoice-btn').forEach(btn => btn.addEventListener('click', (e) => payCardInvoice(e.target.dataset.cardName)));
+
+            // Attach handlers to last-installment spans inside card lists
+            container.querySelectorAll('.last-installment-btn').forEach(el => el.addEventListener('click', (ev) => {
+                const financingId = el.dataset.financingId || null;
+                const installmentId = el.dataset.installmentId || null;
+                goToLastInstallment({ financingId, installmentId });
+            }));
         }
 
         function renderInvestmentsView() {
@@ -1331,9 +1343,14 @@ const firebaseConfig = {
             const row = ui.expensesTableBody.insertRow();
             row.dataset.id = expense.id;
             row.className = `border-b border-gray-200 hover:bg-gray-50 animate-fade-in ${expense.isPaid ? 'opacity-60' : ''}`;
+            // Build the installments/financing display with a clickable total that jumps to last installment
+            // Use a plain span for the clickable area so it inherits all typography and spacing
+            const installmentHtml = expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/<span class="last-installment-btn" data-installment-id="${expense.installmentId}" data-total="${expense.totalInstallments}">${expense.totalInstallments}</span>)</span>` : '';
+            const financingHtml = (expense.financingId && expense.totalFinancing) ? `<span class="text-xs text-gray-500">(${expense.currentFinancing}/<span class="last-installment-btn" data-financing-id="${expense.financingId}" data-total="${expense.totalFinancing}">${expense.totalFinancing}</span>)</span>` : '';
+
             row.innerHTML = `
                 <td class="py-3 px-3 checkbox-cell" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
-                <td class="py-3 px-3" data-label="Descrição">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/${expense.totalInstallments})</span>` : ''} ${(expense.financingId && expense.totalFinancing) ? `<span class=\"text-xs text-gray-500\">(${expense.currentFinancing}/${expense.totalFinancing})</span>` : ''}</td>
+                <td class="py-3 px-3" data-label="Descrição">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${installmentHtml} ${financingHtml}</td>
 
                 <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>
@@ -1342,6 +1359,16 @@ const firebaseConfig = {
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>`;
+
+            // Attach click handler to jump to last installment when present (span will be visually identical)
+            const lastBtn = row.querySelector('.last-installment-btn');
+            if (lastBtn) {
+                lastBtn.addEventListener('click', (ev) => {
+                    const financingId = lastBtn.dataset.financingId || null;
+                    const installmentId = lastBtn.dataset.installmentId || null;
+                    goToLastInstallment({ financingId, installmentId });
+                });
+            }
         }
 
         function renderSavingRow(saving) {
@@ -1643,6 +1670,52 @@ const firebaseConfig = {
             state.currentDate.setMonth(state.currentDate.getMonth() + direction);
             render();
                }
+
+        // Jump to the month of the last installment of a financing/installment group
+        function goToLastInstallment({ financingId = null, installmentId = null } = {}) {
+            try {
+                // Collect all matching installments and find the one with the latest date
+                let last = null; // { year, month, id }
+                // Iterate over state data to find the last installment
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const monthData = state.appData.data[year][month];
+                        const expenses = monthData.expenses || [];
+                        expenses.forEach(exp => {
+                            if (financingId && exp.financingId === financingId) {
+                                const candidate = { year: Number(year), month: Number(month) };
+                                if (!last || candidate.year > last.year || (candidate.year === last.year && candidate.month > last.month)) {
+                                    last = { year: candidate.year, month: candidate.month, id: exp.id };
+                                }
+                            } else if (installmentId && exp.installmentId === installmentId) {
+                                const candidate = { year: Number(year), month: Number(month) };
+                                if (!last || candidate.year > last.year || (candidate.year === last.year && candidate.month > last.month)) {
+                                    last = { year: candidate.year, month: candidate.month, id: exp.id };
+                                }
+                            }
+                        });
+                    });
+                });
+
+                if (!last) return; // nothing found
+
+                // Navigate to that month
+                const target = new Date(last.year, last.month - 1, 1);
+                goToDate(target);
+                // After render, highlight the row briefly
+                requestAnimationFrame(() => {
+                    const row = ui.expensesTableBody.querySelector(`tr[data-id="${last.id}"]`);
+                    if (row) {
+                        row.classList.add('ring-2', 'ring-blue-300');
+                        setTimeout(() => row.classList.remove('ring-2', 'ring-blue-300'), 2000);
+                        // Scroll the page to top so the month header is visible
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+            } catch (e) {
+                console.error('goToLastInstallment error', e);
+            }
+        }
 
         function getCurrentMonthData(date = state.currentDate) {
             const year = date.getFullYear();

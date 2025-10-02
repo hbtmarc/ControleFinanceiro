@@ -99,7 +99,16 @@
         }
 
         dialog, .report-modal {
-            max-height: 90vh;
+            /* Slightly larger max-height to allow more content without inner scroll */
+            max-height: 95vh;
+        }
+
+        /* Class applied to expand the transaction modal vertically when needed (e.g., salary details) */
+        .modal-expanded {
+            /* Allow modal to grow with content but cap to avoid overflowing the viewport */
+            max-height: 90vh !important;
+            overflow: auto;
+            transition: max-height 220ms ease;
         }
         
         dialog::backdrop {
@@ -189,6 +198,21 @@
              background-color: var(--accent-blue);
              color: white;
              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Smooth transitions for modal type toggles and content sections */
+        .modal-type-toggle {
+            transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+        }
+        .section-fade {
+            transition: opacity 220ms ease, transform 220ms ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .section-hidden-smooth {
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 180ms ease, transform 180ms ease;
         }
 
         .sortable-header {
@@ -592,7 +616,10 @@
 
                         <!-- Tabela de Entradas -->
                         <div class="card p-6 rounded-xl">
-                            <h2 class="text-xl font-semibold mb-4">Entradas</h2>
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-xl font-semibold">Entradas</h2>
+                                <div id="vr-badge" class="text-sm text-gray-600"></div>
+                            </div>
                              <div class="overflow-x-auto">
                                 <table class="w-full text-left responsive-table">
                                     <thead><tr class="border-b border-gray-200">
@@ -754,10 +781,11 @@
     </div>
 
     <!-- Modal de Transação -->
-    <dialog id="transaction-modal" class="p-8 rounded-2xl shadow-2xl card w-full max-w-lg">
-        <h2 id="modal-title" class="text-2xl font-bold mb-6">Nova Transação</h2>
-        <form id="transaction-form" class="space-y-4">
+    <dialog id="transaction-modal" class="p-3 rounded-2xl shadow-2xl card w-full max-w-2xl">
+        <h2 id="modal-title" class="text-2xl font-bold mb-3">Nova Transação</h2>
+        <form id="transaction-form" class="space-y-2 text-sm h-full">
             <input type="hidden" id="transaction-id">
+            <div id="transaction-error" role="alert" class="hidden text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">&nbsp;</div>
             <div class="flex items-center justify-center p-1 bg-gray-200 rounded-lg mb-6">
                 <button type="button" data-type="expenses" class="modal-type-toggle w-1/3 py-2 text-center rounded-md font-semibold transition-colors">Despesa</button>
                 <button type="button" data-type="incomes" class="modal-type-toggle w-1/3 py-2 text-center rounded-md font-semibold transition-colors">Entrada</button>
@@ -769,6 +797,8 @@
                 <input type="text" id="description" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" list="description-suggestions">
                 <datalist id="description-suggestions"></datalist>
             </div>
+
+            <!-- salary-section moved into advanced options for better layout -->
             <div>
                 <label for="amount" class="block text-sm font-medium text-gray-700">Valor (R$)</label>
                 <input type="number" id="amount" step="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -808,6 +838,67 @@
                     <input type="checkbox" id="is-recurring" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="ml-2 text-sm text-gray-700">Tornar esta transação recorrente? (mensal)</span>
                 </label>
+                <!-- Campos específicos para Entrada: Salário (posicionados abaixo da opção recorrente) -->
+                <div id="salary-section" class="hidden mt-2 space-y-1">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="is-salary" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">É salário?</span>
+                    </label>
+                    <div id="salary-fields" class="hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1">
+                            <div>
+                                <label class="block text-sm text-gray-700">Salário Base (R$)</label>
+                                <input type="number" id="salary-base" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-700">Periculosidade (%)</label>
+                                <input type="number" id="salary-periculosidade" step="0.1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-700">Outros Proventos (R$)</label>
+                                <input type="number" id="salary-outros-proventos" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-700">Dependentes</label>
+                                <input type="number" id="salary-dependentes" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-700">Desjejum (R$/dia)</label>
+                                <input type="number" id="salary-desjejum-dia" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-700">Transporte (R$/dia)</label>
+                                <input type="number" id="salary-transporte-dia" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                            </div>
+                        </div>
+
+                        <details class="mt-2">
+                            <summary class="cursor-pointer text-sm text-gray-700">Mais opções do salário</summary>
+                            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1">
+                                <div>
+                                    <label class="block text-sm text-gray-700">Dias Trabalhados</label>
+                                    <input type="number" id="salary-dias-trabalhados" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-700">HE Sáb (h)</label>
+                                    <input type="number" id="salary-h-extra-sab" step="0.1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-700">HE Dom (h)</label>
+                                    <input type="number" id="salary-h-extra-dom" step="0.1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-700">Jornada (h/mês)</label>
+                                    <input type="number" id="salary-jornada-horas" step="1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" value="220">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-700">Horas trabalhadas (h)</label>
+                                    <input type="number" id="salary-horas-trabalhadas" step="0.1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" placeholder="Ex: 176">
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
                 <div id="installments-section" class="hidden">
                      <label class="flex items-center cursor-pointer">
                         <input type="checkbox" id="is-installment" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
@@ -925,23 +1016,112 @@
             </div>
         </div>
     </dialog>
+
+    <!-- VR Ledger Modal -->
+    <dialog id="vr-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">Gerenciar VR</h2>
+        <form id="vr-entry-form" class="space-y-3">
+            <input type="hidden" id="vr-entry-id">
+            <div>
+                <label class="block text-sm text-gray-700">Descrição</label>
+                <input id="vr-entry-desc" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-700">Valor (R$)</label>
+                <input id="vr-entry-amount" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button id="vr-entry-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
+                <button id="vr-entry-save" type="submit" class="btn-primary px-3 py-1 rounded">Salvar</button>
+            </div>
+        </form>
+        <button id="close-vr-modal" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
+    </dialog>
     
     <script>
     // Global toast helper para feedback visual (disponível antes do init)
     function showToast(message, color = 'bg-blue-600') {
-        const toast = document.getElementById('toast');
+        let toast = document.getElementById('toast');
         if (!toast) {
-            // Fallback para logs quando o elemento toast não existe
             console.log('[toast]', message);
             return;
         }
         toast.textContent = message;
-        toast.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white px-4 py-2 rounded shadow-lg z-50 ${color}`;
+        toast.className = `${color} text-white px-4 py-2 rounded shadow-lg`;
+        // Choose parent: if a dialog is open, append the toast inside it so it's above the backdrop/blur
+        const openDialogs = Array.from(document.querySelectorAll('dialog[open]'));
+        const parent = openDialogs.length ? openDialogs[openDialogs.length - 1] : document.body;
+        try {
+            if (toast.parentNode !== parent) parent.appendChild(toast);
+        } catch (e) { document.body.appendChild(toast); }
+
+        // Position relative to parent: if inside dialog, use absolute positioning; otherwise fixed to viewport
+        if (parent && parent.tagName && parent.tagName.toLowerCase() === 'dialog') {
+            toast.style.position = 'absolute';
+            toast.style.bottom = '1rem';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            // Make sure it's above dialog content
+            toast.style.zIndex = '9999';
+        } else {
+            toast.style.position = 'fixed';
+            toast.style.bottom = '1rem';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            try { toast.style.zIndex = '130001'; } catch (e) {}
+        }
         toast.style.display = 'block';
         toast.style.opacity = '1';
+        toast.style.pointerEvents = 'auto';
         if (window.__toastTimeout) clearTimeout(window.__toastTimeout);
-        window.__toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        window.__toastTimeout = setTimeout(() => { try { toast.style.display = 'none'; } catch(e){} }, 2500);
     }
+
+    // Transaction modal inline error helpers
+    function setTransactionError(msg) {
+        try {
+            const el = document.getElementById('transaction-error');
+            if (!el) return;
+            el.textContent = msg || 'Erro';
+            el.classList.remove('hidden');
+        } catch (e) { console.error('setTransactionError', e); }
+    }
+    function clearTransactionError() {
+        try {
+            const el = document.getElementById('transaction-error');
+            if (!el) return;
+            el.textContent = '';
+            el.classList.add('hidden');
+        } catch (e) { console.error('clearTransactionError', e); }
+    }
+
+    // Loading overlay helpers (blocks UI during long operations like sanitization/save)
+    function ensureLoadingOverlay() {
+        if (document.getElementById('global-loading-overlay')) return;
+        const overlay = document.createElement('div');
+        overlay.id = 'global-loading-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.left = '0';
+        overlay.style.top = '0';
+        overlay.style.right = '0';
+        overlay.style.bottom = '0';
+        overlay.style.background = 'rgba(0,0,0,0.45)';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.zIndex = '120000';
+    overlay.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;"><div class="loader" style="width:56px;height:56px;border-radius:50%;border:6px solid rgba(255,255,255,0.15);border-top-color:white;animation: spin 1s linear infinite"></div><div style="color:white;font-weight:600">Salvando...</div></div>`;
+        document.body.appendChild(overlay);
+        // inject spin keyframes if not present
+        if (!document.getElementById('global-loading-style')) {
+            const s = document.createElement('style');
+            s.id = 'global-loading-style';
+            s.textContent = `@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;
+            document.head.appendChild(s);
+        }
+    }
+    function showLoading() { try { ensureLoadingOverlay(); const o = document.getElementById('global-loading-overlay'); if (o) o.style.display = 'flex'; } catch(e) { console.error('showLoading', e); } }
+    function hideLoading() { try { const o = document.getElementById('global-loading-overlay'); if (o) o.style.display = 'none'; } catch(e) { console.error('hideLoading', e); } }
 
     // Função para importar dados do import.json para o Firebase
     async function importJsonToFirebase() {
@@ -1050,17 +1230,20 @@ const firebaseConfig = {
         saveData: function(data) {
             try {
                 console.log("Sanitizing data before saving to Firebase...");
+                showLoading();
                 const safe = this.sanitizeForFirebase(data);
                 console.log("Salvando dados no Firebase (sanitizado)...", safe);
                 return database.ref(this.DB_KEY).set(safe)
-                    .then(() => { console.log("Dados salvos com sucesso no Firebase!"); return Promise.resolve(); })
+                    .then(() => { console.log("Dados salvos com sucesso no Firebase!"); hideLoading(); return Promise.resolve(); })
                     .catch(e => {
                         console.error("Erro ao salvar no Firebase:", e);
+                        hideLoading();
                         showToast('Erro ao salvar dados no Firebase: ' + (e && e.message ? e.message : e), 'bg-red-600');
                         return Promise.reject(e);
                     });
             } catch (err) {
                 console.error('Erro ao sanitizar dados antes de salvar:', err);
+                hideLoading();
                 showToast('Erro interno ao preparar dados para salvar.', 'bg-red-600');
                 return Promise.reject(err);
             }
@@ -1070,7 +1253,7 @@ const firebaseConfig = {
                 settings: {
                     goals: [],
                     spendingGoals: [{ type: 'Essenciais', goal: 0.50 }, { type: 'Não Essenciais', goal: 0.30 }, { type: 'Reserva', goal: 0.20 }],
-                    expenseCategories: ["Assinaturas", "Compras", "Contas", "Lazer", "Mercado", "Saúde", "Transporte", "Outros"],
+                    expenseCategories: ["Assinaturas", "Compras", "Contas", "Lazer", "Mercado", "Alimentação", "Saúde", "Transporte", "Outros"],
                     savingCategories: ["Reserva de Emergência", "Ações", "Fundos Imobiliários", "Criptomoedas", "Poupança", "Outros"],
                     paymentMethods: [
                         { name: "Nubank", type: "credit_card", closingDay: 3, dueDay: 10 }, 
@@ -1150,6 +1333,25 @@ const firebaseConfig = {
             console.log("Dados prontos para uso na aplicação:", state.appData);
             mapUI();
             bindEvents();
+            // Migrate any existing VR income items into a dedicated vrLedger per month
+            try {
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const md = state.appData.data[year][month];
+                        if (!md) return;
+                        if (!Array.isArray(md.incomes)) md.incomes = [];
+                        if (!Array.isArray(md.vrLedger)) md.vrLedger = [];
+                        if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
+                        const preserved = [];
+                        md.incomes.forEach(i => {
+                            if (i && i.source === 'benefit-vr') {
+                                md.vrLedger.push({ id: i.id || generateUUID(), amount: i.amount || 0, recurringId: i.recurringId || null, isRecurring: !!i.isRecurring, salaryMeta: i.salaryMeta || null });
+                            } else preserved.push(i);
+                        });
+                        md.incomes = preserved;
+                    });
+                });
+            } catch(e){ console.error('VR migration', e); }
             goToDate(new Date());
             console.log("App.init() finalizado.");
         }
@@ -1207,7 +1409,136 @@ const firebaseConfig = {
             ui.monthlyReportModal.addEventListener('click', (e) => { if(e.target === ui.monthlyReportModal) closeModal('monthly-report-modal'); });
             ui.annualReportModal.addEventListener('click', (e) => { if(e.target === ui.annualReportModal) closeModal('annual-report-modal'); });
             ui.transactionForm.addEventListener('submit', (e) => handleFormSubmit(e));
-            ui.modalTypeToggles.forEach(btn => btn.addEventListener('click', (e) => toggleTransactionType(e.target.dataset.type)));
+            // Mostrar/ocultar seção Salário quando em Entradas
+            const isSalaryCheckbox = document.getElementById('is-salary');
+            const salaryFields = document.getElementById('salary-fields');
+            // track if we auto-checked the salary box from the description field
+            let autoCheckedSalary = false;
+                if (isSalaryCheckbox) {
+                // two-way sync handlers
+                const amountInput = document.getElementById('amount');
+                const salaryBaseInput = document.getElementById('salary-base');
+                let amtToSalaryHandler = null;
+                let salaryToAmtHandler = null;
+                const attachSync = () => {
+                    try {
+                        if (amountInput && salaryBaseInput) {
+                            amtToSalaryHandler = function() { salaryBaseInput.value = this.value || ''; };
+                            salaryToAmtHandler = function() { amountInput.value = this.value || ''; };
+                            amountInput.addEventListener('input', amtToSalaryHandler);
+                            salaryBaseInput.addEventListener('input', salaryToAmtHandler);
+                        }
+                    } catch (e) { console.error('attachSync error', e); }
+                };
+                const detachSync = () => {
+                    try {
+                        if (amountInput && amtToSalaryHandler) amountInput.removeEventListener('input', amtToSalaryHandler);
+                        if (salaryBaseInput && salaryToAmtHandler) salaryBaseInput.removeEventListener('input', salaryToAmtHandler);
+                        amtToSalaryHandler = null; salaryToAmtHandler = null;
+                    } catch (e) { console.error('detachSync error', e); }
+                };
+
+                isSalaryCheckbox.addEventListener('change', function() {
+                    if (salaryFields) salaryFields.classList.toggle('hidden', !this.checked);
+                    // expand modal when salary details are visible
+                    try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.toggle('modal-expanded', this.checked); } catch(e){}
+                    if (this.checked) {
+                        // ensure both fields reflect same value (prefer amount if salary-base empty)
+                        try {
+                            const a = parseFloat((amountInput || { value: '' }).value) || 0;
+                            const s = parseFloat((salaryBaseInput || { value: '' }).value) || 0;
+                            if (s === 0 && a > 0) salaryBaseInput.value = amountInput.value;
+                            else if (a === 0 && s > 0) amountInput.value = salaryBaseInput.value;
+                        } catch(e){}
+                        attachSync();
+                        // If the user checked 'É salário?', also mark transaction as recurring by default
+                        const recurringCheckbox = document.getElementById('is-recurring');
+                        if (recurringCheckbox) recurringCheckbox.checked = true;
+                    } else {
+                        detachSync();
+                        // if user manually toggles off, clear auto flag
+                        autoCheckedSalary = false;
+                        try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.remove('modal-expanded'); } catch(e){}
+                    }
+                });
+            }
+
+            // Auto-open salary options when description contains 'salário' (with or without accent)
+            const descInput = document.getElementById('description');
+            if (descInput) {
+                const amountInput = document.getElementById('amount');
+                let amountSyncAttached = false;
+                let amountSyncHandler = null;
+                descInput.addEventListener('input', function() {
+                    try {
+                        const raw = (this.value || '');
+                        const v = raw.toLowerCase();
+                        // Normalize to remove diacritics for exact-match checks
+                        const normalized = raw.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+                        // contain 'salari' to be flexible with accent/case
+                        const hasSalaryWord = v.indexOf('salari') !== -1;
+                        const isExactSalary = /^\s*salario?s?\s*$/i.test(normalized);
+
+                        if (hasSalaryWord) {
+                            // Ensure modal is in 'incomes' type so salary-section is visible
+                            if (ui.transactionTypeInput && ui.transactionTypeInput.value !== 'incomes') {
+                                toggleTransactionType('incomes');
+                            }
+                            if (isSalaryCheckbox && !isSalaryCheckbox.checked) {
+                                isSalaryCheckbox.checked = true;
+                                if (salaryFields) salaryFields.classList.remove('hidden');
+                                autoCheckedSalary = true;
+                                // ensure recurring is checked too
+                                const recurringCheckbox = document.getElementById('is-recurring');
+                                if (recurringCheckbox) recurringCheckbox.checked = true;
+                                // attach two-way sync if not already attached
+                                try { isSalaryCheckbox.dispatchEvent(new Event('change')); } catch(e){}
+                            }
+                        } else {
+                            // If we auto-checked earlier and the keyword was removed, revert
+                            if (autoCheckedSalary && isSalaryCheckbox) {
+                                isSalaryCheckbox.checked = false;
+                                if (salaryFields) salaryFields.classList.add('hidden');
+                                autoCheckedSalary = false;
+                            }
+                        }
+
+                        // If description is exactly 'Salário' (allow accents), force both salary and recurring and sync amount -> salary-base
+                        const salaryBaseInput = document.getElementById('salary-base');
+                        if (isExactSalary) {
+                            const recurringCheckbox = document.getElementById('is-recurring');
+                            if (isSalaryCheckbox && !isSalaryCheckbox.checked) {
+                                isSalaryCheckbox.checked = true;
+                                if (salaryFields) salaryFields.classList.remove('hidden');
+                                autoCheckedSalary = true;
+                                try { isSalaryCheckbox.dispatchEvent(new Event('change')); } catch(e){}
+                            }
+                            if (recurringCheckbox) recurringCheckbox.checked = true;
+                        }
+                        if (isExactSalary && amountInput) {
+                            // copy current amount value immediately
+                            if (salaryBaseInput) salaryBaseInput.value = amountInput.value || '';
+                            // attach sync handler if not attached
+                            if (!amountSyncAttached) {
+                                amountSyncHandler = function() {
+                                    try { if (salaryBaseInput) salaryBaseInput.value = this.value || ''; } catch(e){}
+                                };
+                                amountInput.addEventListener('input', amountSyncHandler);
+                                amountSyncAttached = true;
+                            }
+                        } else {
+                            // remove sync if previously attached
+                            if (amountSyncAttached && amountInput && amountSyncHandler) {
+                                amountInput.removeEventListener('input', amountSyncHandler);
+                                amountSyncAttached = false;
+                                amountSyncHandler = null;
+                            }
+                        }
+
+                    } catch (e) { console.error('description auto-salary detect error', e); }
+                });
+            }
+            ui.modalTypeToggles.forEach(btn => btn.addEventListener('click', (e) => toggleTransactionType(e.currentTarget.dataset.type)));
             
             ui.incomeTableBody.addEventListener('click', (e) => handleTableClick(e, 'incomes'));
             ui.expensesTableBody.addEventListener('click', (e) => handleTableClick(e, 'expenses'));
@@ -1237,7 +1568,23 @@ const firebaseConfig = {
                 buttons.forEach(btn => btn.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
             }
             ui.isInstallment.addEventListener('change', () => ui.installmentsFields.classList.toggle('hidden', !ui.isInstallment.checked));
-            ui.paymentMethod.addEventListener('change', (e) => toggleInstallmentSection(e.target.value));
+            ui.paymentMethod.addEventListener('change', (e) => {
+                toggleInstallmentSection(e.target.value);
+                try {
+                    // If the user selects VR as payment, automatically ensure category = Alimentação and type = Essenciais
+                    if ((e.target.value || '') === 'VR') {
+                        const settings = state.appData.settings || {};
+                        const expenseCategories = settings.expenseCategories || [];
+                        const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                        const foundAlim = expenseCategories.find(c => normalize(c).includes('aliment'));
+                        if (foundAlim && ui.categoryExpense) {
+                            ui.categoryExpense.value = foundAlim;
+                        }
+                        if (ui.expenseType) ui.expenseType.value = 'Essenciais';
+                        showToast('Pagamento via VR: categoria e tipo ajustados para Alimentação / Essencial.', 'bg-yellow-600');
+                    }
+                } catch (err) { console.error('paymentMethod change VR enforcement error', err); }
+            });
 
             ui.monthlyReportBtn.addEventListener('click', () => openMonthlyReport());
             // Desktop quick links: mirror mobile/nav tabs behavior
@@ -1541,15 +1888,15 @@ const firebaseConfig = {
         function renderCreditCardView() {
             const container = ui.creditCardsContainer;
             container.innerHTML = '';
-            const creditCards = state.appData.settings.paymentMethods.filter(p => p.type === 'credit_card');
             const currentMonthData = getCurrentMonthData();
+            // Render real credit cards
+            const creditCards = (state.appData.settings.paymentMethods || []).filter(p => p.type === 'credit_card');
             creditCards.forEach(card => {
                 const cardExpenses = (currentMonthData.expenses || []).filter(e => e.payment === card.name);
                 const totalAmount = cardExpenses.reduce((sum, exp) => sum + exp.amount, 0);
                 const dueDate = new Date(state.currentDate);
                 if (card.dueDay < 15) dueDate.setMonth(dueDate.getMonth() + 1);
-                dueDate.setDate(card.dueDay);
-                // Render each card and convert any installment/financing totals into clickable spans (visually identical)
+                dueDate.setDate(card.dueDay || 1);
                 container.innerHTML += `
                     <div class="card p-6 rounded-2xl shadow-sm flex flex-col">
                         <div class="flex-grow">
@@ -1569,7 +1916,98 @@ const firebaseConfig = {
                         <button data-card-name="${card.name}" class="pay-invoice-btn mt-6 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">Pagar Fatura</button>
                     </div>`;
             });
+
+                // If there's VR ledger balance or VR activity, render VR as a card-like payment instrument
+            const vrAmount = getMonthVRBalance(currentMonthData);
+            // Show VR card if there's any VR ledger entry or usage for the month,
+            // even if the current available balance (credited - used) is zero.
+            const hasLedger = Array.isArray(currentMonthData.vrLedger) && currentMonthData.vrLedger.length > 0;
+            const hasUsage = Array.isArray(currentMonthData.vrUsage) && currentMonthData.vrUsage.length > 0;
+            if (vrAmount > 0 || hasLedger || hasUsage) {
+                // Derive totals: credited (sum of vrLedger) and usage (sum of vrUsage)
+                // Ensure numeric conversion for safety (some entries may be strings)
+                const creditedTotal = (currentMonthData.vrLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
+                // Compute usage from vrUsage ledger entries
+                let usageTotal = (currentMonthData.vrUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
+                // Also include any expenses in the same month that were paid via VR but not recorded in vrUsage (migration edge-cases)
+                try {
+                    const expensesVR = (currentMonthData.expenses || []).filter(e => (e.payment || '') === 'VR');
+                    const expensesVRSum = expensesVR.reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
+                    if (expensesVRSum > 0) usageTotal = Math.round((usageTotal + expensesVRSum) * 100) / 100;
+                } catch (e) { console.error('compute expenses vr usage', e); }
+                // If there are no vrUsage entries and no VR expenses but usageTotal is still > 0, this indicates a data/parsing anomaly.
+                if ((!Array.isArray(currentMonthData.vrUsage) || currentMonthData.vrUsage.length === 0) && (!Array.isArray(currentMonthData.expenses) || !(currentMonthData.expenses || []).some(ex => (ex.payment || '') === 'VR')) && usageTotal > 0) {
+                    console.warn('[VR WARNING] usageTotal > 0 but no vrUsage or VR expenses found. Forcing usageTotal=0. Details:', { usageTotal, vrLedger: currentMonthData.vrLedger, vrUsage: currentMonthData.vrUsage, expenses: currentMonthData.expenses });
+                    usageTotal = 0;
+                }
+                // Debug: log ledger and usage arrays when displayAmount is zero despite credited > 0
+                try { if (creditedTotal > 0 && Math.round((creditedTotal - usageTotal) * 100) / 100 === 0) console.debug('[VR DEBUG] creditedTotal, usageTotal, ledger, usage:', creditedTotal, usageTotal, currentMonthData.vrLedger, currentMonthData.vrUsage); } catch(e) {}
+                // displayAmount is credited minus expenses already charged to VR
+                const displayAmount = Math.max(0, Math.round((creditedTotal - usageTotal) * 100) / 100);
+                // Derive a friendly limit from latest vrLedger salaryMeta if available (kept for auxiliary info)
+                let vrLimit = vrAmount;
+                try {
+                    const latestLedger = (currentMonthData.vrLedger || []).slice().reverse().find(l => l && l.salaryMeta);
+                    if (latestLedger && latestLedger.salaryMeta && latestLedger.salaryMeta.valorDesjejumDia) {
+                        // compute monthly desjejum limit as desjejumDia * diasUteis
+                        const desjejumDia = Number(latestLedger.salaryMeta.valorDesjejumDia) || 0;
+                        const y = state.currentDate.getFullYear();
+                        const m = state.currentDate.getMonth() + 1;
+                        const dias = typeof diasUteisNoMes === 'function' ? diasUteisNoMes(y, m) : 22;
+                        vrLimit = Math.max(vrAmount, desjejumDia * dias);
+                    }
+                } catch(e) { console.error('derive vr limit', e); }
+
+                // compute last day of the PREVIOUS month relative to the currently displayed month
+                // e.g. if viewing Outubro, show last day of Setembro (30/09)
+                const displayYear = state.currentDate.getFullYear();
+                // Use JS Date trick: day 0 of the displayed month -> last day of previous month
+                const prevMonthLastDate = new Date(displayYear, state.currentDate.getMonth(), 0);
+                const lastDay = prevMonthLastDate.getDate();
+                const prevMonthNumber = prevMonthLastDate.getMonth() + 1; // 1-12
+                const lastDayStr = String(lastDay).padStart(2,'0') + '/' + String(prevMonthNumber).padStart(2,'0');
+
+                container.innerHTML += `
+                    <div class="card p-6 rounded-2xl shadow-sm flex flex-col bg-gradient-to-br from-green-50 to-white border border-green-200">
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">VR</h3>
+                                <!-- Badge shows: Créd. + Último dia do mês exibido (dd/MM) -->
+                                <span class="text-xs font-medium bg-green-100 text-green-800 px-2 py-1 rounded-full">Créd. ${lastDayStr}</span>
+                            </div>
+                            <p class="text-3xl font-bold text-green-600 mb-4">${formatCurrency(displayAmount)}</p>
+                            <p class="text-sm text-gray-500">Creditado: ${formatCurrency(creditedTotal)}</p>
+                            <p class="text-sm text-gray-500">Usado: ${formatCurrency(usageTotal)}</p>
+                            <div class="space-y-2 max-h-48 overflow-y-auto pr-2 mt-3">
+                                ${(currentMonthData.vrLedger || []).map(l => `<div class="flex justify-between text-sm items-center"><span class="truncate pr-2">${l.description || 'VR'}</span><span class="font-medium flex-shrink-0 vr-amount" data-vr-id="${l.id}">${formatCurrency(l.amount || 0)}</span></div>`).join('') || '<p class="text-sm text-gray-500">Nenhum lançamento de VR este mês.</p>'}
+                            </div>
+                            <div class="mt-3 text-sm text-gray-600">
+                                <h4 class="font-semibold text-sm text-gray-700">Usos de VR (lançamentos)</h4>
+                                ${(currentMonthData.vrUsage && currentMonthData.vrUsage.length > 0) ? `<div class="space-y-1 mt-2">${currentMonthData.vrUsage.map(u => `<div class="flex justify-between items-center text-sm"><span class="truncate pr-2">${u.description || 'Despesa VR'}</span><span class="font-medium">${formatCurrency(Number(u.amount)||0)}</span></div>`).join('')}</div>` : '<div class="text-sm text-gray-500 mt-1">Nenhum uso registrado.</div>'}
+                                <div class="mt-2">
+                                    <button id="clear-vr-usage-btn" class="text-xs text-red-600 hover:underline">Limpar usos de VR (depuração)</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Gerenciar VR button removed per UX: VR works as débito somente -->
+                    </div>`;
+            }
             container.querySelectorAll('.pay-invoice-btn').forEach(btn => btn.addEventListener('click', (e) => payCardInvoice(e.target.dataset.cardName)));
+            // Debug: clear VR usage button
+            try {
+                const clearBtn = container.querySelector('#clear-vr-usage-btn');
+                if (clearBtn) clearBtn.addEventListener('click', async () => {
+                    if (!confirm('Remover todos os registros de uso de VR neste mês? Esta ação será salva.')) return;
+                    const md = getCurrentMonthData();
+                    if (Array.isArray(md.vrUsage)) md.vrUsage = [];
+                    try { await storage.saveData(state.appData); showToast('Usos de VR removidos deste mês.', 'bg-green-600'); } catch(e){ console.error('clear vr usage save', e); showToast('Falha ao salvar remoção.', 'bg-red-600'); }
+                    render();
+                });
+            } catch(e) { console.error('attach clear vr usage btn', e); }
+            // VR inline-edit bindings on card amounts
+            try {
+                container.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId)));
+            } catch(e) { /* ignore if nothing to bind */ }
 
             // Attach handlers to last-installment spans inside card lists
             container.querySelectorAll('.last-installment-btn').forEach(el => el.addEventListener('click', (ev) => {
@@ -1652,6 +2090,213 @@ const firebaseConfig = {
             } catch(e){console.error('renderPortfolioCompositionChart', e)}
         }
 
+        /**
+         * Retorna o número de dias úteis (segunda a sexta) de um mês específico.
+         * year - ano (ex: 2025)
+         * month - mês 1-12
+         */
+        function diasUteisNoMes(year, month) {
+            // month 1-12
+            const m = month - 1;
+            const primeiro = new Date(year, m, 1);
+            const ultimo = new Date(year, m + 1, 0);
+            let diasUteis = 0;
+            for (let d = 1; d <= ultimo.getDate(); d++) {
+                const dt = new Date(year, m, d);
+                const dia = dt.getDay(); // 0 domingo, 6 sabado
+                if (dia !== 0 && dia !== 6) diasUteis++;
+            }
+            return diasUteis;
+        }
+
+        /**
+         * calcularSalarioLiquido(params)
+         * Calcula salário líquido e detalhamento conforme regras fornecidas (INSS/IRRF 2025).
+         * Parâmetro params (obj):
+         *  - salarioBase (number)
+         *  - percentualPericulosidade (number) - ex: 30
+         *  - outrosProventosTributaveis (number) - default 0
+         *  - numeroDependentes (int) - default 0
+         *  - valorDesjejumDia (number) - default 0
+         *  - valorTransporteDia (number) - default 0
+         *  - diasTrabalhados (int) - default 22 (pode ser calculado por year/month)
+         *  - horasExtrasSabado (number horas) - default 0
+         *  - horasExtrasDomingo (number horas) - default 0
+         *  - jornadaMensalHoras (number) - default 220
+         *  - hourlyRate (number) - valor por hora, opcional
+         *  - hoursWorked (number) - horas trabalhadas no mês, opcional
+         *  - year, month (opcionais) para calcular dias úteis automaticamente
+         * Retorna objeto JSON com resumo e detalhamento.
+         */
+        function calcularSalarioLiquido(params = {}) {
+            const p = Object.assign({
+                salarioBase: 0,
+                percentualPericulosidade: 0,
+                outrosProventosTributaveis: 0,
+                numeroDependentes: 0,
+                valorDesjejumDia: 0,
+                valorTransporteDia: 0,
+                diasTrabalhados: undefined,
+                horasExtrasSabado: 0,
+                horasExtrasDomingo: 0,
+                jornadaMensalHoras: 220,
+                // hourlyRate/hoursWorked removed - valorHora will be derived from salarioBase / jornadaMensalHoras or salary-horas-trabalhadas input
+                year: undefined,
+                month: undefined
+            }, params);
+
+            // If hoursWorked provided explicitly, use it; otherwise default to jornadaMensalHoras
+            if (!p.hoursTrabalhadas || p.hoursTrabalhadas === 0) {
+                // allow external callers to pass hoursTrabalhadas into params; default to jornadaMensalHoras
+                p.hoursTrabalhadas = p.jornadaMensalHoras;
+            }
+            // Dias trabalhados padrão: dias úteis do mês (quando year/month fornecidos).
+            // Se o usuário forneceu 'hoursTrabalhadas', derivamos dias trabalhados a partir da jornada mensal e dias úteis.
+            const baseDiasUteis = (p.year && p.month) ? diasUteisNoMes(p.year, p.month) : 22;
+            if ((typeof p.diasTrabalhados === 'undefined' || p.diasTrabalhados === null) && p.hoursTrabalhadas && p.hoursTrabalhadas > 0) {
+                // hora por dia = jornadaMensalHoras / baseDiasUteis
+                const horasPorDia = p.jornadaMensalHoras > 0 ? (p.jornadaMensalHoras / baseDiasUteis) : 8;
+                p.diasTrabalhados = Math.round(p.hoursTrabalhadas / horasPorDia);
+            }
+            if ((typeof p.diasTrabalhados === 'undefined' || p.diasTrabalhados === null) && p.year && p.month) {
+                p.diasTrabalhados = baseDiasUteis;
+            }
+            // Fallback padrão
+            if (typeof p.diasTrabalhados === 'undefined' || p.diasTrabalhados === null) p.diasTrabalhados = 22;
+
+            // Constantes 2025
+            const INSS_BRACKETS = [
+                { upTo: 1518.00, rate: 0.075 },
+                { upTo: 2793.88, rate: 0.09 },
+                { upTo: 4190.83, rate: 0.12 },
+                { upTo: 8157.41, rate: 0.14 }
+            ];
+            const IRRF_BRACKETS = [
+                { upTo: 2428.80, rate: 0.0, deduction: 0.00 },
+                { upTo: 2826.65, rate: 0.075, deduction: 182.16 },
+                { upTo: 3751.05, rate: 0.15, deduction: 394.16 },
+                { upTo: 4664.68, rate: 0.225, deduction: 675.49 },
+                { upTo: Infinity, rate: 0.275, deduction: 908.73 }
+            ];
+            const DEPENDENT_DEDUCTION = 189.59;
+
+            // 1) Salário bruto tributável
+            // If the employee worked fewer days/hours than the full month, prorate salárioBase and periculosidade
+            const fullMonthDias = (p.year && p.month) ? diasUteisNoMes(p.year, p.month) : 22;
+            const diasWorked = (typeof p.diasTrabalhados !== 'undefined' && p.diasTrabalhados !== null) ? p.diasTrabalhados : fullMonthDias;
+            const proporcao = (fullMonthDias > 0) ? Math.min(1, diasWorked / fullMonthDias) : 1;
+            // Also consider horas trabalhadas if provided: derive proportion from hours as well and use the smaller proportion
+            let proporcaoHoras = 1;
+            if (p.hoursTrabalhadas && p.hoursTrabalhadas > 0) {
+                proporcaoHoras = Math.min(1, p.hoursTrabalhadas / p.jornadaMensalHoras);
+            }
+            const finalProporcao = Math.min(proporcao, proporcaoHoras);
+
+            const salarioBaseProrata = p.salarioBase * finalProporcao;
+            const adicionalPericulosidade = (salarioBaseProrata * (p.percentualPericulosidade || 0)) / 100;
+            const brutoTributavelSemExtras = salarioBaseProrata + adicionalPericulosidade + (p.outrosProventosTributaveis || 0);
+
+            // 2) Horas extras: calcular valor hora com base na jornada mensal (valorHora = salarioBase / jornadaMensalHoras)
+            const valorHora = (p.jornadaMensalHoras > 0) ? (p.salarioBase / p.jornadaMensalHoras) : ((p.hoursTrabalhadas && p.hoursTrabalhadas > 0) ? (p.salarioBase / p.hoursTrabalhadas) : 0);
+            // Sábado 50% (ou seja, 1.5 * hora normal), Domingo 100% (2.0 * hora normal)
+            const valorHorasExtras = (p.horasExtrasSabado || 0) * (valorHora * 1.5) + (p.horasExtrasDomingo || 0) * (valorHora * 2.0);
+
+            const salarioBrutoTributavel = brutoTributavelSemExtras + valorHorasExtras;
+
+            // 3) Cálculo do INSS progressivo
+            let remaining = salarioBrutoTributavel;
+            let inssTotal = 0;
+            const inssPorFaixa = [];
+            let lower = 0;
+            for (let i = 0; i < INSS_BRACKETS.length; i++) {
+                const faixa = INSS_BRACKETS[i];
+                const upper = faixa.upTo;
+                const taxable = Math.max(0, Math.min(remaining, upper - lower));
+                const desconto = taxable * faixa.rate;
+                inssPorFaixa.push({ lower: lower + 0.01, upper, taxable: round(taxable), rate: faixa.rate, desconto: round(desconto) });
+                inssTotal += desconto;
+                remaining -= taxable;
+                lower = upper;
+                if (remaining <= 0) break;
+            }
+            inssTotal = round(inssTotal);
+
+            // 4) Base de cálculo IRRF
+            const totalDependenteDeduction = (p.numeroDependentes || 0) * DEPENDENT_DEDUCTION;
+            const baseIRRF = Math.max(0, salarioBrutoTributavel - inssTotal - totalDependenteDeduction);
+
+            // 5) Cálculo IRRF
+            let irrfRate = 0, irrfDeduction = 0, irrfValue = 0;
+            for (let i = 0; i < IRRF_BRACKETS.length; i++) {
+                const b = IRRF_BRACKETS[i];
+                if (baseIRRF <= b.upTo) {
+                    irrfRate = b.rate;
+                    irrfDeduction = b.deduction;
+                    break;
+                }
+            }
+            irrfValue = round(Math.max(0, baseIRRF * irrfRate - irrfDeduction));
+
+            // 6) Salário líquido
+            const totalDescontos = round(inssTotal + irrfValue);
+            const salarioLiquido = round(salarioBrutoTributavel - totalDescontos);
+
+            // 7) Benefícios não tributáveis (por dia trabalhado)
+            const beneficiosTotais = round(((p.valorDesjejumDia || 0) + (p.valorTransporteDia || 0)) * (p.diasTrabalhados || 0));
+
+            // 8) Remuneração total mensal
+            const remuneracaoTotal = round(salarioLiquido + beneficiosTotais);
+
+            // 9) FGTS (8% sobre o bruto tributável) - encargo do empregador
+            const fgts = round(0.08 * salarioBrutoTributavel);
+
+            // Monta retorno detalhado
+            const result = {
+                resumo: {
+                    salarioBase: formatNumber(p.salarioBase),
+                    adicionalPericulosidade: formatNumber(adicionalPericulosidade),
+                    valorHorasExtras: formatNumber(valorHorasExtras),
+                    salarioBrutoTributavel: formatNumber(salarioBrutoTributavel),
+                    totalDescontos: formatNumber(totalDescontos),
+                    salarioLiquido: formatNumber(salarioLiquido),
+                    beneficiosTotais: formatNumber(beneficiosTotais),
+                    remuneracaoTotal: formatNumber(remuneracaoTotal),
+                    fgts: formatNumber(fgts)
+                },
+                detalhe: {
+                    proventos: {
+                        salarioBase: formatNumber(p.salarioBase),
+                        adicionalPericulosidade: formatNumber(adicionalPericulosidade),
+                        outrosProventosTributaveis: formatNumber(p.outrosProventosTributaveis || 0),
+                        valorHorasExtras: formatNumber(valorHorasExtras)
+                    },
+                    descontos: {
+                        inssPorFaixa,
+                        inssTotal: formatNumber(inssTotal),
+                        baseIRRF: formatNumber(baseIRRF),
+                        irrfRate,
+                        irrfDeduction: formatNumber(irrfDeduction),
+                        irrfValue: formatNumber(irrfValue)
+                    },
+                    beneficios: {
+                        valorDesjejumDia: formatNumber(p.valorDesjejumDia || 0),
+                        valorTransporteDia: formatNumber(p.valorTransporteDia || 0),
+                        diasTrabalhados: p.diasTrabalhados,
+                        beneficiosTotais: formatNumber(beneficiosTotais)
+                    },
+                    encargos: {
+                        fgts: formatNumber(fgts)
+                    }
+                }
+            };
+
+            return result;
+
+            // helpers
+            function round(v) { return Math.round((v + Number.EPSILON) * 100) / 100; }
+            function formatNumber(v) { return (typeof v === 'number') ? v.toFixed(2) : Number(v || 0).toFixed(2); }
+        }
+
         function renderAllTables() {
             renderIncomeTable();
             renderExpenseTable();
@@ -1660,13 +2305,65 @@ const firebaseConfig = {
 
         function renderIncomeTable() {
             // Inicializa array de entradas para evitar erro
-            const incomes = Array.isArray(getCurrentMonthData().incomes) ? getCurrentMonthData().incomes : [];
+            const monthData = getCurrentMonthData();
+            if (!Array.isArray(monthData.incomes)) monthData.incomes = [];
+            if (!Array.isArray(monthData.vrLedger)) monthData.vrLedger = [];
+            if (!Array.isArray(monthData.vrUsage)) monthData.vrUsage = [];
+            const incomes = monthData.incomes;
             ui.incomeTableBody.innerHTML = '';
             if (incomes.length > 0) {
-                incomes.forEach(income => renderIncomeRow(income));
+                incomes.filter(i => i.source !== 'benefit-vr').forEach(income => renderIncomeRow(income));
             } else {
                 ui.incomeTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Nenhuma entrada registrada.</td></tr>';
             }
+                // (remove VR badge text — VR is shown as ledger rows only)
+            // Render VR ledger rows in Entradas (visual-only) and attach inline edit handlers
+            try {
+                const md = monthData;
+                const ledger = Array.isArray(md.vrLedger) ? md.vrLedger : [];
+                ledger.forEach(l => {
+                    const r = ui.incomeTableBody.insertRow();
+                    r.dataset.vrId = l.id || '';
+                    r.className = 'border-b border-gray-100 bg-green-50 text-green-700 animate-fade-in';
+                    // For VR ledger rows use description 'Benefício - VR' by default and do not show 'rec.' label
+                    const descText = l.description || 'Benefício - VR';
+                    const recurringIcon = l.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : '';
+                    r.innerHTML = `
+                        <td class="py-2 px-3">${descText} ${recurringIcon}</td>
+                        <td class="py-2 px-3 font-medium"><span class="vr-amount" data-vr-id="${l.id}">${formatCurrency(l.amount || 0)}</span></td>
+                        <td class="py-2 px-3 text-right actions-cell"><button class="edit-vr-btn p-1 text-gray-500 hover:text-blue-600" data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">edit</span></button><button class="delete-vr-btn p-1 text-gray-500 hover:text-red-600" data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">delete</span></button></td>`;
+                });
+                // attach inline edit handlers for amounts in the table
+                ui.incomeTableBody.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId)));
+                ui.incomeTableBody.querySelectorAll('.edit-vr-btn').forEach(b => b.addEventListener('click', (e) => { const id = e.currentTarget.dataset.vrId; openVREdit(id); }));
+                ui.incomeTableBody.querySelectorAll('.delete-vr-btn').forEach(b => b.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.dataset.vrId;
+                    if (!id) return;
+                    const md = getCurrentMonthData();
+                    const entry = (md.vrLedger || []).find(v => v.id === id) || null;
+                    if (!entry) return;
+                    if (entry.isRecurring && entry.recurringId) {
+                        const delAll = confirm('Este benefício é recorrente. Deseja excluir este e todas as recorrências futuras? (OK = Sim)');
+                        if (!delAll) return;
+                        await deleteVRLedgerEntry(id);
+                        render();
+                    } else {
+                        if (confirm('Excluir lançamento de VR?')) { await deleteVRLedgerEntry(id); render(); }
+                    }
+                }));
+            } catch(e) { console.error('renderIncomeTable vr rows', e); }
+        }
+
+        function getMonthVRBalance(monthData) {
+            if (!monthData) monthData = getCurrentMonthData();
+            const ledger = Array.isArray(monthData.vrLedger) ? monthData.vrLedger : [];
+            const usage = Array.isArray(monthData.vrUsage) ? monthData.vrUsage : [];
+            // Ensure numeric conversion (some entries may contain strings)
+            const sumLedger = ledger.reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
+            const sumUsage = usage.reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
+            // Round to 2 decimals
+            const bal = Math.round((sumLedger - sumUsage + Number.EPSILON) * 100) / 100;
+            return Math.max(0, bal);
         }
 
         function renderExpenseTable() {
@@ -2294,7 +2991,8 @@ const firebaseConfig = {
                 const modal = ui.transactionModal;
                 if (!modal) return;
                 // Reset and populate
-                if (ui.transactionForm) ui.transactionForm.reset();
+            if (ui.transactionForm) ui.transactionForm.reset();
+            clearTransactionError();
                 if (document.getElementById('transaction-id')) document.getElementById('transaction-id').value = '';
                 populateDropdowns();
                 toggleTransactionType(type || 'expenses');
@@ -2307,6 +3005,14 @@ const firebaseConfig = {
                 }
                 // Show modal
                 modal.showModal();
+                // Run description detector once to auto-open salary options if description already contains 'salário'
+                try {
+                    const descInput = document.getElementById('description');
+                    if (descInput) {
+                        const ev = new Event('input', { bubbles: true });
+                        descInput.dispatchEvent(ev);
+                    }
+                } catch (e) { console.error('openModal run description detector', e); }
             } catch (e) { console.error('openModal', e); }
         }
 
@@ -2314,6 +3020,8 @@ const firebaseConfig = {
             try {
                 const el = document.getElementById(modalId);
                 if (el && typeof el.close === 'function') el.close();
+                // clear any inline error when closing
+                clearTransactionError();
                 // remove dynamic buttons if present
                 const btn = document.getElementById('conclude-financing-btn'); if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
             } catch (e) { console.error('closeModal', e); }
@@ -2323,10 +3031,32 @@ const firebaseConfig = {
             try {
                 const settings = state.appData.settings || {};
                 const paymentMethods = settings.paymentMethods || [];
+                // If current month has VR balance registered, add a virtual payment method 'VR'
+                const md = getCurrentMonthData();
+                const vrAmount = md ? getMonthVRBalance(md) : 0;
+                // VR as a selectable paymentMethod should be an object with type 'vr'
+                const vrOptionObj = { name: 'VR', type: 'vr', available: vrAmount };
+                // Merge payments but avoid duplicate VR entries
+                const mergedPayments = (paymentMethods || []).slice();
+                if (!mergedPayments.find(p => (p && p.name) === 'VR')) mergedPayments.push(vrOptionObj);
                 const expenseCategories = settings.expenseCategories || [];
                 const savingCategories = settings.savingCategories || [];
                 const goals = settings.goals || [];
-                if (ui.paymentMethod) ui.paymentMethod.innerHTML = paymentMethods.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+                // Ensure Alimentação category exists in settings so it's available in the dropdown
+                const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                const hasAlim = expenseCategories.some(c => normalize(c).includes('aliment'));
+                if (!hasAlim) {
+                    try {
+                        // Add Alimentação to settings and persist once
+                        settings.expenseCategories = settings.expenseCategories || [];
+                        settings.expenseCategories.push('Alimentação');
+                        state.appData.settings = settings;
+                        // Save asynchronously but do not block UI
+                        storage.saveData(state.appData).then(() => { showToast('Categoria Alimentação adicionada às configurações.', 'bg-green-600'); }).catch(() => {});
+                    } catch (e) { console.error('failed to persist alimentação category', e); }
+                }
+                // Build payment method options from mergedPayments so VR is always present
+                if (ui.paymentMethod) ui.paymentMethod.innerHTML = mergedPayments.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
                 if (ui.categoryExpense) ui.categoryExpense.innerHTML = expenseCategories.map(c => `<option value="${c}">${c}</option>`).join('');
                 if (ui.categorySaving) {
                     let savingOptions = savingCategories.map(c => `<option value="${c}">${c}</option>`);
@@ -2341,8 +3071,29 @@ const firebaseConfig = {
                 if (!ui.transactionTypeInput) return;
                 ui.transactionTypeInput.value = type;
                 if (ui.modalTypeToggles) ui.modalTypeToggles.forEach(btn => btn.classList.toggle('tab-active', btn.dataset.type === type));
-                if (ui.expenseFields) ui.expenseFields.classList.toggle('hidden', type !== 'expenses');
-                if (ui.savingFields) ui.savingFields.classList.toggle('hidden', type !== 'savings');
+                if (ui.expenseFields) {
+                    ui.expenseFields.classList.toggle('hidden', type !== 'expenses');
+                    ui.expenseFields.classList.toggle('section-hidden-smooth', type !== 'expenses');
+                }
+                if (ui.savingFields) {
+                    ui.savingFields.classList.toggle('hidden', type !== 'savings');
+                    ui.savingFields.classList.toggle('section-hidden-smooth', type !== 'savings');
+                }
+                // Show salary section only for incomes
+                const salarySection = document.getElementById('salary-section');
+                const isSalaryCheckbox = document.getElementById('is-salary');
+                const salaryFields = document.getElementById('salary-fields');
+                if (salarySection) salarySection.classList.toggle('hidden', type !== 'incomes');
+                // When switching types away from incomes, reset salary checkbox and hide fields
+                if (type !== 'incomes' && isSalaryCheckbox) {
+                    isSalaryCheckbox.checked = false;
+                    if (salaryFields) salaryFields.classList.add('hidden');
+                    try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.remove('modal-expanded'); } catch(e){}
+                }
+                // If switching to incomes and the salary checkbox exists and is checked, expand modal
+                if (type === 'incomes' && isSalaryCheckbox && isSalaryCheckbox.checked) {
+                    try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.add('modal-expanded'); } catch(e){}
+                }
                 if (ui.advancedOptions) ui.advancedOptions.classList.remove('hidden');
                 if (ui.installmentsSection) ui.installmentsSection.classList.toggle('hidden', type !== 'expenses');
                 // Adjust financing visibility
@@ -2387,6 +3138,36 @@ const firebaseConfig = {
                     }
                 } else if (type === 'savings') {
                     if (document.getElementById('category-saving')) document.getElementById('category-saving').value = transaction.category || '';
+                } else if (type === 'incomes') {
+                    // If this income was created as part of a salary breakdown, it may carry salaryMeta
+                    if (transaction.source && transaction.salaryMeta) {
+                        // Open salary section and prefill fields
+                        const isSalaryCheckbox = document.getElementById('is-salary');
+                        const salaryFields = document.getElementById('salary-fields');
+                        try {
+                            if (isSalaryCheckbox) {
+                                isSalaryCheckbox.checked = true;
+                                if (salaryFields) salaryFields.classList.remove('hidden');
+                                // expand modal when editing salary-related income
+                                const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.add('modal-expanded');
+                            }
+                        } catch(e){}
+                        const meta = transaction.salaryMeta || {};
+                        // Only fill main salary inputs when source is 'salary' (salary líquido)
+                        if (transaction.source === 'salary') {
+                            document.getElementById('salary-base').value = meta.salarioBase || '';
+                            document.getElementById('salary-periculosidade').value = meta.percentualPericulosidade || '';
+                            document.getElementById('salary-outros-proventos').value = meta.outrosProventosTributaveis || '';
+                            document.getElementById('salary-dependentes').value = meta.numeroDependentes || '';
+                            document.getElementById('salary-desjejum-dia').value = meta.valorDesjejumDia || '';
+                            document.getElementById('salary-transporte-dia').value = meta.valorTransporteDia || '';
+                            document.getElementById('salary-dias-trabalhados').value = meta.diasTrabalhados || '';
+                            document.getElementById('salary-jornada-horas').value = meta.jornadaMensalHoras || '';
+                            document.getElementById('salary-horas-trabalhadas').value = meta.horasTrabalhadas || '';
+                        }
+                        // For benefit entries (VT/VR) we keep them editable per-month (they are not auto-recurring when edited)
+                        // but we still show salary meta so user can edit if needed.
+                    }
                 }
             } catch (e) { console.error('populateModal', e); }
         }
@@ -2842,6 +3623,56 @@ const firebaseConfig = {
                     const existingFId = document.getElementById('transaction-id').value;
                     if (existingFId) transactionData.financingId = currentFin ? (transactionData.financingId || null) : transactionData.financingId;
                 }
+                // If payment method is VR, ensure category is Alimentação (or equivalent), mark as paid and record usage in current month's vrUsage ledger
+                const pm = transactionData.payment || '';
+                if (pm === 'VR') {
+                    // Mark VR expenses as already paid (VR behaves like debit)
+                    transactionData.isPaid = true;
+                    const settings = state.appData.settings || {};
+                    const expenseCategories = settings.expenseCategories || [];
+                    // try to find an 'Alimentação' category (case-insensitive, accent-insensitive)
+                    const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    const foundAlim = expenseCategories.find(c => normalize(c).includes('aliment'));
+                    const currentCat = transactionData.category || '';
+                    if (!normalize(currentCat).includes('aliment')) {
+                        if (foundAlim) {
+                            // Auto-set to the found Alimentação category
+                            transactionData.category = foundAlim;
+                            showToast('Pagamento via VR: categoria ajustada para Alimentação.', 'bg-yellow-600');
+                        } else {
+                            // Warn user but allow save
+                            if (!confirm('Você selecionou VR como forma de pagamento, mas a categoria não parece ser Alimentação. Deseja prosseguir?')) {
+                                // Cancel submit by returning early
+                                return;
+                            }
+                        }
+                    }
+                    // Force type to Essenciais when paying with VR
+                    try { transactionData.type = 'Essenciais'; } catch(e) { /* ignore */ }
+                    // Validate VR balance: do not allow expense > available VR balance for current month
+                    const mdCheck = getCurrentMonthData();
+                    let availableVR = getMonthVRBalance(mdCheck);
+                    // If editing an existing VR expense, add back the original amount so the validation allows reducing/increasing within the original envelope
+                    if (id) {
+                        try {
+                            const existing = mdCheck.expenses && mdCheck.expenses.find(e => e.id === id);
+                            if (existing && existing.payment === 'VR') {
+                                availableVR = Math.round((availableVR + (Number(existing.amount) || 0)) * 100) / 100;
+                            }
+                        } catch (e) { console.error('adjust availableVR for edit', e); }
+                    }
+                    const spendAmount = Number(transactionData.amount) || 0;
+                    if (spendAmount > availableVR) {
+                        // Show inline error in modal so the user can immediately see the problem
+                        setTransactionError('Valor superior ao saldo disponível de VR para este mês. Verifique o saldo no card de VR.');
+                        return; // block save
+                    } else {
+                        clearTransactionError();
+                    }
+                    const md = getCurrentMonthData();
+                    if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
+                    md.vrUsage.push({ id: generateUUID(), amount: transactionData.amount || 0, description: transactionData.description || '', date: new Date().toISOString() });
+                }
             } else if (type === 'savings') {
                 Object.assign(transactionData, { category: document.getElementById('category-saving').value });
             }
@@ -2888,6 +3719,165 @@ const firebaseConfig = {
                 } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
                     console.log('[handleFormSubmit] creating financing (new)', financingTotal, financingCurrent, transactionData);
                     await createFinancing(transactionData, financingTotal, financingCurrent);
+                } else if (type === 'incomes' && document.getElementById('is-salary') && document.getElementById('is-salary').checked) {
+                // Special handling for salary: calculate breakdown and update/create entries
+                try {
+                        const year = state.currentDate.getFullYear();
+                        const month = state.currentDate.getMonth() + 1;
+                        // If salary-base not provided, prefer the main 'amount' field when description indicates salary
+                        const amountFieldVal = parseFloat((document.getElementById('amount') || { value: 0 }).value) || 0;
+                        const providedSalaryBase = parseFloat((document.getElementById('salary-base') || { value: 0 }).value) || 0;
+                        const salarioBaseToUse = providedSalaryBase > 0 ? providedSalaryBase : amountFieldVal;
+
+                        // read current recurring checkbox value at submit time
+                        const isRecurringNow = document.getElementById('is-recurring') ? document.getElementById('is-recurring').checked : !!transactionData.isRecurring;
+
+                        const params = {
+                            salarioBase: salarioBaseToUse,
+                            percentualPericulosidade: parseFloat((document.getElementById('salary-periculosidade') || { value: 0 }).value) || 0,
+                            outrosProventosTributaveis: parseFloat((document.getElementById('salary-outros-proventos') || { value: 0 }).value) || 0,
+                            numeroDependentes: parseInt((document.getElementById('salary-dependentes') || { value: 0 }).value, 10) || 0,
+                            valorDesjejumDia: parseFloat((document.getElementById('salary-desjejum-dia') || { value: 0 }).value) || 0,
+                            valorTransporteDia: parseFloat((document.getElementById('salary-transporte-dia') || { value: 0 }).value) || 0,
+                            diasTrabalhados: parseInt((document.getElementById('salary-dias-trabalhados') || { value: '' }).value, 10) || undefined,
+                            // hoursTrabalhadas is used to compute valorHora when provided; default handled inside calcularSalarioLiquido
+                            hoursTrabalhadas: parseFloat((document.getElementById('salary-horas-trabalhadas') || { value: 0 }).value) || 0,
+                            horasExtrasSabado: parseFloat((document.getElementById('salary-h-extra-sab') || { value: 0 }).value) || 0,
+                            horasExtrasDomingo: parseFloat((document.getElementById('salary-h-extra-dom') || { value: 0 }).value) || 0,
+                            jornadaMensalHoras: parseFloat((document.getElementById('salary-jornada-horas') || { value: 220 }).value) || 220,
+                            // hoursTrabalhadas will be set/used inside calcularSalarioLiquido when needed
+                            year, month
+                        };
+                        const calc = calcularSalarioLiquido(params);
+                        // parse formatted numbers back to numeric values
+                        const parseNum = (s) => { try { return typeof s === 'number' ? s : parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || parseFloat(s); } catch(e){ return parseFloat(s) || 0; } };
+                        // The function currently returns formatted strings in resumo; they use dot as decimal separator (toFixed)
+                        const salarioLiquido = parseFloat(calc.resumo.salarioLiquido) || 0;
+                        const beneficiosTotais = parseFloat(calc.resumo.beneficiosTotais) || 0;
+                        const valorHorasExtras = parseFloat(calc.resumo.valorHorasExtras) || 0;
+
+                        // create helper to build values for a given month
+                        const buildValuesFor = (pMonthly) => {
+                            const calcMonth = calcularSalarioLiquido(pMonthly);
+                            const salarioLiquidoM = parseFloat(calcMonth.resumo.salarioLiquido) || 0;
+                            const valorHorasExtrasM = parseFloat(calcMonth.resumo.valorHorasExtras) || 0;
+                            // Benefits refer to the following month
+                            const nextDate = new Date(pMonthly.year, pMonthly.month, 1);
+                            const nextY2 = nextDate.getFullYear();
+                            const nextM2 = nextDate.getMonth() + 1;
+                            const roundLocal = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
+                            // VT: transporte benefit uses business days of next month (payment month)
+                            const beneficiosVTM = roundLocal((pMonthly.valorTransporteDia || 0) * diasUteisNoMes(nextY2, nextM2));
+                            // VR: per your rule, use dias úteis do MES ATUAL + 4 (to include saturdays equivalent)
+                            const beneficiosVRM = roundLocal((pMonthly.valorDesjejumDia || 0) * (diasUteisNoMes(pMonthly.year, pMonthly.month) + 1));
+                            return { salarioLiquido: salarioLiquidoM, beneficiosVT: beneficiosVTM, beneficiosVR: beneficiosVRM, valorHorasExtras: valorHorasExtrasM };
+                        };
+
+                        // helper to remove previous salary-generated items in a month by recurringId or by salaryMeta
+                        const removeSalaryItemsFromMonth = (monthDataObj, opts) => {
+                            if (!monthDataObj) return;
+                            const oldMetaStr = opts.oldMetaStr || null;
+                            const rid = opts.recurringId || null;
+                            if (!Array.isArray(monthDataObj.incomes)) monthDataObj.incomes = [];
+                            // Remove incomes that belong to the recurringId when provided
+                            if (rid) {
+                                monthDataObj.incomes = monthDataObj.incomes.filter(i => i.recurringId !== rid);
+                                if (Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = monthDataObj.vrLedger.filter(l => l.recurringId !== rid);
+                            } else if (oldMetaStr) {
+                                monthDataObj.incomes = monthDataObj.incomes.filter(i => !(i.salaryMeta && JSON.stringify(i.salaryMeta) === oldMetaStr));
+                                if (Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = monthDataObj.vrLedger.filter(l => !(l.salaryMeta && JSON.stringify(l.salaryMeta) === oldMetaStr));
+                            }
+                        };
+
+                        // pushEntriesToMonth re-used (keeps salaryMeta on created items)
+                        const pushEntriesToMonth = (monthDataObj, rId, values, meta) => {
+                            if (!Array.isArray(monthDataObj.incomes)) monthDataObj.incomes = [];
+                            const toPush = [];
+                            if (values.salarioLiquido > 0) toPush.push({ id: generateUUID(), description: `Salário (Líquido)`, amount: values.salarioLiquido, isRecurring: !!transactionData.isRecurring, recurringId: rId, source: 'salary', salaryMeta: meta || null });
+                            if (values.beneficiosVT > 0) toPush.push({ id: generateUUID(), description: `Benefício - VT`, amount: values.beneficiosVT, isRecurring: !!rId, recurringId: rId || null, source: 'benefit-vt', salaryMeta: meta || null });
+                            if (values.beneficiosVR > 0) {
+                                if (!Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = [];
+                                monthDataObj.vrLedger.push({ id: generateUUID(), description: 'Benefício - VR', amount: values.beneficiosVR, recurringId: rId || null, isRecurring: !!rId, salaryMeta: meta || null });
+                            }
+                            if (values.valorHorasExtras > 0) toPush.push({ id: generateUUID(), description: `Horas Extras`, amount: values.valorHorasExtras, isRecurring: !!transactionData.isRecurring, recurringId: rId, source: 'overtime', salaryMeta: meta || null });
+                            toPush.forEach(en => monthDataObj.incomes.push(en));
+                        };
+
+                        // Now handle editing vs creating
+                        if (id) {
+                            // Editing an existing income: try to find the original salary income
+                            const original = currentMonthData.incomes.find(t => t.id === id);
+                            const oldMetaStr = original && original.salaryMeta ? JSON.stringify(original.salaryMeta) : null;
+                            const origRecurringId = original && original.recurringId ? original.recurringId : null;
+                            const applyToFuture = origRecurringId ? confirm('Essa é uma entrada recorrente. Deseja aplicar as alterações às recorrências futuras? (OK = Sim)') : false;
+
+                            if (origRecurringId && applyToFuture) {
+                                // Update this and future months for this recurringId
+                                Object.keys(state.appData.data).forEach(yearKey => {
+                                    Object.keys(state.appData.data[yearKey]).forEach(monthKey => {
+                                        const monthStart = new Date(Number(yearKey), Number(monthKey) - 1, 1);
+                                        const editedMonthStart = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1);
+                                        if (monthStart >= editedMonthStart) {
+                                            const md = state.appData.data[yearKey][monthKey];
+                                            // remove old recurring entries
+                                            removeSalaryItemsFromMonth(md, { recurringId: origRecurringId });
+                                            // compute pMonthly for this month
+                                            const pMonthly = Object.assign({}, params, { year: Number(yearKey), month: Number(monthKey) });
+                                            const vals = buildValuesFor(pMonthly);
+                                            const meta = { salarioBase: pMonthly.salarioBase, percentualPericulosidade: pMonthly.percentualPericulosidade, outrosProventosTributaveis: pMonthly.outrosProventosTributaveis, numeroDependentes: pMonthly.numeroDependentes, valorDesjejumDia: pMonthly.valorDesjejumDia, valorTransporteDia: pMonthly.valorTransporteDia, diasTrabalhados: pMonthly.diasTrabalhados, horasTrabalhadas: pMonthly.hoursTrabalhadas, jornadaMensalHoras: pMonthly.jornadaMensalHoras };
+                                            pushEntriesToMonth(md, origRecurringId, vals, meta);
+                                        }
+                                    });
+                                });
+                            } else {
+                                // Update only current month
+                                removeSalaryItemsFromMonth(currentMonthData, { oldMetaStr, recurringId: origRecurringId && !applyToFuture ? origRecurringId : null });
+                                const pMonthlyNow = Object.assign({}, params, { year: state.currentDate.getFullYear(), month: state.currentDate.getMonth() + 1 });
+                                const valsNow = buildValuesFor(pMonthlyNow);
+                                const metaNow = { salarioBase: pMonthlyNow.salarioBase, percentualPericulosidade: pMonthlyNow.percentualPericulosidade, outrosProventosTributaveis: pMonthlyNow.outrosProventosTributaveis, numeroDependentes: pMonthlyNow.numeroDependentes, valorDesjejumDia: pMonthlyNow.valorDesjejumDia, valorTransporteDia: pMonthlyNow.valorTransporteDia, diasTrabalhados: pMonthlyNow.diasTrabalhados, horasTrabalhadas: pMonthlyNow.hoursTrabalhadas, jornadaMensalHoras: pMonthlyNow.jornadaMensalHoras };
+                                // Keep original recurringId on this month if it existed
+                                const targetRid = origRecurringId || (transactionData.isRecurring ? generateUUID() : null);
+                                pushEntriesToMonth(currentMonthData, targetRid, valsNow, metaNow);
+                            }
+
+                            try { await storage.saveData(state.appData); showToast('Salário atualizado com sucesso!', 'bg-green-600'); } catch(e){ console.error('save edited salary', e); showToast('Falha ao salvar salário editado.', 'bg-red-600'); }
+                        } else {
+                            // Creating new salary entries (no id provided)
+                            const recurringId = transactionData.isRecurring ? generateUUID() : null;
+                            if (transactionData.isRecurring) {
+                                const rId = recurringId;
+                                for (let i = 0; i < 12; i++) {
+                                    const d = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth() + i, 1);
+                                    const y = d.getFullYear();
+                                    const m = d.getMonth() + 1;
+                                    const pMonthly = Object.assign({}, params, { year: y, month: m });
+                                    const vals = buildValuesFor(pMonthly);
+                                    const md = getCurrentMonthData(new Date(y, m - 1, 1));
+                                    const meta = { salarioBase: pMonthly.salarioBase, percentualPericulosidade: pMonthly.percentualPericulosidade, outrosProventosTributaveis: pMonthly.outrosProventosTributaveis, numeroDependentes: pMonthly.numeroDependentes, valorDesjejumDia: pMonthly.valorDesjejumDia, valorTransporteDia: pMonthly.valorTransporteDia, diasTrabalhados: pMonthly.diasTrabalhados, horasTrabalhadas: pMonthly.hoursTrabalhadas, jornadaMensalHoras: pMonthly.jornadaMensalHoras };
+                                    pushEntriesToMonth(md, rId, vals, meta);
+                                }
+                            } else {
+                                const metaNow = { salarioBase: params.salarioBase, percentualPericulosidade: params.percentualPericulosidade, outrosProventosTributaveis: params.outrosProventosTributaveis, numeroDependentes: params.numeroDependentes, valorDesjejumDia: params.valorDesjejumDia, valorTransporteDia: params.valorTransporteDia, diasTrabalhados: params.diasTrabalhados, horasTrabalhadas: params.hoursTrabalhadas, jornadaMensalHoras: params.jornadaMensalHoras };
+                                pushEntriesToMonth(currentMonthData, null, { salarioLiquido, beneficiosVT, beneficiosVR, valorHorasExtras }, metaNow);
+                            }
+                            try { await storage.saveData(state.appData); showToast('Salário salvo com sucesso!', 'bg-green-600'); } catch(e){ console.error('save new salary', e); showToast('Falha ao salvar salário no Firebase.', 'bg-red-600'); }
+                        }
+
+                        try {
+                            await storage.saveData(state.appData);
+                            showToast('Salário salvo com sucesso!', 'bg-green-600');
+                        } catch (err) {
+                            console.error('Erro ao salvar salário:', err);
+                            showToast('Falha ao salvar salário no Firebase.', 'bg-red-600');
+                        }
+
+                        // Optionally show a quick details toast with totals (short)
+                        // showToast(`Líquido: ${formatCurrency(salarioLiquido)} • Benefícios: ${formatCurrency(beneficiosTotais)} • Extras: ${formatCurrency(valorHorasExtras)}`, 'bg-blue-600');
+
+                    } catch (err) {
+                        console.error('Erro no processamento do salário:', err);
+                        showToast('Erro ao processar salário: ' + (err && err.message ? err.message : ''), 'bg-red-600');
+                    }
                 } else {
                     await saveTransaction(transactionData, type, id);
                 }
@@ -2900,6 +3890,153 @@ const firebaseConfig = {
             render();
         }
 
+            // --- VR inline-edit helpers ---
+            function startInlineVREdit(el, vrId) {
+                try {
+                    if (!el) return;
+                    const current = el.textContent || '';
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.step = '0.01';
+                    input.value = parseFloat(String(current).replace(/[R$\.\s]/g, '').replace(',', '.')) || 0;
+                    input.className = 'inline-vr-input border px-1 py-0 rounded text-right';
+                    input.style.minWidth = '80px';
+                    el.replaceWith(input);
+                    input.focus();
+                    input.select();
+                    const commit = async () => {
+                        const v = parseFloat(input.value) || 0;
+                        await commitInlineVREdit(vrId, v, input);
+                    };
+                    input.addEventListener('blur', commit);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') { input.blur(); }
+                        if (e.key === 'Escape') { render(); }
+                    });
+                } catch(e){ console.error('startInlineVREdit', e); }
+            }
+
+            async function commitInlineVREdit(vrId, newAmount, inputEl) {
+                try {
+                    const md = getCurrentMonthData();
+                    if (!Array.isArray(md.vrLedger)) md.vrLedger = [];
+                    const idx = md.vrLedger.findIndex(l => l.id === vrId);
+                    if (idx === -1) return render();
+                    const entry = md.vrLedger[idx];
+                    const oldAmount = entry.amount || 0;
+                    entry.amount = Math.round((Number(newAmount) + Number.EPSILON) * 100) / 100;
+                    try { await storage.saveData(state.appData); } catch(e){ console.error('commitInlineVREdit save', e); }
+                    // Inline edits should not forcibly apply to future recurrences; explicit action via modal will allow that.
+                    render();
+                } catch(e){ console.error('commitInlineVREdit', e); }
+            }
+
+            function applyToFutureVREntries(recurringId, newAmount) {
+                try {
+                    Object.keys(state.appData.data).forEach(year => {
+                        Object.keys(state.appData.data[year]).forEach(month => {
+                            const md = state.appData.data[year][month];
+                            if (!md || !Array.isArray(md.vrLedger)) return;
+                            md.vrLedger = md.vrLedger.map(l => {
+                                if (l.recurringId === recurringId) {
+                                    return { ...l, amount: newAmount };
+                                }
+                                return l;
+                            });
+                        });
+                    });
+                    try { storage.saveData(state.appData); } catch(e){ console.error('applyToFutureVREntries save', e); }
+                    showToast('Alterações aplicadas às recorrências futuras.', 'bg-green-600');
+                } catch(e){ console.error('applyToFutureVREntries', e); }
+            }
+
+            // Delete a VR ledger entry by id. If it's recurring, ask to remove future recurrences as well.
+            async function deleteVRLedgerEntry(id, yearContext, monthContext) {
+                try {
+                    if (!id) return;
+                    const y = yearContext || state.currentDate.getFullYear();
+                    const m = monthContext || (state.currentDate.getMonth() + 1);
+                    const monthData = getCurrentMonthData(new Date(y, m - 1, 1));
+                    if (!monthData || !Array.isArray(monthData.vrLedger)) return;
+                    const idx = monthData.vrLedger.findIndex(v => v.id === id);
+                    if (idx === -1) return;
+                    const entry = monthData.vrLedger[idx];
+                    let removeFuture = false;
+                    if (entry && entry.recurringId) {
+                        removeFuture = confirm('Este VR é recorrente. Deseja excluir também as recorrências futuras? (OK = Sim)');
+                    }
+                    // remove this entry from current month
+                    monthData.vrLedger.splice(idx, 1);
+                    // if removeFuture and entry.recurringId, sweep future months
+                    if (removeFuture && entry && entry.recurringId) {
+                        const rid = entry.recurringId;
+                        const currentMonthStart = new Date(y, m - 1, 1);
+                        Object.keys(state.appData.data).forEach(yearKey => {
+                            Object.keys(state.appData.data[yearKey]).forEach(monthKey => {
+                                const yearNum = Number(yearKey);
+                                const monthNum = Number(monthKey);
+                                const candidate = new Date(yearNum, monthNum - 1, 1);
+                                if (candidate >= currentMonthStart) {
+                                    const md = state.appData.data[yearKey][monthKey];
+                                    if (md && Array.isArray(md.vrLedger)) {
+                                        md.vrLedger = md.vrLedger.filter(v => v.recurringId !== rid);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                    try { await storage.saveData(state.appData); showToast('VR excluído.'); } catch (e) { console.error('delete vr save', e); showToast('Falha ao excluir VR.', 'bg-red-600'); }
+                } catch (e) { console.error('deleteVRLedgerEntry', e); }
+            }
+
+            // Open the VR modal to edit a ledger entry
+            function openVREdit(id) {
+                try {
+                    const modal = document.getElementById('vr-modal');
+                    if (!modal) return;
+                    const md = getCurrentMonthData();
+                    const entry = (md.vrLedger || []).find(v => v.id === id) || null;
+                    if (entry) {
+                        document.getElementById('vr-entry-id').value = entry.id || '';
+                        document.getElementById('vr-entry-desc').value = entry.description || 'Benefício - VR';
+                        document.getElementById('vr-entry-amount').value = entry.amount || 0;
+                    } else {
+                        document.getElementById('vr-entry-id').value = '';
+                        document.getElementById('vr-entry-desc').value = 'Benefício - VR';
+                        document.getElementById('vr-entry-amount').value = '';
+                    }
+                    try { modal.showModal(); } catch(e){ console.error('openVREdit showModal', e); }
+                } catch (e) { console.error('openVREdit', e); }
+            }
+
+            function closeVRModal() {
+                try { const m = document.getElementById('vr-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeVRModal', e); }
+            }
+
+            async function saveVRLedgerEntry() {
+                try {
+                    const id = document.getElementById('vr-entry-id').value;
+                    const desc = document.getElementById('vr-entry-desc').value || 'Benefício - VR';
+                    const amount = parseFloat(document.getElementById('vr-entry-amount').value) || 0;
+                    const md = getCurrentMonthData();
+                    if (!Array.isArray(md.vrLedger)) md.vrLedger = [];
+                    if (id) {
+                        const idx = md.vrLedger.findIndex(v => v.id === id);
+                        if (idx > -1) {
+                            // Update only this month. VR edits are independent by default.
+                            md.vrLedger[idx].description = desc;
+                            md.vrLedger[idx].amount = amount;
+                        }
+                    } else {
+                        md.vrLedger.push({ id: generateUUID(), description: desc, amount: amount, recurringId: null, isRecurring: false });
+                    }
+                    await storage.saveData(state.appData);
+                    closeVRModal();
+                    render();
+                    showToast('VR salvo.', 'bg-green-600');
+                } catch (e) { console.error('saveVRLedgerEntry', e); showToast('Falha ao salvar VR.', 'bg-red-600'); }
+            }
+
         // Export public API
         return { init };
     })(); // Close App IIFE and assign to App
@@ -2908,6 +4045,12 @@ const firebaseConfig = {
     document.addEventListener('DOMContentLoaded', () => {
         if (App && typeof App.init === 'function') {
             App.init();
+            // Attach VR modal buttons after init so elements are available
+            try {
+                const vrSaveBtn = document.getElementById('vr-entry-save'); if (vrSaveBtn) vrSaveBtn.addEventListener('click', (e) => { e.preventDefault(); saveVRLedgerEntry(); });
+                const vrCancel = document.getElementById('vr-entry-cancel'); if (vrCancel) vrCancel.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('vr-entry-id').value = ''; document.getElementById('vr-entry-desc').value = ''; document.getElementById('vr-entry-amount').value = ''; });
+                const vrClose = document.getElementById('close-vr-modal'); if (vrClose) vrClose.addEventListener('click', () => closeVRModal());
+            } catch(e) { console.error('attach vr modal buttons', e); }
         }
     });
     </script>

@@ -145,6 +145,23 @@
             opacity: 1;
             pointer-events: auto;
         }
+        /* Expenses filter popover base styles */
+        #expenses-filter-popover { z-index: 11000; border-radius: 0.75rem; padding: 0.6rem; min-width: 240px; background: #fff; box-shadow: 0 8px 24px rgba(13, 38, 59, 0.06); }
+        #expenses-filter-popover h3 { margin: 0 0 6px 0; font-weight: 600; }
+        #expenses-filter-popover label { color: var(--text-secondary); margin-bottom: 4px; display:block; }
+        #expenses-filter-popover .material-symbols-outlined { vertical-align: middle; }
+        #expenses-filter-popover.mobile-visible {
+            position: fixed !important;
+            left: 0.6rem !important;
+            right: 0.6rem !important;
+            bottom: 4.5rem !important;
+            max-height: 40vh !important;
+            overflow: auto !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.08) !important;
+            border-radius: 0.75rem !important;
+        }
         /* Toast fade transitions */
         #toast { transition: opacity 0.25s ease, transform 0.2s ease; }
         #toast[style*="display: none"] { opacity: 0; transform: translateY(6px); }
@@ -465,6 +482,43 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Expenses Filter Popover -->
+                        <div id="expenses-filter-popover" class="hidden absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-64">
+                            <h3 class="text-sm font-semibold mb-2">Filtrar Despesas</h3>
+                            <div class="space-y-2 text-sm">
+                                <label class="block">Pagamento</label>
+                                <select id="filter-payment-method" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                    <option value="">Todos</option>
+                                </select>
+                                    <label class="block">Essencialidade</label>
+                                    <select id="filter-spending-type" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                        <option value="">Todos</option>
+                                        <option value="essencial">Essencial</option>
+                                        <option value="nao-essencial">Não Essencial</option>
+                                        <option value="reserva">Reserva</option>
+                                    </select>
+                                <label class="block">Categoria</label>
+                                <select id="filter-category" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                    <option value="">Todas</option>
+                                </select>
+                                <label class="block">Tipo</label>
+                                <select id="filter-type" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                    <option value="">Todos</option>
+                                    <option value="expense">Despesa</option>
+                                    <option value="saving">Reserva</option>
+                                </select>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="filter-recurring" /> <label for="filter-recurring" class="text-sm">Recorrente</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="filter-installment" /> <label for="filter-installment" class="text-sm">Parcelada / Financiamento</label>
+                                </div>
+                                <div class="flex justify-end gap-2 pt-2">
+                                    <button id="filter-clear-btn" class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">Limpar</button>
+                                    <button id="filter-apply-btn" class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700">Aplicar</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button id="next-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_right</span>
@@ -540,7 +594,12 @@
                         <div class="card p-6 rounded-xl">
                              <div class="flex items-center justify-between mb-4">
                                 <h2 class="text-xl font-semibold">Despesas</h2>
-                                <input type="search" id="search-description" placeholder="Pesquisar despesas..." class="bg-gray-100 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/3 p-2.5">
+                                <div class="flex items-center gap-2">
+                                    <input type="search" id="search-description" placeholder="Pesquisar despesas..." class="bg-gray-100 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 p-2.5">
+                                    <button id="expenses-filter-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Filtrar despesas">
+                                        <span class="material-symbols-outlined text-gray-600">filter_list</span>
+                                    </button>
+                                </div>
                              </div>
                              <div class="overflow-x-auto">
                                 <table class="w-full text-left responsive-table">
@@ -1092,6 +1151,7 @@ const firebaseConfig = {
                 'advanced-options', 'expense-type', 'feedback-visual-container', 'feedback-message',
                 'import-data-btn', 'import-file-input', 'export-data-btn',
                 'monthly-report-btn', 'annual-report-btn', 'monthly-report-modal', 'annual-report-modal',
+                'expenses-filter-btn', 'expenses-filter-popover', 'filter-payment-method', 'filter-spending-type', 'filter-category', 'filter-type', 'filter-recurring', 'filter-installment', 'filter-apply-btn', 'filter-clear-btn',
                 'close-monthly-report-btn', 'close-annual-report-btn', 'add-goal-btn', 'goal-modal', 'close-goal-modal-btn',
                 'goal-form', 'goals-container', 'financing-section'
             ];
@@ -1190,6 +1250,117 @@ const firebaseConfig = {
                 state.filters.searchTerm = e.target.value;
                 renderExpenseTable();
             });
+
+            // Expenses filter popover handlers
+            if (ui.expensesFilterBtn && ui.expensesFilterPopover) {
+                ui.expensesFilterBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // populate selects from settings
+                    const payments = state.appData.settings.paymentMethods || [];
+                    ui.filterPaymentMethod.innerHTML = '<option value="">Todos</option>' + payments.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+                    const cats = state.appData.settings.expenseCategories || [];
+                    ui.filterCategory.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+                    // On small screens, show as mobile bottom-sheet using mobile-visible
+                    if (window.innerWidth <= 639) {
+                        ui.expensesFilterPopover.classList.remove('hidden');
+                        ui.expensesFilterPopover.classList.add('mobile-visible');
+                        ui.expensesFilterPopover.style.position = 'fixed';
+                        ui.expensesFilterPopover.style.left = '0.6rem';
+                        ui.expensesFilterPopover.style.right = '0.6rem';
+                        ui.expensesFilterPopover.style.bottom = '4.5rem';
+                        ui.expensesFilterPopover.style.top = 'auto';
+                        ui.expensesFilterPopover.style.maxHeight = '40vh';
+                        ui.expensesFilterPopover.style.overflow = 'auto';
+                    } else {
+                        // For desktop we temporarily move the popover to document.body so it won't cause scroll/layout shifts
+                        try {
+                            const rect = ui.expensesFilterBtn.getBoundingClientRect();
+                            // Save original parent/next so we can restore later
+                            if (!ui.expensesFilterPopover._origParent) {
+                                ui.expensesFilterPopover._origParent = ui.expensesFilterPopover.parentNode;
+                                ui.expensesFilterPopover._origNext = ui.expensesFilterPopover.nextSibling;
+                            }
+                            document.body.appendChild(ui.expensesFilterPopover);
+                            ui.expensesFilterPopover.style.position = 'absolute';
+                            ui.expensesFilterPopover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+                            let left = (rect.left + window.scrollX - 160);
+                            left = Math.max(8, Math.min(left, window.innerWidth - 280));
+                            ui.expensesFilterPopover.style.left = left + 'px';
+                            ui.expensesFilterPopover.style.right = '';
+                            ui.expensesFilterPopover.classList.remove('hidden');
+                            ui.expensesFilterPopover.classList.remove('mobile-visible');
+                            ui.expensesFilterPopover.style.maxHeight = '';
+                            ui.expensesFilterPopover.style.overflow = '';
+                        } catch(e){ console.error('filter popover open error', e) }
+                    }
+                });
+
+                // Close when clicking outside
+                document.addEventListener('click', (ev) => {
+                    if (!ui.expensesFilterPopover) return;
+                    if (ui.expensesFilterPopover.classList.contains('hidden')) return;
+                    if (ev.target === ui.expensesFilterBtn || ui.expensesFilterPopover.contains(ev.target)) return;
+                    // hide and restore if detached
+                    ui.expensesFilterPopover.classList.add('hidden');
+                    ui.expensesFilterPopover.classList.remove('mobile-visible');
+                    if (ui.expensesFilterPopover._origParent) {
+                        try {
+                            if (ui.expensesFilterPopover._origNext && ui.expensesFilterPopover._origNext.parentNode === ui.expensesFilterPopover._origParent) {
+                                ui.expensesFilterPopover._origParent.insertBefore(ui.expensesFilterPopover, ui.expensesFilterPopover._origNext);
+                            } else {
+                                ui.expensesFilterPopover._origParent.appendChild(ui.expensesFilterPopover);
+                            }
+                        } catch(e) { console.error('restore popover error', e); }
+                        ui.expensesFilterPopover._origParent = null; ui.expensesFilterPopover._origNext = null;
+                    }
+                });
+
+                ui.filterApplyBtn.addEventListener('click', () => {
+                    // Build filter object
+                    state.filters.expenseFilters = state.filters.expenseFilters || {};
+                    state.filters.expenseFilters.payment = ui.filterPaymentMethod.value || '';
+                    state.filters.expenseFilters.spendingType = ui.filterSpendingType.value || '';
+                    state.filters.expenseFilters.category = ui.filterCategory.value || '';
+                    state.filters.expenseFilters.type = ui.filterType.value || '';
+                    state.filters.expenseFilters.recurring = ui.filterRecurring.checked;
+                    state.filters.expenseFilters.installment = ui.filterInstallment.checked;
+                    ui.expensesFilterPopover.classList.add('hidden');
+                    ui.expensesFilterPopover.classList.remove('mobile-visible');
+                    if (ui.expensesFilterPopover._origParent) {
+                        try {
+                            if (ui.expensesFilterPopover._origNext && ui.expensesFilterPopover._origNext.parentNode === ui.expensesFilterPopover._origParent) {
+                                ui.expensesFilterPopover._origParent.insertBefore(ui.expensesFilterPopover, ui.expensesFilterPopover._origNext);
+                            } else {
+                                ui.expensesFilterPopover._origParent.appendChild(ui.expensesFilterPopover);
+                            }
+                        } catch(e){}
+                        ui.expensesFilterPopover._origParent = null; ui.expensesFilterPopover._origNext = null;
+                    }
+                    renderExpenseTable();
+                });
+
+                ui.filterClearBtn.addEventListener('click', () => {
+                    ui.filterPaymentMethod.value = '';
+                    ui.filterCategory.value = '';
+                    ui.filterType.value = '';
+                    ui.filterRecurring.checked = false;
+                    ui.filterInstallment.checked = false;
+                    state.filters.expenseFilters = {};
+                    ui.expensesFilterPopover.classList.add('hidden');
+                    ui.expensesFilterPopover.classList.remove('mobile-visible');
+                    if (ui.expensesFilterPopover._origParent) {
+                        try {
+                            if (ui.expensesFilterPopover._origNext && ui.expensesFilterPopover._origNext.parentNode === ui.expensesFilterPopover._origParent) {
+                                ui.expensesFilterPopover._origParent.insertBefore(ui.expensesFilterPopover, ui.expensesFilterPopover._origNext);
+                            } else {
+                                ui.expensesFilterPopover._origParent.appendChild(ui.expensesFilterPopover);
+                            }
+                        } catch(e){}
+                        ui.expensesFilterPopover._origParent = null; ui.expensesFilterPopover._origNext = null;
+                    }
+                    renderExpenseTable();
+                });
+            }
 
             // Automação: se selecionar uma meta como categoria da reserva, preenche descrição automaticamente
             if (ui.categorySaving) {
@@ -1467,6 +1638,41 @@ const firebaseConfig = {
             let expenses = Array.isArray(getCurrentMonthData().expenses) ? [...getCurrentMonthData().expenses] : [];
             if (state.filters.searchTerm) {
                 expenses = expenses.filter(exp => exp.description.toLowerCase().includes(state.filters.searchTerm.toLowerCase()));
+            }
+            // Apply advanced expense filters if present
+            const ef = state.filters.expenseFilters || {};
+            if (ef) {
+                if (ef.payment) expenses = expenses.filter(exp => (exp.payment || '') === ef.payment);
+                if (ef.category) expenses = expenses.filter(exp => (exp.category || '') === ef.category);
+                if (ef.type) {
+                    if (ef.type === 'expense') expenses = expenses.filter(exp => !exp.isSaving);
+                    if (ef.type === 'saving') expenses = expenses.filter(exp => exp.isSaving);
+                }
+                if (ef.recurring) expenses = expenses.filter(exp => !!exp.isRecurring);
+                if (ef.installment) expenses = expenses.filter(exp => !!exp.installmentId || !!exp.financingId || !!exp.totalInstallments || !!exp.totalFinancing);
+                // Spending type filter: essencial / nao-essencial / reserva
+                if (ef.spendingType) {
+                    const settings = state.appData && state.appData.settings ? state.appData.settings : {};
+                    // If the app has a custom categoryGroups mapping, use it. Expected shape: { essencial: ['Contas', ...], naoEssencial: [...], reserva: [...] }
+                    const groups = settings.categoryGroups || {};
+                    let essencials = groups.essencial || groups.essenciais || [];
+                    let naoEssenciais = groups.naoEssencial || groups.naoEssenciais || [];
+                    let reservas = groups.reserva || groups.reservas || [];
+                    // Fallback sensible defaults when no mapping provided
+                    if (!essencials || essencials.length === 0) {
+                        essencials = ['Contas','Mercado','Saúde','Transporte','Assinaturas'];
+                    }
+                    if (!reservas || reservas.length === 0) {
+                        reservas = settings.savingCategories || ['Reserva de Emergência','Poupança'];
+                    }
+                    if (ef.spendingType === 'essencial') {
+                        expenses = expenses.filter(exp => essencials.includes(exp.category));
+                    } else if (ef.spendingType === 'nao-essencial') {
+                        expenses = expenses.filter(exp => !essencials.includes(exp.category) && !reservas.includes(exp.category));
+                    } else if (ef.spendingType === 'reserva') {
+                        expenses = expenses.filter(exp => reservas.includes(exp.category));
+                    }
+                }
             }
             expenses.sort((a, b) => {
                 const key = state.sort.key;

@@ -420,20 +420,38 @@
             html, body {
                 overflow-x: hidden !important;
             }
+            /* Hide desktop quick links on small screens */
+            #desktop-quick-links { display: none !important; }
         }
     </style>
 </head>
 <body class="antialiased">
 
     <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        <!-- Cabeçalho -->
-        <header class="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-                <span>Fluxo Financeiro</span>
-            </h1>
-            <div class="flex items-center gap-4">
-                 <div class="flex items-center gap-1">
+        <!-- Cabeçalho (compact) -->
+        <header class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2">
+            <div class="flex items-center gap-1">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    <span>Fluxo Financeiro</span>
+                </h1>
+                <div id="desktop-quick-links" class="inline-flex items-center gap-1 ml-1">
+                    <button id="desktop-dashboard-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Dashboard">
+                        <span class="material-symbols-outlined text-gray-600">dashboard</span>
+                    </button>
+                    <button id="desktop-creditcards-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Cartões">
+                        <span class="material-symbols-outlined text-gray-600">credit_card</span>
+                    </button>
+                    <button id="desktop-investments-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Investimentos">
+                        <span class="material-symbols-outlined text-gray-600">trending_up</span>
+                    </button>
+                    <button id="add-transaction-btn" class="bg-blue-600 p-2 rounded-full shadow-sm hover:bg-blue-700 transition-colors text-white ml-1" title="Nova Transação">
+                        <span class="material-symbols-outlined">add</span>
+                    </button>
+                </div>
+            </div>
+          <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2">
                     <div id="infrequent-controls" class="infrequent-controls flex items-center gap-1">
                         <button id="import-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Importar dados (JSON)">
                             <span class="material-symbols-outlined text-gray-600">upload</span>
@@ -447,19 +465,20 @@
                     <button id="mobile-infrequent-toggle" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors hidden sm:hidden" title="Mais opções" aria-label="Abrir opções">
                         <span class="material-symbols-outlined text-gray-600">more_horiz</span>
                     </button>
-                    <button id="monthly-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Relatório Mensal">
+                    <button id="monthly-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Relatório Mensal" aria-label="Relatório Mensal">
                         <span class="material-symbols-outlined text-gray-600">assessment</span>
                     </button>
-                     <button id="annual-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Relatório Anual">
+                     <button id="annual-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Relatório Anual" aria-label="Relatório Anual">
                         <span class="material-symbols-outlined text-gray-600">calendar_month</span>
                     </button>
+                    <!-- quick links removed from this position (moved next to title) -->
                 </div>
-                <div class="flex items-center gap-2 card !shadow-sm !hover:scale-100 rounded-full p-1">
-                    <button id="prev-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
+                <div class="flex items-center gap-1 card !shadow-sm !hover:scale-100 rounded-full p-0.5">
+                    <button id="prev-month-btn" class="p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_left</span>
                     </button>
                     <div class="relative">
-                        <span id="current-month-display" class="w-40 text-center font-semibold text-gray-700 whitespace-nowrap cursor-pointer">Setembro 2025</span>
+                        <span id="current-month-display" class="w-36 text-center font-semibold text-gray-700 whitespace-nowrap cursor-pointer text-sm">Setembro 2025</span>
                         <!-- Month picker popover (hidden by default) -->
                         <div id="month-picker" class="hidden absolute z-50 mt-2 right-0 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
                             <div class="space-y-2">
@@ -524,10 +543,10 @@
                             </div>
                         </div>
                     </div>
-                    <button id="next-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
+                    <button id="next-month-btn" class="p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_right</span>
                     </button>
-                     <button id="today-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300" title="Voltar para o mês atual">
+                     <button id="today-btn" class="p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300" title="Voltar para o mês atual">
                         <span class="material-symbols-outlined">today</span>
                     </button>
                 </div>
@@ -535,11 +554,11 @@
         </header>
         
         <!-- Abas de Navegação -->
-        <div class="mb-8">
-            <div id="tabs" class="flex items-center p-1 space-x-1 bg-gray-200 rounded-lg max-w-md mx-auto">
-                 <button data-view="dashboard" class="tab-button w-full py-2 text-sm font-semibold text-gray-600 rounded-md transition-colors">Visão Geral</button>
-                 <button data-view="credit-cards" class="tab-button w-full py-2 text-sm font-semibold text-gray-600 rounded-md transition-colors">Faturas</button>
-                 <button data-view="investments" class="tab-button w-full py-2 text-sm font-semibold text-gray-600 rounded-md transition-colors">Investimentos</button>
+        <div class="mb-6">
+            <div id="tabs" class="flex sm:hidden items-center p-0.5 space-x-1 bg-gray-200 rounded-lg max-w-lg mx-auto">
+                 <button data-view="dashboard" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Visão Geral</button>
+                 <button data-view="credit-cards" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Faturas</button>
+                 <button data-view="investments" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Investimentos</button>
             </div>
         </div>
         
@@ -569,15 +588,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Coluna de Transações -->
                     <div class="lg:col-span-2 space-y-8">
-                         <div class="card p-6 rounded-xl !hover:scale-100">
-                            <div class="flex items-center justify-between mb-4">
-                                <h2 class="text-xl font-semibold">Movimentações do Mês</h2>
-                                <button id="add-transaction-btn" class="btn-primary font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-transform active:scale-95">
-                                    <span class="material-symbols-outlined">add</span>
-                                    <span class="hidden sm:inline">Nova Transação</span>
-                                </button>
-                            </div>
-                        </div>
+                        <!-- Movimentações do Mês header removed; add button moved to header -->
 
                         <!-- Tabela de Entradas -->
                         <div class="card p-6 rounded-xl">
@@ -635,7 +646,7 @@
                                 </table>
                             </div>
                         </div>
-
+                    
                     </div>
                      <!-- Coluna de Gráficos e Insights -->
                     <div class="lg:col-span-1 space-y-8">
@@ -1155,6 +1166,7 @@ const firebaseConfig = {
                 'advanced-options', 'expense-type', 'feedback-visual-container', 'feedback-message',
                 'import-data-btn', 'import-file-input', 'export-data-btn',
                 'monthly-report-btn', 'annual-report-btn', 'monthly-report-modal', 'annual-report-modal',
+                'desktop-dashboard-btn', 'desktop-creditcards-btn', 'desktop-investments-btn',
                 'expenses-filter-btn', 'expenses-filter-popover', 'filter-payment-method', 'filter-spending-type', 'filter-category', 'filter-type', 'filter-recurring', 'filter-installment', 'filter-apply-btn', 'filter-clear-btn',
                 'close-monthly-report-btn', 'close-annual-report-btn', 'add-goal-btn', 'goal-modal', 'close-goal-modal-btn',
                 'goal-form', 'goals-container', 'financing-section'
@@ -1228,6 +1240,10 @@ const firebaseConfig = {
             ui.paymentMethod.addEventListener('change', (e) => toggleInstallmentSection(e.target.value));
 
             ui.monthlyReportBtn.addEventListener('click', () => openMonthlyReport());
+            // Desktop quick links: mirror mobile/nav tabs behavior
+            if (ui.desktopDashboardBtn) ui.desktopDashboardBtn.addEventListener('click', () => changeView('dashboard'));
+            if (ui.desktopCreditcardsBtn) ui.desktopCreditcardsBtn.addEventListener('click', () => changeView('credit-cards'));
+            if (ui.desktopInvestmentsBtn) ui.desktopInvestmentsBtn.addEventListener('click', () => changeView('investments'));
             // Show import/export when hovering the monthly report icon/area
             const infrequent = document.getElementById('infrequent-controls');
             if (infrequent && ui.monthlyReportBtn) {

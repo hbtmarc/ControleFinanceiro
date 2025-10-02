@@ -348,7 +348,35 @@
                     <button id="prev-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_left</span>
                     </button>
-                    <span id="current-month-display" class="w-40 text-center font-semibold text-gray-700 whitespace-nowrap">Setembro 2025</span>
+                    <div class="relative">
+                        <span id="current-month-display" class="w-40 text-center font-semibold text-gray-700 whitespace-nowrap cursor-pointer">Setembro 2025</span>
+                        <!-- Month picker popover (hidden by default) -->
+                        <div id="month-picker" class="hidden absolute z-50 mt-2 right-0 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+                            <div class="space-y-2">
+                                <label class="block text-xs text-gray-500">Mês</label>
+                                <select id="month-picker-month" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                    <option value="0">Janeiro</option>
+                                    <option value="1">Fevereiro</option>
+                                    <option value="2">Março</option>
+                                    <option value="3">Abril</option>
+                                    <option value="4">Maio</option>
+                                    <option value="5">Junho</option>
+                                    <option value="6">Julho</option>
+                                    <option value="7">Agosto</option>
+                                    <option value="8">Setembro</option>
+                                    <option value="9">Outubro</option>
+                                    <option value="10">Novembro</option>
+                                    <option value="11">Dezembro</option>
+                                </select>
+                                <label class="block text-xs text-gray-500">Ano</label>
+                                <select id="month-picker-year" class="w-full border-gray-200 rounded-md p-1 text-sm"></select>
+                                <div class="flex justify-end gap-2 pt-2">
+                                    <button id="month-picker-cancel" type="button" class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">Cancelar</button>
+                                    <button id="month-picker-apply" type="button" class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700">Ir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button id="next-month-btn" class="p-2 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_right</span>
                     </button>
@@ -956,7 +984,7 @@ const firebaseConfig = {
 
         function mapUI() {
             const ids = [
-                'current-month-display', 'prev-month-btn', 'next-month-btn', 'today-btn', 
+                'current-month-display', 'prev-month-btn', 'next-month-btn', 'today-btn', 'month-picker', 'month-picker-month', 'month-picker-year', 'month-picker-apply', 'month-picker-cancel', 
                 'income-table-body', 'expenses-table-body', 'savings-table-body', 'expenses-table-head', 
                 'add-transaction-btn', 'transaction-modal', 'close-transaction-modal-btn', 'transaction-form', 
                 'expense-fields', 'dashboard-view', 'credit-cards-view', 'investments-view', 
@@ -985,6 +1013,17 @@ const firebaseConfig = {
             ui.prevMonthBtn.addEventListener('click', () => changeMonth(-1));
             ui.nextMonthBtn.addEventListener('click', () => changeMonth(1));
             ui.todayBtn.addEventListener('click', () => goToDate(new Date()));
+            // Month picker interactions
+            if (ui.currentMonthDisplay) ui.currentMonthDisplay.addEventListener('click', (e) => { e.stopPropagation(); openMonthPicker(); });
+            if (ui.monthPickerCancel) ui.monthPickerCancel.addEventListener('click', closeMonthPicker);
+            if (ui.monthPickerApply) ui.monthPickerApply.addEventListener('click', applyMonthPicker);
+            // Close picker on outside click
+            document.addEventListener('click', (e) => {
+                const picker = ui.monthPicker;
+                if (!picker) return;
+                if (picker.classList.contains('hidden')) return;
+                if (!picker.contains(e.target) && e.target !== ui.currentMonthDisplay) closeMonthPicker();
+            });
             ui.addTransactionBtn.addEventListener('click', () => openModal('expenses'));
             ui.closeTransactionModalBtn.addEventListener('click', () => closeModal('transaction-modal'));
             ui.transactionModal.addEventListener('click', (e) => { if(e.target === ui.transactionModal) closeModal('transaction-modal'); });
@@ -1645,6 +1684,101 @@ const firebaseConfig = {
 
         function renderMonthDisplay() {
             ui.currentMonthDisplay.textContent = state.currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
+        }
+
+        // Month picker helpers
+        function populateMonthPicker() {
+            try {
+                const yearSelect = ui.monthPickerYear;
+                if (!yearSelect) return;
+                yearSelect.innerHTML = '';
+                const currentYear = state.currentDate.getFullYear();
+                // show a range of years: currentYear -5 .. currentYear +5
+                for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = y;
+                    yearSelect.appendChild(opt);
+                }
+                // set selects to current date
+                if (ui.monthPickerMonth) ui.monthPickerMonth.value = String(state.currentDate.getMonth());
+                yearSelect.value = String(currentYear);
+            } catch (e) { console.error('populateMonthPicker', e); }
+        }
+
+        // We'll move the picker to document.body when opened to avoid stacking context issues
+        (function(){
+            let _originalParent = null;
+            let _originalNext = null;
+            window.__monthPickerDetached = false;
+            function _attachToBody(picker, trigger) {
+                if (!picker) return;
+                if (!_originalParent) {
+                    _originalParent = picker.parentNode;
+                    _originalNext = picker.nextSibling;
+                }
+                document.body.appendChild(picker);
+                picker.style.position = 'absolute';
+                picker.style.zIndex = '9999';
+                // compute position to align under trigger (right aligned)
+                try {
+                    const rect = trigger.getBoundingClientRect();
+                    const top = rect.bottom + window.scrollY + 8; // small gap
+                    const right = window.innerWidth - (rect.right + window.scrollX);
+                    picker.style.top = top + 'px';
+                    picker.style.right = right + 'px';
+                } catch (e) { /* ignore */ }
+                window.__monthPickerDetached = true;
+            }
+            function _restoreParent(picker) {
+                if (!picker || !_originalParent) return;
+                picker.style.position = '';
+                picker.style.top = '';
+                picker.style.right = '';
+                picker.style.zIndex = '';
+                if (_originalNext && _originalNext.parentNode === _originalParent) {
+                    _originalParent.insertBefore(picker, _originalNext);
+                } else {
+                    _originalParent.appendChild(picker);
+                }
+                _originalParent = null; _originalNext = null; window.__monthPickerDetached = false;
+            }
+
+            window.openMonthPicker = function() {
+                try {
+                    const picker = ui.monthPicker;
+                    if (!picker || !ui.currentMonthDisplay) return;
+                    populateMonthPicker();
+                    _attachToBody(picker, ui.currentMonthDisplay);
+                    picker.classList.remove('hidden');
+                    setTimeout(() => { if (ui.monthPickerMonth) ui.monthPickerMonth.focus(); }, 50);
+                } catch (e) { console.error('openMonthPicker', e); }
+            };
+
+            window.closeMonthPicker = function() {
+                try {
+                    const picker = ui.monthPicker;
+                    if (!picker) return;
+                    picker.classList.add('hidden');
+                    if (window.__monthPickerDetached) _restoreParent(picker);
+                } catch (e) { console.error('closeMonthPicker', e); }
+            };
+        })();
+
+        function closeMonthPicker() {
+            try { if (ui.monthPicker) ui.monthPicker.classList.add('hidden'); } catch (e) { console.error('closeMonthPicker', e); }
+        }
+
+        function applyMonthPicker() {
+            try {
+                if (!ui.monthPickerMonth || !ui.monthPickerYear) return;
+                const month = parseInt(ui.monthPickerMonth.value, 10);
+                const year = parseInt(ui.monthPickerYear.value, 10);
+                if (isNaN(month) || isNaN(year)) return;
+                state.currentDate = new Date(year, month, 1);
+                render();
+                closeMonthPicker();
+            } catch (e) { console.error('applyMonthPicker', e); }
         }
 
         function updateSortHeaders() {

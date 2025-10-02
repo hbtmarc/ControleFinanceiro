@@ -6,10 +6,29 @@
     <title>Fluxo Financeiro</title>
 
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Suppress specific CDN warnings (development convenience) -->
+    <script>
+        (function(){
+            const _warn = console.warn.bind(console);
+            console.warn = function(...args){
+                try {
+                    const msg = args && args[0] ? String(args[0]) : '';
+                    if (msg.indexOf('cdn.tailwindcss.com should not be used in production') !== -1) return; // ignore Tailwind production warning
+                } catch(e){}
+                _warn(...args);
+            };
+            const _error = console.error.bind(console);
+            console.error = function(...args){
+                try {
+                    const msg = args && args[0] ? String(args[0]) : '';
+                    if (msg.indexOf('Could not read source map for https://cdn.jsdelivr.net/npm/chart.js') !== -1) return; // ignore chart.js sourcemap 404 noise
+                } catch(e){}
+                _error(...args);
+            };
+        })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
     <!-- Google Fonts & Icons -->
@@ -681,6 +700,23 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- VT KPI: mirror VR immediately below -->
+                        <div id="kpi-vt-card" class="card p-2 rounded-xl mb-2">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-xs font-medium text-gray-500">VT - Uso</h4>
+                                </div>
+                                <div class="text-right">
+                                    <p id="kpi-vt-values" class="text-sm font-semibold text-yellow-600">R$ 0,00</p>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="w-full bg-gray-200 rounded h-4 overflow-hidden relative">
+                                    <div id="kpi-vt-progress" class="h-4 w-0 flex items-center justify-end pr-1 text-xs text-white" style="transition: width 360ms ease;"></div>
+                                    <div id="kpi-vt-bar-text" class="absolute inset-0 flex items-center justify-center text-xs text-gray-700 pointer-events-none"></div>
+                                </div>
+                            </div>
+                        </div>
                         <div id="feedback-card" class="card p-6 rounded-xl">
                              <h2 class="text-xl font-semibold mb-2">Feedback do Mês</h2>
                              <p id="feedback-message" class="text-gray-600 text-sm mb-4">...</p>
@@ -1056,6 +1092,48 @@
         <button id="vr-usage-close" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
     </dialog>
     
+    <!-- VT Ledger Modal -->
+    <dialog id="vt-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">Gerenciar VT</h2>
+        <form id="vt-entry-form" class="space-y-3">
+            <input type="hidden" id="vt-entry-id">
+            <div>
+                <label class="block text-sm text-gray-700">Descrição</label>
+                <input id="vt-entry-desc" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-700">Valor (R$)</label>
+                <input id="vt-entry-amount" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button id="vt-entry-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
+                <button id="vt-entry-save" type="submit" class="btn-primary px-3 py-1 rounded">Salvar</button>
+            </div>
+        </form>
+        <button id="close-vt-modal" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
+    </dialog>
+    
+    <!-- VT Usage Edit Modal -->
+    <dialog id="vt-usage-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">Editar Compra (VT)</h2>
+        <form id="vt-usage-form" class="space-y-3">
+            <input type="hidden" id="vt-usage-id">
+            <div>
+                <label class="block text-sm text-gray-700">Descrição</label>
+                <input id="vt-usage-desc" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-700">Valor (R$)</label>
+                <input id="vt-usage-amount" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button id="vt-usage-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
+                <button id="vt-usage-save" type="submit" class="btn-primary px-3 py-1 rounded">Salvar</button>
+            </div>
+        </form>
+        <button id="vt-usage-close" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
+    </dialog>
+    
     <script>
     // Global toast helper para feedback visual (disponível antes do init)
     function showToast(message, color = 'bg-blue-600') {
@@ -1370,7 +1448,10 @@ const firebaseConfig = {
                         if (!md) return;
                         if (!Array.isArray(md.incomes)) md.incomes = [];
                         if (!Array.isArray(md.vrLedger)) md.vrLedger = [];
+                        // Ensure VT ledger exists
+                        if (!Array.isArray(md.vtLedger)) md.vtLedger = [];
                         if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
+                        if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
                         const preserved = [];
                         md.incomes.forEach(i => {
                             if (i && i.source === 'benefit-vr') {
@@ -1381,6 +1462,38 @@ const firebaseConfig = {
                     });
                 });
             } catch(e){ console.error('VR migration', e); }
+            // Migrate any existing VT income items into vtLedger and legacy VT expenses into vtUsage
+            try {
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const md = state.appData.data[year][month];
+                        if (!md) return;
+                        if (!Array.isArray(md.incomes)) md.incomes = [];
+                        if (!Array.isArray(md.vtLedger)) md.vtLedger = [];
+                        if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
+                        const preserved = [];
+                        md.incomes.forEach(i => {
+                            if (i && i.source === 'benefit-vt') {
+                                md.vtLedger.push({ id: i.id || generateUUID(), amount: i.amount || 0, recurringId: i.recurringId || null, isRecurring: !!i.isRecurring, salaryMeta: i.salaryMeta || null });
+                            } else preserved.push(i);
+                        });
+                        md.incomes = preserved;
+                        // move legacy expenses paid with VT into vtUsage
+                        const remainingExpenses = [];
+                        md.expenses = md.expenses || [];
+                        md.expenses.forEach(exp => {
+                            try {
+                                if (exp && (exp.payment || '').toString() === 'VT') {
+                                    md.vtUsage.push({ id: exp.id || generateUUID(), amount: Number(exp.amount) || 0, description: exp.description || '', date: exp.date || new Date().toISOString() });
+                                } else {
+                                    remainingExpenses.push(exp);
+                                }
+                            } catch (e) { remainingExpenses.push(exp); }
+                        });
+                        md.expenses = remainingExpenses;
+                    });
+                });
+            } catch(e) { console.error('VT migration', e); }
             // Additionally migrate any legacy expenses that used payment === 'VR' into the vrUsage ledger
             try {
                 let migratedCount = 0;
@@ -1659,6 +1772,13 @@ const firebaseConfig = {
                     kpiVr.addEventListener('click', () => changeView('credit-cards'));
                 }
             } catch (e) { console.error('attach kpi-vr click handler', e); }
+            try {
+                const kpiVt = document.getElementById('kpi-vt-card');
+                if (kpiVt) {
+                    kpiVt.style.cursor = 'pointer';
+                    kpiVt.addEventListener('click', () => changeView('credit-cards'));
+                }
+            } catch (e) { console.error('attach kpi-vt click handler', e); }
             // Show import/export when hovering the monthly report icon/area
             const infrequent = document.getElementById('infrequent-controls');
             if (infrequent && ui.monthlyReportBtn) {
@@ -2064,25 +2184,66 @@ const firebaseConfig = {
                                 })() : '<div class="text-sm text-gray-500 mt-1">Nenhuma compra registrada.</div>'}
                             </div>
                         </div>
-                        <!-- Gerenciar VR button removed per UX: VR works as débito somente -->
+                                <!-- Gerenciar VR button removed per UX: VR works as débito somente -->
                     </div>`;
             }
-            // Attach handler to add VR usage from the VR card (open transaction modal with payment=VR)
-            try {
-                const addVrBtn = container.querySelector('#add-vr-usage-btn');
-                if (addVrBtn) addVrBtn.addEventListener('click', (ev) => {
-                    // Open transaction modal for expense and prefill payment=VR, then focus description
-                    openModal('expenses');
-                    // Wait briefly for dropdowns to be populated, then set payment and focus description
-                    setTimeout(() => {
+                    // VT: mirror VR card rendering if there is VT activity
+                    const vtAmount = getMonthVTBalance(currentMonthData);
+                    const hasVtLedger = Array.isArray(currentMonthData.vtLedger) && currentMonthData.vtLedger.length > 0;
+                    const hasVtUsage = Array.isArray(currentMonthData.vtUsage) && currentMonthData.vtUsage.length > 0;
+                    if (vtAmount > 0 || hasVtLedger || hasVtUsage) {
+                        const vtCreditedTotal = (currentMonthData.vtLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
+                        let vtUsageTotal = (currentMonthData.vtUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
                         try {
-                            const pm = document.getElementById('payment-method'); if (pm) pm.value = 'VR';
-                            const desc = document.getElementById('description'); if (desc) { desc.focus(); try { desc.select(); } catch(_) {}
-                            }
-                        } catch(e) {}
-                    }, 60);
-                });
-            } catch(e) { console.error('attach add-vr-usage handler', e); }
+                            const expensesVT = (currentMonthData.expenses || []).filter(e => (e.payment || '') === 'VT');
+                            const expensesVTSum = expensesVT.reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
+                            if (expensesVTSum > 0) vtUsageTotal = Math.round((vtUsageTotal + expensesVTSum) * 100) / 100;
+                        } catch (e) { console.error('compute expenses vt usage', e); }
+                        if ((!Array.isArray(currentMonthData.vtUsage) || currentMonthData.vtUsage.length === 0) && (!Array.isArray(currentMonthData.expenses) || !(currentMonthData.expenses || []).some(ex => (ex.payment || '') === 'VT')) && vtUsageTotal > 0) {
+                            console.warn('[VT WARNING] usageTotal > 0 but no vtUsage or VT expenses found. Forcing vtUsageTotal=0.');
+                            vtUsageTotal = 0;
+                        }
+                        const vtDisplayAmount = Math.max(0, Math.round((vtCreditedTotal - vtUsageTotal) * 100) / 100);
+                        const latestVtLedger = (currentMonthData.vtLedger || []).slice().reverse().find(l => l && l.salaryMeta);
+                        const prevMonthLastDateVT = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 0);
+                        const lastDayVT = prevMonthLastDateVT.getDate();
+                        const prevMonthNumberVT = prevMonthLastDateVT.getMonth() + 1;
+                        const lastDayStrVT = String(lastDayVT).padStart(2,'0') + '/' + String(prevMonthNumberVT).padStart(2,'0');
+
+                        container.innerHTML += `
+                            <div class="card p-6 rounded-2xl shadow-sm flex flex-col bg-gradient-to-br from-yellow-50 to-white border border-yellow-200">
+                                <div class="flex-grow">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="text-xl font-semibold">VT</h3>
+                                        <span class="text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Créd. ${lastDayStrVT}</span>
+                                    </div>
+                                    <div class="vr-value-group" title="Usado: ${formatCurrency(vtUsageTotal)}" style="position:relative; display:inline-block;">
+                                        <p class="text-3xl font-bold text-yellow-600 mb-4" style="margin:0;">${formatCurrency(vtDisplayAmount)}</p>
+                                        <p class="text-sm text-gray-500 vr-used" style="margin:0; opacity:0; transition: opacity 160ms ease;">Usado: ${formatCurrency(vtUsageTotal)}</p>
+                                    </div>
+                                    <div class="mt-3 text-sm text-gray-600">
+                                        <h4 class="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                                            <span>Compras</span>
+                                            <button id="add-vt-usage-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" title="Adicionar compra VT">
+                                                <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+                                            </button>
+                                        </h4>
+                                        ${(currentMonthData.vtUsage && currentMonthData.vtUsage.length > 0) ? (() => {
+                                            const usagesSorted = (currentMonthData.vtUsage || []).slice().sort((a,b) => { const A=(a.description||'').toLowerCase(); const B=(b.description||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
+                                            return `<div class="space-y-1 mt-2">${usagesSorted.map(u => `<div class="flex justify-between items-center text-sm"><div class="flex items-center"><span class="truncate pr-2 cursor-pointer edit-vt-usage-trigger" data-vt-usage-edit-id="${u.id}">${u.description || 'Despesa VT'}</span></div><div class="flex items-center"><span class="font-medium mr-2">${formatCurrency(Number(u.amount)||0)}</span><button data-vt-usage-edit-id="${u.id}" class="ml-1 text-gray-600 edit-vt-usage-btn" title="Editar"><span class="material-symbols-outlined">edit</span></button><button data-vt-usage-id="${u.id}" class="ml-3 text-red-600 delete-vt-usage-btn" title="Excluir"><span class="material-symbols-outlined">delete</span></button></div></div>`).join('')}</div>`;
+                                        })() : '<div class="text-sm text-gray-500 mt-1">Nenhuma compra registrada.</div>'}
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+            // Attach handler to add VR usage from the VR card (open transaction modal with payment=VR)
+                try {
+                    const addVrBtn = container.querySelector('#add-vr-usage-btn');
+                    if (addVrBtn) addVrBtn.addEventListener('click', (ev) => {
+                        // Open transaction modal for expense and deterministically prefill payment=VR and focus description
+                        openModal('expenses', null, { payment: 'VR', focusDescription: true });
+                    });
+                } catch(e) { console.error('attach add-vr-usage handler', e); }
             container.querySelectorAll('.pay-invoice-btn').forEach(btn => btn.addEventListener('click', (e) => payCardInvoice(e.target.dataset.cardName)));
             // Attach per-item delete and edit buttons for VR usages
             try {
@@ -2097,6 +2258,29 @@ const firebaseConfig = {
                     try { await storage.saveData(state.appData); showToast('Uso de VR excluído.', 'bg-green-600'); } catch(e) { console.error('delete vr usage save', e); showToast('Falha ao salvar exclusão.', 'bg-red-600'); }
                     render();
                 }));
+                // VT handlers: add, edit, delete
+                    try {
+                        const addVtBtn = container.querySelector('#add-vt-usage-btn');
+                        if (addVtBtn) addVtBtn.addEventListener('click', (ev) => {
+                            openModal('expenses', null, { payment: 'VT', focusDescription: true });
+                        });
+                        container.querySelectorAll('.delete-vt-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
+                        const id = ev.currentTarget.getAttribute('data-vt-usage-id');
+                        if (!id) return;
+                        if (!confirm('Excluir este uso de VT?')) return;
+                        const md = getCurrentMonthData();
+                        if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
+                        const idx = md.vtUsage.findIndex(u => u.id === id);
+                        if (idx > -1) md.vtUsage.splice(idx, 1);
+                        try { await storage.saveData(state.appData); showToast('Uso de VT excluído.', 'bg-green-600'); } catch(e) { console.error('delete vt usage save', e); showToast('Falha ao salvar exclusão.', 'bg-red-600'); }
+                        render();
+                    }));
+                    container.querySelectorAll('.edit-vt-usage-btn, .edit-vt-usage-trigger').forEach(el => el.addEventListener('click', (ev) => {
+                        const id = ev.currentTarget.getAttribute('data-vt-usage-edit-id') || ev.currentTarget.closest('[data-vt-usage-edit-id]')?.getAttribute('data-vt-usage-edit-id');
+                        if (!id) return;
+                        openVTUsageEdit(id);
+                    }));
+                } catch(e) { console.error('attach vt usage item handlers', e); }
                 // Edit triggers (icon and description clickable)
                 container.querySelectorAll('.edit-vr-usage-btn, .edit-vr-usage-trigger').forEach(el => el.addEventListener('click', (ev) => {
                     const id = ev.currentTarget.getAttribute('data-vr-usage-edit-id') || ev.currentTarget.closest('[data-vr-usage-edit-id]')?.getAttribute('data-vr-usage-edit-id');
@@ -2412,28 +2596,39 @@ const firebaseConfig = {
             const incomes = monthData.incomes;
             ui.incomeTableBody.innerHTML = '';
             if (incomes.length > 0) {
-                incomes.filter(i => i.source !== 'benefit-vr').forEach(income => renderIncomeRow(income));
+                // Exclude benefit entries (VR/VT) from the standard incomes list; they are shown as ledger rows below
+                incomes.filter(i => (i.source || '').toString() !== 'benefit-vr' && (i.source || '').toString() !== 'benefit-vt').forEach(income => renderIncomeRow(income));
             } else {
                 ui.incomeTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Nenhuma entrada registrada.</td></tr>';
             }
-                // (remove VR badge text — VR is shown as ledger rows only)
-            // Render VR ledger rows in Entradas (visual-only) and attach inline edit handlers
+            // Render benefit ledgers (VR and VT) in a generic way so Entradas shows them consistently
             try {
-                const md = monthData;
-                const ledger = Array.isArray(md.vrLedger) ? md.vrLedger : [];
-                ledger.forEach(l => {
-                    const r = ui.incomeTableBody.insertRow();
-                    r.dataset.vrId = l.id || '';
-                    r.className = 'border-b border-gray-100 bg-green-50 text-green-700 animate-fade-in';
-                    // For VR ledger rows use description 'Benefício - VR' by default and do not show 'rec.' label
-                    const descText = l.description || 'Benefício - VR';
-                    const recurringIcon = l.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : '';
-                    r.innerHTML = `
-                        <td class="py-2 px-3">${descText} ${recurringIcon}</td>
-                        <td class="py-2 px-3 font-medium"><span class="vr-amount" data-vr-id="${l.id}">${formatCurrency(l.amount || 0)}</span></td>
-                        <td class="py-2 px-3 text-right actions-cell"><button class="edit-vr-btn p-1 text-gray-500 hover:text-blue-600" data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">edit</span></button><button class="delete-vr-btn p-1 text-gray-500 hover:text-red-600" data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">delete</span></button></td>`;
-                });
-                // attach inline edit handlers for amounts in the table
+                function renderBenefitLedgerRows(type) {
+                    const md = monthData;
+                    const keyLedger = (type === 'vt') ? 'vtLedger' : 'vrLedger';
+                    const ledger = Array.isArray(md[keyLedger]) ? md[keyLedger] : [];
+                    ledger.forEach(l => {
+                        const r = ui.incomeTableBody.insertRow();
+                        r.dataset[`${type}Id`] = l.id || '';
+                        // colorize row by type: VR = green, VT = yellow
+                        const baseClass = (type === 'vt') ? 'border-b border-gray-100 bg-yellow-50 text-yellow-700' : 'border-b border-gray-100 bg-green-50 text-green-700';
+                        r.className = baseClass + ' animate-fade-in';
+                        const descDefault = (type === 'vt') ? 'Benefício - VT' : 'Benefício - VR';
+                        const recurringIcon = l.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : '';
+                        const amountSpan = (type === 'vt') ? `<span class="vt-amount" data-vt-id="${l.id}">${formatCurrency(l.amount || 0)}</span>` : `<span class="vr-amount" data-vr-id="${l.id}">${formatCurrency(l.amount || 0)}</span>`;
+                        const editBtn = (type === 'vt') ? `<button class="edit-vt-btn p-1 text-gray-500 hover:text-blue-600" data-vt-id="${l.id}"><span class="material-symbols-outlined text-xl">edit</span></button>` : `<button class="edit-vr-btn p-1 text-gray-500 hover:text-blue-600" data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">edit</span></button>`;
+                        const deleteBtn = (type === 'vt') ? `<button class="delete-vt-btn p-1 text-gray-500 hover:text-red-600" data-vt-id="${l.id}"><span class="material-symbols-outlined text-xl">delete</span></button>` : `<button class="delete-vr-btn p-1 text-gray-500 hover:text-red-600" data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">delete</span></button>`;
+                        r.innerHTML = `
+                            <td class="py-2 px-3">${l.description || descDefault} ${recurringIcon}</td>
+                            <td class="py-2 px-3 font-medium">${amountSpan}</td>
+                            <td class="py-2 px-3 text-right actions-cell">${editBtn}${deleteBtn}</td>`;
+                    });
+                }
+                // Render VR and VT ledger rows
+                renderBenefitLedgerRows('vr');
+                renderBenefitLedgerRows('vt');
+
+                // attach inline edit handlers for amounts and edit/delete actions for VR and VT
                 ui.incomeTableBody.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId)));
                 ui.incomeTableBody.querySelectorAll('.edit-vr-btn').forEach(b => b.addEventListener('click', (e) => { const id = e.currentTarget.dataset.vrId; openVREdit(id); }));
                 ui.incomeTableBody.querySelectorAll('.delete-vr-btn').forEach(b => b.addEventListener('click', async (e) => {
@@ -2451,7 +2646,25 @@ const firebaseConfig = {
                         if (confirm('Excluir lançamento de VR?')) { await deleteVRLedgerEntry(id); render(); }
                     }
                 }));
-            } catch(e) { console.error('renderIncomeTable vr rows', e); }
+                // VT handlers
+                ui.incomeTableBody.querySelectorAll('.vt-amount').forEach(el => el.addEventListener('click', (e) => startInlineVTEdit && typeof startInlineVTEdit === 'function' ? startInlineVTEdit(e.currentTarget, e.currentTarget.dataset.vtId) : null));
+                ui.incomeTableBody.querySelectorAll('.edit-vt-btn').forEach(b => b.addEventListener('click', (e) => { const id = e.currentTarget.dataset.vtId; openVTEdit(id); }));
+                ui.incomeTableBody.querySelectorAll('.delete-vt-btn').forEach(b => b.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.dataset.vtId;
+                    if (!id) return;
+                    const md = getCurrentMonthData();
+                    const entry = (md.vtLedger || []).find(v => v.id === id) || null;
+                    if (!entry) return;
+                    if (entry.isRecurring && entry.recurringId) {
+                        const delAll = confirm('Este benefício é recorrente. Deseja excluir este e todas as recorrências futuras? (OK = Sim)');
+                        if (!delAll) return;
+                        await deleteVTLedgerEntry(id);
+                        render();
+                    } else {
+                        if (confirm('Excluir lançamento de VT?')) { await deleteVTLedgerEntry(id); render(); }
+                    }
+                }));
+            } catch(e) { console.error('renderIncomeTable benefit rows', e); }
         }
 
         function getMonthVRBalance(monthData) {
@@ -2462,6 +2675,17 @@ const firebaseConfig = {
             const sumLedger = ledger.reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
             const sumUsage = usage.reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
             // Round to 2 decimals
+            const bal = Math.round((sumLedger - sumUsage + Number.EPSILON) * 100) / 100;
+            return Math.max(0, bal);
+        }
+
+        // VT balance helper (mirror VR)
+        function getMonthVTBalance(monthData) {
+            if (!monthData) monthData = getCurrentMonthData();
+            const ledger = Array.isArray(monthData.vtLedger) ? monthData.vtLedger : [];
+            const usage = Array.isArray(monthData.vtUsage) ? monthData.vtUsage : [];
+            const sumLedger = ledger.reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
+            const sumUsage = usage.reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
             const bal = Math.round((sumLedger - sumUsage + Number.EPSILON) * 100) / 100;
             return Math.max(0, bal);
         }
@@ -2700,6 +2924,29 @@ const firebaseConfig = {
                         barTextEl.textContent = `${formatCurrency(usedRounded)} gasto`;
                     }
                 } catch(e) { console.error('updateKPIs vr kpi', e); }
+                // VT KPI: mirror VR logic for VT
+                try {
+                    const vtCredited = (monthData.vtLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
+                    let vtUsed = (monthData.vtUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
+                    try { const expensesVT = (monthData.expenses || []).filter(e => (e.payment || '') === 'VT'); vtUsed += expensesVT.reduce((s,e) => s + (Number(e && e.amount) || 0), 0); } catch(e){}
+                    const vtUsedRounded = Math.round((vtUsed + Number.EPSILON) * 100) / 100;
+                    const vtCreditRounded = Math.round((vtCredited + Number.EPSILON) * 100) / 100;
+                    const vtDisplay = Math.max(0, Math.round((vtCreditRounded - vtUsedRounded) * 100) / 100);
+                    const vtValuesEl = document.getElementById('kpi-vt-values'); if (vtValuesEl) vtValuesEl.textContent = formatCurrency(vtDisplay);
+                    const vtProgressEl = document.getElementById('kpi-vt-progress');
+                    const vtBarTextEl = document.getElementById('kpi-vt-bar-text');
+                    if (vtProgressEl) {
+                        const pctRaw = vtCreditRounded > 0 ? (vtUsedRounded / vtCreditRounded) : 0;
+                        const pct = Math.min(1, Math.max(0, pctRaw));
+                        vtProgressEl.style.width = `${Math.round(pct * 100)}%`;
+                        vtProgressEl.classList.remove('bg-yellow-500','bg-yellow-400','bg-red-500');
+                        if (pctRaw >= 1) vtProgressEl.classList.add('bg-red-500');
+                        else if (pctRaw >= 0.75) vtProgressEl.classList.add('bg-yellow-500');
+                        else vtProgressEl.classList.add('bg-yellow-400');
+                        try { vtProgressEl.title = `${Math.round((pctRaw)*100)}% utilizado (${formatCurrency(vtUsedRounded)} de ${formatCurrency(vtCreditRounded)})`; } catch(e){}
+                    }
+                    if (vtBarTextEl) vtBarTextEl.textContent = `${formatCurrency(vtUsedRounded)} gasto`;
+                } catch(e) { console.error('updateKPIs vt kpi', e); }
             } catch (e) {
                 console.error('updateKPIs error', e);
             }
@@ -3127,13 +3374,14 @@ const firebaseConfig = {
         }
 
         // --- MODALS & UI HELPERS (implementações defensivas) ---
-        function openModal(type, id = null) {
+        // openModal now accepts an optional prefill object: { payment, description, amount, focusDescription }
+        function openModal(type, id = null, prefill = null) {
             try {
                 const modal = ui.transactionModal;
                 if (!modal) return;
                 // Reset and populate
-            if (ui.transactionForm) ui.transactionForm.reset();
-            clearTransactionError();
+                if (ui.transactionForm) ui.transactionForm.reset();
+                clearTransactionError();
                 if (document.getElementById('transaction-id')) document.getElementById('transaction-id').value = '';
                 populateDropdowns();
                 toggleTransactionType(type || 'expenses');
@@ -3146,6 +3394,26 @@ const firebaseConfig = {
                 }
                 // Show modal
                 modal.showModal();
+
+                // Apply optional prefill values deterministically (no timeouts)
+                try {
+                    if (prefill && typeof prefill === 'object') {
+                        const pm = document.getElementById('payment-method');
+                        if (pm && prefill.payment) pm.value = prefill.payment;
+                        const desc = document.getElementById('description');
+                        if (desc && (prefill.description !== undefined)) {
+                            desc.value = prefill.description;
+                        }
+                        if (prefill.amount !== undefined) {
+                            const amt = document.getElementById('amount'); if (amt) amt.value = prefill.amount;
+                        }
+                        // If requested, focus and select description
+                        if (desc && (prefill.focusDescription || prefill.description !== undefined)) {
+                            try { desc.focus(); desc.select(); } catch (_) {}
+                        }
+                    }
+                } catch (e) { console.error('openModal apply prefill', e); }
+
                 // Run description detector once to auto-open salary options if description already contains 'salário'
                 try {
                     const descInput = document.getElementById('description');
@@ -3180,6 +3448,10 @@ const firebaseConfig = {
                 // Merge payments but avoid duplicate VR entries
                 const mergedPayments = (paymentMethods || []).slice();
                 if (!mergedPayments.find(p => (p && p.name) === 'VR')) mergedPayments.push(vrOptionObj);
+                // VT: same approach as VR
+                const vtAmount = md ? getMonthVTBalance(md) : 0;
+                const vtOptionObj = { name: 'VT', type: 'vt', available: vtAmount };
+                if (!mergedPayments.find(p => (p && p.name) === 'VT')) mergedPayments.push(vtOptionObj);
                 const expenseCategories = settings.expenseCategories || [];
                 const savingCategories = settings.savingCategories || [];
                 const goals = settings.goals || [];
@@ -4160,6 +4432,43 @@ const firebaseConfig = {
                 } catch (e) { console.error('deleteVRLedgerEntry', e); }
             }
 
+            // Delete VT ledger entry by id (mirror VR behavior)
+            async function deleteVTLedgerEntry(id, yearContext, monthContext) {
+                try {
+                    if (!id) return;
+                    const y = yearContext || state.currentDate.getFullYear();
+                    const m = monthContext || (state.currentDate.getMonth() + 1);
+                    const monthData = getCurrentMonthData(new Date(y, m - 1, 1));
+                    if (!monthData || !Array.isArray(monthData.vtLedger)) return;
+                    const idx = monthData.vtLedger.findIndex(v => v.id === id);
+                    if (idx === -1) return;
+                    const entry = monthData.vtLedger[idx];
+                    let removeFuture = false;
+                    if (entry && entry.recurringId) {
+                        removeFuture = confirm('Este VT é recorrente. Deseja excluir também as recorrências futuras? (OK = Sim)');
+                    }
+                    monthData.vtLedger.splice(idx, 1);
+                    if (removeFuture && entry && entry.recurringId) {
+                        const rid = entry.recurringId;
+                        const currentMonthStart = new Date(y, m - 1, 1);
+                        Object.keys(state.appData.data).forEach(yearKey => {
+                            Object.keys(state.appData.data[yearKey]).forEach(monthKey => {
+                                const yearNum = Number(yearKey);
+                                const monthNum = Number(monthKey);
+                                const candidate = new Date(yearNum, monthNum - 1, 1);
+                                if (candidate >= currentMonthStart) {
+                                    const md = state.appData.data[yearKey][monthKey];
+                                    if (md && Array.isArray(md.vtLedger)) {
+                                        md.vtLedger = md.vtLedger.filter(v => v.recurringId !== rid);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                    try { await storage.saveData(state.appData); showToast('VT excluído.'); } catch (e) { console.error('delete vt save', e); showToast('Falha ao excluir VT.', 'bg-red-600'); }
+                } catch (e) { console.error('deleteVTLedgerEntry', e); }
+            }
+
             // Open the VR modal to edit a ledger entry
             function openVREdit(id) {
                 try {
@@ -4269,15 +4578,126 @@ const firebaseConfig = {
                 } catch(e) { console.error('saveVRUsageEdit', e); }
             }
 
+            // VT Ledger helpers
+            function openVTEdit(id) {
+                try {
+                    const modal = document.getElementById('vt-modal');
+                    if (!modal) return;
+                    const md = getCurrentMonthData();
+                    const entry = (md.vtLedger || []).find(v => v.id === id) || null;
+                    if (entry) {
+                        document.getElementById('vt-entry-id').value = entry.id || '';
+                        document.getElementById('vt-entry-desc').value = entry.description || 'Benefício - VT';
+                        document.getElementById('vt-entry-amount').value = entry.amount || 0;
+                    } else {
+                        document.getElementById('vt-entry-id').value = '';
+                        document.getElementById('vt-entry-desc').value = 'Benefício - VT';
+                        document.getElementById('vt-entry-amount').value = '';
+                    }
+                    try { modal.showModal(); } catch(e){ console.error('openVTEdit showModal', e); }
+                } catch (e) { console.error('openVTEdit', e); }
+            }
+
+            function closeVTModal() {
+                try { const m = document.getElementById('vt-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeVTModal', e); }
+            }
+
+            async function saveVTLedgerEntry() {
+                try {
+                    const id = document.getElementById('vt-entry-id').value;
+                    const desc = document.getElementById('vt-entry-desc').value || 'Benefício - VT';
+                    const amount = parseFloat(document.getElementById('vt-entry-amount').value) || 0;
+                    const md = getCurrentMonthData();
+                    if (!Array.isArray(md.vtLedger)) md.vtLedger = [];
+                    if (id) {
+                        const idx = md.vtLedger.findIndex(v => v.id === id);
+                        if (idx > -1) {
+                            md.vtLedger[idx].description = desc;
+                            md.vtLedger[idx].amount = amount;
+                        }
+                    } else {
+                        md.vtLedger.push({ id: generateUUID(), description: desc, amount: amount, recurringId: null, isRecurring: false });
+                    }
+                    await storage.saveData(state.appData);
+                    closeVTModal();
+                    render();
+                    showToast('VT salvo.', 'bg-green-600');
+                } catch (e) { console.error('saveVTLedgerEntry', e); showToast('Falha ao salvar VT.', 'bg-red-600'); }
+            }
+
+            // VT Usage edit helpers
+            function openVTUsageEdit(id) {
+                try {
+                    const md = getCurrentMonthData();
+                    const entry = (md.vtUsage || []).find(u => u.id === id);
+                    const modal = document.getElementById('vt-usage-modal');
+                    if (!modal) return;
+                    if (entry) {
+                        document.getElementById('vt-usage-id').value = entry.id || '';
+                        document.getElementById('vt-usage-desc').value = entry.description || '';
+                        document.getElementById('vt-usage-amount').value = entry.amount || 0;
+                    } else {
+                        document.getElementById('vt-usage-id').value = '';
+                        document.getElementById('vt-usage-desc').value = '';
+                        document.getElementById('vt-usage-amount').value = '';
+                    }
+                    try { modal.showModal(); } catch(e) { console.error('openVTUsageEdit showModal', e); }
+                } catch(e) { console.error('openVTUsageEdit', e); }
+            }
+
+            function closeVTUsageModal() {
+                try { const m = document.getElementById('vt-usage-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeVTUsageModal', e); }
+            }
+
+            async function saveVTUsageEdit(e) {
+                try {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                    const id = document.getElementById('vt-usage-id').value;
+                    const desc = document.getElementById('vt-usage-desc').value || '';
+                    const amount = parseFloat(document.getElementById('vt-usage-amount').value) || 0;
+                    const md = getCurrentMonthData();
+                    if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
+                    // Validate against available VT balance for this month.
+                    const ledgerTotal = (Array.isArray(md.vtLedger) ? md.vtLedger.reduce((s,l) => s + (Number(l && l.amount) || 0), 0) : 0);
+                    const currentUsageExcludingThis = (md.vtUsage || []).reduce((s,u) => s + (Number(u && u.amount) || 0), 0) - ((id && md.vtUsage.find(u => u.id === id)) ? Number(md.vtUsage.find(u => u.id === id).amount || 0) : 0);
+                    const projectedUsage = Math.round((currentUsageExcludingThis + amount) * 100) / 100;
+                    if (projectedUsage > Math.round((ledgerTotal + Number.EPSILON) * 100) / 100) {
+                        try { setTransactionError('Valor superior ao saldo disponível de VT para este mês. Verifique o saldo no card de VT.'); } catch(e) {}
+                        showToast('Saldo de VT insuficiente para esta edição.', 'bg-red-600');
+                        return; // abort save
+                    }
+
+                    if (id) {
+                        const idx = md.vtUsage.findIndex(u => u.id === id);
+                        if (idx > -1) {
+                            md.vtUsage[idx].description = desc;
+                            md.vtUsage[idx].amount = amount;
+                        }
+                    } else {
+                        md.vtUsage.push({ id: generateUUID(), description: desc, amount: amount, date: new Date().toISOString() });
+                    }
+                    try { await storage.saveData(state.appData); showToast('Compra VT salva.', 'bg-green-600'); } catch(e) { console.error('saveVTUsageEdit save', e); showToast('Falha ao salvar compra VT.', 'bg-red-600'); }
+                    closeVTUsageModal();
+                    render();
+                } catch(e) { console.error('saveVTUsageEdit', e); }
+            }
+
         // Export public API
-        return { 
+        return {
             init,
-            // expose VR helpers so external code (listeners) can call them safely
+            // VR helpers
             openVRUsageEdit,
             closeVRUsageModal,
             saveVRUsageEdit,
             saveVRLedgerEntry,
-            closeVRModal
+            closeVRModal,
+            // VT helpers
+            openVTUsageEdit,
+            closeVTUsageModal,
+            saveVTUsageEdit,
+            saveVTLedgerEntry,
+            closeVTModal,
+            openVTEdit
         };
     })(); // Close App IIFE and assign to App
 
@@ -4297,6 +4717,15 @@ const firebaseConfig = {
                 const vruForm = document.getElementById('vr-usage-form'); if (vruForm) vruForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVRUsageEdit(e); });
                 // Also protect VR ledger form (vr-entry-form) from default submit behavior
                 const vrEntryForm = document.getElementById('vr-entry-form'); if (vrEntryForm) vrEntryForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVRLedgerEntry(); });
+                // VT modal bindings
+                const vtSaveBtn = document.getElementById('vt-entry-save'); if (vtSaveBtn) vtSaveBtn.addEventListener('click', (e) => { e.preventDefault(); App.saveVTLedgerEntry(); });
+                const vtCancel = document.getElementById('vt-entry-cancel'); if (vtCancel) vtCancel.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('vt-entry-id').value = ''; document.getElementById('vt-entry-desc').value = ''; document.getElementById('vt-entry-amount').value = ''; });
+                const vtClose = document.getElementById('close-vt-modal'); if (vtClose) vtClose.addEventListener('click', () => App.closeVTModal());
+                const vtuSave = document.getElementById('vt-usage-save'); if (vtuSave) vtuSave.addEventListener('click', (e) => { e.preventDefault(); App.saveVTUsageEdit(e); });
+                const vtuCancel = document.getElementById('vt-usage-cancel'); if (vtuCancel) vtuCancel.addEventListener('click', (e) => { e.preventDefault(); App.closeVTUsageModal(); });
+                const vtuClose = document.getElementById('vt-usage-close'); if (vtuClose) vtuClose.addEventListener('click', () => App.closeVTUsageModal());
+                const vtuForm = document.getElementById('vt-usage-form'); if (vtuForm) vtuForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVTUsageEdit(e); });
+                const vtEntryForm = document.getElementById('vt-entry-form'); if (vtEntryForm) vtEntryForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVTLedgerEntry(); });
             } catch(e) { console.error('attach vr modal buttons', e); }
         }
     });

@@ -54,34 +54,7 @@
     80% { color: #dc2626; }
     100% { color: #1d1d1f; }
 }
-        /* Animações para KPIs principais */
-        .kpi-animate {
-            animation: kpiPulse 0.7s;
-        }
-        @keyframes kpiPulse {
-            0% { transform: scale(1); }
-            30% { transform: scale(1.15); }
-            60% { transform: scale(0.97); }
-            100% { transform: scale(1); }
-        }
-        .kpi-animate-up {
-            animation: kpiColorUp 0.7s;
-            color: #16a34a !important; /* verde entradas */
-        }
-        .kpi-animate-down {
-            animation: kpiColorDown 0.7s;
-            color: #dc2626 !important; /* vermelho */
-        }
-        @keyframes kpiColorUp {
-            0% { color: #16a34a; }
-            80% { color: #16a34a; }
-            100% { color: #1d1d1f; }
-        }
-        @keyframes kpiColorDown {
-            0% { color: #dc2626; }
-            80% { color: #dc2626; }
-            100% { color: #1d1d1f; }
-        }
+        /* Deduplicated KPI animations (defined above) */
         :root {
             --background-color: #f8f8fa;
             --card-background: rgba(255, 255, 255, 0.9);
@@ -219,6 +192,11 @@
             cursor: pointer;
             user-select: none;
         }
+
+        /* VR card: show 'Usado' only on hover of the value */
+        .vr-value-group:hover .vr-used { opacity: 1 !important; }
+        .delete-vr-usage-btn { background: transparent; border: none; padding: 4px; border-radius: 6px; cursor: pointer; display:inline-flex; align-items:center; justify-content:center; }
+        .delete-vr-usage-btn .material-symbols-outlined { font-size: 16px; color: #dc2626; }
         .sort-icon {
             opacity: 0.3;
             transition: all 0.2s ease;
@@ -473,6 +451,7 @@
                         <span class="material-symbols-outlined">add</span>
                     </button>
                 </div>
+                <!-- VR KPI moved to right column (below 'Projetado' and above feedback) -->
             </div>
           <div class="flex items-center gap-2">
               <div class="flex items-center gap-2">
@@ -682,6 +661,24 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-xs text-gray-500">Projetado</span>
                                 <span id="kpi-projected-balance" class="text-base font-semibold text-gray-700">R$ 0,00</span>
+                            </div>
+                        </div>
+                        <!-- VR KPI: minimal — shows available balance and spent progress -->
+                        <div id="kpi-vr-card" class="card p-2 rounded-xl mb-2">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-xs font-medium text-gray-500">VR - Uso</h4>
+                                </div>
+                                <div class="text-right">
+                                    <!-- Show available balance (credited - used), same value as the VR card in Faturas -->
+                                    <p id="kpi-vr-values" class="text-sm font-semibold text-green-600">R$ 0,00</p>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="w-full bg-gray-200 rounded h-4 overflow-hidden relative">
+                                    <div id="kpi-vr-progress" class="h-4 w-0 flex items-center justify-end pr-1 text-xs text-white" style="transition: width 360ms ease;"></div>
+                                    <div id="kpi-vr-bar-text" class="absolute inset-0 flex items-center justify-center text-xs text-gray-700 pointer-events-none"></div>
+                                </div>
                             </div>
                         </div>
                         <div id="feedback-card" class="card p-6 rounded-xl">
@@ -1038,12 +1035,33 @@
         <button id="close-vr-modal" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
     </dialog>
     
+    <!-- VR Usage Edit Modal -->
+    <dialog id="vr-usage-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">Editar Compra (VR)</h2>
+        <form id="vr-usage-form" class="space-y-3">
+            <input type="hidden" id="vr-usage-id">
+            <div>
+                <label class="block text-sm text-gray-700">Descrição</label>
+                <input id="vr-usage-desc" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-700">Valor (R$)</label>
+                <input id="vr-usage-amount" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button id="vr-usage-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
+                <button id="vr-usage-save" type="submit" class="btn-primary px-3 py-1 rounded">Salvar</button>
+            </div>
+        </form>
+        <button id="vr-usage-close" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
+    </dialog>
+    
     <script>
     // Global toast helper para feedback visual (disponível antes do init)
     function showToast(message, color = 'bg-blue-600') {
         let toast = document.getElementById('toast');
         if (!toast) {
-            console.log('[toast]', message);
+            // console.debug('[toast]', message);
             return;
         }
         toast.textContent = message;
@@ -1173,10 +1191,10 @@ const firebaseConfig = {
         loadData: async function() {
             const initialData = this.getInitialData();
             try {
-                console.log('storage.loadData: fetching data from Firebase...');
+                // console.debug('storage.loadData: fetching data from Firebase...');
                 const snapshot = await database.ref(this.DB_KEY).get();
                 if (!snapshot.exists()) {
-                    console.log("Firebase está vazio. Inicializando com dados padrão e salvando no banco.");
+                    // console.debug("Firebase está vazio. Inicializando com dados padrão e salvando no banco.");
                     await this.saveData(initialData);
                     return initialData;
                 }
@@ -1191,7 +1209,7 @@ const firebaseConfig = {
                 mergedData.settings.goals = mergedData.settings.goals || [];
                 mergedData.settings.paymentMethods = mergedData.settings.paymentMethods || [];
                 
-                console.log("Dados do Firebase carregados e validados com sucesso.");
+                // console.debug("Dados do Firebase carregados e validados com sucesso.");
                 return mergedData;
             } catch (err) {
                 console.error("Erro crítico ao carregar dados do Firebase. Usando estrutura de dados inicial.", err);
@@ -1229,12 +1247,12 @@ const firebaseConfig = {
 
         saveData: function(data) {
             try {
-                console.log("Sanitizing data before saving to Firebase...");
+                // console.debug("Sanitizing data before saving to Firebase...");
                 showLoading();
                 const safe = this.sanitizeForFirebase(data);
-                console.log("Salvando dados no Firebase (sanitizado)...", safe);
+                // Persist without verbose logging of the entire object
                 return database.ref(this.DB_KEY).set(safe)
-                    .then(() => { console.log("Dados salvos com sucesso no Firebase!"); hideLoading(); return Promise.resolve(); })
+                    .then(() => { /* saved successfully */ hideLoading(); return Promise.resolve(); })
                     .catch(e => {
                         console.error("Erro ao salvar no Firebase:", e);
                         hideLoading();
@@ -1321,7 +1339,7 @@ const firebaseConfig = {
         // --- CORE FUNCTIONS ---
 
         async function init() {
-            console.log("App.init() iniciado.");
+            // console.debug("App.init() iniciado.");
             // A nova função `loadData` é robusta e sempre retorna um objeto de estado válido.
             // O `await` garante que o código abaixo só execute após o carregamento completo.
             state.appData = await storage.loadData();
@@ -1330,7 +1348,18 @@ const firebaseConfig = {
                 // Idealmente, exibir uma mensagem de erro visível para o usuário aqui.
                 return;
             }
-            console.log("Dados prontos para uso na aplicação:", state.appData);
+            // Normalize settings lists (alphabetical) to keep UX consistent
+            try {
+                const s = state.appData.settings || {};
+                if (Array.isArray(s.expenseCategories)) s.expenseCategories = sortStrings(s.expenseCategories);
+                if (Array.isArray(s.savingCategories)) s.savingCategories = sortStrings(s.savingCategories);
+                if (Array.isArray(s.goals)) s.goals = (s.goals || []).slice().sort((a,b) => ((a.name||'').toLowerCase() < (b.name||'').toLowerCase() ? -1 : 1));
+                if (Array.isArray(s.paymentMethods)) s.paymentMethods = (s.paymentMethods || []).slice().sort((a,b)=> ((a.name||'').toLowerCase() < (b.name||'').toLowerCase() ? -1 : 1));
+                state.appData.settings = s;
+                // Persist normalized settings in background
+                storage.saveData(state.appData).catch(() => {});
+            } catch(e) { /* non-fatal */ }
+            // console.debug("Dados prontos para uso na aplicação:", state.appData);
             mapUI();
             bindEvents();
             // Migrate any existing VR income items into a dedicated vrLedger per month
@@ -1352,8 +1381,39 @@ const firebaseConfig = {
                     });
                 });
             } catch(e){ console.error('VR migration', e); }
+            // Additionally migrate any legacy expenses that used payment === 'VR' into the vrUsage ledger
+            try {
+                let migratedCount = 0;
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const md = state.appData.data[year][month];
+                        if (!md) return;
+                        if (!Array.isArray(md.expenses)) md.expenses = [];
+                        if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
+                        // Find expenses paid with VR and move them to vrUsage
+                        const remainingExpenses = [];
+                        md.expenses.forEach(exp => {
+                            try {
+                                if (exp && (exp.payment || '').toString() === 'VR') {
+                                    // preserve id if present
+                                    md.vrUsage.push({ id: exp.id || generateUUID(), amount: Number(exp.amount) || 0, description: exp.description || '', date: exp.date || new Date().toISOString() });
+                                    migratedCount++;
+                                } else {
+                                    remainingExpenses.push(exp);
+                                }
+                            } catch (e) { remainingExpenses.push(exp); }
+                        });
+                        md.expenses = remainingExpenses;
+                    });
+                });
+                if (migratedCount > 0) {
+                    // console.debug('[VR MIGRATION] moved', migratedCount, 'expenses -> vrUsage across months. Persisting migration to Firebase.');
+                    // Persist state so the migration is saved
+                    try { await storage.saveData(state.appData); } catch(e) { console.error('Failed to persist VR migration', e); }
+                }
+            } catch (e) { console.error('VR expenses migration', e); }
             goToDate(new Date());
-            console.log("App.init() finalizado.");
+            // console.debug("App.init() finalizado.");
         }
 
         function mapUI() {
@@ -1591,6 +1651,14 @@ const firebaseConfig = {
             if (ui.desktopDashboardBtn) ui.desktopDashboardBtn.addEventListener('click', () => changeView('dashboard'));
             if (ui.desktopCreditcardsBtn) ui.desktopCreditcardsBtn.addEventListener('click', () => changeView('credit-cards'));
             if (ui.desktopInvestmentsBtn) ui.desktopInvestmentsBtn.addEventListener('click', () => changeView('investments'));
+            // Make VR KPI clickable: open Faturas (credit-cards) when clicked
+            try {
+                const kpiVr = document.getElementById('kpi-vr-card');
+                if (kpiVr) {
+                    kpiVr.style.cursor = 'pointer';
+                    kpiVr.addEventListener('click', () => changeView('credit-cards'));
+                }
+            } catch (e) { console.error('attach kpi-vr click handler', e); }
             // Show import/export when hovering the monthly report icon/area
             const infrequent = document.getElementById('infrequent-controls');
             if (infrequent && ui.monthlyReportBtn) {
@@ -1640,9 +1708,11 @@ const firebaseConfig = {
                     e.stopPropagation();
                     // populate selects from settings
                     const payments = state.appData.settings.paymentMethods || [];
-                    ui.filterPaymentMethod.innerHTML = '<option value="">Todos</option>' + payments.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+                    const paymentsSorted = sortStrings((payments || []).map(p => p.name || ''));
+                    ui.filterPaymentMethod.innerHTML = '<option value="">Todos</option>' + paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
                     const cats = state.appData.settings.expenseCategories || [];
-                    ui.filterCategory.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+                    const catsSorted = sortStrings(cats);
+                    ui.filterCategory.innerHTML = '<option value="">Todas</option>' + catsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
                     // On small screens, show as mobile bottom-sheet using mobile-visible
                     if (window.innerWidth <= 639) {
                         ui.expensesFilterPopover.classList.remove('hidden');
@@ -1890,7 +1960,9 @@ const firebaseConfig = {
             container.innerHTML = '';
             const currentMonthData = getCurrentMonthData();
             // Render real credit cards
-            const creditCards = (state.appData.settings.paymentMethods || []).filter(p => p.type === 'credit_card');
+            const creditCards = ((state.appData.settings.paymentMethods || []).filter(p => p.type === 'credit_card')).slice().sort((a,b) => {
+                const A = (a && a.name || '').toLowerCase(); const B = (b && b.name || '').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0;
+            });
             creditCards.forEach(card => {
                 const cardExpenses = (currentMonthData.expenses || []).filter(e => e.payment === card.name);
                 const totalAmount = cardExpenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -1941,7 +2013,7 @@ const firebaseConfig = {
                     usageTotal = 0;
                 }
                 // Debug: log ledger and usage arrays when displayAmount is zero despite credited > 0
-                try { if (creditedTotal > 0 && Math.round((creditedTotal - usageTotal) * 100) / 100 === 0) console.debug('[VR DEBUG] creditedTotal, usageTotal, ledger, usage:', creditedTotal, usageTotal, currentMonthData.vrLedger, currentMonthData.vrUsage); } catch(e) {}
+                try { /* VR debug disabled in cleanup pass */ } catch(e) {}
                 // displayAmount is credited minus expenses already charged to VR
                 const displayAmount = Math.max(0, Math.round((creditedTotal - usageTotal) * 100) / 100);
                 // Derive a friendly limit from latest vrLedger salaryMeta if available (kept for auxiliary info)
@@ -1975,35 +2047,63 @@ const firebaseConfig = {
                                 <!-- Badge shows: Créd. + Último dia do mês exibido (dd/MM) -->
                                 <span class="text-xs font-medium bg-green-100 text-green-800 px-2 py-1 rounded-full">Créd. ${lastDayStr}</span>
                             </div>
-                            <p class="text-3xl font-bold text-green-600 mb-4">${formatCurrency(displayAmount)}</p>
-                            <p class="text-sm text-gray-500">Creditado: ${formatCurrency(creditedTotal)}</p>
-                            <p class="text-sm text-gray-500">Usado: ${formatCurrency(usageTotal)}</p>
-                            <div class="space-y-2 max-h-48 overflow-y-auto pr-2 mt-3">
-                                ${(currentMonthData.vrLedger || []).map(l => `<div class="flex justify-between text-sm items-center"><span class="truncate pr-2">${l.description || 'VR'}</span><span class="font-medium flex-shrink-0 vr-amount" data-vr-id="${l.id}">${formatCurrency(l.amount || 0)}</span></div>`).join('') || '<p class="text-sm text-gray-500">Nenhum lançamento de VR este mês.</p>'}
+                            <div class="vr-value-group" title="Usado: ${formatCurrency(usageTotal)}" style="position:relative; display:inline-block;">
+                                <p class="text-3xl font-bold text-green-600 mb-4" style="margin:0;">${formatCurrency(displayAmount)}</p>
+                                <p class="text-sm text-gray-500 vr-used" style="margin:0; opacity:0; transition: opacity 160ms ease;">Usado: ${formatCurrency(usageTotal)}</p>
                             </div>
                             <div class="mt-3 text-sm text-gray-600">
-                                <h4 class="font-semibold text-sm text-gray-700">Usos de VR (lançamentos)</h4>
-                                ${(currentMonthData.vrUsage && currentMonthData.vrUsage.length > 0) ? `<div class="space-y-1 mt-2">${currentMonthData.vrUsage.map(u => `<div class="flex justify-between items-center text-sm"><span class="truncate pr-2">${u.description || 'Despesa VR'}</span><span class="font-medium">${formatCurrency(Number(u.amount)||0)}</span></div>`).join('')}</div>` : '<div class="text-sm text-gray-500 mt-1">Nenhum uso registrado.</div>'}
-                                <div class="mt-2">
-                                    <button id="clear-vr-usage-btn" class="text-xs text-red-600 hover:underline">Limpar usos de VR (depuração)</button>
-                                </div>
+                                <h4 class="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                                    <span>Compras</span>
+                                    <button id="add-vr-usage-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" title="Adicionar compra VR">
+                                        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+                                    </button>
+                                </h4>
+                                ${(currentMonthData.vrUsage && currentMonthData.vrUsage.length > 0) ? (() => {
+                                    const usagesSorted = (currentMonthData.vrUsage || []).slice().sort((a,b) => { const A=(a.description||'').toLowerCase(); const B=(b.description||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
+                                    return `<div class="space-y-1 mt-2">${usagesSorted.map(u => `<div class="flex justify-between items-center text-sm"><div class="flex items-center"><span class="truncate pr-2 cursor-pointer edit-vr-usage-trigger" data-vr-usage-edit-id="${u.id}">${u.description || 'Despesa VR'}</span></div><div class="flex items-center"><span class="font-medium mr-2">${formatCurrency(Number(u.amount)||0)}</span><button data-vr-usage-edit-id="${u.id}" class="ml-1 text-gray-600 edit-vr-usage-btn" title="Editar"><span class="material-symbols-outlined">edit</span></button><button data-vr-usage-id="${u.id}" class="ml-3 text-red-600 delete-vr-usage-btn" title="Excluir"><span class="material-symbols-outlined">delete</span></button></div></div>`).join('')}</div>`;
+                                })() : '<div class="text-sm text-gray-500 mt-1">Nenhuma compra registrada.</div>'}
                             </div>
                         </div>
                         <!-- Gerenciar VR button removed per UX: VR works as débito somente -->
                     </div>`;
             }
-            container.querySelectorAll('.pay-invoice-btn').forEach(btn => btn.addEventListener('click', (e) => payCardInvoice(e.target.dataset.cardName)));
-            // Debug: clear VR usage button
+            // Attach handler to add VR usage from the VR card (open transaction modal with payment=VR)
             try {
-                const clearBtn = container.querySelector('#clear-vr-usage-btn');
-                if (clearBtn) clearBtn.addEventListener('click', async () => {
-                    if (!confirm('Remover todos os registros de uso de VR neste mês? Esta ação será salva.')) return;
-                    const md = getCurrentMonthData();
-                    if (Array.isArray(md.vrUsage)) md.vrUsage = [];
-                    try { await storage.saveData(state.appData); showToast('Usos de VR removidos deste mês.', 'bg-green-600'); } catch(e){ console.error('clear vr usage save', e); showToast('Falha ao salvar remoção.', 'bg-red-600'); }
-                    render();
+                const addVrBtn = container.querySelector('#add-vr-usage-btn');
+                if (addVrBtn) addVrBtn.addEventListener('click', (ev) => {
+                    // Open transaction modal for expense and prefill payment=VR, then focus description
+                    openModal('expenses');
+                    // Wait briefly for dropdowns to be populated, then set payment and focus description
+                    setTimeout(() => {
+                        try {
+                            const pm = document.getElementById('payment-method'); if (pm) pm.value = 'VR';
+                            const desc = document.getElementById('description'); if (desc) { desc.focus(); try { desc.select(); } catch(_) {}
+                            }
+                        } catch(e) {}
+                    }, 60);
                 });
-            } catch(e) { console.error('attach clear vr usage btn', e); }
+            } catch(e) { console.error('attach add-vr-usage handler', e); }
+            container.querySelectorAll('.pay-invoice-btn').forEach(btn => btn.addEventListener('click', (e) => payCardInvoice(e.target.dataset.cardName)));
+            // Attach per-item delete and edit buttons for VR usages
+            try {
+                container.querySelectorAll('.delete-vr-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
+                    const id = ev.currentTarget.getAttribute('data-vr-usage-id');
+                    if (!id) return;
+                    if (!confirm('Excluir este uso de VR?')) return;
+                    const md = getCurrentMonthData();
+                    if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
+                    const idx = md.vrUsage.findIndex(u => u.id === id);
+                    if (idx > -1) md.vrUsage.splice(idx, 1);
+                    try { await storage.saveData(state.appData); showToast('Uso de VR excluído.', 'bg-green-600'); } catch(e) { console.error('delete vr usage save', e); showToast('Falha ao salvar exclusão.', 'bg-red-600'); }
+                    render();
+                }));
+                // Edit triggers (icon and description clickable)
+                container.querySelectorAll('.edit-vr-usage-btn, .edit-vr-usage-trigger').forEach(el => el.addEventListener('click', (ev) => {
+                    const id = ev.currentTarget.getAttribute('data-vr-usage-edit-id') || ev.currentTarget.closest('[data-vr-usage-edit-id]')?.getAttribute('data-vr-usage-edit-id');
+                    if (!id) return;
+                    openVRUsageEdit(id);
+                }));
+            } catch(e) { console.error('attach vr usage item handlers', e); }
             // VR inline-edit bindings on card amounts
             try {
                 container.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId)));
@@ -2366,6 +2466,16 @@ const firebaseConfig = {
             return Math.max(0, bal);
         }
 
+        // Utility: sort array of strings alphabetically (case-insensitive)
+        function sortStrings(arr) {
+            if (!Array.isArray(arr)) return [];
+            return arr.slice().sort((a,b) => {
+                const sa = (a||'').toString().toLowerCase();
+                const sb = (b||'').toString().toLowerCase();
+                return sa < sb ? -1 : sa > sb ? 1 : 0;
+            });
+        }
+
         function renderExpenseTable() {
             // Inicializa array de despesas para evitar erro
             let expenses = Array.isArray(getCurrentMonthData().expenses) ? [...getCurrentMonthData().expenses] : [];
@@ -2496,7 +2606,7 @@ const firebaseConfig = {
 
         function renderGoals() {
             const container = ui.goalsContainer;
-            const goals = state.appData.settings.goals || [];
+            const goals = (state.appData.settings.goals || []).slice().sort((a,b) => { const A=(a.name||'').toLowerCase(); const B=(b.name||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
             const allSavings = Object.values(state.appData.data).flatMap(y => Object.values(y)).flatMap(m => m.savings || []);
             
             container.innerHTML = goals.length === 0 ? '<p class="text-center text-gray-500">Nenhuma meta definida.</p>' : '';
@@ -2559,6 +2669,37 @@ const firebaseConfig = {
                 }
 
                 getFeedback(totalIncome, totalExpenses, totalSavings);
+
+                // VR KPI: compute credited and used totals for current month
+                try {
+                    const creditedTotal = (monthData.vrLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
+                    let usedTotal = (monthData.vrUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
+                    // include legacy expenses paid with VR (edge-cases)
+                    try { const expensesVR = (monthData.expenses || []).filter(e => (e.payment || '') === 'VR'); usedTotal += expensesVR.reduce((s, e) => s + (Number(e && e.amount) || 0), 0); } catch(e) {}
+                    const usedRounded = Math.round((usedTotal + Number.EPSILON) * 100) / 100;
+                    const creditRounded = Math.round((creditedTotal + Number.EPSILON) * 100) / 100;
+                    // displayAmount = available (credited - used) — same shown in Faturas card
+                    const displayAmount = Math.max(0, Math.round((creditRounded - usedRounded) * 100) / 100);
+                    const valuesEl = document.getElementById('kpi-vr-values'); if (valuesEl) valuesEl.textContent = formatCurrency(displayAmount);
+                    const progressEl = document.getElementById('kpi-vr-progress');
+                    const barTextEl = document.getElementById('kpi-vr-bar-text');
+                    if (progressEl) {
+                        const pctRaw = creditRounded > 0 ? (usedRounded / creditRounded) : 0;
+                        const pct = Math.min(1, Math.max(0, pctRaw));
+                        progressEl.style.width = `${Math.round(pct * 100)}%`;
+                        // Color thresholds: green <75%, yellow 75-99%, red >=100%
+                        progressEl.classList.remove('bg-green-500','bg-yellow-400','bg-red-500');
+                        if (pctRaw >= 1) progressEl.classList.add('bg-red-500');
+                        else if (pctRaw >= 0.75) progressEl.classList.add('bg-yellow-400');
+                        else progressEl.classList.add('bg-green-500');
+                        // tooltip with percent
+                        try { progressEl.title = `${Math.round((pctRaw)*100)}% utilizado (${formatCurrency(usedRounded)} de ${formatCurrency(creditRounded)})`; } catch(e){}
+                    }
+                    if (barTextEl) {
+                        // show spent amount centered over the bar
+                        barTextEl.textContent = `${formatCurrency(usedRounded)} gasto`;
+                    }
+                } catch(e) { console.error('updateKPIs vr kpi', e); }
             } catch (e) {
                 console.error('updateKPIs error', e);
             }
@@ -3055,12 +3196,17 @@ const firebaseConfig = {
                         storage.saveData(state.appData).then(() => { showToast('Categoria Alimentação adicionada às configurações.', 'bg-green-600'); }).catch(() => {});
                     } catch (e) { console.error('failed to persist alimentação category', e); }
                 }
+                // Sort lists alphabetically for consistent UX
+                const paymentsSorted = sortStrings((mergedPayments || []).map(p => p.name || ''));
+                const expenseCatsSorted = sortStrings(expenseCategories || []);
+                const savingCatsSorted = sortStrings(savingCategories || []);
+                const goalsSorted = sortStrings(goals.map(g => g.name || ''));
                 // Build payment method options from mergedPayments so VR is always present
-                if (ui.paymentMethod) ui.paymentMethod.innerHTML = mergedPayments.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
-                if (ui.categoryExpense) ui.categoryExpense.innerHTML = expenseCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+                if (ui.paymentMethod) ui.paymentMethod.innerHTML = paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
+                if (ui.categoryExpense) ui.categoryExpense.innerHTML = expenseCatsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
                 if (ui.categorySaving) {
-                    let savingOptions = savingCategories.map(c => `<option value="${c}">${c}</option>`);
-                    if (goals.length) savingOptions = savingOptions.concat(goals.map(g => `<option value="${g.name}">${g.name} (Meta)</option>`));
+                    let savingOptions = savingCatsSorted.map(c => `<option value="${c}">${c}</option>`);
+                    if (goalsSorted.length) savingOptions = savingOptions.concat(goalsSorted.map(g => `<option value="${g}">${g} (Meta)</option>`));
                     ui.categorySaving.innerHTML = savingOptions.join('');
                 }
             } catch (e) { console.error('populateDropdowns', e); }
@@ -3373,15 +3519,21 @@ const firebaseConfig = {
                 const installmentDate = new Date(state.currentDate);
                 installmentDate.setMonth(state.currentDate.getMonth() + i - 1);
                 const futureMonthData = getCurrentMonthData(installmentDate);
-                if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
-                futureMonthData.expenses.push({ 
-                    ...baseTransaction, 
-                    id: generateUUID(), 
-                    amount: installmentAmount, 
-                    installmentId, 
-                    currentInstallment: i, 
-                    totalInstallments: count 
-                });
+                // If payment method is VR, store as vrUsage entry instead of expenses
+                if ((baseTransaction.payment || '') === 'VR') {
+                    if (!Array.isArray(futureMonthData.vrUsage)) futureMonthData.vrUsage = [];
+                    futureMonthData.vrUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString() });
+                } else {
+                    if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
+                    futureMonthData.expenses.push({ 
+                        ...baseTransaction, 
+                        id: generateUUID(), 
+                        amount: installmentAmount, 
+                        installmentId, 
+                        currentInstallment: i, 
+                        totalInstallments: count 
+                    });
+                }
             }
             try {
                 await storage.saveData(state.appData);
@@ -3398,14 +3550,19 @@ const firebaseConfig = {
                 const installmentDate = new Date(state.currentDate);
                 installmentDate.setMonth(state.currentDate.getMonth() + (i - current));
                 const futureMonthData = getCurrentMonthData(installmentDate);
-                if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
-                futureMonthData.expenses.push({
-                    ...baseTransaction,
-                    id: generateUUID(),
-                    financingId,
-                    currentFinancing: i,
-                    totalFinancing: total
-                });
+                if ((baseTransaction.payment || '') === 'VR') {
+                    if (!Array.isArray(futureMonthData.vrUsage)) futureMonthData.vrUsage = [];
+                    futureMonthData.vrUsage.push({ id: generateUUID(), amount: parseFloat(baseTransaction.amount) || 0, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString(), financingId, currentFinancing: i, totalFinancing: total });
+                } else {
+                    if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
+                    futureMonthData.expenses.push({
+                        ...baseTransaction,
+                        id: generateUUID(),
+                        financingId,
+                        currentFinancing: i,
+                        totalFinancing: total
+                    });
+                }
             }
             try {
                 await storage.saveData(state.appData);
@@ -3669,9 +3826,23 @@ const firebaseConfig = {
                     } else {
                         clearTransactionError();
                     }
-                    const md = getCurrentMonthData();
-                    if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
-                    md.vrUsage.push({ id: generateUUID(), amount: transactionData.amount || 0, description: transactionData.description || '', date: new Date().toISOString() });
+                        // Instead of saving this as a normal expense, store it in the month's vrUsage ledger
+                        const md = getCurrentMonthData();
+                        if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
+                        const usageEntry = { id: generateUUID(), amount: Number(transactionData.amount) || 0, description: transactionData.description || '', date: new Date().toISOString() };
+                        md.vrUsage.push(usageEntry);
+                        // Persist immediately and bail out of the normal expense save flow
+                        try {
+                            await storage.saveData(state.appData);
+                            showToast('Despesa registrada no VR (lançamento separado).', 'bg-green-600');
+                        } catch (e) {
+                            console.error('Erro ao salvar uso de VR:', e);
+                            showToast('Falha ao salvar uso de VR no Firebase.', 'bg-red-600');
+                        }
+                        // Close modal and re-render instead of continuing to add to expenses
+                        closeModal('transaction-modal');
+                        render();
+                        return;
                 }
             } else if (type === 'savings') {
                 Object.assign(transactionData, { category: document.getElementById('category-saving').value });
@@ -3714,10 +3885,10 @@ const firebaseConfig = {
 
                 // Default flows for creating new or simple edits
                 if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
-                    console.log('[handleFormSubmit] creating installments (new)', installmentsCount, transactionData);
+                    // console.debug('[handleFormSubmit] creating installments (new)', installmentsCount /*, transactionData */);
                     await createInstallments(transactionData, installmentsCount);
                 } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
-                    console.log('[handleFormSubmit] creating financing (new)', financingTotal, financingCurrent, transactionData);
+                    // console.debug('[handleFormSubmit] creating financing (new)', financingTotal, financingCurrent /*, transactionData */);
                     await createFinancing(transactionData, financingTotal, financingCurrent);
                 } else if (type === 'incomes' && document.getElementById('is-salary') && document.getElementById('is-salary').checked) {
                 // Special handling for salary: calculate breakdown and update/create entries
@@ -4037,8 +4208,77 @@ const firebaseConfig = {
                 } catch (e) { console.error('saveVRLedgerEntry', e); showToast('Falha ao salvar VR.', 'bg-red-600'); }
             }
 
+            // VR Usage edit helpers
+            function openVRUsageEdit(id) {
+                try {
+                    const md = getCurrentMonthData();
+                    const entry = (md.vrUsage || []).find(u => u.id === id);
+                    const modal = document.getElementById('vr-usage-modal');
+                    if (!modal) return;
+                    if (entry) {
+                        document.getElementById('vr-usage-id').value = entry.id || '';
+                        document.getElementById('vr-usage-desc').value = entry.description || '';
+                        document.getElementById('vr-usage-amount').value = entry.amount || 0;
+                    } else {
+                        document.getElementById('vr-usage-id').value = '';
+                        document.getElementById('vr-usage-desc').value = '';
+                        document.getElementById('vr-usage-amount').value = '';
+                    }
+                    try { modal.showModal(); } catch(e) { console.error('openVRUsageEdit showModal', e); }
+                } catch(e) { console.error('openVRUsageEdit', e); }
+            }
+
+            function closeVRUsageModal() {
+                try { const m = document.getElementById('vr-usage-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeVRUsageModal', e); }
+            }
+
+            async function saveVRUsageEdit(e) {
+                try {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                    const id = document.getElementById('vr-usage-id').value;
+                    const desc = document.getElementById('vr-usage-desc').value || '';
+                    const amount = parseFloat(document.getElementById('vr-usage-amount').value) || 0;
+                    const md = getCurrentMonthData();
+                    if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
+                    // Validate against available VR balance for this month.
+                    const ledgerTotal = (Array.isArray(md.vrLedger) ? md.vrLedger.reduce((s,l) => s + (Number(l && l.amount) || 0), 0) : 0);
+                    const currentUsageExcludingThis = (md.vrUsage || []).reduce((s,u) => s + (Number(u && u.amount) || 0), 0) - ((id && md.vrUsage.find(u => u.id === id)) ? Number(md.vrUsage.find(u => u.id === id).amount || 0) : 0);
+                    const projectedUsage = Math.round((currentUsageExcludingThis + amount) * 100) / 100;
+                    if (projectedUsage > Math.round((ledgerTotal + Number.EPSILON) * 100) / 100) {
+                        // Exceeds available VR balance — show inline error and abort
+                        // Use transaction error area if transaction modal is open, otherwise toast
+                        try {
+                            setTransactionError('Valor superior ao saldo disponível de VR para este mês. Verifique o saldo no card de VR.');
+                        } catch(e) { /* ignore */ }
+                        showToast('Saldo de VR insuficiente para esta edição.', 'bg-red-600');
+                        return; // abort save
+                    }
+
+                    if (id) {
+                        const idx = md.vrUsage.findIndex(u => u.id === id);
+                        if (idx > -1) {
+                            md.vrUsage[idx].description = desc;
+                            md.vrUsage[idx].amount = amount;
+                        }
+                    } else {
+                        md.vrUsage.push({ id: generateUUID(), description: desc, amount: amount, date: new Date().toISOString() });
+                    }
+                    try { await storage.saveData(state.appData); showToast('Compra VR salva.', 'bg-green-600'); } catch(e) { console.error('saveVRUsageEdit save', e); showToast('Falha ao salvar compra VR.', 'bg-red-600'); }
+                    closeVRUsageModal();
+                    render();
+                } catch(e) { console.error('saveVRUsageEdit', e); }
+            }
+
         // Export public API
-        return { init };
+        return { 
+            init,
+            // expose VR helpers so external code (listeners) can call them safely
+            openVRUsageEdit,
+            closeVRUsageModal,
+            saveVRUsageEdit,
+            saveVRLedgerEntry,
+            closeVRModal
+        };
     })(); // Close App IIFE and assign to App
 
     // Inicializa a aplicação quando o DOM estiver pronto
@@ -4047,9 +4287,16 @@ const firebaseConfig = {
             App.init();
             // Attach VR modal buttons after init so elements are available
             try {
-                const vrSaveBtn = document.getElementById('vr-entry-save'); if (vrSaveBtn) vrSaveBtn.addEventListener('click', (e) => { e.preventDefault(); saveVRLedgerEntry(); });
+                const vrSaveBtn = document.getElementById('vr-entry-save'); if (vrSaveBtn) vrSaveBtn.addEventListener('click', (e) => { e.preventDefault(); App.saveVRLedgerEntry(); });
                 const vrCancel = document.getElementById('vr-entry-cancel'); if (vrCancel) vrCancel.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('vr-entry-id').value = ''; document.getElementById('vr-entry-desc').value = ''; document.getElementById('vr-entry-amount').value = ''; });
-                const vrClose = document.getElementById('close-vr-modal'); if (vrClose) vrClose.addEventListener('click', () => closeVRModal());
+                const vrClose = document.getElementById('close-vr-modal'); if (vrClose) vrClose.addEventListener('click', () => App.closeVRModal());
+                const vruSave = document.getElementById('vr-usage-save'); if (vruSave) vruSave.addEventListener('click', (e) => { e.preventDefault(); App.saveVRUsageEdit(e); });
+                const vruCancel = document.getElementById('vr-usage-cancel'); if (vruCancel) vruCancel.addEventListener('click', (e) => { e.preventDefault(); App.closeVRUsageModal(); });
+                const vruClose = document.getElementById('vr-usage-close'); if (vruClose) vruClose.addEventListener('click', () => App.closeVRUsageModal());
+                // Ensure form submission (Enter key) does not trigger a full page submit
+                const vruForm = document.getElementById('vr-usage-form'); if (vruForm) vruForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVRUsageEdit(e); });
+                // Also protect VR ledger form (vr-entry-form) from default submit behavior
+                const vrEntryForm = document.getElementById('vr-entry-form'); if (vrEntryForm) vrEntryForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVRLedgerEntry(); });
             } catch(e) { console.error('attach vr modal buttons', e); }
         }
     });

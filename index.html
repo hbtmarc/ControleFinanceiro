@@ -714,10 +714,14 @@
                      <!-- Coluna de Gráficos e Insights -->
                     <div class="lg:col-span-1 space-y-8">
                         <!-- Valor Projetado do Mês (acima do feedback, visual sóbrio) -->
-                        <div class="card p-2 rounded-lg mb-3 bg-gray-50 border border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-500">Projetado</span>
+                        <div class="card p-3 rounded-lg mb-3 bg-gray-50 border border-gray-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-gray-500">Saldo Projetado</span>
                                 <span id="kpi-projected-balance" class="text-base font-semibold text-gray-700">R$ 0,00</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-500">Despesas Projetadas</span>
+                                <span id="kpi-projected-expenses" class="text-base font-semibold text-red-600">R$ 0,00</span>
                             </div>
                         </div>
                         <!-- VR KPI: minimal — shows available balance and spent progress -->
@@ -982,6 +986,9 @@
                     <div id="installments-fields" class="hidden mt-2">
                         <label for="installments-count" class="block text-sm font-medium text-gray-700">Número de parcelas (Valor total será dividido)</label>
                         <input type="number" id="installments-count" min="2" max="48" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 12">
+                        <label for="installments-current" class="block text-sm font-medium text-gray-700 mt-2">Parcela atual (se já estiver em andamento)</label>
+                        <input type="number" id="installments-current" min="1" max="48" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 4">
+                        <p class="text-xs text-gray-500 mt-1">Se >1, o valor informado será tratado como valor por parcela (não será dividido).</p>
                     </div>
                 </div>
                 <div id="financing-section" class="hidden">
@@ -993,7 +1000,7 @@
                         <label for="financing-total" class="block text-sm font-medium text-gray-700">Total de parcelas</label>
                         <input type="number" id="financing-total" min="2" max="120" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 36">
                         <label for="financing-current" class="block text-sm font-medium text-gray-700 mt-2">Parcela atual</label>
-                        <input type="number" id="financing-current" min="1" max="120" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 13">
+                        <input type="number" id="financing-current" min="1" max="120" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 12">
                     </div>
                 </div>
             </div>
@@ -1427,6 +1434,8 @@ const firebaseConfig = {
         const ui = {
             charts: {}
         };
+        // in-memory session defaults for the transaction modal (do not persist)
+        ui.lastTransactionDefaults = null;
 
         // --- HELPERS ---
         function generateUUID() {
@@ -1443,17 +1452,76 @@ const firebaseConfig = {
         }
 
         function propagateRecurringTransactions() {
-            // Ensure recurring transactions exist for months up to the current month
-            const today = new Date();
-            Object.keys(state.appData.data).forEach(year => {
-                Object.keys(state.appData.data[year]).forEach(month => {
-                    const monthData = state.appData.data[year][month];
-                    ['incomes','expenses','savings'].forEach(type => {
-                        if (!Array.isArray(monthData[type])) monthData[type] = [];
+            // Ensure recurring transactions exist for months and propagate future recurrences for expenses and savings
+            try {
+                const today = new Date();
+                // Ensure arrays exist for each month
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const monthData = state.appData.data[year][month];
+                        ['incomes','expenses','savings'].forEach(type => {
+                            if (!Array.isArray(monthData[type])) monthData[type] = [];
+                        });
                     });
                 });
-            });
-            // This is intentionally lightweight: full propagation logic can be added if required.
+
+                // Collect recurring templates from existing months (only for expenses and savings)
+                const templates = {}; // recurringId -> { type, template }
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const monthData = state.appData.data[year][month];
+                        ['expenses','savings'].forEach(type => {
+                            (monthData[type] || []).forEach(item => {
+                                try {
+                                    if (item && item.isRecurring && item.recurringId) {
+                                        if (!templates[item.recurringId]) {
+                                            // create a minimal template
+                                            const tpl = Object.assign({}, item);
+                                            // remove id/date to avoid duplicates
+                                            delete tpl.id;
+                                            if (tpl.date) delete tpl.date;
+                                            templates[item.recurringId] = { type, template: tpl };
+                                        }
+                                    }
+                                } catch (e) { /* ignore malformed items */ }
+                            });
+                        });
+                    });
+                });
+
+                // Propagate each template into the next 12 months (including current month)
+                const monthsToCreate = 12;
+                const added = [];
+                Object.keys(templates).forEach(rid => {
+                    const info = templates[rid];
+                    for (let i = 0; i < monthsToCreate; i++) {
+                        const target = new Date(today.getFullYear(), today.getMonth() + i, 1);
+                        const y = String(target.getFullYear());
+                        const m = String(String(target.getMonth() + 1).padStart(2, '0'));
+                        if (!state.appData.data[y]) state.appData.data[y] = {};
+                        if (!state.appData.data[y][m]) state.appData.data[y][m] = { incomes: [], expenses: [], savings: [] };
+                        const md = state.appData.data[y][m];
+                        // Ensure the array exists
+                        if (!Array.isArray(md[info.type])) md[info.type] = [];
+                        // If an entry with same recurringId already exists in that month, skip
+                        const exists = (md[info.type] || []).some(it => it && it.recurringId === rid);
+                        if (!exists) {
+                            const clone = Object.assign({}, info.template);
+                            clone.id = generateUUID();
+                            clone.recurringId = rid;
+                            // prefer to set a normalized date on the transaction (first day of month)
+                            clone.date = new Date(target.getFullYear(), target.getMonth(), 1).toISOString();
+                            // default isPaid to false for future months
+                            clone.isPaid = !!clone.isPaid && i === 0 ? clone.isPaid : false;
+                            md[info.type].push(clone);
+                            added.push({ y, m, type: info.type, id: clone.id });
+                        }
+                    }
+                });
+                if (added.length > 0) {
+                    try { storage.saveData(state.appData).catch(() => {}); } catch(e){}
+                }
+            } catch (e) { console.error('propagateRecurringTransactions', e); }
         }
 
         // --- CORE FUNCTIONS ---
@@ -1578,7 +1646,7 @@ const firebaseConfig = {
                 'add-transaction-btn', 'transaction-modal', 'close-transaction-modal-btn', 'transaction-form', 
                 'expense-fields', 'dashboard-view', 'credit-cards-view', 'investments-view', 
                 'credit-cards-container', 'installments-section', 'is-installment', 'search-description',
-                'installments-fields', 'payment-method', 'is-recurring', 
+                'installments-fields', 'installments-current', 'payment-method', 'is-recurring', 
                 'saving-fields', 'category-expense', 'category-saving', 'transaction-type-input', 
                 'advanced-options', 'expense-type', 'feedback-visual-container', 'feedback-message',
                 'import-data-btn', 'import-file-input', 'export-data-btn',
@@ -1783,6 +1851,16 @@ const firebaseConfig = {
                 buttons.forEach(btn => btn.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
             }
             ui.isInstallment.addEventListener('change', () => ui.installmentsFields.classList.toggle('hidden', !ui.isInstallment.checked));
+            // Ensure financing checkbox always toggles financing fields even if payment-method change hasn't attached an onchange
+            try {
+                const financingCheckbox = document.getElementById('is-financing');
+                if (financingCheckbox) {
+                    financingCheckbox.addEventListener('change', () => {
+                        const ff = document.getElementById('financing-fields');
+                        if (ff) ff.classList.toggle('hidden', !financingCheckbox.checked);
+                    });
+                }
+            } catch (e) { console.error('bindEvents attach financing handler', e); }
             ui.paymentMethod.addEventListener('change', (e) => {
                 toggleInstallmentSection(e.target.value);
                 try {
@@ -2969,8 +3047,11 @@ const firebaseConfig = {
         animateKPINumber('kpi-balance', balance);
 
                 // Projected balance (consider all expenses)
-                const projectedBalance = totalIncome - ((monthData.expenses || []).reduce((s, e) => s + (e.amount || 0), 0)) - totalSavings;
+                const totalProjectedExpenses = (monthData.expenses || []).reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
+                const projectedBalance = totalIncome - totalProjectedExpenses - totalSavings;
                 const projEl = document.getElementById('kpi-projected-balance'); if (projEl) animateKPINumber('kpi-projected-balance', projectedBalance);
+                // Populate Despesas Projetadas KPI (shows total of all expenses regardless of paid status)
+                const projExpEl = document.getElementById('kpi-projected-expenses'); if (projExpEl) animateKPINumber('kpi-projected-expenses', totalProjectedExpenses);
 
                 // Percentual de cada despesa do mês
                 const expenses = monthData.expenses || [];
@@ -3488,6 +3569,8 @@ const firebaseConfig = {
                     populateModal(type, id);
                 } else {
                     document.getElementById('modal-title').textContent = 'Nova Transação';
+                    // Apply session-aware defaults: prefer last used in-session values when present
+                    if (!prefill) prepareModalForNextEntry();
                 }
                 // Show modal
                 modal.showModal();
@@ -3643,6 +3726,51 @@ const firebaseConfig = {
                     if (financingCheckbox) financingCheckbox.onchange = function() { document.getElementById('financing-fields').classList.toggle('hidden', !this.checked); };
                 }
             } catch (e) { console.error('toggleInstallmentSection', e); }
+        }
+
+        // Reset transaction modal inputs to sensible defaults
+        function resetTransactionModalDefaults() {
+            try {
+                // Default payment: first debit method if available, else first paymentMethod
+                const payments = (state.appData.settings && state.appData.settings.paymentMethods) || [];
+                let defaultPayment = '';
+                try {
+                    const debit = payments.find(p => (p.type || '').toString().toLowerCase() === 'debit');
+                    if (debit) defaultPayment = debit.name;
+                } catch(e) {}
+                if (!defaultPayment && payments.length) defaultPayment = payments[0].name || '';
+                // Fallbacks
+                if (!defaultPayment) defaultPayment = 'Pix';
+                if (document.getElementById('payment-method')) document.getElementById('payment-method').value = defaultPayment;
+                // Default category: Contas if exists, else first expense category
+                const expenseCats = (state.appData.settings && state.appData.settings.expenseCategories) || [];
+                let defaultCat = expenseCats.find(c => (c||'').toString().toLowerCase().includes('conta')) || expenseCats[0] || 'Contas';
+                if (document.getElementById('category-expense')) document.getElementById('category-expense').value = defaultCat;
+                // Uncheck recurring and financing/installment checkboxes and hide fields
+                const recurring = document.getElementById('is-recurring'); if (recurring) recurring.checked = false;
+                const instal = document.getElementById('is-installment'); if (instal) instal.checked = false; const instFields = document.getElementById('installments-fields'); if (instFields) instFields.classList.add('hidden');
+                const financ = document.getElementById('is-financing'); if (financ) financ.checked = false; const financFields = document.getElementById('financing-fields'); if (financFields) financFields.classList.add('hidden');
+                // Clear description and amount inputs
+                const desc = document.getElementById('description'); if (desc) desc.value = '';
+                const amt = document.getElementById('amount'); if (amt) amt.value = '';
+                // Reset modal-expanded class
+                try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.remove('modal-expanded'); } catch(e){}
+            } catch (e) { console.error('resetTransactionModalDefaults', e); }
+        }
+
+        // Prepare modal inputs for the next entry: prefer session last-used values when present
+        function prepareModalForNextEntry() {
+            try {
+                // If session has last defaults, use them
+                if (ui.lastTransactionDefaults && typeof ui.lastTransactionDefaults === 'object') {
+                    const d = ui.lastTransactionDefaults;
+                    if (document.getElementById('payment-method') && d.payment) document.getElementById('payment-method').value = d.payment;
+                    if (document.getElementById('category-expense') && d.category) document.getElementById('category-expense').value = d.category;
+                    return;
+                }
+                // otherwise apply global defaults
+                resetTransactionModalDefaults();
+            } catch (e) { console.error('prepareModalForNextEntry', e); }
         }
 
         function populateModal(type, id) {
@@ -3897,22 +4025,38 @@ const firebaseConfig = {
             }
         }
         
-    async function createInstallments(baseTransaction, count) {
+    // createInstallments(baseTransaction, count, start) - start: current installment number (default 1)
+    async function createInstallments(baseTransaction, count, start = 1) {
             const installmentId = generateUUID();
-            const installmentAmount = parseFloat((baseTransaction.amount / count).toFixed(2));
-            for (let i = 1; i <= count; i++) {
+            // If a start/current installment > 1 is provided, the user is registering
+            // an in-progress parcel and expects the provided amount to be the
+            // per-installment value (do NOT divide by total). Otherwise divide
+            // the provided amount evenly across total installments.
+            let installmentAmount;
+            const rawAmount = parseFloat(baseTransaction.amount) || 0;
+            if (start && start > 1) {
+                installmentAmount = parseFloat(rawAmount.toFixed(2));
+            } else {
+                installmentAmount = parseFloat((rawAmount / count).toFixed(2));
+            }
+            // Do not create previous installments automatically.
+
+            // create installments numbered start..count (inclusive)
+            for (let i = start; i <= count; i++) {
+                // Determine month offset: installment i corresponds to month offset (i - start)
+                const monthOffset = i - start;
                 const installmentDate = new Date(state.currentDate);
-                installmentDate.setMonth(state.currentDate.getMonth() + i - 1);
+                installmentDate.setMonth(state.currentDate.getMonth() + monthOffset);
                 const futureMonthData = getCurrentMonthData(installmentDate);
                 // If payment method is VR, store as vrUsage entry instead of expenses
-                if ((baseTransaction.payment || '') === 'VR') {
+                    if ((baseTransaction.payment || '') === 'VR') {
                     if (!Array.isArray(futureMonthData.vrUsage)) futureMonthData.vrUsage = [];
-                    futureMonthData.vrUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString() });
+                    futureMonthData.vrUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString(), installmentId, currentInstallment: i, totalInstallments: count, isPaid: i < start ? true : false });
                 }
                 // If payment method is VT, mirror VR behavior and store in vtUsage ledger
                 else if ((baseTransaction.payment || '') === 'VT') {
                     if (!Array.isArray(futureMonthData.vtUsage)) futureMonthData.vtUsage = [];
-                    futureMonthData.vtUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VT', date: new Date(installmentDate).toISOString() });
+                    futureMonthData.vtUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VT', date: new Date(installmentDate).toISOString(), installmentId, currentInstallment: i, totalInstallments: count, isPaid: i < start ? true : false });
                 } else {
                     if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
                     futureMonthData.expenses.push({ 
@@ -3921,8 +4065,9 @@ const firebaseConfig = {
                         amount: installmentAmount, 
                         installmentId, 
                         currentInstallment: i, 
-                        totalInstallments: count 
-                    });
+                        totalInstallments: count, 
+                        isPaid: i < start ? true : false 
+                     });
                 }
             }
             try {
@@ -4054,6 +4199,14 @@ const firebaseConfig = {
                 try {
                     await storage.saveData(state.appData);
                     showToast('Transação salva com sucesso!', 'bg-green-600');
+                    // Persist session 'last used' payment/category for faster subsequent entries (in-memory only)
+                    try {
+                        const lastPayment = document.getElementById('payment-method') ? document.getElementById('payment-method').value : null;
+                        const lastCat = document.getElementById('category-expense') ? document.getElementById('category-expense').value : null;
+                        ui.lastTransactionDefaults = { payment: lastPayment, category: lastCat };
+                    } catch(e) { /* ignore */ }
+                    // Prepare modal for next entry using session defaults (will fall back to app defaults on reload)
+                    try { prepareModalForNextEntry(); } catch(e) { console.error('prepare next after save', e); }
                 } catch (e) {
                     console.error('Erro ao salvar nova transação:', e);
                     showToast('Falha ao salvar transação no Firebase.', 'bg-red-600');
@@ -4316,7 +4469,8 @@ const firebaseConfig = {
                             // remove original single transaction
                             const idx = currentMonthData.expenses.findIndex(t => t.id === id);
                             if (idx > -1) currentMonthData.expenses.splice(idx, 1);
-                            await createInstallments(transactionData, installmentsCount);
+                            const startInstallment = parseInt((document.getElementById('installments-current') || { value: 1 }).value, 10) || 1;
+                            await createInstallments(transactionData, installmentsCount, startInstallment);
                             // done
                             closeModal('transaction-modal');
                             render();
@@ -4335,9 +4489,10 @@ const firebaseConfig = {
                 }
 
                 // Default flows for creating new or simple edits
-                if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
+                    if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
                     // console.debug('[handleFormSubmit] creating installments (new)', installmentsCount /*, transactionData */);
-                    await createInstallments(transactionData, installmentsCount);
+                    const startInstallment = parseInt((document.getElementById('installments-current') || { value: 1 }).value, 10) || 1;
+                    await createInstallments(transactionData, installmentsCount, startInstallment);
                 } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
                     // console.debug('[handleFormSubmit] creating financing (new)', financingTotal, financingCurrent /*, transactionData */);
                     await createFinancing(transactionData, financingTotal, financingCurrent);

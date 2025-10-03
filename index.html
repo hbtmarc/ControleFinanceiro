@@ -867,6 +867,8 @@
                 <label for="description" class="block text-sm font-medium text-gray-700">Descrição</label>
                 <input type="text" id="description" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" list="description-suggestions">
                 <datalist id="description-suggestions"></datalist>
+                <!-- Hint explaining when description is auto-filled/disabled (visible for VT flows) -->
+                <p id="description-hint" class="text-xs text-gray-500 mt-1 hidden" aria-hidden="true">&nbsp;</p>
             </div>
 
             <!-- salary-section moved into advanced options for better layout -->
@@ -885,6 +887,8 @@
                      <div>
                         <label for="category-expense" class="block text-sm font-medium text-gray-700">Categoria</label>
                         <select id="category-expense" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
+                        <!-- Hint explaining when category is auto-selected/disabled (visible for VT/VR flows) -->
+                        <p id="category-hint" class="text-xs text-gray-500 mt-1 hidden" aria-hidden="true">&nbsp;</p>
                     </div>
                 </div>
                 <div>
@@ -1787,6 +1791,12 @@ const firebaseConfig = {
                     const expenseCategories = settings.expenseCategories || [];
                     const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
                     const descEl = document.getElementById('description');
+                    const descHint = document.getElementById('description-hint');
+                    const catHint = document.getElementById('category-hint');
+
+                    // clear hints by default
+                    if (descHint) { descHint.textContent = ''; descHint.classList.add('hidden'); descHint.setAttribute('aria-hidden', 'true'); }
+                    if (catHint) { catHint.textContent = ''; catHint.classList.add('hidden'); catHint.setAttribute('aria-hidden', 'true'); }
 
                     // VR enforcement: Alimentação / Essenciais
                     if (pm === 'VR') {
@@ -1798,6 +1808,8 @@ const firebaseConfig = {
                         if (ui.expenseType) ui.expenseType.value = 'Essenciais';
                         // ensure description is editable for VR cases
                         try { if (descEl) descEl.disabled = false; } catch(e){}
+                        // show hint explaining why category is locked
+                        if (catHint) { catHint.textContent = 'Categoria padronizada para VR (Alimentação). Você pode alterar após salvar no gerenciamento de VR.'; catHint.classList.remove('hidden'); catHint.setAttribute('aria-hidden', 'false'); }
                         showToast('Pagamento via VR: categoria e tipo ajustados para Alimentação / Essencial.', 'bg-yellow-600');
                     }
 
@@ -1811,6 +1823,9 @@ const firebaseConfig = {
                         if (ui.expenseType) ui.expenseType.value = 'Essenciais';
                         // Force description to 'Abastecimento' and make it readonly/disabled so it's mandatory
                         try { if (descEl) { descEl.value = 'Abastecimento'; descEl.disabled = true; } } catch(e){}
+                        // show hint explaining why description and category are locked for VT
+                        if (descHint) { descHint.textContent = 'Descrição obrigatória para VT: "Abastecimento". Caso precise outra descrição, registre como débito comum.'; descHint.classList.remove('hidden'); descHint.setAttribute('aria-hidden', 'false'); }
+                        if (catHint) { catHint.textContent = 'Categoria padronizada para VT (Transporte). Para outras categorias, use método de pagamento diferente.'; catHint.classList.remove('hidden'); catHint.setAttribute('aria-hidden', 'false'); }
                         showToast('Pagamento via VT: categoria definida para Transporte e descrição definida para "Abastecimento".', 'bg-yellow-600');
                     }
 
@@ -1818,6 +1833,9 @@ const firebaseConfig = {
                     else {
                         try { if (ui.categoryExpense) ui.categoryExpense.disabled = false; } catch(e){}
                         try { if (descEl) descEl.disabled = false; } catch(e){}
+                        // clear hints when normal payment selected
+                        if (descHint) { descHint.textContent = ''; descHint.classList.add('hidden'); descHint.setAttribute('aria-hidden', 'true'); }
+                        if (catHint) { catHint.textContent = ''; catHint.classList.add('hidden'); catHint.setAttribute('aria-hidden', 'true'); }
                     }
                 } catch (err) { console.error('paymentMethod change enforcement error', err); }
             });

@@ -384,6 +384,24 @@
             /* Hide desktop quick links on small screens */
             #desktop-quick-links { display: none !important; }
         }
+        /* Desktop: make the expenses selector column narrow (just big enough for checkbox) */
+        @media (min-width: 640px) {
+            /* header cell that shows the check icon for expenses only */
+            #expenses-table-head th:first-child {
+                width: 36px; /* narrow column */
+                padding-left: 8px;
+                padding-right: 8px;
+                text-align: center;
+            }
+            /* body checkbox cells */
+            .checkbox-cell {
+                width: 36px;
+                padding-left: 8px;
+                padding-right: 8px;
+                text-align: center;
+            }
+            .checkbox-cell input[type="checkbox"] { margin: 0 auto; display: inline-block; }
+        }
     </style>
     <style>
     /* Mobile-only UI polish: floating action button, larger touch targets, clearer bottom nav spacing */
@@ -644,11 +662,7 @@
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="payment">Pagamento <span class="sort-icon material-symbols-outlined"></span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="category">Categoria <span class="sort-icon material-symbols-outlined"></span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="amount">Valor <span class="sort-icon material-symbols-outlined"></span></th>
-                                        <th class="py-3 px-3 text-sm text-gray-500 align-middle" style="width:48px;">
-                                            <button id="group-expenses-btn" class="p-1 ml-2 rounded text-gray-600 hover:text-gray-900" title="Agrupar/Desagrupar despesas">
-                                                <span class="material-symbols-outlined">merge_type</span>
-                                            </button>
-                                        </th>
+                                        <!-- removed group/ungroup column for simpler responsive layout -->
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 text-right align-middle" style="width:120px">Ações</th>
                                     </tr></thead>
                                     <tbody id="expenses-table-body"></tbody>
@@ -1666,7 +1680,6 @@ const firebaseConfig = {
                 'current-month-display', 'prev-month-btn', 'next-month-btn', 'today-btn', 'month-picker', 'month-picker-month', 'month-picker-year', 'month-picker-apply', 'month-picker-cancel', 
                 'income-table-body', 'expenses-table-body', 'savings-table-body', 'expenses-table-head', 
                 'toggle-expense-grouped', 'toggle-expense-grouped-label', 'expenses-grouped-container', 'expenses-groups',
-                'group-expenses-btn',
                 'add-transaction-btn', 'transaction-modal', 'close-transaction-modal-btn', 'transaction-form', 
                 'expense-fields', 'dashboard-view', 'credit-cards-view', 'investments-view', 
                 'credit-cards-container', 'installments-section', 'is-installment', 'search-description',
@@ -3703,7 +3716,6 @@ const firebaseConfig = {
                 <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>
                 <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${formatCurrency(expense.amount)}</td>
-                <td class="py-3 px-3" aria-hidden="true"></td>
                 <td class="py-3 px-3 text-right actions-cell align-middle">
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
@@ -4040,8 +4052,31 @@ const firebaseConfig = {
             } catch(e){console.error('renderPaymentMethodChart', e)}
         }
 
+        // helper: compute month outcome using card invoice totals (to keep annual totals consistent with faturas)
+        function invoiceAwareOutcomeForMonth(year, month, monthData) {
+            try {
+                const expenses = (monthData && monthData.expenses) || [];
+                const savingsSum = (monthData && monthData.savings || []).reduce((s,t)=>s+(t.amount||0),0);
+                const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
+                const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
+                const cardNames = cardMethods.map(c => c.name);
+                const nonCardExpensesSum = expenses.filter(e => !cardNames.includes(e.payment)).reduce((s,t)=>s+(t.amount||0),0);
+                const cardAnticipations = (state.appData.data[year] && state.appData.data[year][month] && state.appData.data[year][month].cardAnticipations) || {};
+                let totalInvoices = 0;
+                cardMethods.forEach(card => {
+                    const cardExpenses = expenses.filter(e => e.payment === card.name);
+                    const totalBeforeAnticipation = cardExpenses.reduce((s,t)=>s+(t.amount||0),0);
+                    const anticipated = Number(cardAnticipations[card.name] || 0);
+                    const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
+                    totalInvoices += invoiceTotal;
+                });
+                return nonCardExpensesSum + totalInvoices + savingsSum;
+            } catch(e) { console.error('invoiceAwareOutcomeForMonth', e); return ((monthData.expenses||[]).reduce((s,t)=>s+(t.amount||0),0)) + ((monthData.savings||[]).reduce((s,t)=>s+(t.amount||0),0)); }
+        }
+
         function renderAnnualSummaryChart() {
             try {
+                const year = state.currentDate.getFullYear();
                 destroyChart('annual-summary-chart');
                 const yearData = state.appData.data[state.currentDate.getFullYear()] || {};
                 const months = Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
@@ -4049,11 +4084,46 @@ const firebaseConfig = {
                 months.forEach(month => {
                     const monthData = yearData[month] || {};
                     const income = (monthData.incomes || []).reduce((s,t)=>s+(t.amount||0),0);
-                    const expense = ((monthData.expenses || []).reduce((s,t)=>s+(t.amount||0),0)) + ((monthData.savings || []).reduce((s,t)=>s+(t.amount||0),0));
+                    const expense = invoiceAwareOutcomeForMonth(year, month, monthData);
                     monthlyTotals.incomes.push(income); monthlyTotals.expenses.push(expense); monthlyTotals.balance.push(income-expense);
                 });
                 const ctx = document.getElementById('annual-summary-chart'); if (!ctx) return;
-                ui.charts['annual-summary-chart'] = new Chart(ctx.getContext('2d'), { type:'bar', data:{ labels:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], datasets:[ { label:'Entradas', data:monthlyTotals.incomes, backgroundColor:'#22C55E' }, { label:'Saídas', data:monthlyTotals.expenses, backgroundColor:'#EF4444' } ] }, options:{responsive:true, maintainAspectRatio:false, scales:{ x:{ stacked:true }, y:{ stacked:true } } } });
+                const asData = {
+                    labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+                    datasets: [
+                        { label: 'Entradas', data: monthlyTotals.incomes, backgroundColor: '#22C55E' },
+                        { label: 'Saídas', data: monthlyTotals.expenses, backgroundColor: '#EF4444' }
+                    ]
+                };
+                const asOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                generateLabels: function(chart){
+                                    try {
+                                        const ds = chart.data.datasets || [];
+                                        return ds.map((d, idx) => {
+                                            const sum = (d.data || []).reduce((s, v) => s + (v || 0), 0);
+                                            return { text: d.label + ' (' + formatCurrency(sum) + ')', fillStyle: d.backgroundColor, hidden: chart.getDatasetMeta(idx).hidden, index: idx };
+                                        });
+                                    } catch (e) {
+                                        return Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, ticks: { callback: function(v){ return formatCurrency(v); } }, beginAtZero: true }
+                    },
+                    elements: { bar: { borderRadius: 6 } },
+                    layout: { padding: { top: 6, bottom: 6 } }
+                };
+                ui.charts['annual-summary-chart'] = new Chart(ctx.getContext('2d'), { type: 'bar', data: asData, options: asOptions });
             } catch(e){console.error('renderAnnualSummaryChart', e)}
         }
 
@@ -4064,8 +4134,40 @@ const firebaseConfig = {
                 const monthData = getCurrentMonthData();
                 const expenses = monthData.expenses || [];
                 const byCategory = expenses.reduce((acc, e) => { acc[e.category] = (acc[e.category]||0) + (e.amount||0); return acc; }, {});
-                const ctx = document.getElementById('mr-category-breakdown-chart'); if (!ctx || Object.keys(byCategory).length === 0 || typeof Chart === 'undefined') return;
-                ui.charts['mr-category-breakdown-chart'] = new Chart(ctx.getContext('2d'), { type:'pie', data:{ labels:Object.keys(byCategory), datasets:[{ data:Object.values(byCategory), backgroundColor:['#EF4444','#F97316','#84CC16','#22C55E','#14B8A6','#06B6D4','#6366F1','#D946EF'] }] }, options:{responsive:true, maintainAspectRatio:false} });
+                const entries = Object.keys(byCategory).map(k => ({ category: k, value: byCategory[k] }));
+                // sort descending by value so legend and pie render from largest to smallest
+                entries.sort((a,b) => (b.value||0) - (a.value||0));
+                const labels = entries.map(e => e.category);
+                const dataVals = entries.map(e => e.value);
+                const colors = ['#EF4444','#F97316','#84CC16','#22C55E','#14B8A6','#06B6D4','#6366F1','#D946EF'];
+                const ctx = document.getElementById('mr-category-breakdown-chart'); if (!ctx || labels.length === 0 || typeof Chart === 'undefined') return;
+                const mrData = { labels: labels, datasets: [{ data: dataVals, backgroundColor: colors.slice(0, labels.length) }] };
+                const mrOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                generateLabels: function(chart){
+                                    try {
+                                        const data = chart.data;
+                                        const ds = (data.datasets && data.datasets[0] && data.datasets[0].data) || [];
+                                        const total = ds.reduce((s,v)=>s+(v||0),0) || 1;
+                                        return (data.labels || []).map((lab, i) => {
+                                            const val = ds[i] || 0;
+                                            const pct = Math.round((val/total)*100);
+                                            return { text: lab + ' (' + pct + '%)', fillStyle: (data.datasets[0].backgroundColor||[])[i], hidden: chart.getDataVisibility(i) === false, index: i };
+                                        });
+                                    } catch (e) {
+                                        return Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+                ui.charts['mr-category-breakdown-chart'] = new Chart(ctx.getContext('2d'), { type: 'pie', data: mrData, options: mrOptions });
             } catch(e){console.error('renderMonthlyReportCategoryChart', e)}
         }
 
@@ -4078,11 +4180,38 @@ const firebaseConfig = {
                 const balances = months.map(m => {
                     const md = yearData[m] || { incomes: [], expenses: [], savings: [] };
                     const inc = (md.incomes || []).reduce((s,t)=>s+(t.amount||0),0);
-                    const out = ((md.expenses || []).reduce((s,t)=>s+(t.amount||0),0)) + ((md.savings || []).reduce((s,t)=>s+(t.amount||0),0));
+                    const out = invoiceAwareOutcomeForMonth(year, m, md);
                     return inc - out;
                 });
                 const ctx = document.getElementById('ar-balance-evolution-chart'); if (!ctx || typeof Chart === 'undefined') return;
-                ui.charts['ar-balance-evolution-chart'] = new Chart(ctx.getContext('2d'), { type:'line', data:{ labels:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], datasets:[{ label:'Saldo Mensal', data:balances, borderColor:'#2563EB', tension:0.2 }] }, options:{responsive:true, maintainAspectRatio:false} });
+                const arData = {
+                    labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+                    datasets: [{ label: 'Saldo Mensal', data: balances, borderColor: '#2563EB', tension: 0.2, pointRadius: 3, pointHoverRadius: 6 }]
+                };
+                const arOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                generateLabels: function(chart){
+                                    try{
+                                        const d = chart.data.datasets && chart.data.datasets[0];
+                                        const last = (d && d.data && d.data.length) ? d.data[d.data.length-1] : 0;
+                                        return [{ text: d.label + ' (último: ' + formatCurrency(last) + ')', fillStyle: d.borderColor, hidden: chart.getDatasetMeta(0).hidden, index: 0 }];
+                                    }catch(e){
+                                        return Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { ticks: { callback: function(v){ return formatCurrency(v); } } }, x: { ticks: { maxRotation: 0, autoSkip: true } } },
+                    elements: { line: { tension: 0.2 } },
+                    layout: { padding: { top: 8, bottom: 6 } }
+                };
+                ui.charts['ar-balance-evolution-chart'] = new Chart(ctx.getContext('2d'), { type: 'line', data: arData, options: arOptions });
             } catch(e){console.error('renderAnnualBalanceEvolutionChart', e)}
         }
 
@@ -4102,7 +4231,30 @@ const firebaseConfig = {
                 months.forEach(() => {});
                 Object.keys(categories).forEach(cat => { avg[cat] = categories[cat] / Math.max(1, months.length); });
                 const ctx = document.getElementById('ar-avg-category-spending-chart'); if (!ctx || Object.keys(avg).length === 0 || typeof Chart === 'undefined') return;
-                ui.charts['ar-avg-category-spending-chart'] = new Chart(ctx.getContext('2d'), { type:'bar', data:{ labels:Object.keys(avg), datasets:[{ label:'Média Mensal', data:Object.values(avg), backgroundColor:'#F59E0B' }] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} });
+                const acData = { labels: Object.keys(avg), datasets: [{ label: 'Média Mensal', data: Object.values(avg), backgroundColor: '#F59E0B' }] };
+                const acOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                generateLabels: function(chart){
+                                    try{
+                                        const d = chart.data.datasets && chart.data.datasets[0];
+                                        const sum = (d && d.data) ? d.data.reduce((s,v)=>s+(v||0),0) : 0;
+                                        return [{ text: d.label + ' (' + formatCurrency(sum) + ')', fillStyle: d.backgroundColor, hidden: chart.getDatasetMeta(0).hidden, index: 0 }];
+                                    }catch(e){
+                                        return Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { ticks: { callback: function(v){ return formatCurrency(v); } }, beginAtZero: true }, x: { ticks: { autoSkip: true } } },
+                    layout: { padding: { top: 6, bottom: 6 } }
+                };
+                ui.charts['ar-avg-category-spending-chart'] = new Chart(ctx.getContext('2d'), { type: 'bar', data: acData, options: acOptions });
             } catch(e){console.error('renderAnnualAvgCategoryChart', e)}
         }
 
@@ -4651,7 +4803,27 @@ const firebaseConfig = {
                 // Build and show monthly report modal
                 const monthData = getCurrentMonthData();
                 const totalIncome = (monthData.incomes || []).reduce((s,t)=>s+(t.amount||0),0);
-                const totalOutcome = ((monthData.expenses || []).reduce((s,t)=>s+(t.amount||0),0)) + ((monthData.savings || []).reduce((s,t)=>s+(t.amount||0),0));
+                // Recalculate outcomes using invoice (fatura) totals for credit cards to avoid divergence.
+                const expenses = monthData.expenses || [];
+                const year = state.currentDate.getFullYear();
+                const month = String(state.currentDate.getMonth() + 1).padStart(2, '0');
+                const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
+                const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
+                const cardNames = cardMethods.map(c => c.name);
+                // Sum expenses that are NOT paid with cards (they remain as-is)
+                const nonCardExpensesSum = expenses.filter(e => !cardNames.includes(e.payment)).reduce((s,t)=>s+(t.amount||0),0);
+                // Sum invoice totals per-card (total of card expenses minus any anticipations)
+                const cardAnticipations = (state.appData.data[year] && state.appData.data[year][month] && state.appData.data[year][month].cardAnticipations) || {};
+                let totalInvoices = 0;
+                cardMethods.forEach(card => {
+                    const cardExpenses = expenses.filter(e => e.payment === card.name);
+                    const totalBeforeAnticipation = cardExpenses.reduce((s,t)=>s+(t.amount||0),0);
+                    const anticipated = Number(cardAnticipations[card.name] || 0);
+                    const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
+                    totalInvoices += invoiceTotal;
+                });
+                const savingsSum = (monthData.savings || []).reduce((s,t)=>s+(t.amount||0),0);
+                const totalOutcome = nonCardExpensesSum + totalInvoices + savingsSum;
                 const finalBalance = totalIncome - totalOutcome;
                 const title = document.getElementById('monthly-report-title'); if (title) title.textContent = state.currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
                 const inEl = document.getElementById('mr-total-income'); if (inEl) inEl.textContent = formatCurrency(totalIncome);
@@ -4659,17 +4831,40 @@ const firebaseConfig = {
                 const finEl = document.getElementById('mr-final-balance'); if (finEl) finEl.textContent = formatCurrency(finalBalance);
                 renderMonthlySavingsChart();
                 renderMonthlyReportCategoryChart();
-                // Populate top expenses list
+                // Populate top expenses list (include card invoices as single entries)
                 try {
                     const topList = document.getElementById('mr-top-expenses-list');
                     if (topList) {
                         topList.innerHTML = '';
-                        const topExpenses = (monthData.expenses || []).slice().sort((a,b)=> (b.amount||0)-(a.amount||0)).slice(0,8);
-                        if (topExpenses.length === 0) topList.innerHTML = '<li class="text-gray-500">Nenhuma despesa registrada.</li>';
-                        topExpenses.forEach(exp => {
+                        const contributors = [];
+                        // add non-card individual expenses
+                        (expenses || []).filter(e => !cardNames.includes(e.payment)).forEach(e => {
+                            contributors.push({ id: `exp-${generateUUID()}`, label: e.description || 'Despesa', amount: Number(e.amount)||0, count: 1, kind: 'expense' });
+                        });
+                        // add one entry per card: invoice total
+                        cardMethods.forEach(card => {
+                            const cardExpenses = (expenses || []).filter(e => e.payment === card.name);
+                            const totalBeforeAnticipation = cardExpenses.reduce((s,t)=>s+(t.amount||0),0);
+                            const anticipated = Number(cardAnticipations[card.name] || 0);
+                            const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
+                            // Only include card invoice if it contributes something (non-zero) or there are expenses
+                            if ((invoiceTotal !== 0) || cardExpenses.length > 0) {
+                                contributors.push({ id: `card-${card.name}`, label: `Fatura ${card.name}`, amount: invoiceTotal, count: cardExpenses.length, kind: 'invoice' });
+                            }
+                        });
+                        // sort contributors by amount desc and take top 8
+                        const topContributors = contributors.slice().sort((a,b) => (b.amount||0) - (a.amount||0)).slice(0,8);
+                        if (topContributors.length === 0) topList.innerHTML = '<li class="text-gray-500">Nenhuma despesa registrada.</li>';
+                        topContributors.forEach(c => {
                             const li = document.createElement('li');
                             li.className = 'flex justify-between';
-                            li.innerHTML = `<span>${exp.description}</span><span class="font-medium">${formatCurrency(exp.amount)}</span>`;
+                            const left = document.createElement('span');
+                            left.textContent = c.count > 1 && c.kind === 'invoice' ? `${c.label} (${c.count})` : c.label;
+                            const right = document.createElement('span');
+                            right.className = 'font-medium';
+                            right.textContent = formatCurrency(c.amount);
+                            li.appendChild(left);
+                            li.appendChild(right);
                             topList.appendChild(li);
                         });
                     }
@@ -4689,7 +4884,7 @@ const firebaseConfig = {
                 months.forEach(m => {
                     const md = yearData[m] || { incomes: [], expenses: [], savings: [] };
                     totalInc += (md.incomes || []).reduce((s,t)=>s+(t.amount||0),0);
-                    totalOut += ((md.expenses || []).reduce((s,t)=>s+(t.amount||0),0)) + ((md.savings || []).reduce((s,t)=>s+(t.amount||0),0));
+                    totalOut += invoiceAwareOutcomeForMonth(year, m, md);
                 });
                 const final = totalInc - totalOut;
                 const inEl = document.getElementById('ar-total-income'); if (inEl) inEl.textContent = formatCurrency(totalInc);

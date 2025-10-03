@@ -2264,7 +2264,12 @@ const firebaseConfig = {
                                 }).join('') || '<p class="text-sm text-gray-500">Nenhum gasto este mês.</p>'}
                             </div>
                         </div>
-                        <button data-card-name="${card.name}" class="pay-invoice-btn mt-6 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">Pagar Fatura</button>
+                        <div class="mt-6">
+                            <div class="flex w-full items-center" style="gap:8px;">
+                                <button data-card-name="${card.name}" class="pay-invoice-btn flex-grow bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">Pagar Fatura</button>
+                                <button data-card-name="${card.name}" title="Adicionar despesa neste cartão" class="add-card-expense-btn flex-shrink-0 w-12 bg-blue-500 text-white font-semibold py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"> <span class="material-symbols-outlined" style="font-size:20px; line-height:1;">add</span></button>
+                            </div>
+                        </div>
                     </div>`;
             });
 
@@ -2416,6 +2421,16 @@ const firebaseConfig = {
                     });
                 } catch(e) { console.error('attach add-vr-usage handler', e); }
             container.querySelectorAll('.pay-invoice-btn').forEach(btn => btn.addEventListener('click', (e) => payCardInvoice(e.target.dataset.cardName)));
+            // Attach '+' handlers: open transaction modal prefilled with card payment and last used category (if any)
+            container.querySelectorAll('.add-card-expense-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                const cardName = e.currentTarget.dataset.cardName || e.target.dataset.cardName;
+                const prefill = { payment: cardName, focusDescription: true };
+                try {
+                    if (ui.lastTransactionDefaults && ui.lastTransactionDefaults.category) prefill.category = ui.lastTransactionDefaults.category;
+                } catch(e) { /* ignore */ }
+                showToast(`Criando despesa para ${cardName}...`, 'bg-blue-600');
+                openModal('expenses', null, prefill);
+            }));
             // Attach per-item delete and edit buttons for VR usages
             try {
                 container.querySelectorAll('.delete-vr-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {

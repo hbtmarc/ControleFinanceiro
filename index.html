@@ -213,8 +213,9 @@
             user-select: none;
         }
 
-        /* VR card: show 'Usado' only on hover of the value */
-        .vr-value-group:hover .vr-used { opacity: 1 !important; }
+    /* VR card: show 'Usado' always (previously only on hover) so it's tappable/clickable and visible on mobile */
+    .vr-value-group:hover .vr-used { opacity: 1 !important; }
+    .vr-used { opacity: 1 !important; }
         .delete-vr-usage-btn { background: transparent; border: none; padding: 4px; border-radius: 6px; cursor: pointer; display:inline-flex; align-items:center; justify-content:center; }
         .delete-vr-usage-btn .material-symbols-outlined { font-size: 16px; color: #dc2626; }
         .sort-icon {
@@ -569,32 +570,44 @@
                         <div id="expenses-filter-popover" class="hidden absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-64">
                             <h3 class="text-sm font-semibold mb-2">Filtrar Despesas</h3>
                             <div class="space-y-2 text-sm">
-                                <label class="block">Pagamento</label>
-                                <select id="filter-payment-method" class="w-full border-gray-200 rounded-md p-1 text-sm">
-                                    <option value="">Todos</option>
-                                </select>
-                                    <label class="block">Essencialidade</label>
-                                    <select id="filter-spending-type" class="w-full border-gray-200 rounded-md p-1 text-sm">
-                                        <option value="">Todos</option>
-                                        <option value="essencial">Essencial</option>
-                                        <option value="nao-essencial">Não Essencial</option>
-                                        <option value="reserva">Reserva</option>
-                                    </select>
-                                <label class="block">Categoria</label>
-                                <select id="filter-category" class="w-full border-gray-200 rounded-md p-1 text-sm">
-                                    <option value="">Todas</option>
-                                </select>
-                                <label class="block">Tipo</label>
-                                <select id="filter-type" class="w-full border-gray-200 rounded-md p-1 text-sm">
-                                    <option value="">Todos</option>
-                                    <option value="expense">Despesa</option>
-                                    <option value="saving">Reserva</option>
-                                </select>
-                                <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="filter-recurring" /> <label for="filter-recurring" class="text-sm">Recorrente</label>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="filter-installment" /> <label for="filter-installment" class="text-sm">Parcelada / Financiamento</label>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs text-gray-500">Pagamento</label>
+                                            <select id="filter-payment-method" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                                <option value="">Todos</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-500">Essencialidade</label>
+                                            <select id="filter-spending-type" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                                <option value="">Todos</option>
+                                                <option value="essencial">Essencial</option>
+                                                <option value="nao-essencial">Não Essencial</option>
+                                                <option value="reserva">Reserva</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs text-gray-500">Categoria</label>
+                                            <select id="filter-category" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                                <option value="">Todas</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-500">Tipo</label>
+                                            <select id="filter-type" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                                <option value="">Todos</option>
+                                                <option value="expense">Despesa</option>
+                                                <option value="saving">Reserva</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-2"><input type="checkbox" id="filter-recurring" /> <label for="filter-recurring" class="text-sm">Recorrente</label></div>
+                                        <div class="flex items-center gap-2"><input type="checkbox" id="filter-installment" /> <label for="filter-installment" class="text-sm">Parcelada / Financiamento</label></div>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end gap-2 pt-2">
                                     <button id="filter-clear-btn" class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">Limpar</button>
@@ -674,8 +687,9 @@
                                 <h2 class="text-xl font-semibold">Despesas</h2>
                                 <div class="flex items-center gap-2">
                                     <input type="search" id="search-description" placeholder="Pesquisar despesas..." class="bg-gray-100 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 p-2.5">
-                                    <button id="expenses-filter-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Filtrar despesas">
+                                    <button id="expenses-filter-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors relative" title="Filtrar despesas">
                                         <span class="material-symbols-outlined text-gray-600">filter_list</span>
+                                        <span id="expenses-filter-badge" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white bg-red-600 rounded">0</span>
                                     </button>
                                 </div>
                              </div>
@@ -1928,14 +1942,27 @@ const firebaseConfig = {
                 const kpiVr = document.getElementById('kpi-vr-card');
                 if (kpiVr) {
                     kpiVr.style.cursor = 'pointer';
-                    kpiVr.addEventListener('click', () => changeView('credit-cards'));
+                    kpiVr.addEventListener('click', () => {
+                        // Apply filter for VR payments and show expenses (dashboard)
+                        state.filters.expenseFilters = state.filters.expenseFilters || {};
+                        state.filters.expenseFilters.payment = 'VR';
+                        // navigate to dashboard where expenses table is shown
+                        changeView('dashboard');
+                        // renderExpenseTable will be invoked by render(); ensure badge reflects active filters
+                        try { updateFilterBadge(); } catch(e) {}
+                    });
                 }
             } catch (e) { console.error('attach kpi-vr click handler', e); }
             try {
                 const kpiVt = document.getElementById('kpi-vt-card');
                 if (kpiVt) {
                     kpiVt.style.cursor = 'pointer';
-                    kpiVt.addEventListener('click', () => changeView('credit-cards'));
+                    kpiVt.addEventListener('click', () => {
+                        state.filters.expenseFilters = state.filters.expenseFilters || {};
+                        state.filters.expenseFilters.payment = 'VT';
+                        changeView('dashboard');
+                        try { updateFilterBadge(); } catch(e) {}
+                    });
                 }
             } catch (e) { console.error('attach kpi-vt click handler', e); }
             // Show import/export when hovering the monthly report icon/area
@@ -2047,6 +2074,40 @@ const firebaseConfig = {
                     }
                 });
 
+                // Make expenses filter popover act as bottom-sheet on narrow screens
+                function openExpensesFilterAsNeeded() {
+                    try {
+                        const rect = ui.expensesFilterBtn.getBoundingClientRect();
+                        if (window.innerWidth <= 640) {
+                            ui.expensesFilterPopover.classList.add('mobile-visible');
+                            ui.expensesFilterPopover.classList.remove('hidden');
+                        } else {
+                            // existing positioning handled elsewhere
+                        }
+                    } catch(e) {}
+                }
+
+                // Update filter badge count
+                function updateFilterBadge() {
+                    try {
+                        const badge = document.getElementById('expenses-filter-badge');
+                        if (!badge) return;
+                        const ef = state.filters.expenseFilters || {};
+                        let count = 0;
+                        if (ef.payment) count++;
+                        if (ef.spendingType) count++;
+                        if (ef.category) count++;
+                        if (ef.type) count++;
+                        if (ef.recurring) count++;
+                        if (ef.installment) count++;
+                        badge.textContent = String(count);
+                        badge.style.display = count > 0 ? 'inline-flex' : 'none';
+                    } catch(e) { }
+                }
+
+                // ensure badge is correct on load
+                try { updateFilterBadge(); } catch(e) {}
+
                 ui.filterApplyBtn.addEventListener('click', () => {
                     // Build filter object
                     state.filters.expenseFilters = state.filters.expenseFilters || {};
@@ -2069,6 +2130,7 @@ const firebaseConfig = {
                         ui.expensesFilterPopover._origParent = null; ui.expensesFilterPopover._origNext = null;
                     }
                     renderExpenseTable();
+                    updateFilterBadge();
                 });
 
                 ui.filterClearBtn.addEventListener('click', () => {
@@ -2091,6 +2153,7 @@ const firebaseConfig = {
                         ui.expensesFilterPopover._origParent = null; ui.expensesFilterPopover._origNext = null;
                     }
                     renderExpenseTable();
+                    updateFilterBadge();
                 });
             }
 
@@ -2978,24 +3041,45 @@ const firebaseConfig = {
                 // Spending type filter: essencial / nao-essencial / reserva
                 if (ef.spendingType) {
                     const settings = state.appData && state.appData.settings ? state.appData.settings : {};
-                    // If the app has a custom categoryGroups mapping, use it. Expected shape: { essencial: ['Contas', ...], naoEssencial: [...], reserva: [...] }
                     const groups = settings.categoryGroups || {};
                     let essencials = groups.essencial || groups.essenciais || [];
-                    let naoEssenciais = groups.naoEssencial || groups.naoEssenciais || [];
                     let reservas = groups.reserva || groups.reservas || [];
-                    // Fallback sensible defaults when no mapping provided
                     if (!essencials || essencials.length === 0) {
                         essencials = ['Contas','Mercado','Saúde','Transporte','Assinaturas'];
                     }
                     if (!reservas || reservas.length === 0) {
                         reservas = settings.savingCategories || ['Reserva de Emergência','Poupança'];
                     }
+                    // Prefer explicit expense.type when present (edited inline), otherwise fall back to category-group mapping
                     if (ef.spendingType === 'essencial') {
-                        expenses = expenses.filter(exp => essencials.includes(exp.category));
+                        expenses = expenses.filter(exp => {
+                            if (exp.type && typeof exp.type === 'string') {
+                                const t = exp.type.toString().toLowerCase();
+                                return t.includes('essencial');
+                            }
+                            return essencials.includes(exp.category);
+                        });
                     } else if (ef.spendingType === 'nao-essencial') {
-                        expenses = expenses.filter(exp => !essencials.includes(exp.category) && !reservas.includes(exp.category));
+                        expenses = expenses.filter(exp => {
+                            if (exp.type && typeof exp.type === 'string') {
+                                const t = exp.type.toString().toLowerCase();
+                                // if type explicitly states essencial, it's not nao-essencial
+                                if (t.includes('essencial')) return false;
+                                // if type explicitly states reserva, exclude
+                                if (t.includes('reserva') || t.includes('saving')) return false;
+                                // otherwise treat as nao-essencial
+                                return true;
+                            }
+                            return !essencials.includes(exp.category) && !reservas.includes(exp.category);
+                        });
                     } else if (ef.spendingType === 'reserva') {
-                        expenses = expenses.filter(exp => reservas.includes(exp.category));
+                        expenses = expenses.filter(exp => {
+                            if (exp.type && typeof exp.type === 'string') {
+                                const t = exp.type.toString().toLowerCase();
+                                return t.includes('reserva') || t.includes('saving');
+                            }
+                            return reservas.includes(exp.category);
+                        });
                     }
                 }
             }

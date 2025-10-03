@@ -627,6 +627,11 @@
                             </div>
                              <div class="overflow-x-auto">
                                 <table class="w-full text-left responsive-table table-fixed">
+                                    <colgroup>
+                                        <col style="width:auto"> <!-- description gets remaining space -->
+                                        <col style="width:120px"> <!-- value -->
+                                        <col style="width:120px"> <!-- actions -->
+                                    </colgroup>
                                     <thead><tr class="border-b border-gray-200">
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Descrição</th>
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Valor</th>
@@ -656,13 +661,20 @@
                              </div>
                              <div class="overflow-x-auto">
                                 <table class="w-full text-left responsive-table table-fixed">
+                                    <colgroup>
+                                        <col style="width:36px"> <!-- checkbox -->
+                                        <col style="width:auto"> <!-- description gets remaining space -->
+                                        <col style="width:120px"> <!-- payment -->
+                                        <col style="width:140px"> <!-- category -->
+                                        <col style="width:120px"> <!-- value -->
+                                        <col style="width:120px"> <!-- actions -->
+                                    </colgroup>
                                     <thead id="expenses-table-head"><tr class="border-b border-gray-200">
                                         <th class="py-3 px-3 align-middle"><span class="material-symbols-outlined text-gray-500 text-base">done</span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="description">Descrição <span class="sort-icon material-symbols-outlined"></span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="payment">Pagamento <span class="sort-icon material-symbols-outlined"></span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="category">Categoria <span class="sort-icon material-symbols-outlined"></span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="amount">Valor <span class="sort-icon material-symbols-outlined"></span></th>
-                                        <!-- removed group/ungroup column for simpler responsive layout -->
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 text-right align-middle" style="width:120px">Ações</th>
                                     </tr></thead>
                                     <tbody id="expenses-table-body"></tbody>

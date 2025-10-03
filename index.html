@@ -1538,6 +1538,51 @@ const firebaseConfig = {
             } catch (e) { console.error('propagateRecurringTransactions', e); }
         }
 
+        /**
+         * Propagate a changed amount for subscription/recurring expenses to future months.
+         * expense: the expense object in the current month that was edited
+         * newAmount: number
+         */
+        async function propagateSubscriptionAmountChange(expense, newAmount) {
+            try {
+                if (!expense || typeof newAmount !== 'number') return;
+                const recurringId = expense.recurringId || null;
+                const signature = `${(expense.description||'').toString().trim().toLowerCase()}||${(expense.category||'').toString().trim().toLowerCase()}||${(expense.payment||'').toString().trim().toLowerCase()}`;
+                const now = new Date(state.currentDate || new Date());
+                // update future months (including next month onward)
+                const monthsToUpdate = 24; // reasonable window
+                const updated = [];
+                for (let i = 1; i <= monthsToUpdate; i++) {
+                    const target = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                    const y = String(target.getFullYear());
+                    const m = String(String(target.getMonth() + 1).padStart(2, '0'));
+                    const md = (state.appData.data && state.appData.data[y] && state.appData.data[y][m]) ? state.appData.data[y][m] : null;
+                    if (!md) continue;
+                    if (!Array.isArray(md.expenses)) continue;
+                    md.expenses.forEach(e => {
+                        try {
+                            if (!e) return;
+                            let match = false;
+                            if (recurringId && e.recurringId && e.recurringId === recurringId) match = true;
+                            // fallback: match by signature if recurringId not available
+                            if (!match) {
+                                const sig2 = `${(e.description||'').toString().trim().toLowerCase()}||${(e.category||'').toString().trim().toLowerCase()}||${(e.payment||'').toString().trim().toLowerCase()}`;
+                                if (sig2 === signature) match = true;
+                            }
+                            if (match) {
+                                e.amount = newAmount;
+                                updated.push({ y, m, id: e.id });
+                            }
+                        } catch(ex) { /* ignore */ }
+                    });
+                }
+                if (updated.length > 0) {
+                    try { await storage.saveData(state.appData); } catch(e) { console.error('save propagateSubscriptionAmountChange', e); }
+                }
+                return updated;
+            } catch(e) { console.error('propagateSubscriptionAmountChange error', e); return []; }
+        }
+
         // --- CORE FUNCTIONS ---
 
         async function init() {
@@ -2340,7 +2385,7 @@ const firebaseConfig = {
                                         const remainingTotal = (Number(exp.amount) || 0) * remainingCount;
                                         return `<span class="remaining-total text-xs text-gray-500 ml-2 hidden">${formatCurrency(remainingTotal)}</span>`;
                                     })() : '';
-                                    return `<div class="flex justify-between text-sm items-center"><div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;"><span class="desc-text truncate">${exp.description} ${inst} ${fin}</span>${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="font-medium flex-shrink-0">${formatCurrency(exp.amount)}</span></div>`;
+                                    return `<div class="flex justify-between text-sm items-center"><div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;"><span class="desc-text truncate">${exp.description} ${inst} ${fin}</span>${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="card-exp-amount font-medium flex-shrink-0" data-exp-id="${exp.id}">${formatCurrency(exp.amount)}</span></div>`;
                                 }).join('') || '<p class="text-sm text-gray-500">Nenhum gasto este mês.</p>'}
                             </div>
                         </div>
@@ -2554,10 +2599,20 @@ const firebaseConfig = {
                     openVRUsageEdit(id);
                 }));
             } catch(e) { console.error('attach vr usage item handlers', e); }
-            // VR inline-edit bindings on card amounts
+                // VR inline-edit bindings on card amounts
             try {
                 container.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId)));
             } catch(e) { /* ignore if nothing to bind */ }
+
+                // Clicking the amount opens the transaction modal for editing (centralized flow)
+            try {
+                container.querySelectorAll('.card-exp-amount').forEach(span => span.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const expId = span.dataset.expId;
+                    if (!expId) return;
+                    openModal('expenses', expId);
+                }));
+            } catch(e) { console.error('attach card-exp-amount handlers', e); }
 
             // Attach handlers to last-installment spans inside card lists
             container.querySelectorAll('.last-installment-btn').forEach(el => el.addEventListener('click', (ev) => {
@@ -2583,53 +2638,13 @@ const firebaseConfig = {
                     });
                 });
 
-                // Inline category edit flow: clicking pencil replaces description with select
+                // Open transaction modal when clicking pencil: centralized editing flow
                 container.querySelectorAll('.edit-cat-btn').forEach(btn => btn.addEventListener('click', (ev) => {
                     ev.stopPropagation();
                     const expId = btn.dataset.expId;
                     if (!expId) return;
-                    const md = getCurrentMonthData();
-                    const expense = (md.expenses || []).find(e => e.id === expId);
-                    if (!expense) return;
-                    // Create inline selects: category and type
-                    const cats = (state.appData.settings && state.appData.settings.expenseCategories) || [];
-                    const select = document.createElement('select');
-                    // compact but consistent with modal selects
-                    select.className = 'inline-cat-select block w-40 h-8 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500';
-                    cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; if (c === (expense.category || '')) o.selected = true; select.appendChild(o); });
-
-                    const typeSelect = document.createElement('select');
-                    typeSelect.className = 'inline-type-select block w-36 h-8 border border-gray-300 rounded-md shadow-sm text-sm ml-2 focus:ring-blue-500 focus:border-blue-500';
-                    const opt1 = document.createElement('option'); opt1.value = 'Essenciais'; opt1.textContent = 'Essencial';
-                    const opt2 = document.createElement('option'); opt2.value = 'Não Essenciais'; opt2.textContent = 'Não Essencial';
-                    typeSelect.appendChild(opt1); typeSelect.appendChild(opt2);
-                    // Preselect current type if present
-                    try { if (expense.type && (expense.type === 'Essenciais' || expense.type === 'Não Essenciais')) { typeSelect.value = expense.type; } } catch(e) {}
-
-                    const saveBtn = document.createElement('button'); saveBtn.className = 'ml-2 inline-flex items-center px-2 py-1 bg-green-600 text-white text-xs font-medium rounded'; saveBtn.textContent = 'Salvar';
-                    const cancelBtn = document.createElement('button'); cancelBtn.className = 'ml-2 inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded'; cancelBtn.textContent = 'Cancelar';
-                    const wrapEl = btn.closest('.desc-wrap');
-                    const origText = wrapEl.querySelector('.desc-text');
-                    origText.style.display = 'none';
-                    // insert category then type select
-                    wrapEl.insertBefore(select, btn);
-                    wrapEl.insertBefore(typeSelect, btn);
-                    wrapEl.insertBefore(saveBtn, btn);
-                    wrapEl.insertBefore(cancelBtn, btn);
-                    btn.classList.add('invisible');
-
-                    saveBtn.addEventListener('click', async (e) => {
-                        const newCat = select.value;
-                        const newType = typeSelect.value;
-                        expense.category = newCat;
-                        expense.type = newType;
-                        try { await storage.saveData(state.appData); showToast('Categoria e tipo atualizados', 'bg-green-600'); } catch(err) { console.error('save cat/type', err); showToast('Falha ao salvar alterações', 'bg-red-600'); }
-                        // cleanup
-                        select.remove(); typeSelect.remove(); saveBtn.remove(); cancelBtn.remove(); btn.classList.remove('invisible'); origText.style.display = ''; render();
-                    });
-                    cancelBtn.addEventListener('click', (e) => {
-                        select.remove(); typeSelect.remove(); saveBtn.remove(); cancelBtn.remove(); btn.classList.remove('invisible'); origText.style.display = '';
-                    });
+                    // Reuse the main transaction modal to edit this expense
+                    openModal('expenses', expId);
                 }));
             } catch(e) { console.error('attach card desc hover/edit handlers', e); }
         }

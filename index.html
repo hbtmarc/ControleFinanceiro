@@ -6,6 +6,7 @@
     <title>Fluxo Financeiro</title>
 
     <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Suppress specific CDN warnings (development convenience) -->
     <script>
         (function(){
@@ -484,7 +485,7 @@
                     </div>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
                     <!-- Mobile toggle for import/export (visible on small screens) -->
-                    <button id="mobile-infrequent-toggle" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors hidden sm:hidden" title="Mais opções" aria-label="Abrir opções">
+                    <button id="mobile-infrequent-toggle" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors hidden sm:inline-flex" title="Mais opções" aria-label="Abrir opções">
                         <span class="material-symbols-outlined text-gray-600">more_horiz</span>
                     </button>
                     <button id="monthly-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Relatório Mensal" aria-label="Relatório Mensal">
@@ -1744,19 +1745,44 @@ const firebaseConfig = {
             ui.paymentMethod.addEventListener('change', (e) => {
                 toggleInstallmentSection(e.target.value);
                 try {
-                    // If the user selects VR as payment, automatically ensure category = Alimentação and type = Essenciais
-                    if ((e.target.value || '') === 'VR') {
-                        const settings = state.appData.settings || {};
-                        const expenseCategories = settings.expenseCategories || [];
-                        const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    const pm = (e.target.value || '').toString();
+                    const settings = state.appData.settings || {};
+                    const expenseCategories = settings.expenseCategories || [];
+                    const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    const descEl = document.getElementById('description');
+
+                    // VR enforcement: Alimentação / Essenciais
+                    if (pm === 'VR') {
                         const foundAlim = expenseCategories.find(c => normalize(c).includes('aliment'));
                         if (foundAlim && ui.categoryExpense) {
                             ui.categoryExpense.value = foundAlim;
+                            try { ui.categoryExpense.disabled = true; } catch(e){}
                         }
                         if (ui.expenseType) ui.expenseType.value = 'Essenciais';
+                        // ensure description is editable for VR cases
+                        try { if (descEl) descEl.disabled = false; } catch(e){}
                         showToast('Pagamento via VR: categoria e tipo ajustados para Alimentação / Essencial.', 'bg-yellow-600');
                     }
-                } catch (err) { console.error('paymentMethod change VR enforcement error', err); }
+
+                    // VT enforcement: Transporte (categoria obrigatória) + description forced to 'Abastecimento'
+                    else if (pm === 'VT') {
+                        const foundTransp = expenseCategories.find(c => normalize(c).includes('transport')) || expenseCategories.find(c => normalize(c).includes('transp')) || expenseCategories.find(c => normalize(c).includes('transporte'));
+                        if (foundTransp && ui.categoryExpense) {
+                            ui.categoryExpense.value = foundTransp;
+                            try { ui.categoryExpense.disabled = true; } catch(e){}
+                        }
+                        if (ui.expenseType) ui.expenseType.value = 'Essenciais';
+                        // Force description to 'Abastecimento' and make it readonly/disabled so it's mandatory
+                        try { if (descEl) { descEl.value = 'Abastecimento'; descEl.disabled = true; } } catch(e){}
+                        showToast('Pagamento via VT: categoria definida para Transporte e descrição definida para "Abastecimento".', 'bg-yellow-600');
+                    }
+
+                    // Otherwise, if changing away from VR/VT, re-enable category select and description
+                    else {
+                        try { if (ui.categoryExpense) ui.categoryExpense.disabled = false; } catch(e){}
+                        try { if (descEl) descEl.disabled = false; } catch(e){}
+                    }
+                } catch (err) { console.error('paymentMethod change enforcement error', err); }
             });
 
             ui.monthlyReportBtn.addEventListener('click', () => openMonthlyReport());
@@ -2205,9 +2231,21 @@ const firebaseConfig = {
                         }
                         const vtDisplayAmount = Math.max(0, Math.round((vtCreditedTotal - vtUsageTotal) * 100) / 100);
                         const latestVtLedger = (currentMonthData.vtLedger || []).slice().reverse().find(l => l && l.salaryMeta);
-                        const prevMonthLastDateVT = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 0);
-                        const lastDayVT = prevMonthLastDateVT.getDate();
-                        const prevMonthNumberVT = prevMonthLastDateVT.getMonth() + 1;
+                        // For VT, display the 5th business day of the currently viewed month (not the previous month)
+                        const vtYear = state.currentDate.getFullYear();
+                        const vtMonthIndex = state.currentDate.getMonth(); // 0-based
+                        const daysInMonth = new Date(vtYear, vtMonthIndex + 1, 0).getDate();
+                        let businessCount = 0;
+                        let vtDay = 1;
+                        for (; vtDay <= daysInMonth; vtDay++) {
+                            const d = new Date(vtYear, vtMonthIndex, vtDay);
+                            const wd = d.getDay(); // 0 = Sun, 6 = Sat
+                            if (wd !== 0 && wd !== 6) businessCount++;
+                            if (businessCount >= 5) break;
+                        }
+                        // If month has fewer than 5 business days (very unlikely), vtDay will be last available business day
+                        const lastDayVT = vtDay;
+                        const prevMonthNumberVT = vtMonthIndex + 1; // display month number for the viewed month
                         const lastDayStrVT = String(lastDayVT).padStart(2,'0') + '/' + String(prevMonthNumberVT).padStart(2,'0');
 
                         container.innerHTML += `
@@ -2920,8 +2958,9 @@ const firebaseConfig = {
                         try { progressEl.title = `${Math.round((pctRaw)*100)}% utilizado (${formatCurrency(usedRounded)} de ${formatCurrency(creditRounded)})`; } catch(e){}
                     }
                     if (barTextEl) {
-                        // show spent amount centered over the bar
-                        barTextEl.textContent = `${formatCurrency(usedRounded)} gasto`;
+                        // show spent amount centered over the bar with percentage used
+                        const pctDisplay = Math.round((creditRounded > 0 ? (usedRounded / creditRounded) : 0) * 100);
+                        barTextEl.textContent = `${formatCurrency(usedRounded)} (${pctDisplay}% gasto)`;
                     }
                 } catch(e) { console.error('updateKPIs vr kpi', e); }
                 // VT KPI: mirror VR logic for VT
@@ -2945,7 +2984,10 @@ const firebaseConfig = {
                         else vtProgressEl.classList.add('bg-yellow-400');
                         try { vtProgressEl.title = `${Math.round((pctRaw)*100)}% utilizado (${formatCurrency(vtUsedRounded)} de ${formatCurrency(vtCreditRounded)})`; } catch(e){}
                     }
-                    if (vtBarTextEl) vtBarTextEl.textContent = `${formatCurrency(vtUsedRounded)} gasto`;
+                    if (vtBarTextEl) {
+                        const pctDisplayVT = Math.round((vtCreditRounded > 0 ? (vtUsedRounded / vtCreditRounded) : 0) * 100);
+                        vtBarTextEl.textContent = `${formatCurrency(vtUsedRounded)} (${pctDisplayVT}% gasto)`;
+                    }
                 } catch(e) { console.error('updateKPIs vt kpi', e); }
             } catch (e) {
                 console.error('updateKPIs error', e);
@@ -3399,11 +3441,27 @@ const firebaseConfig = {
                 try {
                     if (prefill && typeof prefill === 'object') {
                         const pm = document.getElementById('payment-method');
-                        if (pm && prefill.payment) pm.value = prefill.payment;
                         const desc = document.getElementById('description');
-                        if (desc && (prefill.description !== undefined)) {
+                        const cat = document.getElementById('category-expense');
+
+                        if (pm && prefill.payment) {
+                            pm.value = prefill.payment;
+                            // Dispatch change so existing handlers (which enforce VR/VT rules) run
+                            try { pm.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) { try { pm.dispatchEvent(new Event('change')); } catch(e){} }
+                        }
+
+                        // If prefill provided a category explicitly, set it
+                        if (cat && prefill.category) {
+                            try { cat.value = prefill.category; } catch(e){}
+                        }
+
+                        // If payment is VT and no explicit description provided, enforce 'Abastecimento'
+                        if ((prefill.payment === 'VT') && desc && (prefill.description === undefined || prefill.description === null || prefill.description === '')) {
+                            try { desc.value = 'Abastecimento'; } catch(e){}
+                        } else if (desc && (prefill.description !== undefined)) {
                             desc.value = prefill.description;
                         }
+
                         if (prefill.amount !== undefined) {
                             const amt = document.getElementById('amount'); if (amt) amt.value = prefill.amount;
                         }
@@ -3795,6 +3853,11 @@ const firebaseConfig = {
                 if ((baseTransaction.payment || '') === 'VR') {
                     if (!Array.isArray(futureMonthData.vrUsage)) futureMonthData.vrUsage = [];
                     futureMonthData.vrUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString() });
+                }
+                // If payment method is VT, mirror VR behavior and store in vtUsage ledger
+                else if ((baseTransaction.payment || '') === 'VT') {
+                    if (!Array.isArray(futureMonthData.vtUsage)) futureMonthData.vtUsage = [];
+                    futureMonthData.vtUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VT', date: new Date(installmentDate).toISOString() });
                 } else {
                     if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
                     futureMonthData.expenses.push({ 
@@ -3825,6 +3888,10 @@ const firebaseConfig = {
                 if ((baseTransaction.payment || '') === 'VR') {
                     if (!Array.isArray(futureMonthData.vrUsage)) futureMonthData.vrUsage = [];
                     futureMonthData.vrUsage.push({ id: generateUUID(), amount: parseFloat(baseTransaction.amount) || 0, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString(), financingId, currentFinancing: i, totalFinancing: total });
+                }
+                else if ((baseTransaction.payment || '') === 'VT') {
+                    if (!Array.isArray(futureMonthData.vtUsage)) futureMonthData.vtUsage = [];
+                    futureMonthData.vtUsage.push({ id: generateUUID(), amount: parseFloat(baseTransaction.amount) || 0, description: baseTransaction.description || 'Despesa VT', date: new Date(installmentDate).toISOString(), financingId, currentFinancing: i, totalFinancing: total });
                 } else {
                     if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
                     futureMonthData.expenses.push({
@@ -4115,6 +4182,63 @@ const firebaseConfig = {
                         closeModal('transaction-modal');
                         render();
                         return;
+                }
+                // VT mirror of VR: store VT purchases in vtUsage ledger (do not add to expenses)
+                if (pm === 'VT') {
+                    // Mark VT purchases similar to VR (treated as immediate debit)
+                    transactionData.isPaid = true;
+                    // Ensure category is Transporte (if not already)
+                    try {
+                        const settings = state.appData.settings || {};
+                        const expenseCategories = settings.expenseCategories || [];
+                        const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                        const foundTransp = expenseCategories.find(c => normalize(c).includes('transport')) || expenseCategories.find(c => normalize(c).includes('transp')) || expenseCategories.find(c => normalize(c).includes('transporte'));
+                        const currentCat = transactionData.category || '';
+                        if (!normalize(currentCat).includes('transp') && foundTransp) {
+                            transactionData.category = foundTransp;
+                            showToast('Pagamento via VT: categoria ajustada para Transporte.', 'bg-yellow-600');
+                        }
+                    } catch (e) { console.error('vt category enforcement', e); }
+
+                    // If description empty, set to Abastecimento
+                    if (!transactionData.description || transactionData.description.trim() === '') {
+                        transactionData.description = 'Abastecimento';
+                    }
+
+                    // Validate VT balance similar to VR
+                    const mdCheck = getCurrentMonthData();
+                    let availableVT = getMonthVTBalance(mdCheck);
+                    if (id) {
+                        try {
+                            const existing = (mdCheck.expenses || []).find(e => e.id === id);
+                            if (existing && existing.payment === 'VT') {
+                                availableVT = Math.round((availableVT + (Number(existing.amount) || 0)) * 100) / 100;
+                            }
+                        } catch (e) { console.error('adjust availableVT for edit', e); }
+                    }
+                    const spendAmount = Number(transactionData.amount) || 0;
+                    if (spendAmount > availableVT) {
+                        setTransactionError('Valor superior ao saldo disponível de VT para este mês. Verifique o saldo no card de VT.');
+                        return;
+                    } else {
+                        clearTransactionError();
+                    }
+
+                    // Store in vtUsage ledger instead of expenses
+                    const md = getCurrentMonthData();
+                    if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
+                    const usageEntry = { id: generateUUID(), amount: Number(transactionData.amount) || 0, description: transactionData.description || '', date: new Date().toISOString() };
+                    md.vtUsage.push(usageEntry);
+                    try {
+                        await storage.saveData(state.appData);
+                        showToast('Despesa registrada no VT (lançamento separado).', 'bg-green-600');
+                    } catch (e) {
+                        console.error('Erro ao salvar uso de VT:', e);
+                        showToast('Falha ao salvar uso de VT no Firebase.', 'bg-red-600');
+                    }
+                    closeModal('transaction-modal');
+                    render();
+                    return;
                 }
             } else if (type === 'savings') {
                 Object.assign(transactionData, { category: document.getElementById('category-saving').value });

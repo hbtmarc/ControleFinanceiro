@@ -2260,7 +2260,12 @@ const firebaseConfig = {
                                 ${cardExpenses.map(exp => {
                                     const inst = exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/<span class="last-installment-btn" data-installment-id="${exp.installmentId}" data-total="${exp.totalInstallments}">${exp.totalInstallments}</span>)</span>` : '';
                                     const fin = (exp.financingId && exp.totalFinancing) ? `<span class="text-xs text-gray-500">(${exp.currentFinancing}/<span class="last-installment-btn" data-financing-id="${exp.financingId}" data-total="${exp.totalFinancing}">${exp.totalFinancing}</span>)</span>` : '';
-                                    return `<div class="flex justify-between text-sm items-center"><span class="truncate pr-2">${exp.description} ${inst} ${fin}</span><span class="font-medium flex-shrink-0">${formatCurrency(exp.amount)}</span></div>`;
+                                    const remainingHtml = exp.totalInstallments ? (() => {
+                                        const remainingCount = (exp.totalInstallments - (exp.currentInstallment || 1) + 1);
+                                        const remainingTotal = (Number(exp.amount) || 0) * remainingCount;
+                                        return `<span class="remaining-total text-xs text-gray-500 ml-2 hidden">${formatCurrency(remainingTotal)}</span>`;
+                                    })() : '';
+                                    return `<div class="flex justify-between text-sm items-center"><div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;"><span class="desc-text truncate">${exp.description} ${inst} ${fin}</span>${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="font-medium flex-shrink-0">${formatCurrency(exp.amount)}</span></div>`;
                                 }).join('') || '<p class="text-sm text-gray-500">Nenhum gasto este mês.</p>'}
                             </div>
                         </div>
@@ -2485,6 +2490,73 @@ const firebaseConfig = {
                 const installmentId = el.dataset.installmentId || null;
                 goToLastInstallment({ financingId, installmentId });
             }));
+
+            // Show edit icon and remaining total on hover for card expense descriptions
+            try {
+                container.querySelectorAll('.desc-wrap').forEach(wrap => {
+                    wrap.addEventListener('mouseenter', (ev) => {
+                        const btn = wrap.querySelector('.edit-cat-btn');
+                        const rem = wrap.querySelector('.remaining-total');
+                        if (btn) btn.classList.remove('invisible');
+                        if (rem) rem.classList.remove('hidden');
+                    });
+                    wrap.addEventListener('mouseleave', (ev) => {
+                        const btn = wrap.querySelector('.edit-cat-btn');
+                        const rem = wrap.querySelector('.remaining-total');
+                        if (btn) btn.classList.add('invisible');
+                        if (rem) rem.classList.add('hidden');
+                    });
+                });
+
+                // Inline category edit flow: clicking pencil replaces description with select
+                container.querySelectorAll('.edit-cat-btn').forEach(btn => btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const expId = btn.dataset.expId;
+                    if (!expId) return;
+                    const md = getCurrentMonthData();
+                    const expense = (md.expenses || []).find(e => e.id === expId);
+                    if (!expense) return;
+                    // Create inline selects: category and type
+                    const cats = (state.appData.settings && state.appData.settings.expenseCategories) || [];
+                    const select = document.createElement('select');
+                    // compact but consistent with modal selects
+                    select.className = 'inline-cat-select block w-40 h-8 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500';
+                    cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; if (c === (expense.category || '')) o.selected = true; select.appendChild(o); });
+
+                    const typeSelect = document.createElement('select');
+                    typeSelect.className = 'inline-type-select block w-36 h-8 border border-gray-300 rounded-md shadow-sm text-sm ml-2 focus:ring-blue-500 focus:border-blue-500';
+                    const opt1 = document.createElement('option'); opt1.value = 'Essenciais'; opt1.textContent = 'Essencial';
+                    const opt2 = document.createElement('option'); opt2.value = 'Não Essenciais'; opt2.textContent = 'Não Essencial';
+                    typeSelect.appendChild(opt1); typeSelect.appendChild(opt2);
+                    // Preselect current type if present
+                    try { if (expense.type && (expense.type === 'Essenciais' || expense.type === 'Não Essenciais')) { typeSelect.value = expense.type; } } catch(e) {}
+
+                    const saveBtn = document.createElement('button'); saveBtn.className = 'ml-2 inline-flex items-center px-2 py-1 bg-green-600 text-white text-xs font-medium rounded'; saveBtn.textContent = 'Salvar';
+                    const cancelBtn = document.createElement('button'); cancelBtn.className = 'ml-2 inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded'; cancelBtn.textContent = 'Cancelar';
+                    const wrapEl = btn.closest('.desc-wrap');
+                    const origText = wrapEl.querySelector('.desc-text');
+                    origText.style.display = 'none';
+                    // insert category then type select
+                    wrapEl.insertBefore(select, btn);
+                    wrapEl.insertBefore(typeSelect, btn);
+                    wrapEl.insertBefore(saveBtn, btn);
+                    wrapEl.insertBefore(cancelBtn, btn);
+                    btn.classList.add('invisible');
+
+                    saveBtn.addEventListener('click', async (e) => {
+                        const newCat = select.value;
+                        const newType = typeSelect.value;
+                        expense.category = newCat;
+                        expense.type = newType;
+                        try { await storage.saveData(state.appData); showToast('Categoria e tipo atualizados', 'bg-green-600'); } catch(err) { console.error('save cat/type', err); showToast('Falha ao salvar alterações', 'bg-red-600'); }
+                        // cleanup
+                        select.remove(); typeSelect.remove(); saveBtn.remove(); cancelBtn.remove(); btn.classList.remove('invisible'); origText.style.display = ''; render();
+                    });
+                    cancelBtn.addEventListener('click', (e) => {
+                        select.remove(); typeSelect.remove(); saveBtn.remove(); cancelBtn.remove(); btn.classList.remove('invisible'); origText.style.display = '';
+                    });
+                }));
+            } catch(e) { console.error('attach card desc hover/edit handlers', e); }
         }
 
         function renderInvestmentsView() {

@@ -85,6 +85,8 @@
             --progress-bar-bg: #e5e7eb;
         }
 
+        
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: var(--background-color);
@@ -931,6 +933,13 @@
                     <input type="checkbox" id="is-recurring" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="ml-2 text-sm text-gray-700">Tornar esta transação recorrente? (mensal)</span>
                 </label>
+                <div class="flex items-center gap-2 text-sm">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="apply-to-future" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Aplicar também às futuras</span>
+                    </label>
+                    <button type="button" id="preview-future-btn" class="text-xs text-blue-600 hover:underline">ver previsões</button>
+                </div>
                 <!-- Campos específicos para Entrada: Salário (posicionados abaixo da opção recorrente) -->
                 <div id="salary-section" class="hidden mt-2 space-y-1">
                     <label class="flex items-center">
@@ -1724,6 +1733,9 @@ const firebaseConfig = {
                     else ui[id.replace(/-./g, m => m[1].toUpperCase())] = element;
                 }
             });
+                // map new modal controls if present
+                ui.applyToFuture = document.getElementById('apply-to-future');
+                ui.previewFutureBtn = document.getElementById('preview-future-btn');
             ui.modalTypeToggles = document.querySelectorAll('.modal-type-toggle');
             // Map mobile bottom nav
             ui.mobileBottomNav = document.getElementById('mobile-bottom-nav');
@@ -2212,6 +2224,17 @@ const firebaseConfig = {
                     renderExpenseTable();
                     updateFilterBadge();
                 });
+                // Preview future changes button (shows compact list of affected months/values)
+                if (ui.previewFutureBtn) {
+                    ui.previewFutureBtn.addEventListener('click', () => {
+                        try {
+                            const id = document.getElementById('transaction-id').value;
+                            if (!id) return showToast('Abra uma transação existente para ver previsões.', 'bg-gray-600');
+                            const type = ui.transactionTypeInput.value;
+                            previewFutureChanges(id, type);
+                        } catch(e) { console.error('previewFutureBtn click', e); }
+                    });
+                }
             }
 
             // Automação: se selecionar uma meta como categoria da reserva, preenche descrição automaticamente
@@ -2363,8 +2386,25 @@ const firebaseConfig = {
                 const A = (a && a.name || '').toLowerCase(); const B = (b && b.name || '').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0;
             });
             creditCards.forEach(card => {
-                const cardExpenses = (currentMonthData.expenses || []).filter(e => e.payment === card.name);
-                const totalAmount = cardExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                let cardExpenses = (currentMonthData.expenses || []).filter(e => e.payment === card.name);
+                // choose sort mode per-card: default alphabetical
+                ui.cardSorts = ui.cardSorts || {};
+                const sortMode = ui.cardSorts[card.name] || 'alf';
+                if (sortMode === 'alf') {
+                    cardExpenses = cardExpenses.slice().sort((a,b) => { const A=(a.description||'').toLowerCase(); const B=(b.description||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
+                } else if (sortMode === 'value-desc') {
+                    cardExpenses = cardExpenses.slice().sort((a,b) => (Number(b.amount)||0) - (Number(a.amount)||0));
+                } else if (sortMode === 'value-asc') {
+                    cardExpenses = cardExpenses.slice().sort((a,b) => (Number(a.amount)||0) - (Number(b.amount)||0));
+                }
+                const totalBeforeAnticipation = cardExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+                // anticipation value (amount paid/anticipated to bank) stored per-month under cardAnticipations
+                const y = String(state.currentDate.getFullYear()); const m = String(String(state.currentDate.getMonth()+1).padStart(2,'0'));
+                if (!state.appData.data[y]) state.appData.data[y] = {};
+                if (!state.appData.data[y][m]) state.appData.data[y][m] = { incomes: [], expenses: [], savings: [] };
+                const cardAnticipations = state.appData.data[y][m].cardAnticipations || {};
+                const anticipated = Number(cardAnticipations[card.name] || 0);
+                const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
                 const dueDate = new Date(state.currentDate);
                 if (card.dueDay < 15) dueDate.setMonth(dueDate.getMonth() + 1);
                 dueDate.setDate(card.dueDay || 1);
@@ -2372,10 +2412,17 @@ const firebaseConfig = {
                     <div class="card p-6 rounded-2xl shadow-sm flex flex-col">
                         <div class="flex-grow">
                             <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-xl font-semibold">${card.name}</h3>
+                                <div class="flex items-center gap-3">
+                                    <h3 class="text-xl font-semibold card-title-sortable cursor-pointer" data-card-name="${card.name}">${card.name}</h3>
+                                    <div class="flex items-center text-sm text-gray-500" style="gap:6px;">
+                                        <button class="card-sort-arrow" data-card-name="${card.name}" data-sort="value-desc" title="Ordenar por valor desc">▲</button>
+                                        <button class="card-sort-arrow" data-card-name="${card.name}" data-sort="value-asc" title="Ordenar por valor asc">▼</button>
+                                    </div>
+                                </div>
                                 <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Venc. ${dueDate.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
                             </div>
-                            <p class="text-3xl font-bold text-blue-600 mb-4">${formatCurrency(totalAmount)}</p>
+                            <p class="text-3xl font-bold text-blue-600 mb-1">${formatCurrency(invoiceTotal)}</p>
+                            <p class="text-sm text-green-600 mb-1">- <span class="anticipation-amount cursor-pointer" data-card-name="${card.name}">${formatCurrency(anticipated)}</span> antecipado</p>
                             <div class="space-y-2 max-h-48 overflow-y-auto pr-2">
                                 ${cardExpenses.map(exp => {
                                     const inst = exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/<span class="last-installment-btn" data-installment-id="${exp.installmentId}" data-total="${exp.totalInstallments}">${exp.totalInstallments}</span>)</span>` : '';
@@ -2391,7 +2438,12 @@ const firebaseConfig = {
                         </div>
                         <div class="mt-6">
                             <div class="flex w-full items-center" style="gap:8px;">
-                                <button data-card-name="${card.name}" class="pay-invoice-btn flex-grow bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">Pagar Fatura</button>
+                                ${(() => {
+                                    const allPaid = cardExpenses.length > 0 && cardExpenses.every(e => e.isPaid);
+                                    const btnText = allPaid ? 'Reaver Fatura' : 'Pagar Fatura';
+                                    const btnClass = allPaid ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'bg-green-500 text-white hover:bg-green-600';
+                                    return `<button data-card-name="${card.name}" class="pay-invoice-btn flex-grow ${btnClass} font-semibold py-2 px-4 rounded-lg transition-colors">${btnText}</button>`;
+                                })()}
                                 <button data-card-name="${card.name}" title="Adicionar despesa neste cartão" class="add-card-expense-btn flex-shrink-0 w-12 bg-blue-500 text-white font-semibold py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"> <span class="material-symbols-outlined" style="font-size:20px; line-height:1;">add</span></button>
                             </div>
                         </div>
@@ -2556,6 +2608,23 @@ const firebaseConfig = {
                 showToast(`Criando despesa para ${cardName}...`, 'bg-blue-600');
                 openModal('expenses', null, prefill);
             }));
+            // attach handlers for editing anticipation amounts
+            container.querySelectorAll('.edit-anticipation-btn').forEach(btn => btn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const cardName = ev.currentTarget.dataset.cardName || ev.target.dataset.cardName;
+                const y = String(state.currentDate.getFullYear()); const m = String(String(state.currentDate.getMonth()+1).padStart(2,'0'));
+                if (!state.appData.data[y]) state.appData.data[y] = {};
+                if (!state.appData.data[y][m]) state.appData.data[y][m] = { incomes: [], expenses: [], savings: [] };
+                const md = state.appData.data[y][m];
+                md.cardAnticipations = md.cardAnticipations || {};
+                const currentVal = Number(md.cardAnticipations[cardName] || 0);
+                const input = prompt(`Valor antecipado para ${cardName} (R$):`, currentVal || '0');
+                if (input === null) return; // cancelled
+                const v = parseFloat(String(input).replace(',', '.')) || 0;
+                if (v <= 0) delete md.cardAnticipations[cardName]; else md.cardAnticipations[cardName] = Math.round((v + Number.EPSILON) * 100) / 100;
+                try { storage.saveData(state.appData); showToast('Valor antecipado atualizado.', 'bg-green-600'); } catch(e) { console.error('save anticipation', e); showToast('Falha ao salvar antecipação.', 'bg-red-600'); }
+                render();
+            }));
             // Attach per-item delete and edit buttons for VR usages
             try {
                 container.querySelectorAll('.delete-vr-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
@@ -2621,6 +2690,41 @@ const firebaseConfig = {
                 goToLastInstallment({ financingId, installmentId });
             }));
 
+            // Attach handlers for card sort via title click (toggle alphabetical) and arrow buttons (value asc/desc)
+            container.querySelectorAll('.card-title-sortable').forEach(el => el.addEventListener('click', (ev) => {
+                const cardName = ev.currentTarget.dataset.cardName;
+                ui.cardSorts = ui.cardSorts || {};
+                // toggle between alphabetical and value-desc when clicking title
+                const current = ui.cardSorts[cardName] || 'alf';
+                ui.cardSorts[cardName] = current === 'alf' ? 'value-desc' : 'alf';
+                renderCreditCardView();
+            }));
+            container.querySelectorAll('.card-sort-arrow').forEach(btn => btn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const cardName = ev.currentTarget.dataset.cardName;
+                const sort = ev.currentTarget.dataset.sort;
+                ui.cardSorts = ui.cardSorts || {};
+                ui.cardSorts[cardName] = sort;
+                renderCreditCardView();
+            }));
+            // attach handlers for editing anticipation amounts by clicking the amount
+            container.querySelectorAll('.anticipation-amount').forEach(el => el.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const cardName = ev.currentTarget.dataset.cardName || ev.target.dataset.cardName;
+                const y = String(state.currentDate.getFullYear()); const m = String(String(state.currentDate.getMonth()+1).padStart(2,'0'));
+                if (!state.appData.data[y]) state.appData.data[y] = {};
+                if (!state.appData.data[y][m]) state.appData.data[y][m] = { incomes: [], expenses: [], savings: [] };
+                const md = state.appData.data[y][m];
+                md.cardAnticipations = md.cardAnticipations || {};
+                const currentVal = Number(md.cardAnticipations[cardName] || 0);
+                const input = prompt(`Valor antecipado para ${cardName} (R$):`, currentVal || '0');
+                if (input === null) return; // cancelled
+                const v = parseFloat(String(input).replace(',', '.')) || 0;
+                if (v <= 0) delete md.cardAnticipations[cardName]; else md.cardAnticipations[cardName] = Math.round((v + Number.EPSILON) * 100) / 100;
+                try { storage.saveData(state.appData); showToast('Valor antecipado atualizado.', 'bg-green-600'); } catch(e) { console.error('save anticipation', e); showToast('Falha ao salvar antecipação.', 'bg-red-600'); }
+                render();
+            }));
+
             // Show edit icon and remaining total on hover for card expense descriptions
             try {
                 container.querySelectorAll('.desc-wrap').forEach(wrap => {
@@ -2681,12 +2785,16 @@ const firebaseConfig = {
         async function payCardInvoice(cardName) {
             try {
                 if (!cardName) return;
-                // Marca todas as despesas deste mês com payment === cardName como pagas
                 const monthData = getCurrentMonthData();
-                (monthData.expenses || []).forEach(exp => { if (exp.payment === cardName) exp.isPaid = true; });
+                const cardExpenses = (monthData.expenses || []).filter(exp => exp.payment === cardName);
+                if (cardExpenses.length === 0) return;
+                const allPaid = cardExpenses.every(exp => exp.isPaid);
+                // Toggle: if all paid -> revert (unmark), else mark all as paid
+                cardExpenses.forEach(exp => { exp.isPaid = !allPaid; });
                 try {
                     await storage.saveData(state.appData);
-                    showToast(`Fatura ${cardName} marcada como paga neste mês.`, 'bg-green-600');
+                    if (allPaid) showToast(`Fatura ${cardName} revertida (desmarcada).`, 'bg-gray-600');
+                    else showToast(`Fatura ${cardName} marcada como paga neste mês.`, 'bg-green-600');
                 } catch (e) {
                     console.error('Erro ao salvar status da fatura:', e);
                     showToast('Falha ao salvar status da fatura no Firebase.', 'bg-red-600');
@@ -3249,7 +3357,29 @@ const firebaseConfig = {
             try {
                 const monthData = getCurrentMonthData();
                 const totalIncome = (monthData.incomes || []).reduce((s, t) => s + (t.amount || 0), 0);
-                const totalExpenses = (monthData.expenses || []).filter(t => t.isPaid).reduce((s, t) => s + (t.amount || 0), 0);
+                // Compute total paid expenses but treat full-paid credit-card invoices as (sum of card expenses - anticipated)
+                const expensesAll = monthData.expenses || [];
+                const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
+                const creditCardNames = paymentMethods.filter(p => p.type === 'credit_card').map(p => p.name);
+                const cardAnticipations = monthData.cardAnticipations || {};
+                const byPayment = expensesAll.reduce((acc, e) => { const k = e.payment || '_none_'; (acc[k] = acc[k] || []).push(e); return acc; }, {});
+                let totalExpenses = 0;
+                for (const [payment, group] of Object.entries(byPayment)) {
+                    if (creditCardNames.includes(payment)) {
+                        const paidCount = group.filter(g => g.isPaid).length;
+                        if (group.length > 0 && paidCount === group.length) {
+                            // full invoice paid: count invoice total (sum - antecipado)
+                            const sumAll = group.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+                            const anticipatedForCard = Number(cardAnticipations[payment] || 0);
+                            totalExpenses += Math.round((sumAll - anticipatedForCard + Number.EPSILON) * 100) / 100;
+                        } else {
+                            // partial payments: count only paid items
+                            totalExpenses += group.filter(g => g.isPaid).reduce((s, x) => s + (Number(x.amount) || 0), 0);
+                        }
+                    } else {
+                        totalExpenses += group.filter(g => g.isPaid).reduce((s, x) => s + (Number(x.amount) || 0), 0);
+                    }
+                }
                 const totalSavings = (monthData.savings || []).reduce((s, t) => s + (t.amount || 0), 0);
                 const balance = totalIncome - totalExpenses - totalSavings;
 
@@ -3259,12 +3389,16 @@ const firebaseConfig = {
         animateKPINumber('kpi-total-savings', totalSavings);
         animateKPINumber('kpi-balance', balance);
 
-                // Projected balance (consider all expenses)
+                // Projected balance (consider all expenses but subtract card anticipations so invoice totals are used)
                 const totalProjectedExpenses = (monthData.expenses || []).reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
-                const projectedBalance = totalIncome - totalProjectedExpenses - totalSavings;
+                // Sum anticipations stored per-card for this month (new: monthData.cardAnticipations = { cardName: amount })
+                const totalAnticipations = Object.values(monthData.cardAnticipations || {}).reduce((s, a) => s + (Number(a) || 0), 0);
+                // Adjust projected expenses by subtracting anticipations so the KPI reflects invoice totals (sum - antecipado)
+                const adjustedProjectedExpenses = totalProjectedExpenses - totalAnticipations;
+                const projectedBalance = totalIncome - adjustedProjectedExpenses - totalSavings;
                 const projEl = document.getElementById('kpi-projected-balance'); if (projEl) animateKPINumber('kpi-projected-balance', projectedBalance);
-                // Populate Despesas Projetadas KPI (shows total of all expenses regardless of paid status)
-                const projExpEl = document.getElementById('kpi-projected-expenses'); if (projExpEl) animateKPINumber('kpi-projected-expenses', totalProjectedExpenses);
+                // Populate Despesas Projetadas KPI (shows total of all expenses minus anticipations so invoice totals are used)
+                const projExpEl = document.getElementById('kpi-projected-expenses'); if (projExpEl) animateKPINumber('kpi-projected-expenses', adjustedProjectedExpenses);
 
                 // Percentual de cada despesa do mês
                 const expenses = monthData.expenses || [];
@@ -3994,6 +4128,8 @@ const firebaseConfig = {
                 document.getElementById('description').value = transaction.description || '';
                 document.getElementById('amount').value = transaction.amount || '';
                 document.getElementById('is-recurring').checked = !!transaction.isRecurring;
+                // If this transaction is recurring, enable the apply-to-future checkbox default to false (user decides)
+                try { if (ui.applyToFuture) ui.applyToFuture.checked = false; } catch(e) {}
                 if (type === 'expenses') {
                     if (document.getElementById('payment-method')) document.getElementById('payment-method').value = transaction.payment || '';
                     if (document.getElementById('category-expense')) document.getElementById('category-expense').value = transaction.category || '';
@@ -4383,15 +4519,26 @@ const firebaseConfig = {
                     transaction.financingId = originalTransaction.financingId;
                     transaction.installmentId = originalTransaction.installmentId;
 
+                    // If there's a recurringId or financingId, consult the 'apply-to-future' checkbox (if present)
+                    const applyToFutureChecked = (ui.applyToFuture && ui.applyToFuture.checked) ? true : null;
                     if (originalTransaction.recurringId) {
-                        if (confirm('Esta é uma transação recorrente. Deseja atualizar as futuras também?')) {
+                        if (applyToFutureChecked === true) {
                             updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
+                        } else if (applyToFutureChecked === null) {
+                            // fallback to old confirm dialog when checkbox not available
+                            if (confirm('Esta é uma transação recorrente. Deseja atualizar as futuras também?')) {
+                                updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
+                            }
                         }
                     }
 
                     if (originalTransaction.financingId) {
-                        if (confirm('Esta é uma transação de financiamento. Deseja atualizar as parcelas futuras também?')) {
+                        if (applyToFutureChecked === true) {
                             updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
+                        } else if (applyToFutureChecked === null) {
+                            if (confirm('Esta é uma transação de financiamento. Deseja atualizar as parcelas futuras também?')) {
+                                updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
+                            }
                         }
                     }
 
@@ -4425,6 +4572,29 @@ const firebaseConfig = {
                     showToast('Falha ao salvar transação no Firebase.', 'bg-red-600');
                 }
             }
+        }
+
+        // Show a compact preview of which future months would be affected by applying changes
+        function previewFutureChanges(id, type) {
+            try {
+                if (!id) return showToast('ID da transação não informado para pré-visualização.', 'bg-gray-600');
+                const affected = [];
+                Object.keys(state.appData.data || {}).forEach(year => {
+                    Object.keys(state.appData.data[year] || {}).forEach(month => {
+                        const md = state.appData.data[year][month];
+                        if (!md || !Array.isArray(md[type])) return;
+                        md[type].forEach(item => {
+                            if (!item) return;
+                            if (item.recurringId && item.recurringId === id) affected.push({ year: Number(year), month: Number(month), amount: item.amount });
+                            if (item.financingId && item.financingId === id) affected.push({ year: Number(year), month: Number(month), amount: item.amount });
+                        });
+                    });
+                });
+                if (affected.length === 0) return showToast('Nenhuma recorrência futura encontrada para esta transação.', 'bg-gray-600');
+                const lines = affected.slice(0, 20).map(a => `${String(a.month).padStart(2,'0')}/${a.year}: ${formatCurrency(a.amount)}`);
+                const more = affected.length > 20 ? `\n...e mais ${affected.length - 20} meses` : '';
+                alert('Recorrências afetadas:\n' + lines.join('\n') + more);
+            } catch (e) { console.error('previewFutureChanges', e); showToast('Erro ao gerar pré-visualização.', 'bg-red-600'); }
         }
 
     // Função principal para excluir

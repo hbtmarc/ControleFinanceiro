@@ -143,86 +143,9 @@
         .infrequent-controls {
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.18s ease;
-        }
-        .infrequent-controls.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        /* Expenses filter popover base styles */
-        #expenses-filter-popover { z-index: 11000; border-radius: 0.75rem; padding: 0.6rem; min-width: 240px; background: #fff; box-shadow: 0 8px 24px rgba(13, 38, 59, 0.06); }
-        #expenses-filter-popover h3 { margin: 0 0 6px 0; font-weight: 600; }
-        #expenses-filter-popover label { color: var(--text-secondary); margin-bottom: 4px; display:block; }
-        #expenses-filter-popover .material-symbols-outlined { vertical-align: middle; }
-        #expenses-filter-popover.mobile-visible {
-            position: fixed !important;
-            left: 0.6rem !important;
-            right: 0.6rem !important;
-            bottom: 4.5rem !important;
-            max-height: 40vh !important;
-            overflow: auto !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.08) !important;
-            border-radius: 0.75rem !important;
-        }
-        /* Toast fade transitions */
-        #toast { transition: opacity 0.25s ease, transform 0.2s ease; }
-        #toast[style*="display: none"] { opacity: 0; transform: translateY(6px); }
-
-        @keyframes slideInUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        dialog[open] { animation: slideInUp 0.3s ease-out forwards; }
-        
-        .animate-fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
-        
-        tbody tr.animate-fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .tab-active {
-             background-color: var(--accent-blue);
-             color: white;
-             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        /* Smooth transitions for modal type toggles and content sections */
-        .modal-type-toggle {
-            transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
-        }
-        .section-fade {
-            transition: opacity 220ms ease, transform 220ms ease;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .section-hidden-smooth {
-            opacity: 0;
-            transform: translateY(-6px);
-            transition: opacity 180ms ease, transform 180ms ease;
-        }
-
-        .sortable-header {
-            cursor: pointer;
-            user-select: none;
-        }
-
-    /* VR card: show 'Usado' always (previously only on hover) so it's tappable/clickable and visible on mobile */
-    .vr-value-group:hover .vr-used { opacity: 1 !important; }
-    .vr-used { opacity: 1 !important; }
-        .delete-vr-usage-btn { background: transparent; border: none; padding: 4px; border-radius: 6px; cursor: pointer; display:inline-flex; align-items:center; justify-content:center; }
-        .delete-vr-usage-btn .material-symbols-outlined { font-size: 16px; color: #dc2626; }
-        .sort-icon {
-            opacity: 0.3;
-            transition: all 0.2s ease;
+        .material-symbols-outlined {
             display: inline-block;
             width: 1.2em;
             font-size: 1em;
@@ -237,6 +160,19 @@
             overflow: hidden;
             height: 0.75rem;
         }
+    /* Grouped expenses visual cards */
+    .expenses-groups { display: flex; flex-wrap: wrap; gap: 12px; }
+    .expense-group-card { background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%); border: 1px solid rgba(99,102,241,0.08); padding: 14px 16px; border-radius: 12px; min-width: 220px; max-width: 340px; box-shadow: 0 6px 20px rgba(16,24,40,0.04); cursor: pointer; position: relative; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+    .expense-group-card:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(16,24,40,0.08); }
+    .expense-group-title { font-weight: 700; color: var(--text-primary); font-size: 1rem; }
+    .expense-group-sub { color: var(--text-secondary); font-size: 0.88rem; margin-top: 6px; display:flex; align-items:center; gap:8px; }
+    .expense-category-badge { background: rgba(10,132,255,0.08); color: #0A84FF; padding: 4px 8px; border-radius: 999px; font-size: 0.78rem; font-weight:600; }
+    .expense-group-amount { font-weight: 800; margin-top: 8px; font-size: 1.08rem; color: #111827; }
+    .expense-group-count { font-size: 0.82rem; color: #6b7280; background: rgba(0,0,0,0.04); padding: 2px 6px; border-radius: 999px; }
+    /* Tooltip with breakdown on hover */
+    .expense-tooltip { position: absolute; z-index: 3000; background: #0f172a; color: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(2,6,23,0.6); white-space: nowrap; display: none; transform-origin: bottom left; }
+    .expense-tooltip::after { content: ''; position: absolute; left: 14px; bottom: -6px; width: 12px; height: 12px; background: #0f172a; transform: rotate(45deg); border-radius: 2px; }
+    .expense-group-card.show-tooltip .expense-tooltip { display: block; }
         .progress-bar > div {
             height: 100%;
             border-radius: 9999px;
@@ -672,11 +608,11 @@
                                 <div id="vr-badge" class="text-sm text-gray-600"></div>
                             </div>
                              <div class="overflow-x-auto">
-                                <table class="w-full text-left responsive-table">
+                                <table class="w-full text-left responsive-table table-fixed">
                                     <thead><tr class="border-b border-gray-200">
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Descrição</th>
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Valor</th>
-                                        <th class="py-2 px-3 font-medium text-sm text-gray-500 text-right">Ações</th>
+                                        <th class="py-3 px-3 font-medium text-sm text-gray-500 text-right align-middle">Ações</th>
                                     </tr></thead>
                                     <tbody id="income-table-body"></tbody>
                                 </table>
@@ -693,20 +629,34 @@
                                         <span class="material-symbols-outlined text-gray-600">filter_list</span>
                                         <span id="expenses-filter-badge" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white bg-red-600 rounded">0</span>
                                     </button>
+                                    <!-- Toggle: Agrupar despesas por descrição -->
+                                    <button id="toggle-expense-grouped" class="bg-white/90 p-2 rounded-md shadow-sm hover:bg-gray-100 flex items-center gap-2 text-sm" title="Alternar visão agrupada">
+                                        <span class="material-symbols-outlined text-gray-600">view_module</span>
+                                        <span id="toggle-expense-grouped-label" class="text-gray-700">Agrupar</span>
+                                    </button>
                                 </div>
                              </div>
                              <div class="overflow-x-auto">
-                                <table class="w-full text-left responsive-table">
+                                <table class="w-full text-left responsive-table table-fixed">
                                     <thead id="expenses-table-head"><tr class="border-b border-gray-200">
-                                        <th class="py-2 px-3"><span class="material-symbols-outlined text-gray-500 text-base">done</span></th>
-                                        <th class="py-2 px-3 font-medium text-sm text-gray-500 sortable-header" data-sort="description">Descrição <span class="sort-icon material-symbols-outlined"></span></th>
-                                        <th class="py-2 px-3 font-medium text-sm text-gray-500 sortable-header" data-sort="payment">Pagamento <span class="sort-icon material-symbols-outlined"></span></th>
-                                        <th class="py-2 px-3 font-medium text-sm text-gray-500 sortable-header" data-sort="category">Categoria <span class="sort-icon material-symbols-outlined"></span></th>
-                                        <th class="py-2 px-3 font-medium text-sm text-gray-500 sortable-header" data-sort="amount">Valor <span class="sort-icon material-symbols-outlined"></span></th>
-                                        <th class="py-2 px-3 font-medium text-sm text-gray-500 text-right">Ações</th>
+                                        <th class="py-3 px-3 align-middle"><span class="material-symbols-outlined text-gray-500 text-base">done</span></th>
+                                        <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="description">Descrição <span class="sort-icon material-symbols-outlined"></span></th>
+                                        <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="payment">Pagamento <span class="sort-icon material-symbols-outlined"></span></th>
+                                        <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="category">Categoria <span class="sort-icon material-symbols-outlined"></span></th>
+                                        <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="amount">Valor <span class="sort-icon material-symbols-outlined"></span></th>
+                                        <th class="py-3 px-3 text-sm text-gray-500 align-middle" style="width:48px;">
+                                            <button id="group-expenses-btn" class="p-1 ml-2 rounded text-gray-600 hover:text-gray-900" title="Agrupar/Desagrupar despesas">
+                                                <span class="material-symbols-outlined">merge_type</span>
+                                            </button>
+                                        </th>
+                                        <th class="py-3 px-3 font-medium text-sm text-gray-500 text-right align-middle" style="width:120px">Ações</th>
                                     </tr></thead>
                                     <tbody id="expenses-table-body"></tbody>
                                 </table>
+                            </div>
+                            <!-- Grouped view container (hidden by default) -->
+                            <div id="expenses-grouped-container" class="mt-4 hidden">
+                                <div id="expenses-groups" class="expenses-groups"></div>
                             </div>
                         </div>
                         
@@ -714,7 +664,7 @@
                         <div class="card p-6 rounded-xl">
                             <h2 class="text-xl font-semibold mb-4">Reservas e Investimentos</h2>
                             <div class="overflow-x-auto">
-                                <table class="w-full text-left responsive-table">
+                                <table class="w-full text-left responsive-table table-fixed">
                                     <thead><tr class="border-b border-gray-200">
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Descrição</th>
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Categoria</th>
@@ -1451,7 +1401,11 @@ const firebaseConfig = {
             appData: null,
             currentView: 'dashboard',
             sort: { key: 'description', order: 'asc' },
-            filters: { searchTerm: '' }
+            filters: { searchTerm: '' },
+            // UX: control whether Despesas are shown grouped by descrição
+            showGroupedExpenses: false,
+            // Per-card grouping state for credit card invoices
+            cardGrouped: {}
         };
 
         const ui = {
@@ -1711,6 +1665,8 @@ const firebaseConfig = {
             const ids = [
                 'current-month-display', 'prev-month-btn', 'next-month-btn', 'today-btn', 'month-picker', 'month-picker-month', 'month-picker-year', 'month-picker-apply', 'month-picker-cancel', 
                 'income-table-body', 'expenses-table-body', 'savings-table-body', 'expenses-table-head', 
+                'toggle-expense-grouped', 'toggle-expense-grouped-label', 'expenses-grouped-container', 'expenses-groups',
+                'group-expenses-btn',
                 'add-transaction-btn', 'transaction-modal', 'close-transaction-modal-btn', 'transaction-form', 
                 'expense-fields', 'dashboard-view', 'credit-cards-view', 'investments-view', 
                 'credit-cards-container', 'installments-section', 'is-installment', 'search-description',
@@ -1932,6 +1888,46 @@ const firebaseConfig = {
                     });
                 }
             } catch (e) { console.error('bindEvents attach financing handler', e); }
+            // Dashboard grouping controls removed: grouping is only available on the credit-cards (faturas) page.
+            try {
+                if (ui['toggleExpenseGrouped']) {
+                    ui['toggleExpenseGrouped'].style.display = 'none';
+                }
+                if (ui.groupExpensesBtn) {
+                    ui.groupExpensesBtn.style.display = 'none';
+                }
+                const wrapped = document.getElementById('expenses-grouped-container'); if (wrapped) wrapped.classList.add('hidden');
+                // ensure state.showGroupedExpenses is not used on dashboard
+                state.showGroupedExpenses = false;
+            } catch(e) { /* silent */ }
+
+                // Delegated handler: if any card's group-toggle is clicked, toggle grouping for ALL cards
+                try {
+                    if (ui.creditCardsContainer) {
+                        ui.creditCardsContainer.addEventListener('click', (ev) => {
+                            const toggle = ev.target.closest && ev.target.closest('.card-group-toggle');
+                            if (!toggle) return;
+                            ev.preventDefault();
+                            const name = toggle.dataset.cardName;
+                            // Determine new state as inverse of current state of clicked card
+                            const newState = !state.cardGrouped[name];
+                            // Apply to all cards
+                            const container = document.getElementById('credit-cards-container');
+                            if (!container) return;
+                            const roots = Array.from(container.querySelectorAll('[data-card-root]'));
+                            roots.forEach(r => {
+                                const nm = r.dataset.cardRoot;
+                                state.cardGrouped[nm] = newState;
+                                // update per-card icon
+                                try { const b = r.querySelector('.card-group-toggle .material-symbols-outlined'); if (b) b.textContent = newState ? 'vertical_split' : 'merge_type'; } catch(e){}
+                                // repopulate each card
+                                try { const exps = (getCurrentMonthData().expenses || []).filter(e => e.payment === nm); populateCardExpenses(nm, exps); } catch(e){}
+                            });
+                        });
+                    }
+                } catch(e) { console.error('attach delegated card-group-toggle', e); }
+
+            
             ui.paymentMethod.addEventListener('change', (e) => {
                 toggleInstallmentSection(e.target.value);
                 try {
@@ -2385,17 +2381,22 @@ const firebaseConfig = {
             const creditCards = ((state.appData.settings.paymentMethods || []).filter(p => p.type === 'credit_card')).slice().sort((a,b) => {
                 const A = (a && a.name || '').toLowerCase(); const B = (b && b.name || '').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0;
             });
+            // Default: start with all cards grouped unless explicitly set otherwise
+            creditCards.forEach(c => { if (state.cardGrouped[c.name] === undefined) state.cardGrouped[c.name] = true; });
             creditCards.forEach(card => {
                 let cardExpenses = (currentMonthData.expenses || []).filter(e => e.payment === card.name);
                 // choose sort mode per-card: default alphabetical
                 ui.cardSorts = ui.cardSorts || {};
                 const sortMode = ui.cardSorts[card.name] || 'alf';
-                if (sortMode === 'alf') {
-                    cardExpenses = cardExpenses.slice().sort((a,b) => { const A=(a.description||'').toLowerCase(); const B=(b.description||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
-                } else if (sortMode === 'value-desc') {
-                    cardExpenses = cardExpenses.slice().sort((a,b) => (Number(b.amount)||0) - (Number(a.amount)||0));
-                } else if (sortMode === 'value-asc') {
-                    cardExpenses = cardExpenses.slice().sort((a,b) => (Number(a.amount)||0) - (Number(b.amount)||0));
+                // If grouped display is active for this card, defer ordering to populateCardExpenses
+                if (!state.cardGrouped[card.name]) {
+                    if (sortMode === 'alf') {
+                        cardExpenses = cardExpenses.slice().sort((a,b) => { const A=(a.description||'').toLowerCase(); const B=(b.description||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
+                    } else if (sortMode === 'value-desc') {
+                        cardExpenses = cardExpenses.slice().sort((a,b) => (Number(b.amount)||0) - (Number(a.amount)||0));
+                    } else if (sortMode === 'value-asc') {
+                        cardExpenses = cardExpenses.slice().sort((a,b) => (Number(a.amount)||0) - (Number(b.amount)||0));
+                    }
                 }
                 const totalBeforeAnticipation = cardExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
                 // anticipation value (amount paid/anticipated to bank) stored per-month under cardAnticipations
@@ -2409,7 +2410,7 @@ const firebaseConfig = {
                 if (card.dueDay < 15) dueDate.setMonth(dueDate.getMonth() + 1);
                 dueDate.setDate(card.dueDay || 1);
                 container.innerHTML += `
-                    <div class="card p-6 rounded-2xl shadow-sm flex flex-col">
+                    <div class="card p-6 rounded-2xl shadow-sm flex flex-col" data-card-root="${card.name}">
                         <div class="flex-grow">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="flex items-center gap-3">
@@ -2417,24 +2418,14 @@ const firebaseConfig = {
                                     <div class="flex items-center text-sm text-gray-500" style="gap:6px;">
                                         <button class="card-sort-arrow" data-card-name="${card.name}" data-sort="value-desc" title="Ordenar por valor desc">▲</button>
                                         <button class="card-sort-arrow" data-card-name="${card.name}" data-sort="value-asc" title="Ordenar por valor asc">▼</button>
+                                        <button class="card-group-toggle p-1 ml-1" data-card-name="${card.name}" title="Agrupar/Desagrupar"><span class="material-symbols-outlined">${state.cardGrouped[card.name] ? 'vertical_split' : 'merge_type'}</span></button>
                                     </div>
                                 </div>
                                 <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Venc. ${dueDate.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
                             </div>
                             <p class="text-3xl font-bold text-blue-600 mb-1">${formatCurrency(invoiceTotal)}</p>
                             <p class="text-sm text-green-600 mb-1">- <span class="anticipation-amount cursor-pointer" data-card-name="${card.name}">${formatCurrency(anticipated)}</span> antecipado</p>
-                            <div class="space-y-2 max-h-48 overflow-y-auto pr-2">
-                                ${cardExpenses.map(exp => {
-                                    const inst = exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/<span class="last-installment-btn" data-installment-id="${exp.installmentId}" data-total="${exp.totalInstallments}">${exp.totalInstallments}</span>)</span>` : '';
-                                    const fin = (exp.financingId && exp.totalFinancing) ? `<span class="text-xs text-gray-500">(${exp.currentFinancing}/<span class="last-installment-btn" data-financing-id="${exp.financingId}" data-total="${exp.totalFinancing}">${exp.totalFinancing}</span>)</span>` : '';
-                                    const remainingHtml = exp.totalInstallments ? (() => {
-                                        const remainingCount = (exp.totalInstallments - (exp.currentInstallment || 1) + 1);
-                                        const remainingTotal = (Number(exp.amount) || 0) * remainingCount;
-                                        return `<span class="remaining-total text-xs text-gray-500 ml-2 hidden">${formatCurrency(remainingTotal)}</span>`;
-                                    })() : '';
-                                    return `<div class="flex justify-between text-sm items-center"><div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;"><span class="desc-text truncate">${exp.description} ${inst} ${fin}</span>${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="card-exp-amount font-medium flex-shrink-0" data-exp-id="${exp.id}">${formatCurrency(exp.amount)}</span></div>`;
-                                }).join('') || '<p class="text-sm text-gray-500">Nenhum gasto este mês.</p>'}
-                            </div>
+                            <div class="space-y-1 max-h-48 overflow-y-auto pr-2 card-items-list" data-card-name="${card.name}"></div>
                         </div>
                         <div class="mt-6">
                             <div class="flex w-full items-center" style="gap:8px;">
@@ -2448,6 +2439,10 @@ const firebaseConfig = {
                             </div>
                         </div>
                     </div>`;
+                // After inserting the card HTML, populate the card items area (grouped or normal depending on state)
+                try {
+                    populateCardExpenses(card.name, cardExpenses);
+                } catch(e) { console.error('populateCardExpenses error', e); }
             });
 
                 // If there's VR ledger balance or VR activity, render VR as a card-like payment instrument
@@ -2725,6 +2720,24 @@ const firebaseConfig = {
                 render();
             }));
 
+            // attach handlers for collapsing/expanding grouped expense headers
+            container.querySelectorAll('.group-header').forEach(h => h.addEventListener('click', (ev) => {
+                const cardName = h.dataset.cardName;
+                const desc = decodeURIComponent(h.dataset.descEnc || '');
+                ui.cardGroups = ui.cardGroups || {};
+                ui.cardGroups[cardName] = ui.cardGroups[cardName] || {};
+                const current = ui.cardGroups[cardName][desc] || false;
+                ui.cardGroups[cardName][desc] = !current;
+                // simple DOM toggle for smoother UX (don't rerender entire view)
+                const root = h.closest('.expense-group');
+                if (root) {
+                    const items = root.querySelector('.group-items');
+                    const caret = root.querySelector('.group-caret');
+                    if (items) items.classList.toggle('hidden');
+                    if (caret) caret.textContent = (!current) ? '▸' : '▾';
+                }
+            }));
+
             // Show edit icon and remaining total on hover for card expense descriptions
             try {
                 container.querySelectorAll('.desc-wrap').forEach(wrap => {
@@ -2751,6 +2764,211 @@ const firebaseConfig = {
                     openModal('expenses', expId);
                 }));
             } catch(e) { console.error('attach card desc hover/edit handlers', e); }
+        }
+
+        // Helper: populate the expenses area for a credit-card card either grouped or as full list
+        function populateCardExpenses(cardName, cardExpenses) {
+            try {
+                const root = document.querySelector(`#credit-cards-container [data-card-root="${cardName}"]`);
+                if (!root) return;
+                const listEl = root.querySelector(`.card-items-list[data-card-name="${cardName}"]`);
+                if (!listEl) return;
+                listEl.innerHTML = '';
+                // Build groups by description
+                const groups = {};
+                cardExpenses.forEach(exp => {
+                    const key = (exp.description || '').trim() || (exp.category || 'Sem descrição');
+                    groups[key] = groups[key] || [];
+                    groups[key].push(exp);
+                });
+                const groupedKeys = [];
+                const singleExpenses = [];
+                Object.keys(groups).forEach(k => {
+                    if (groups[k].length > 1) groupedKeys.push(k);
+                    else singleExpenses.push(groups[k][0]);
+                });
+
+                const isGrouped = !!state.cardGrouped[cardName];
+                // Update header toggle icon
+                try {
+                    const btn = root.querySelector('.card-group-toggle .material-symbols-outlined');
+                    if (btn) btn.textContent = isGrouped ? 'vertical_split' : 'merge_type';
+                } catch(e){}
+
+                if (isGrouped) {
+                    // Render group summaries
+                    if (groupedKeys.length === 0) {
+                        // No groups to aggregate; show a small message and render singles
+                        listEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum grupo com mais de 1 lançamento.</p>';
+                    } else {
+                        // Sort groups according to current sort settings:
+                        // - for cards: ui.cardSorts[cardName] can be 'alf', 'value-desc', 'value-asc'
+                        // - for safety fallback to alphabetical
+                        try {
+                            const cardSortMode = (ui.cardSorts && ui.cardSorts[cardName]) || 'alf';
+                            if (cardSortMode === 'alf') groupedKeys.sort((a,b) => a.localeCompare(b));
+                            else if (cardSortMode === 'value-desc') groupedKeys.sort((a,b) => {
+                                const sa = groups[a].reduce((s,i) => s + (Number(i.amount)||0), 0);
+                                const sb = groups[b].reduce((s,i) => s + (Number(i.amount)||0), 0);
+                                return sb - sa;
+                            });
+                            else if (cardSortMode === 'value-asc') groupedKeys.sort((a,b) => {
+                                const sa = groups[a].reduce((s,i) => s + (Number(i.amount)||0), 0);
+                                const sb = groups[b].reduce((s,i) => s + (Number(i.amount)||0), 0);
+                                return sa - sb;
+                            });
+                        } catch(e) {
+                            groupedKeys.sort((a,b) => a.localeCompare(b));
+                        }
+                        // Build unified list and render interleaved compact rows
+                        const unified = [];
+                        groupedKeys.forEach(k => {
+                            const items = groups[k];
+                            const total = items.reduce((s,i) => s + (Number(i.amount)||0), 0);
+                            unified.push({ type: 'group', key: k, items: items, total: total, count: items.length });
+                        });
+                        singleExpenses.forEach(exp => unified.push({ type: 'single', expense: exp, total: Number(exp.amount) || 0 }));
+
+                        const cardSortMode = (ui.cardSorts && ui.cardSorts[cardName]) || 'alf';
+                        if (cardSortMode === 'value-desc') unified.sort((a,b) => (Number(b.total)||0) - (Number(a.total)||0));
+                        else if (cardSortMode === 'value-asc') unified.sort((a,b) => (Number(a.total)||0) - (Number(b.total)||0));
+                        else unified.sort((a,b) => {
+                            const aLabel = a.type === 'group' ? (a.key||'') : (a.expense && a.expense.description ? a.expense.description : '');
+                            const bLabel = b.type === 'group' ? (b.key||'') : (b.expense && b.expense.description ? b.expense.description : '');
+                            return aLabel.toString().toLowerCase().localeCompare(bLabel.toString().toLowerCase());
+                        });
+
+                        unified.forEach(item => {
+                            if (item.type === 'group') {
+                                const items = item.items;
+                                const sum = item.total;
+                                const count = item.count;
+                                const key = item.key;
+                                const row = document.createElement('div');
+                                row.className = 'flex w-full justify-between text-sm items-center group-item py-0.5 grouped-row';
+                                row._items = items;
+                                row.title = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`).join('\n');
+                                row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-group-key="${encodeURIComponent(key)}" style="gap:6px;"><span class="desc-text truncate">${escapeHtml(key)} <span class="text-xs text-gray-500">(${count} • ${formatCurrency(sum)})</span></span><button class="group-info-btn invisible ml-2" data-group-key="${encodeURIComponent(key)}" title="Detalhes do grupo"><span class="material-symbols-outlined" style="font-size:16px;">info</span></button></div><span class="card-exp-amount font-medium flex-shrink-0">${formatCurrency(sum)}</span>`;
+                                row.addEventListener('click', () => { try { const lines = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`); showModalList(`Detalhes: ${key}`, lines.join('\n')); } catch(e){console.error('group click', e);} });
+                                // attach tooltip behavior to small info button synchronously to preserve ordering
+                                const btn = row.querySelector('.group-info-btn');
+                                if (btn) {
+                                    let tt = null;
+                                    function showTip() {
+                                        if (tt) return;
+                                        tt = document.createElement('div');
+                                        tt.className = 'expense-tooltip';
+                                        // build content safely without nested template braces
+                                        const linesArr = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`);
+                                        const totalVal = items.reduce((s,i)=>s+(Number(i.amount)||0),0);
+                                        tt.innerHTML = linesArr.join('<br>') + '<br><hr style="opacity:.12;margin:6px 0">' + '<strong>Total: ' + formatCurrency(totalVal) + '</strong>';
+                                        document.body.appendChild(tt);
+                                        const r = btn.getBoundingClientRect();
+                                        tt.style.position = 'fixed';
+                                        tt.style.left = (r.left + 8) + 'px';
+                                        tt.style.top = (r.top + r.height + 6) + 'px';
+                                        tt.style.zIndex = 4000;
+                                    }
+                                    function hideTip() { if (tt) { try { tt.remove(); } catch(e){} tt = null; } }
+                                    btn.addEventListener('mouseenter', showTip);
+                                    btn.addEventListener('mouseleave', hideTip);
+                                    btn.addEventListener('click', (ev) => { ev.stopPropagation(); const lines = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`); showModalList(`Detalhes: ${key}`, lines.join('\n')); });
+                                }
+                                listEl.appendChild(row);
+                            } else {
+                                const exp = item.expense;
+                                const inst = exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/<span class="last-installment-btn" data-installment-id="${exp.installmentId}" data-total="${exp.totalInstallments}">${exp.totalInstallments}</span>)</span>` : '';
+                                const fin = (exp.financingId && exp.totalFinancing) ? `<span class="text-xs text-gray-500">(${exp.currentFinancing}/<span class="last-installment-btn" data-financing-id="${exp.financingId}" data-total="${exp.totalFinancing}">${exp.totalFinancing}</span>)</span>` : '';
+                                const remainingHtml = exp.totalInstallments ? (() => { const remainingCount = (exp.totalInstallments - (exp.currentInstallment || 1) + 1); const remainingTotal = (Number(exp.amount) || 0) * remainingCount; return `<span class="remaining-total text-xs text-gray-500 ml-2 hidden">${formatCurrency(remainingTotal)}</span>`; })() : '';
+                                const row = document.createElement('div');
+                                row.className = 'flex w-full justify-between text-sm items-center group-item py-0.5';
+                                row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;"><span class="desc-text truncate">${escapeHtml(exp.description)} ${inst} ${fin}</span>${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="card-exp-amount font-medium flex-shrink-0" data-exp-id="${exp.id}">${formatCurrency(exp.amount)}</span>`;
+                                listEl.appendChild(row);
+                            }
+                        });
+                    }
+                } else {
+                    // Render full list (no grouping)
+                    if (cardExpenses.length === 0) {
+                        listEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum gasto este mês.</p>';
+                    } else {
+                        cardExpenses.forEach(exp => {
+                            const inst = exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/<span class="last-installment-btn" data-installment-id="${exp.installmentId}" data-total="${exp.totalInstallments}">${exp.totalInstallments}</span>)</span>` : '';
+                            const fin = (exp.financingId && exp.totalFinancing) ? `<span class="text-xs text-gray-500">(${exp.currentFinancing}/<span class="last-installment-btn" data-financing-id="${exp.financingId}" data-total="${exp.totalFinancing}">${exp.totalFinancing}</span>)</span>` : '';
+                            const remainingHtml = exp.totalInstallments ? (() => {
+                                const remainingCount = (exp.totalInstallments - (exp.currentInstallment || 1) + 1);
+                                const remainingTotal = (Number(exp.amount) || 0) * remainingCount;
+                                return `<span class="remaining-total text-xs text-gray-500 ml-2 hidden">${formatCurrency(remainingTotal)}</span>`;
+                            })() : '';
+                            const div = document.createElement('div');
+                            div.className = 'flex w-full justify-between text-sm items-center group-item py-0.5';
+                            div.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;"><span class="desc-text truncate">${escapeHtml(exp.description)} ${inst} ${fin}</span>${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="card-exp-amount font-medium flex-shrink-0" data-exp-id="${exp.id}">${formatCurrency(exp.amount)}</span>`;
+                            listEl.appendChild(div);
+                        });
+                    }
+                }
+
+                // Attach hover handlers for edit button visibility and remaining-total toggles
+                try {
+                    listEl.querySelectorAll('.desc-wrap').forEach(wrap => {
+                        wrap.addEventListener('mouseenter', (ev) => {
+                            const btn = wrap.querySelector('.edit-cat-btn');
+                            const rem = wrap.querySelector('.remaining-total');
+                            if (btn) btn.classList.remove('invisible');
+                            if (rem) rem.classList.remove('hidden');
+                        });
+                        wrap.addEventListener('mouseleave', (ev) => {
+                            const btn = wrap.querySelector('.edit-cat-btn');
+                            const rem = wrap.querySelector('.remaining-total');
+                            if (btn) btn.classList.add('invisible');
+                            if (rem) rem.classList.add('hidden');
+                        });
+                    });
+                } catch(e) { console.error('attach desc hover handlers for card', e); }
+
+                // Hook last-installment and edit buttons
+                try {
+                    listEl.querySelectorAll('.last-installment-btn').forEach(btn => btn.addEventListener('click', (ev) => {
+                        const financingId = btn.dataset.financingId || null;
+                        const installmentId = btn.dataset.installmentId || null;
+                        goToLastInstallment({ financingId, installmentId });
+                    }));
+                    listEl.querySelectorAll('.edit-cat-btn').forEach(btn => btn.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        // If this button is attached to a grouped row, it will have data-group-key
+                        const groupKeyEnc = btn.dataset.groupKey;
+                        if (groupKeyEnc) {
+                            const key = decodeURIComponent(groupKeyEnc);
+                            // Prefer items stored on the nearest row, fallback to groups map
+                            let row = btn.closest('.group-item');
+                            let items = row && row._items;
+                            if (!items) items = groups && groups[key] ? groups[key] : [];
+                            if (items && items.length > 0) {
+                                const lines = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`);
+                                showModalList(`Detalhes: ${key}`, lines.join('\n'));
+                            } else {
+                                showToast('Nenhum item encontrado para este grupo.', 'bg-yellow-600');
+                            }
+                            return;
+                        }
+                        const expId = btn.dataset.expId;
+                        if (!expId) return;
+                        openModal('expenses', expId);
+                    }));
+                } catch(e) { console.error('attach card action handlers', e); }
+
+                // Attach toggle click for this card (if not already attached)
+                try {
+                    const toggle = root.querySelector('.card-group-toggle');
+                    if (toggle && !toggle._attached) {
+                        // Note: actual grouping toggle is handled via delegation on the credit-cards container
+                        // keep a marker to avoid duplicate wiring
+                        // (delegated handler will toggle all cards when any .card-group-toggle is clicked)
+                        toggle._attached = true;
+                    }
+                } catch(e) { console.error('attach card toggle handler', e); }
+
+            } catch(e) { console.error('populateCardExpenses', e); }
         }
 
         function renderInvestmentsView() {
@@ -3241,6 +3459,7 @@ const firebaseConfig = {
                 const valB = b[key] || '';
                 return valA.localeCompare(valB) * order;
             });
+            // Dashboard: grouping is intentionally disabled here (grouping only applies to invoice cards)
             ui.expensesTableBody.innerHTML = '';
             if (expenses.length > 0) {
                 expenses.forEach(expense => renderExpenseRow(expense));
@@ -3248,6 +3467,200 @@ const firebaseConfig = {
                 ui.expensesTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">Nenhuma despesa registrada.</td></tr>';
             }
             updateSortHeaders();
+        }
+
+        // Render expenses grouped by description (or category if description empty)
+        function renderExpenseGroupedView(expenses) {
+            // Ensure grouped container is available
+            const groupsEl = document.getElementById('expenses-groups');
+            const wrapper = document.getElementById('expenses-grouped-container');
+            if (!groupsEl || !wrapper) return;
+            // Prepare table wrapper reference
+            const tableWrapper = ui.expensesTableBody ? ui.expensesTableBody.closest('.overflow-x-auto') : null;
+            groupsEl.innerHTML = '';
+            if (!expenses || expenses.length === 0) {
+                groupsEl.innerHTML = '<div class="text-sm text-gray-500">Nenhuma despesa registrada.</div>';
+                // ensure table hidden
+                if (tableWrapper) tableWrapper.style.display = 'none';
+                wrapper.classList.toggle('hidden', !state.showGroupedExpenses);
+                return;
+            }
+            // Group by normalized description (fallback to category)
+            const normalize = v => (v || '').toString().trim();
+            const byDesc = {};
+            expenses.forEach(exp => {
+                const key = normalize(exp.description) || normalize(exp.category) || 'Sem descrição';
+                if (!byDesc[key]) byDesc[key] = [];
+                byDesc[key].push(exp);
+            });
+
+            // Separate into groups (count>1) and singles
+            const groupedKeys = [];
+            const singleExpenses = [];
+            Object.keys(byDesc).forEach(k => {
+                if (byDesc[k].length > 1) groupedKeys.push(k);
+                else singleExpenses.push(byDesc[k][0]);
+            });
+
+            // Build a unified list of groups and single expenses so they can be sorted together
+            const unified = [];
+            groupedKeys.forEach(k => {
+                const items = byDesc[k];
+                const total = items.reduce((s,i) => s + (Number(i.amount) || 0), 0);
+                unified.push({ type: 'group', key: k, items: items, total: total, count: items.length });
+            });
+            singleExpenses.forEach(exp => unified.push({ type: 'single', expense: exp, total: Number(exp.amount) || 0 }));
+
+            // Sort unified list according to current state.sort
+            try {
+                if (state.sort && state.sort.key === 'amount') {
+                    if (state.sort.order === 'asc') unified.sort((a,b) => (Number(a.total)||0) - (Number(b.total)||0));
+                    else unified.sort((a,b) => (Number(b.total)||0) - (Number(a.total)||0));
+                } else {
+                    // alphabetical by label (group key or expense description)
+                    unified.sort((a,b) => {
+                        const aLabel = a.type === 'group' ? (a.key||'') : (a.expense && a.expense.description ? a.expense.description : '');
+                        const bLabel = b.type === 'group' ? (b.key||'') : (b.expense && b.expense.description ? b.expense.description : '');
+                        const cmp = aLabel.toString().toLowerCase().localeCompare(bLabel.toString().toLowerCase());
+                        return (state.sort && state.sort.order === 'desc') ? -cmp : cmp;
+                    });
+                }
+            } catch(e) {
+                // fallback alphabetical
+                unified.sort((a,b) => {
+                    const al = a.type === 'group' ? (a.key||'') : (a.expense && a.expense.description ? a.expense.description : '');
+                    const bl = b.type === 'group' ? (b.key||'') : (b.expense && b.expense.description ? b.expense.description : '');
+                    return al.toString().toLowerCase().localeCompare(bl.toString().toLowerCase());
+                });
+            }
+
+            // Render unified list inside the grouped container so groups and singles are interleaved visually
+            groupsEl.innerHTML = '';
+            // We'll render single items as compact rows inside the same container (instead of the table) to allow interleaving
+            unified.forEach(item => {
+                if (item.type === 'group') {
+                    const items = item.items;
+                    const total = item.total;
+                    const count = item.count;
+                    const key = item.key;
+                    // compact grouped row
+                    const row = document.createElement('div');
+                    row.className = 'flex w-full justify-between text-sm items-center group-item py-0.5 grouped-row';
+                    row._items = items;
+                    const breakdown = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`).join('\n');
+                    row.title = breakdown; // small native tooltip on hover
+                    row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-group-key="${encodeURIComponent(key)}" style="gap:6px;"><span class="desc-text truncate">${escapeHtml(key)} <span class="text-xs text-gray-500">(${count} • ${formatCurrency(total)})</span></span><button class="group-info-btn invisible ml-2" data-group-key="${encodeURIComponent(key)}" title="Detalhes do grupo"><span class="material-symbols-outlined" style="font-size:16px;">info</span></button></div><span class="card-exp-amount font-medium flex-shrink-0">${formatCurrency(total)}</span>`;
+                    row.addEventListener('click', () => { try { const lines = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')} (${escapeHtml(it.payment || it.category || '')})`); showModalList(`Detalhes: ${key}`, lines.join('\n')); } catch(e) { console.error('group click', e); } });
+                    // add hover tooltip on the small info button
+                    setTimeout(() => {
+                        const infoBtn = row.querySelector('.group-info-btn');
+                        if (!infoBtn) { groupsEl.appendChild(row); return; }
+                        let tt = null;
+                        function showTT() {
+                            if (tt) return;
+                            tt = document.createElement('div');
+                            tt.className = 'expense-tooltip';
+                            const lines = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`);
+                            const totalLine = `<strong>Total: ${formatCurrency(items.reduce((s,i)=>s+(Number(i.amount)||0),0))}</strong>`;
+                            tt.innerHTML = lines.join('<br>') + '<br><hr style="opacity:.12;margin:6px 0">' + totalLine;
+                            document.body.appendChild(tt);
+                            const r = infoBtn.getBoundingClientRect();
+                            tt.style.position = 'fixed';
+                            tt.style.left = (r.left + 8) + 'px';
+                            tt.style.top = (r.top + r.height + 6) + 'px';
+                            tt.style.zIndex = 4000;
+                        }
+                        function hideTT() { if (tt) { try { tt.remove(); } catch(e){} tt = null; } }
+                        infoBtn.addEventListener('mouseenter', showTT);
+                        infoBtn.addEventListener('mouseleave', hideTT);
+                        infoBtn.addEventListener('click', (ev) => { ev.stopPropagation(); const lines = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')} (${escapeHtml(it.payment || it.category || '')})`); showModalList(`Detalhes: ${key}`, lines.join('\n')); });
+                        groupsEl.appendChild(row);
+                    }, 0);
+                } else {
+                    const exp = item.expense;
+                    const inst = exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/<span class="last-installment-btn" data-installment-id="${exp.installmentId}" data-total="${exp.totalInstallments}">${exp.totalInstallments}</span>)</span>` : '';
+                    const fin = (exp.financingId && exp.totalFinancing) ? `<span class="text-xs text-gray-500">(${exp.currentFinancing}/<span class="last-installment-btn" data-financing-id="${exp.financingId}" data-total="${exp.totalFinancing}">${exp.totalFinancing}</span>)</span>` : '';
+                    const remainingHtml = exp.totalInstallments ? (() => { const remainingCount = (exp.totalInstallments - (exp.currentInstallment || 1) + 1); const remainingTotal = (Number(exp.amount) || 0) * remainingCount; return `<span class="remaining-total text-xs text-gray-500 ml-2 hidden">${formatCurrency(remainingTotal)}</span>`; })() : '';
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between text-sm items-center group-item py-0.5';
+                    row.dataset.expId = exp.id || '';
+                    row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;"><span class="desc-text truncate">${escapeHtml(exp.description)} ${inst} ${fin}</span>${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="card-exp-amount font-medium flex-shrink-0" data-exp-id="${exp.id}">${formatCurrency(exp.amount)}</span>`;
+                    groupsEl.appendChild(row);
+                }
+            });
+
+            // Since singles are rendered inside the grouped container now, hide the traditional table wrapper
+            if (tableWrapper) tableWrapper.style.display = 'none';
+            wrapper.classList.toggle('hidden', !state.showGroupedExpenses);
+
+            // Attach hover handlers and action buttons for the single rows inside groupsEl
+            try {
+                groupsEl.querySelectorAll('.desc-wrap').forEach(wrap => {
+                    wrap.addEventListener('mouseenter', (ev) => {
+                        const btn = wrap.querySelector('.edit-cat-btn');
+                        const rem = wrap.querySelector('.remaining-total');
+                        if (btn) btn.classList.remove('invisible');
+                        if (rem) rem.classList.remove('hidden');
+                    });
+                    wrap.addEventListener('mouseleave', (ev) => {
+                        const btn = wrap.querySelector('.edit-cat-btn');
+                        const rem = wrap.querySelector('.remaining-total');
+                        if (btn) btn.classList.add('invisible');
+                        if (rem) rem.classList.add('hidden');
+                    });
+                });
+                groupsEl.querySelectorAll('.last-installment-btn').forEach(btn => btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const financingId = btn.dataset.financingId || null;
+                    const installmentId = btn.dataset.installmentId || null;
+                    goToLastInstallment({ financingId, installmentId });
+                }));
+                groupsEl.querySelectorAll('.edit-cat-btn').forEach(btn => btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const groupKeyEnc = btn.dataset.groupKey;
+                    if (groupKeyEnc) {
+                        const key = decodeURIComponent(groupKeyEnc);
+                        let row = btn.closest('.group-item');
+                        let items = row && row._items;
+                        if (!items) items = byDesc && byDesc[key] ? byDesc[key] : [];
+                        if (items && items.length > 0) {
+                            const lines = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`);
+                            showModalList(`Detalhes: ${key}`, lines.join('\n'));
+                        } else {
+                            showToast('Nenhum item encontrado para este grupo.', 'bg-yellow-600');
+                        }
+                        return;
+                    }
+                    const expId = btn.dataset.expId;
+                    if (!expId) return;
+                    openModal('expenses', expId);
+                }));
+            } catch(e) { console.error('attach grouped view handlers', e); }
+        }
+
+        // Simple helper to escape HTML for text insertion
+        function escapeHtml(str) {
+            return (str || '').toString().replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]; });
+        }
+
+        // Small modal-list helper (reuses transaction modal if present, otherwise falls back to alert)
+        function showModalList(title, content) {
+            try {
+                const modal = document.getElementById('transaction-modal');
+                if (!modal) { alert(title + '\n\n' + content); return; }
+                // Populate a simple container inside modal (create if missing)
+                let container = modal.querySelector('.group-modal-content');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.className = 'group-modal-content p-4';
+                    container.style.maxHeight = '60vh';
+                    container.style.overflow = 'auto';
+                    const body = modal.querySelector('.modal-body') || modal;
+                    body.appendChild(container);
+                }
+                container.innerHTML = `<h3 class="text-lg font-semibold mb-2">${escapeHtml(title)}</h3><pre style="white-space:pre-wrap">${escapeHtml(content)}</pre>`;
+                openModal();
+            } catch(e) { alert(title + '\n\n' + content); }
         }
 
         function renderSavingsTable() {
@@ -3290,7 +3703,8 @@ const firebaseConfig = {
                 <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>
                 <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${formatCurrency(expense.amount)}</td>
-                <td class="py-3 px-3 text-right actions-cell">
+                <td class="py-3 px-3" aria-hidden="true"></td>
+                <td class="py-3 px-3 text-right actions-cell align-middle">
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>`;
@@ -3314,7 +3728,7 @@ const firebaseConfig = {
                 <td class="py-3 px-3" data-label="Descrição">${saving.description} ${saving.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${(state.appData.settings.goals||[]).some(g=>g.name===saving.category) ? 'Meta' : saving.category}</td>
                 <td class="py-3 px-3 font-medium text-indigo-600" data-label="Valor">${formatCurrency(saving.amount)}</td>
-                <td class="py-3 px-3 text-right actions-cell">
+                <td class="py-3 px-3 text-right actions-cell align-middle">
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>`;
@@ -3396,21 +3810,31 @@ const firebaseConfig = {
                 // Adjust projected expenses by subtracting anticipations so the KPI reflects invoice totals (sum - antecipado)
                 const adjustedProjectedExpenses = totalProjectedExpenses - totalAnticipations;
                 const projectedBalance = totalIncome - adjustedProjectedExpenses - totalSavings;
-                const projEl = document.getElementById('kpi-projected-balance'); if (projEl) animateKPINumber('kpi-projected-balance', projectedBalance);
+                const projEl = document.getElementById('kpi-projected-balance'); if (projEl) { animateKPINumber('kpi-projected-balance', projectedBalance); projEl.classList.toggle('text-red-600', projectedBalance < 0); projEl.classList.toggle('text-green-600', projectedBalance >= 0); }
                 // Populate Despesas Projetadas KPI (shows total of all expenses minus anticipations so invoice totals are used)
                 const projExpEl = document.getElementById('kpi-projected-expenses'); if (projExpEl) animateKPINumber('kpi-projected-expenses', adjustedProjectedExpenses);
 
-                // Percentual de cada despesa do mês
+                // Percentual de cada despesa do mês (sempre ordenado decrescentemente por percentual)
                 const expenses = monthData.expenses || [];
                 const totalMonthExpenses = expenses.reduce((s, exp) => s + (exp.amount || 0), 0);
                 const container = document.getElementById('kpi-expense-percentuals');
                 if (container) {
                     container.innerHTML = '';
-                    if (expenses.length === 0) container.innerHTML = '<span class="text-gray-400 text-xs">Nenhuma despesa registrada.</span>';
-                    expenses.forEach(exp => {
-                        const percent = totalMonthExpenses > 0 ? ((exp.amount / totalMonthExpenses) * 100).toFixed(1) : '0.0';
-                        container.innerHTML += `<div class="flex justify-between text-sm"><span>${exp.description}</span><span>${percent}%</span></div>`;
-                    });
+                    if (expenses.length === 0) {
+                        container.innerHTML = '<span class="text-gray-400 text-xs">Nenhuma despesa registrada.</span>';
+                    } else {
+                        // Build array with computed percent and sort descending
+                        const list = expenses.map(exp => ({
+                            description: exp.description || exp.category || 'Sem descrição',
+                            amount: Number(exp.amount) || 0,
+                            percent: totalMonthExpenses > 0 ? ( (Number(exp.amount) || 0) / totalMonthExpenses ) * 100 : 0
+                        }));
+                        list.sort((a,b) => b.percent - a.percent);
+                        list.forEach(item => {
+                            const percentStr = item.percent.toFixed(1);
+                            container.innerHTML += `<div class="flex justify-between text-sm"><span>${escapeHtml(item.description)}</span><span>${percentStr}%</span></div>`;
+                        });
+                    }
                 }
 
                 getFeedback(totalIncome, totalExpenses, totalSavings);

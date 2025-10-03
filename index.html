@@ -3814,25 +3814,45 @@ const firebaseConfig = {
                 // Populate Despesas Projetadas KPI (shows total of all expenses minus anticipations so invoice totals are used)
                 const projExpEl = document.getElementById('kpi-projected-expenses'); if (projExpEl) animateKPINumber('kpi-projected-expenses', adjustedProjectedExpenses);
 
-                // Percentual de cada despesa do mês (sempre ordenado decrescentemente por percentual)
+                // Percentual de cada despesa do mês (agrupado por descrição, soma valores e conta ocorrências)
                 const expenses = monthData.expenses || [];
-                const totalMonthExpenses = expenses.reduce((s, exp) => s + (exp.amount || 0), 0);
+                const totalMonthExpenses = expenses.reduce((s, exp) => s + (Number(exp.amount) || 0), 0);
                 const container = document.getElementById('kpi-expense-percentuals');
                 if (container) {
                     container.innerHTML = '';
-                    if (expenses.length === 0) {
+                    if (!expenses || expenses.length === 0 || totalMonthExpenses === 0) {
                         container.innerHTML = '<span class="text-gray-400 text-xs">Nenhuma despesa registrada.</span>';
                     } else {
-                        // Build array with computed percent and sort descending
-                        const list = expenses.map(exp => ({
-                            description: exp.description || exp.category || 'Sem descrição',
-                            amount: Number(exp.amount) || 0,
-                            percent: totalMonthExpenses > 0 ? ( (Number(exp.amount) || 0) / totalMonthExpenses ) * 100 : 0
+                        // Group by normalized description (fall back to category or 'Sem descrição')
+                        const groupsMap = new Map();
+                        expenses.forEach(exp => {
+                            const rawDesc = (exp.description || exp.category || 'Sem descrição').toString().trim();
+                            const key = rawDesc.toLowerCase();
+                            const amount = Number(exp.amount) || 0;
+                            if (!groupsMap.has(key)) groupsMap.set(key, { description: rawDesc, amount: 0, count: 0 });
+                            const g = groupsMap.get(key);
+                            g.amount += amount;
+                            g.count += 1;
+                        });
+
+                        // Turn into array and compute percent
+                        const grouped = Array.from(groupsMap.values()).map(g => ({
+                            description: g.description,
+                            amount: g.amount,
+                            count: g.count,
+                            percent: totalMonthExpenses > 0 ? (g.amount / totalMonthExpenses) * 100 : 0
                         }));
-                        list.sort((a,b) => b.percent - a.percent);
-                        list.forEach(item => {
-                            const percentStr = item.percent.toFixed(1);
-                            container.innerHTML += `<div class="flex justify-between text-sm"><span>${escapeHtml(item.description)}</span><span>${percentStr}%</span></div>`;
+
+                        // Sort descending by percent (largest contributors first)
+                        grouped.sort((a,b) => b.percent - a.percent);
+
+                        // Render each group: Description (count)  — percent%  • formatted currency
+                        grouped.forEach(g => {
+                            const percentStr = g.percent.toFixed(1);
+                            const countStr = g.count > 1 ? ` <span class="text-gray-400">(${g.count})</span>` : '';
+                            const left = `${escapeHtml(g.description)}${countStr}`;
+                            const right = `<span class="text-sm text-gray-600">${percentStr}%</span> <span class="ml-3 font-medium">${formatCurrency(g.amount)}</span>`;
+                            container.innerHTML += `<div class="flex justify-between items-center text-sm"> <div class="truncate pr-4">${left}</div><div class="flex items-center">${right}</div></div>`;
                         });
                     }
                 }

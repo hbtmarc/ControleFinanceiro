@@ -2019,6 +2019,17 @@ const firebaseConfig = {
                     const cats = state.appData.settings.expenseCategories || [];
                     const catsSorted = sortStrings(cats);
                     ui.filterCategory.innerHTML = '<option value="">Todas</option>' + catsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
+                    // Pre-select current filters so the UI reflects programmatic filters
+                    try {
+                        const ef = state.filters.expenseFilters || {};
+                        ui.filterPaymentMethod.value = ef.payment || '';
+                        ui.filterSpendingType.value = ef.spendingType || '';
+                        ui.filterCategory.value = ef.category || '';
+                        ui.filterType.value = ef.type || '';
+                        ui.filterRecurring.checked = !!ef.recurring;
+                        ui.filterInstallment.checked = !!ef.installment;
+                    } catch(e) { /* ignore */ }
+
                     // On small screens, show as mobile bottom-sheet using mobile-visible
                     if (window.innerWidth <= 639) {
                         ui.expensesFilterPopover.classList.remove('hidden');
@@ -2137,6 +2148,7 @@ const firebaseConfig = {
                     ui.filterPaymentMethod.value = '';
                     ui.filterCategory.value = '';
                     ui.filterType.value = '';
+                    ui.filterSpendingType.value = '';
                     ui.filterRecurring.checked = false;
                     ui.filterInstallment.checked = false;
                     state.filters.expenseFilters = {};
@@ -3030,14 +3042,25 @@ const firebaseConfig = {
             // Apply advanced expense filters if present
             const ef = state.filters.expenseFilters || {};
             if (ef) {
-                if (ef.payment) expenses = expenses.filter(exp => (exp.payment || '') === ef.payment);
-                if (ef.category) expenses = expenses.filter(exp => (exp.category || '') === ef.category);
+                // helper normalizer
+                const norm = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                if (ef.payment) {
+                    const want = norm(ef.payment);
+                    // allow tolerant match (some payments may include extra labels)
+                    expenses = expenses.filter(exp => (norm(exp.payment) || '').includes(want));
+                }
+                if (ef.category) {
+                    const wantCat = norm(ef.category);
+                    // tolerant: match when category contains selected value (handles appended meta labels)
+                    expenses = expenses.filter(exp => (norm(exp.category) || '').includes(wantCat));
+                }
                 if (ef.type) {
-                    if (ef.type === 'expense') expenses = expenses.filter(exp => !exp.isSaving);
-                    if (ef.type === 'saving') expenses = expenses.filter(exp => exp.isSaving);
+                    // type filter: 'expense' (regular expense) or 'saving' (reservas stored as savings entries or flagged)
+                    if (ef.type === 'expense') expenses = expenses.filter(exp => !exp.isSaving && (exp.source || '') !== 'saving');
+                    if (ef.type === 'saving') expenses = expenses.filter(exp => !!exp.isSaving || (state.appData && state.appData.settings && Array.isArray(state.appData.settings.savingCategories) && state.appData.settings.savingCategories.map(c=>norm(c)).includes(norm(exp.category))));
                 }
                 if (ef.recurring) expenses = expenses.filter(exp => !!exp.isRecurring);
-                if (ef.installment) expenses = expenses.filter(exp => !!exp.installmentId || !!exp.financingId || !!exp.totalInstallments || !!exp.totalFinancing);
+                if (ef.installment) expenses = expenses.filter(exp => !!exp.installmentId || !!exp.financingId || !!exp.totalInstallments || !!exp.totalFinancing || !!exp.isInstallment);
                 // Spending type filter: essencial / nao-essencial / reserva
                 if (ef.spendingType) {
                     const settings = state.appData && state.appData.settings ? state.appData.settings : {};
@@ -3051,34 +3074,38 @@ const firebaseConfig = {
                         reservas = settings.savingCategories || ['Reserva de Emergência','Poupança'];
                     }
                     // Prefer explicit expense.type when present (edited inline), otherwise fall back to category-group mapping
+                    // normalize the group lists
+                    const normArr = arr => (Array.isArray(arr) ? arr.map(x => (x||'').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')) : []);
+                    essencials = normArr(essencials);
+                    reservas = normArr(reservas);
+
+                    const expTypeCheck = (exp) => {
+                        if (exp && exp.type && typeof exp.type === 'string') return norm(exp.type);
+                        return null;
+                    };
+
                     if (ef.spendingType === 'essencial') {
                         expenses = expenses.filter(exp => {
-                            if (exp.type && typeof exp.type === 'string') {
-                                const t = exp.type.toString().toLowerCase();
-                                return t.includes('essencial');
-                            }
-                            return essencials.includes(exp.category);
+                            const t = expTypeCheck(exp);
+                            if (t) return t.includes('essencial');
+                            return essencials.includes(norm(exp.category));
                         });
                     } else if (ef.spendingType === 'nao-essencial') {
                         expenses = expenses.filter(exp => {
-                            if (exp.type && typeof exp.type === 'string') {
-                                const t = exp.type.toString().toLowerCase();
-                                // if type explicitly states essencial, it's not nao-essencial
+                            const t = expTypeCheck(exp);
+                            if (t) {
                                 if (t.includes('essencial')) return false;
-                                // if type explicitly states reserva, exclude
                                 if (t.includes('reserva') || t.includes('saving')) return false;
-                                // otherwise treat as nao-essencial
                                 return true;
                             }
-                            return !essencials.includes(exp.category) && !reservas.includes(exp.category);
+                            const catNorm = norm(exp.category);
+                            return (!essencials.includes(catNorm) && !reservas.includes(catNorm));
                         });
                     } else if (ef.spendingType === 'reserva') {
                         expenses = expenses.filter(exp => {
-                            if (exp.type && typeof exp.type === 'string') {
-                                const t = exp.type.toString().toLowerCase();
-                                return t.includes('reserva') || t.includes('saving');
-                            }
-                            return reservas.includes(exp.category);
+                            const t = expTypeCheck(exp);
+                            if (t) return t.includes('reserva') || t.includes('saving');
+                            return reservas.includes(norm(exp.category));
                         });
                     }
                 }

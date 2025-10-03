@@ -446,6 +446,43 @@
             #desktop-quick-links { display: none !important; }
         }
     </style>
+    <style>
+    /* Mobile-only UI polish: floating action button, larger touch targets, clearer bottom nav spacing */
+    @media (max-width: 639px) {
+        /* Floating Add button for mobile (visible only on small screens) */
+        #mobile-add-transaction-fab {
+            display: inline-flex !important;
+            position: fixed;
+            right: 1rem;
+            bottom: 5.6rem; /* above the mobile bottom nav */
+            width: 64px;
+            height: 64px;
+            border-radius: 9999px;
+            background: linear-gradient(180deg,#0ea5e9,#0369a1);
+            color: white;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(2,6,23,0.18);
+            z-index: 140000;
+            border: none;
+            font-size: 28px;
+        }
+        #mobile-add-transaction-fab:active { transform: translateY(1px); }
+
+        /* Make small header icons and list actions larger for touch */
+        header .material-symbols-outlined, .mobile-nav-btn .material-symbols-outlined { font-size: 22px !important; }
+        .responsive-table td .material-symbols-outlined, .responsive-table td button { padding: 10px !important; }
+
+        /* Improve spacing inside responsive table rows for readability */
+        .responsive-table tr { padding: 0.85rem !important; }
+        .responsive-table td { padding: 0.9rem 0.6rem !important; }
+
+        /* Ensure month-picker and filter bottom-sheets have comfortable margins */
+        #month-picker, #expenses-filter-popover { left: 0.6rem !important; right: 0.6rem !important; bottom: 4.6rem !important; max-height: 52vh !important; }
+    }
+    /* Hidden by default (desktop) - shown only on mobile via media query above */
+    #mobile-add-transaction-fab { display: none; }
+    </style>
 </head>
 <body class="antialiased">
 
@@ -4850,6 +4887,22 @@ const firebaseConfig = {
                 const vtuClose = document.getElementById('vt-usage-close'); if (vtuClose) vtuClose.addEventListener('click', () => App.closeVTUsageModal());
                 const vtuForm = document.getElementById('vt-usage-form'); if (vtuForm) vtuForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVTUsageEdit(e); });
                 const vtEntryForm = document.getElementById('vt-entry-form'); if (vtEntryForm) vtEntryForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVTLedgerEntry(); });
+                // Mobile FAB: delegate to existing add-transaction button to preserve behavior
+                try {
+                    const mobileFab = document.getElementById('mobile-add-transaction-fab');
+                    const desktopAddBtn = document.getElementById('add-transaction-btn');
+                    if (mobileFab && desktopAddBtn) {
+                        mobileFab.addEventListener('click', (e) => {
+                            // If on mobile, simulate click on the main add button which opens the modal
+                            if (window.innerWidth <= 639) {
+                                try { desktopAddBtn.click(); } catch (err) { openModal('expenses'); }
+                            } else {
+                                // hide mobile FAB on desktop
+                                mobileFab.style.display = 'none';
+                            }
+                        });
+                    }
+                } catch(e) { console.error('attach mobile FAB', e); }
             } catch(e) { console.error('attach vr modal buttons', e); }
         }
     });
@@ -4862,5 +4915,8 @@ const firebaseConfig = {
         <button data-view="credit-cards" class="mobile-nav-btn p-2 rounded-full" title="Faturas"><span class="material-symbols-outlined">credit_card</span></button>
         <button data-view="investments" class="mobile-nav-btn p-2 rounded-full" title="Investimentos"><span class="material-symbols-outlined">trending_up</span></button>
     </nav>
+    <!-- Mobile Floating Add Transaction Button -->
+    <button id="mobile-add-transaction-fab" aria-label="Adicionar transação" title="Nova transação">+
+    </button>
 </body>
 </html>

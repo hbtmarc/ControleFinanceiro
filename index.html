@@ -1617,6 +1617,20 @@ const firebaseConfig = {
                             } else preserved.push(i);
                         });
                         md.incomes = preserved;
+                        // Deduplicate vrLedger entries by salaryMeta+amount to avoid legacy duplicates
+                        try {
+                            if (Array.isArray(md.vrLedger) && md.vrLedger.length > 1) {
+                                const seen = new Map();
+                                md.vrLedger = md.vrLedger.slice().reverse().filter(l => {
+                                    try {
+                                        const key = `${JSON.stringify(l.salaryMeta||{})}::${Number(l.amount||0)}`;
+                                        if (seen.has(key)) return false;
+                                        seen.set(key, true);
+                                        return true;
+                                    } catch(e){ return true; }
+                                }).reverse();
+                            }
+                        } catch(e){ /* non-fatal */ }
                     });
                 });
             } catch(e){ console.error('VR migration', e); }
@@ -1636,6 +1650,20 @@ const firebaseConfig = {
                             } else preserved.push(i);
                         });
                         md.incomes = preserved;
+                        // Deduplicate vtLedger entries by salaryMeta+amount to avoid legacy duplicates
+                        try {
+                            if (Array.isArray(md.vtLedger) && md.vtLedger.length > 1) {
+                                const seen2 = new Map();
+                                md.vtLedger = md.vtLedger.slice().reverse().filter(l => {
+                                    try {
+                                        const key = `${JSON.stringify(l.salaryMeta||{})}::${Number(l.amount||0)}`;
+                                        if (seen2.has(key)) return false;
+                                        seen2.set(key, true);
+                                        return true;
+                                    } catch(e){ return true; }
+                                }).reverse();
+                            }
+                        } catch(e){ /* non-fatal */ }
                         // move legacy expenses paid with VT into vtUsage
                         const remainingExpenses = [];
                         md.expenses = md.expenses || [];
@@ -1739,10 +1767,31 @@ const firebaseConfig = {
             });
             ui.addTransactionBtn.addEventListener('click', () => openModal('expenses'));
             ui.closeTransactionModalBtn.addEventListener('click', () => closeModal('transaction-modal'));
-            ui.transactionModal.addEventListener('click', (e) => { if(e.target === ui.transactionModal) closeModal('transaction-modal'); });
-            ui.goalModal.addEventListener('click', (e) => { if(e.target === ui.goalModal) closeModal('goal-modal'); });
-            ui.monthlyReportModal.addEventListener('click', (e) => { if(e.target === ui.monthlyReportModal) closeModal('monthly-report-modal'); });
-            ui.annualReportModal.addEventListener('click', (e) => { if(e.target === ui.annualReportModal) closeModal('annual-report-modal'); });
+            // Require double-click on modal backdrop to avoid accidental closure
+            const attachBackdropDoubleClickToClose = (modalEl, modalId, timeoutMs = 2000) => {
+                if (!modalEl) return;
+                let clickCount = 0;
+                let timer = null;
+                modalEl.addEventListener('click', (e) => {
+                    if (e.target !== modalEl) return; // only backdrop clicks
+                    clickCount++;
+                    if (clickCount === 1) {
+                        // first click - show subtle hint (optional) and start/reset timer
+                        try { showToast('Clique novamente no fundo para fechar o modal', 'bg-gray-700'); } catch(e){}
+                        timer = setTimeout(() => { clickCount = 0; timer = null; }, timeoutMs);
+                        return;
+                    }
+                    if (clickCount >= 2) {
+                        if (timer) { clearTimeout(timer); timer = null; }
+                        clickCount = 0;
+                        closeModal(modalId);
+                    }
+                });
+            };
+            attachBackdropDoubleClickToClose(ui.transactionModal, 'transaction-modal');
+            attachBackdropDoubleClickToClose(ui.goalModal, 'goal-modal');
+            attachBackdropDoubleClickToClose(ui.monthlyReportModal, 'monthly-report-modal');
+            attachBackdropDoubleClickToClose(ui.annualReportModal, 'annual-report-modal');
             ui.transactionForm.addEventListener('submit', (e) => handleFormSubmit(e));
             // Mostrar/ocultar seção Salário quando em Entradas
             const isSalaryCheckbox = document.getElementById('is-salary');
@@ -5636,9 +5685,9 @@ const firebaseConfig = {
                             const nextY2 = nextDate.getFullYear();
                             const nextM2 = nextDate.getMonth() + 1;
                             const roundLocal = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
-                            // VT: transporte benefit uses business days of next month (payment month)
-                            const beneficiosVTM = roundLocal((pMonthly.valorTransporteDia || 0) * diasUteisNoMes(nextY2, nextM2));
-                            // VR: per your rule, use dias úteis do MES ATUAL + 4 (to include saturdays equivalent)
+                            // VT: transporte benefit per requirement - use dias úteis do MÊS SELECIONADO + 1
+                            const beneficiosVTM = roundLocal((pMonthly.valorTransporteDia || 0) * (diasUteisNoMes(pMonthly.year, pMonthly.month) + 1));
+                            // VR: desjejum benefit per requirement - use dias úteis do MÊS SELECIONADO + 1
                             const beneficiosVRM = roundLocal((pMonthly.valorDesjejumDia || 0) * (diasUteisNoMes(pMonthly.year, pMonthly.month) + 1));
                             return { salarioLiquido: salarioLiquidoM, beneficiosVT: beneficiosVTM, beneficiosVR: beneficiosVRM, valorHorasExtras: valorHorasExtrasM };
                         };
@@ -5649,24 +5698,33 @@ const firebaseConfig = {
                             const oldMetaStr = opts.oldMetaStr || null;
                             const rid = opts.recurringId || null;
                             if (!Array.isArray(monthDataObj.incomes)) monthDataObj.incomes = [];
-                            // Remove incomes that belong to the recurringId when provided
+                            // Ensure ledgers exist
+                            if (!Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = [];
+                            if (!Array.isArray(monthDataObj.vtLedger)) monthDataObj.vtLedger = [];
+                            // Remove incomes and ledger entries that belong to the recurringId when provided
                             if (rid) {
                                 monthDataObj.incomes = monthDataObj.incomes.filter(i => i.recurringId !== rid);
-                                if (Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = monthDataObj.vrLedger.filter(l => l.recurringId !== rid);
+                                monthDataObj.vrLedger = monthDataObj.vrLedger.filter(l => l.recurringId !== rid);
+                                monthDataObj.vtLedger = monthDataObj.vtLedger.filter(l => l.recurringId !== rid);
                             } else if (oldMetaStr) {
                                 monthDataObj.incomes = monthDataObj.incomes.filter(i => !(i.salaryMeta && JSON.stringify(i.salaryMeta) === oldMetaStr));
-                                if (Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = monthDataObj.vrLedger.filter(l => !(l.salaryMeta && JSON.stringify(l.salaryMeta) === oldMetaStr));
+                                monthDataObj.vrLedger = monthDataObj.vrLedger.filter(l => !(l.salaryMeta && JSON.stringify(l.salaryMeta) === oldMetaStr));
+                                monthDataObj.vtLedger = monthDataObj.vtLedger.filter(l => !(l.salaryMeta && JSON.stringify(l.salaryMeta) === oldMetaStr));
                             }
                         };
 
                         // pushEntriesToMonth re-used (keeps salaryMeta on created items)
                         const pushEntriesToMonth = (monthDataObj, rId, values, meta) => {
                             if (!Array.isArray(monthDataObj.incomes)) monthDataObj.incomes = [];
+                            if (!Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = [];
+                            if (!Array.isArray(monthDataObj.vtLedger)) monthDataObj.vtLedger = [];
                             const toPush = [];
                             if (values.salarioLiquido > 0) toPush.push({ id: generateUUID(), description: `Salário (Líquido)`, amount: values.salarioLiquido, isRecurring: !!transactionData.isRecurring, recurringId: rId, source: 'salary', salaryMeta: meta || null });
-                            if (values.beneficiosVT > 0) toPush.push({ id: generateUUID(), description: `Benefício - VT`, amount: values.beneficiosVT, isRecurring: !!rId, recurringId: rId || null, source: 'benefit-vt', salaryMeta: meta || null });
+                            // VT should be stored in vtLedger (mirror VR implementation) to avoid showing twice in incomes
+                            if (values.beneficiosVT > 0) {
+                                monthDataObj.vtLedger.push({ id: generateUUID(), description: 'Benefício - VT', amount: values.beneficiosVT, recurringId: rId || null, isRecurring: !!rId, salaryMeta: meta || null });
+                            }
                             if (values.beneficiosVR > 0) {
-                                if (!Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = [];
                                 monthDataObj.vrLedger.push({ id: generateUUID(), description: 'Benefício - VR', amount: values.beneficiosVR, recurringId: rId || null, isRecurring: !!rId, salaryMeta: meta || null });
                             }
                             if (values.valorHorasExtras > 0) toPush.push({ id: generateUUID(), description: `Horas Extras`, amount: values.valorHorasExtras, isRecurring: !!transactionData.isRecurring, recurringId: rId, source: 'overtime', salaryMeta: meta || null });
@@ -5727,8 +5785,10 @@ const firebaseConfig = {
                                     pushEntriesToMonth(md, rId, vals, meta);
                                 }
                             } else {
-                                const metaNow = { salarioBase: params.salarioBase, percentualPericulosidade: params.percentualPericulosidade, outrosProventosTributaveis: params.outrosProventosTributaveis, numeroDependentes: params.numeroDependentes, valorDesjejumDia: params.valorDesjejumDia, valorTransporteDia: params.valorTransporteDia, diasTrabalhados: params.diasTrabalhados, horasTrabalhadas: params.hoursTrabalhadas, jornadaMensalHoras: params.jornadaMensalHoras };
-                                pushEntriesToMonth(currentMonthData, null, { salarioLiquido, beneficiosVT, beneficiosVR, valorHorasExtras }, metaNow);
+                                const pMonthlyNow = Object.assign({}, params, { year: state.currentDate.getFullYear(), month: state.currentDate.getMonth() + 1 });
+                                const valsNow = buildValuesFor(pMonthlyNow);
+                                const metaNow = { salarioBase: pMonthlyNow.salarioBase, percentualPericulosidade: pMonthlyNow.percentualPericulosidade, outrosProventosTributaveis: pMonthlyNow.outrosProventosTributaveis, numeroDependentes: pMonthlyNow.numeroDependentes, valorDesjejumDia: pMonthlyNow.valorDesjejumDia, valorTransporteDia: pMonthlyNow.valorTransporteDia, diasTrabalhados: pMonthlyNow.diasTrabalhados, horasTrabalhadas: pMonthlyNow.hoursTrabalhadas, jornadaMensalHoras: pMonthlyNow.jornadaMensalHoras };
+                                pushEntriesToMonth(currentMonthData, null, valsNow, metaNow);
                             }
                             try { await storage.saveData(state.appData); showToast('Salário salvo com sucesso!', 'bg-green-600'); } catch(e){ console.error('save new salary', e); showToast('Falha ao salvar salário no Firebase.', 'bg-red-600'); }
                         }

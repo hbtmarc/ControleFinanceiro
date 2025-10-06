@@ -3220,7 +3220,10 @@ const firebaseConfig = {
             if ((typeof p.diasTrabalhados === 'undefined' || p.diasTrabalhados === null) && p.hoursTrabalhadas && p.hoursTrabalhadas > 0) {
                 // hora por dia = jornadaMensalHoras / baseDiasUteis
                 const horasPorDia = p.jornadaMensalHoras > 0 ? (p.jornadaMensalHoras / baseDiasUteis) : 8;
-                p.diasTrabalhados = Math.round(p.hoursTrabalhadas / horasPorDia);
+                // derive diasTrabalhados as fractional value (do not round) so we can compute prorata correctly from hours
+                p.diasTrabalhados = p.hoursTrabalhadas / horasPorDia;
+                // keep a rounded copy for display in the modal where an integer day count is shown
+                p._diasTrabalhadosRoundedForDisplay = Math.round(p.diasTrabalhados);
             }
             if ((typeof p.diasTrabalhados === 'undefined' || p.diasTrabalhados === null) && p.year && p.month) {
                 p.diasTrabalhados = baseDiasUteis;
@@ -3250,12 +3253,14 @@ const firebaseConfig = {
             const fullMonthDias = (p.year && p.month) ? diasUteisNoMes(p.year, p.month) : 22;
             const diasWorked = (typeof p.diasTrabalhados !== 'undefined' && p.diasTrabalhados !== null) ? p.diasTrabalhados : fullMonthDias;
             const proporcao = (fullMonthDias > 0) ? Math.min(1, diasWorked / fullMonthDias) : 1;
-            // Also consider horas trabalhadas if provided: derive proportion from hours as well and use the smaller proportion
+            // Also consider horas trabalhadas if provided: derive proportion from hours.
+            // When hoursTrabalhadas is explicitly provided, prefer the hours-based proportion to match payroll (holerite) behavior.
             let proporcaoHoras = 1;
             if (p.hoursTrabalhadas && p.hoursTrabalhadas > 0) {
                 proporcaoHoras = Math.min(1, p.hoursTrabalhadas / p.jornadaMensalHoras);
             }
-            const finalProporcao = Math.min(proporcao, proporcaoHoras);
+            // If hours were provided, use hours proportion; otherwise use days proportion
+            const finalProporcao = (p.hoursTrabalhadas && p.hoursTrabalhadas > 0) ? proporcaoHoras : proporcao;
 
             const salarioBaseProrata = p.salarioBase * finalProporcao;
             const adicionalPericulosidade = (salarioBaseProrata * (p.percentualPericulosidade || 0)) / 100;
@@ -4789,17 +4794,20 @@ const firebaseConfig = {
                 // Always compute for the currently viewed month
                 const year = state.currentDate.getFullYear();
                 const month = state.currentDate.getMonth() + 1;
-                // Prefer explicit salaryMeta on the income; otherwise try to find a salaryMeta in the current month's data
+                // Prefer salaryMeta coming from the currently viewed month (so hours/days reflect that month).
+                // Fallback: use income.salaryMeta only if no salaryMeta exists in the current month's data.
                 const md = getCurrentMonthData();
-                let meta = income.salaryMeta || null;
-                if (!meta) {
+                let meta = null;
+                try {
                     const combined = [];
                     if (Array.isArray(md.incomes)) combined.push(...md.incomes);
                     if (Array.isArray(md.vrLedger)) combined.push(...md.vrLedger);
                     if (Array.isArray(md.vtLedger)) combined.push(...md.vtLedger);
                     const found = combined.slice().reverse().find(x => x && x.salaryMeta);
                     if (found) meta = found.salaryMeta;
-                }
+                } catch (e) { /* ignore search errors */ }
+                // fallback to the income's meta if nothing found for this month
+                if (!meta && income && income.salaryMeta) meta = income.salaryMeta;
                 if (!meta) meta = {};
 
                 // helper: parse hours input which may be a number (decimal) or string like "117:20"
@@ -4841,7 +4849,78 @@ const firebaseConfig = {
                 const resumo = calc.resumo || {};
                 const detalhe = calc.detalhe || {};
 
-                titleEl.textContent = `Detalhamento: ${income.description || 'Salário'} — ${state.currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}`;
+                // Insert navigation arrows similar to main header so user can move months while modal is open
+                try {
+                    // Abbreviated month with first letter uppercase (e.g. "Out 2025")
+                    const _d = state.currentDate || new Date();
+                    const monthNamesAbbrev = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                    const monthLabel = `${monthNamesAbbrev[_d.getMonth()]} ${_d.getFullYear()}`;
+                    // Title: keep only the income description and the abbreviated month; nav controls will be appended at the end
+                    titleEl.innerHTML = `${income.description || 'Salário'} — <span id="salary-breakdown-month-label">${monthLabel}</span>`;
+                    // create nav buttons container at the end of the title (grouped)
+                    let navWrap = document.getElementById('salary-breakdown-nav-wrap');
+                    if (!navWrap) {
+                        navWrap = document.createElement('span');
+                        navWrap.id = 'salary-breakdown-nav-wrap';
+                        navWrap.className = 'ml-3 inline-flex items-center';
+                        // append to title
+                        titleEl.appendChild(navWrap);
+                    }
+                    // left, today, right buttons
+                    let leftBtn = document.getElementById('salary-breakdown-prev');
+                    let todayBtn = document.getElementById('salary-breakdown-today');
+                    let rightBtn = document.getElementById('salary-breakdown-next');
+                    if (!leftBtn) {
+                        leftBtn = document.createElement('button');
+                        leftBtn.id = 'salary-breakdown-prev';
+                        leftBtn.className = 'p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300';
+                        leftBtn.title = 'Mês anterior';
+                        leftBtn.innerHTML = '<span class="material-symbols-outlined">chevron_left</span>';
+                        navWrap.appendChild(leftBtn);
+                    }
+                    if (!todayBtn) {
+                        todayBtn = document.createElement('button');
+                        todayBtn.id = 'salary-breakdown-today';
+                        todayBtn.className = 'p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300 mx-1';
+                        todayBtn.title = 'Voltar para o mês atual';
+                        todayBtn.innerHTML = '<span class="material-symbols-outlined">today</span>';
+                        navWrap.appendChild(todayBtn);
+                    }
+                    if (!rightBtn) {
+                        rightBtn = document.createElement('button');
+                        rightBtn.id = 'salary-breakdown-next';
+                        rightBtn.className = 'p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300';
+                        rightBtn.title = 'Próximo mês';
+                        rightBtn.innerHTML = '<span class="material-symbols-outlined">chevron_right</span>';
+                        navWrap.appendChild(rightBtn);
+                    }
+                    // handler to refresh modal content for new current month
+                    const refreshModalForCurrentMonth = () => {
+                        try {
+                            // recompute using the same meta/income but with updated state.currentDate
+                            const yearNow = state.currentDate.getFullYear();
+                            const monthNow = state.currentDate.getMonth() + 1;
+                            // update label
+                            const lbl = document.getElementById('salary-breakdown-month-label');
+                            if (lbl) lbl.textContent = state.currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                            // rebuild params and recalc: reuse meta and income
+                            const parsedHoursNow = parseHoursRaw(meta.hoursTrabalhadas || meta.horasTrabalhadas || meta.hoursWorked || meta.hours || '');
+                            const paramsNow = Object.assign({}, params, { year: yearNow, month: monthNow, hoursTrabalhadas: parsedHoursNow });
+                            const newCalc = calcularSalarioLiquido(paramsNow);
+                            // replace content by recursively calling the original builder: easiest is to set income and call openSalaryBreakdown again
+                            // but to avoid stacking handlers, call content builder code path by updating params and re-executing this function's body up to contentEl.innerHTML
+                            // Simple approach: set contentEl.innerHTML = '' and call openSalaryBreakdown(income) to rebuild modal
+                            contentEl.innerHTML = '';
+                            // slight delay to allow closing operations and avoid duplicate element IDs
+                            setTimeout(() => openSalaryBreakdown(income), 0);
+                        } catch (e) { console.error('refreshModalForCurrentMonth', e); }
+                    };
+
+                    // attach click handlers
+                    leftBtn.onclick = (ev) => { ev.preventDefault(); changeMonth(-1); refreshModalForCurrentMonth(); };
+                    rightBtn.onclick = (ev) => { ev.preventDefault(); changeMonth(1); refreshModalForCurrentMonth(); };
+                    todayBtn.onclick = (ev) => { ev.preventDefault(); const now = new Date(); state.currentDate = new Date(now.getFullYear(), now.getMonth(), 1); refreshModalForCurrentMonth(); };
+                } catch(e){ console.error('build modal title with nav', e); }
 
                 // Determine whether VR/VT were previously edited (persisted) for this month so we only show the edit icon when relevant
                 const roundLocal = (v) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;

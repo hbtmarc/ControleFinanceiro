@@ -1814,6 +1814,9 @@ const firebaseConfig = {
                         const hasSalaryWord = v.indexOf('salari') !== -1;
                         const isExactSalary = /^\s*salario?s?\s*$/i.test(normalized);
 
+                        // Detect 'Serviço' prefix to reveal financing options for incomes
+                        const isServicoPrefix = /^\s*servi\w*/i.test(normalized);
+
                         if (hasSalaryWord) {
                             // Ensure modal is in 'incomes' type so salary-section is visible
                             if (ui.transactionTypeInput && ui.transactionTypeInput.value !== 'incomes') {
@@ -1849,6 +1852,16 @@ const firebaseConfig = {
                                 try { isSalaryCheckbox.dispatchEvent(new Event('change')); } catch(e){}
                             }
                             if (recurringCheckbox) recurringCheckbox.checked = true;
+                        }
+                        // If description starts with 'Serviço', ensure modal is in 'incomes' and show financing options
+                        if (isServicoPrefix) {
+                            if (ui.transactionTypeInput && ui.transactionTypeInput.value !== 'incomes') {
+                                toggleTransactionType('incomes');
+                            }
+                            // Reveal installments option for 'Serviço' incomes (do not auto-check)
+                            try {
+                                const instSection = document.getElementById('installments-section'); if (instSection) instSection.classList.remove('hidden');
+                            } catch(e){}
                         }
                         if (isExactSalary && amountInput) {
                             // copy current amount value immediately
@@ -5112,6 +5125,39 @@ const firebaseConfig = {
             }
         }
 
+        // Create financing entries for incomes (receivables)
+        async function createIncomeFinancing(baseTransaction, total, current) {
+            const financingId = generateUUID();
+            for (let i = current; i <= total; i++) {
+                const installmentDate = new Date(state.currentDate);
+                installmentDate.setMonth(state.currentDate.getMonth() + (i - current));
+                const futureMonthData = getCurrentMonthData(installmentDate);
+                if (!Array.isArray(futureMonthData.incomes)) futureMonthData.incomes = [];
+                futureMonthData.incomes.push({ ...baseTransaction, id: generateUUID(), financingId, currentFinancing: i, totalFinancing: total, isPaid: false });
+            }
+            try { await storage.saveData(state.appData); showToast(`Financiamento de entrada criado (${total}x).`, 'bg-green-600'); } catch(e) { console.error('createIncomeFinancing save', e); showToast('Falha ao salvar financiamento de entrada.', 'bg-red-600'); }
+        }
+
+        // Create income installments (parcelada) across months when user marks an income as installment
+        async function createIncomeInstallments(baseTransaction, count, start = 1) {
+            const installmentId = generateUUID();
+            // If start > 1, assume provided amount is per-installment; otherwise divide by count
+            let installmentAmount;
+            const rawAmount = parseFloat(baseTransaction.amount) || 0;
+            if (start && start > 1) installmentAmount = parseFloat(rawAmount.toFixed(2));
+            else installmentAmount = parseFloat((rawAmount / count).toFixed(2));
+
+            for (let i = start; i <= count; i++) {
+                const monthOffset = i - start;
+                const d = new Date(state.currentDate);
+                d.setMonth(state.currentDate.getMonth() + monthOffset);
+                const md = getCurrentMonthData(d);
+                if (!Array.isArray(md.incomes)) md.incomes = [];
+                md.incomes.push({ id: generateUUID(), description: baseTransaction.description || 'Serviço', amount: installmentAmount, installmentId, currentInstallment: i, totalInstallments: count, isPaid: false, isRecurring: !!baseTransaction.isRecurring });
+            }
+            try { await storage.saveData(state.appData); showToast(`${count} parcelas de entrada criadas.`, 'bg-green-600'); } catch(e) { console.error('createIncomeInstallments save', e); showToast('Falha ao salvar parcelas de entrada.', 'bg-red-600'); }
+        }
+
         function deleteFutureInstallments(installmentId, currentInstallment) {
             Object.keys(state.appData.data).forEach(year => {
                 Object.keys(state.appData.data[year]).forEach(month => {
@@ -5132,6 +5178,12 @@ const firebaseConfig = {
                     if (monthData.expenses && Array.isArray(monthData.expenses)) {
                         monthData.expenses = monthData.expenses.filter(exp => 
                             !(exp.financingId === financingId && (exp.currentFinancing || 0) >= fromCurrentFinancing)
+                        );
+                    }
+                    // Also remove income financings if present
+                    if (monthData.incomes && Array.isArray(monthData.incomes)) {
+                        monthData.incomes = monthData.incomes.filter(inc => 
+                            !(inc.financingId === financingId && (inc.currentFinancing || 0) >= fromCurrentFinancing)
                         );
                     }
                 });
@@ -5530,6 +5582,13 @@ const firebaseConfig = {
                 } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
                     // console.debug('[handleFormSubmit] creating financing (new)', financingTotal, financingCurrent /*, transactionData */);
                     await createFinancing(transactionData, financingTotal, financingCurrent);
+                } else if (type === 'incomes' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
+                    // Creating financing for incomes (receivable financing)
+                    await createIncomeFinancing(transactionData, financingTotal, financingCurrent);
+                } else if (type === 'incomes' && isInstallment && installmentsCount > 1 && !id) {
+                    // Creating parcelada (installments) for incomes (Serviço)
+                    const startInstallment = parseInt((document.getElementById('installments-current') || { value: 1 }).value, 10) || 1;
+                    await createIncomeInstallments(transactionData, installmentsCount, startInstallment);
                 } else if (type === 'incomes' && document.getElementById('is-salary') && document.getElementById('is-salary').checked) {
                 // Special handling for salary: calculate breakdown and update/create entries
                 try {

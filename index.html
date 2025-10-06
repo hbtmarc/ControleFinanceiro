@@ -626,11 +626,11 @@
                                 <div id="vr-badge" class="text-sm text-gray-600"></div>
                             </div>
                              <div class="overflow-x-auto">
-                                <table class="w-full text-left responsive-table table-fixed">
+                                <table class="w-full text-left responsive-table" style="table-layout:fixed;">
                                     <colgroup>
-                                        <col style="width:auto"> <!-- description gets remaining space -->
-                                        <col style="width:120px"> <!-- value -->
-                                        <col style="width:120px"> <!-- actions -->
+                                        <col> <!-- descrição (auto, ocupa o restante) -->
+                                        <col style="width:120px"> <!-- valor -->
+                                        <col style="width:80px"> <!-- ações -->
                                     </colgroup>
                                     <thead><tr class="border-b border-gray-200">
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Descrição</th>
@@ -660,14 +660,14 @@
                                 </div>
                              </div>
                              <div class="overflow-x-auto">
-                                <table class="w-full text-left responsive-table table-fixed">
+                                <table class="w-full text-left responsive-table" style="table-layout:fixed;">
                                     <colgroup>
                                         <col style="width:36px"> <!-- checkbox -->
-                                        <col style="width:auto"> <!-- description gets remaining space -->
-                                        <col style="width:120px"> <!-- payment -->
-                                        <col style="width:140px"> <!-- category -->
-                                        <col style="width:120px"> <!-- value -->
-                                        <col style="width:120px"> <!-- actions -->
+                                        <col> <!-- descrição (auto, ocupa o restante) -->
+                                        <col style="width:120px"> <!-- pagamento -->
+                                        <col style="width:120px"> <!-- categoria -->
+                                        <col style="width:120px"> <!-- valor -->
+                                        <col style="width:80px"> <!-- ações -->
                                     </colgroup>
                                     <thead id="expenses-table-head"><tr class="border-b border-gray-200">
                                         <th class="py-3 px-3 align-middle sortable-header" data-sort="isPaid" title="Ordenar por pago/não pago" style="cursor:pointer"><span class="material-symbols-outlined text-gray-500 text-base">done</span></th>
@@ -3825,7 +3825,7 @@ const firebaseConfig = {
             const amountHtml = `<span class="salary-breakdown-hidden text-green-600 font-medium" data-id="${income.id}">${formatCurrency(income.amount)}</span>`;
 
             row.innerHTML = `
-                <td class="py-3 px-3" data-label="Descrição">${income.description} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
+                <td class="py-3 px-3 description-cell" data-label="Descrição" title="${income.description}">${income.description} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
                 <td class="py-3 px-3" data-label="Valor">${amountHtml}</td>
                 <td class="py-3 px-3 text-right actions-cell" style="display:flex;justify-content:flex-end;gap:0;align-items:center;">
                     <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
@@ -3852,7 +3852,24 @@ const firebaseConfig = {
 
             row.innerHTML = `
                 <td class="py-3 px-3 checkbox-cell" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
-                <td class="py-3 px-3" data-label="Descrição">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${installmentHtml} ${financingHtml}</td>
+                <td class="py-3 px-3 description-cell" data-label="Descrição" title="${expense.description}">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${installmentHtml} ${financingHtml}</td>
+        <style>
+        .description-cell {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: clamp(0.75rem, 1vw, 1rem);
+            max-width: 1px;
+        }
+        .description-cell:hover {
+            text-overflow: unset;
+            overflow: visible;
+            white-space: normal;
+            background: #f9fafb;
+            z-index: 2;
+            position: relative;
+        }
+        </style>
 
                 <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>

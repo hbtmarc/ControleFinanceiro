@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fluxo Financeiro</title>
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Suppress specific CDN warnings (development convenience) -->
     <script>
         (function(){
@@ -28,6 +26,8 @@
             };
         })();
     </script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -2752,7 +2752,7 @@ const firebaseConfig = {
             } catch(e) { console.error('attach vr usage item handlers', e); }
                 // VR inline-edit bindings on card amounts
             try {
-                container.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId)));
+                container.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => (typeof startInlineVREdit === 'function') ? startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId) : null));
             } catch(e) { /* ignore if nothing to bind */ }
 
                 // Clicking the amount opens the transaction modal for editing (centralized flow)
@@ -3390,7 +3390,7 @@ const firebaseConfig = {
                 renderBenefitLedgerRows('vt');
 
                 // attach inline edit handlers for amounts and edit/delete actions for VR and VT
-                ui.incomeTableBody.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId)));
+                ui.incomeTableBody.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => (typeof startInlineVREdit === 'function') ? startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId) : null));
                 ui.incomeTableBody.querySelectorAll('.edit-vr-btn').forEach(b => b.addEventListener('click', (e) => { const id = e.currentTarget.dataset.vrId; openVREdit(id); }));
                 ui.incomeTableBody.querySelectorAll('.delete-vr-btn').forEach(b => b.addEventListener('click', async (e) => {
                     const id = e.currentTarget.dataset.vrId;
@@ -3408,7 +3408,7 @@ const firebaseConfig = {
                     }
                 }));
                 // VT handlers
-                ui.incomeTableBody.querySelectorAll('.vt-amount').forEach(el => el.addEventListener('click', (e) => startInlineVTEdit && typeof startInlineVTEdit === 'function' ? startInlineVTEdit(e.currentTarget, e.currentTarget.dataset.vtId) : null));
+                ui.incomeTableBody.querySelectorAll('.vt-amount').forEach(el => el.addEventListener('click', (e) => (typeof startInlineVTEdit === 'function') ? startInlineVTEdit(e.currentTarget, e.currentTarget.dataset.vtId) : null));
                 ui.incomeTableBody.querySelectorAll('.edit-vt-btn').forEach(b => b.addEventListener('click', (e) => { const id = e.currentTarget.dataset.vtId; openVTEdit(id); }));
                 ui.incomeTableBody.querySelectorAll('.delete-vt-btn').forEach(b => b.addEventListener('click', async (e) => {
                     const id = e.currentTarget.dataset.vtId;
@@ -5879,6 +5879,65 @@ const firebaseConfig = {
                     showToast('Alterações aplicadas às recorrências futuras.', 'bg-green-600');
                 } catch(e){ console.error('applyToFutureVREntries', e); }
             }
+
+                // --- VT inline-edit helpers (mirror of VR) ---
+                function startInlineVTEdit(el, vtId) {
+                    try {
+                        if (!el) return;
+                        const current = el.textContent || '';
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.step = '0.01';
+                        input.value = parseFloat(String(current).replace(/[R$\.\s]/g, '').replace(',', '.')) || 0;
+                        input.className = 'inline-vt-input border px-1 py-0 rounded text-right';
+                        input.style.minWidth = '80px';
+                        el.replaceWith(input);
+                        input.focus();
+                        input.select();
+                        const commit = async () => {
+                            const v = parseFloat(input.value) || 0;
+                            await commitInlineVTEdit(vtId, v, input);
+                        };
+                        input.addEventListener('blur', commit);
+                        input.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter') { input.blur(); }
+                            if (e.key === 'Escape') { render(); }
+                        });
+                    } catch(e){ console.error('startInlineVTEdit', e); }
+                }
+
+                async function commitInlineVTEdit(vtId, newAmount, inputEl) {
+                    try {
+                        const md = getCurrentMonthData();
+                        if (!Array.isArray(md.vtLedger)) md.vtLedger = [];
+                        const idx = md.vtLedger.findIndex(l => l.id === vtId);
+                        if (idx === -1) return render();
+                        const entry = md.vtLedger[idx];
+                        const oldAmount = entry.amount || 0;
+                        entry.amount = Math.round((Number(newAmount) + Number.EPSILON) * 100) / 100;
+                        try { await storage.saveData(state.appData); } catch(e){ console.error('commitInlineVTEdit save', e); }
+                        render();
+                    } catch(e){ console.error('commitInlineVTEdit', e); }
+                }
+
+                function applyToFutureVTEntries(recurringId, newAmount) {
+                    try {
+                        Object.keys(state.appData.data).forEach(year => {
+                            Object.keys(state.appData.data[year]).forEach(month => {
+                                const md = state.appData.data[year][month];
+                                if (!md || !Array.isArray(md.vtLedger)) return;
+                                md.vtLedger = md.vtLedger.map(l => {
+                                    if (l.recurringId === recurringId) {
+                                        return { ...l, amount: newAmount };
+                                    }
+                                    return l;
+                                });
+                            });
+                        });
+                        try { storage.saveData(state.appData); } catch(e){ console.error('applyToFutureVTEntries save', e); }
+                        showToast('Alterações aplicadas às recorrências futuras.', 'bg-green-600');
+                    } catch(e){ console.error('applyToFutureVTEntries', e); }
+                }
 
             // Delete a VR ledger entry by id. If it's recurring, ask to remove future recurrences as well.
             async function deleteVRLedgerEntry(id, yearContext, monthContext) {

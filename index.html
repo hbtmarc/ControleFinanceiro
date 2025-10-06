@@ -971,7 +971,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm text-gray-700">Horas trabalhadas (h)</label>
-                                    <input type="number" id="salary-horas-trabalhadas" step="0.1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" placeholder="Ex: 176">
+                                    <input type="text" id="salary-horas-trabalhadas" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" placeholder="Ex: 117:20 (h:mm)">
                                 </div>
                             </div>
                         </details>
@@ -1159,6 +1159,19 @@
             </div>
         </form>
         <button id="close-vt-modal" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
+    </dialog>
+
+    <!-- Salary breakdown modal (step-by-step ilustrative calculation) -->
+    <dialog id="salary-breakdown-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-2xl">
+        <div class="modal-body">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="salary-breakdown-title" class="text-lg font-semibold">Detalhamento do Salário</h3>
+                <button id="close-salary-breakdown" class="text-gray-500 hover:text-gray-700">Fechar ✕</button>
+            </div>
+            <div id="salary-breakdown-content" class="space-y-3 text-sm text-gray-700">
+                <!-- dynamic content injected by JS -->
+            </div>
+        </div>
     </dialog>
     
     <!-- VT Usage Edit Modal -->
@@ -1792,6 +1805,12 @@ const firebaseConfig = {
             attachBackdropDoubleClickToClose(ui.goalModal, 'goal-modal');
             attachBackdropDoubleClickToClose(ui.monthlyReportModal, 'monthly-report-modal');
             attachBackdropDoubleClickToClose(ui.annualReportModal, 'annual-report-modal');
+            // Salary breakdown modal wiring (ensure backdrop double-click closes it)
+            const salaryModalEl = document.getElementById('salary-breakdown-modal');
+            if (salaryModalEl) {
+                attachBackdropDoubleClickToClose(salaryModalEl, 'salary-breakdown-modal');
+                const salaryCloseBtn = document.getElementById('close-salary-breakdown'); if (salaryCloseBtn) salaryCloseBtn.addEventListener('click', () => closeSalaryBreakdown());
+            }
             ui.transactionForm.addEventListener('submit', (e) => handleFormSubmit(e));
             // Mostrar/ocultar seção Salário quando em Entradas
             const isSalaryCheckbox = document.getElementById('is-salary');
@@ -3216,12 +3235,13 @@ const firebaseConfig = {
                 { upTo: 4190.83, rate: 0.12 },
                 { upTo: 8157.41, rate: 0.14 }
             ];
+            // IRRF 2025 (mensal) — conforme tabela fornecida
             const IRRF_BRACKETS = [
-                { upTo: 2428.80, rate: 0.0, deduction: 0.00 },
-                { upTo: 2826.65, rate: 0.075, deduction: 182.16 },
-                { upTo: 3751.05, rate: 0.15, deduction: 394.16 },
-                { upTo: 4664.68, rate: 0.225, deduction: 675.49 },
-                { upTo: Infinity, rate: 0.275, deduction: 908.73 }
+                { upTo: 2259.20, rate: 0.0, deduction: 0.00 },
+                { upTo: 2826.65, rate: 0.075, deduction: 169.44 },
+                { upTo: 3751.05, rate: 0.15, deduction: 381.44 },
+                { upTo: 4664.68, rate: 0.225, deduction: 662.77 },
+                { upTo: Infinity, rate: 0.275, deduction: 896.00 }
             ];
             const DEPENDENT_DEDUCTION = 189.59;
 
@@ -3241,8 +3261,9 @@ const firebaseConfig = {
             const adicionalPericulosidade = (salarioBaseProrata * (p.percentualPericulosidade || 0)) / 100;
             const brutoTributavelSemExtras = salarioBaseProrata + adicionalPericulosidade + (p.outrosProventosTributaveis || 0);
 
-            // 2) Horas extras: calcular valor hora com base na jornada mensal (valorHora = salarioBase / jornadaMensalHoras)
-            const valorHora = (p.jornadaMensalHoras > 0) ? (p.salarioBase / p.jornadaMensalHoras) : ((p.hoursTrabalhadas && p.hoursTrabalhadas > 0) ? (p.salarioBase / p.hoursTrabalhadas) : 0);
+            // 2) Horas extras: calcular valor hora com base no salário base já pro-rata (para que horas extras reflitam efetivamente o que foi ganho)
+            // valorHora = salarioBaseProrata / jornadaMensalHoras (se jornadaMensalHoras > 0). Isso garante que, se o funcionário trabalhou menos horas, o valor/hora fique proporcional.
+            const valorHora = (p.jornadaMensalHoras > 0) ? (salarioBaseProrata / p.jornadaMensalHoras) : ((p.hoursTrabalhadas && p.hoursTrabalhadas > 0) ? (salarioBaseProrata / p.hoursTrabalhadas) : 0);
             // Sábado 50% (ou seja, 1.5 * hora normal), Domingo 100% (2.0 * hora normal)
             const valorHorasExtras = (p.horasExtrasSabado || 0) * (valorHora * 1.5) + (p.horasExtrasDomingo || 0) * (valorHora * 2.0);
 
@@ -3286,11 +3307,20 @@ const firebaseConfig = {
             const totalDescontos = round(inssTotal + irrfValue);
             const salarioLiquido = round(salarioBrutoTributavel - totalDescontos);
 
-            // 7) Benefícios não tributáveis (por dia trabalhado)
-            const beneficiosTotais = round(((p.valorDesjejumDia || 0) + (p.valorTransporteDia || 0)) * (p.diasTrabalhados || 0));
+            // 7) Benefícios não tributáveis
+            // Base para benefícios: quando year/month fornecidos, usar dias úteis do mês + 1 (regras do produto);
+            // caso contrário, cair back para diasTrabalhados (pró-rata) ou fullMonthDias.
+            const beneficiosDiasBase = (p.year && p.month) ? (diasUteisNoMes(p.year, p.month) + 1) : (p.diasTrabalhados || fullMonthDias);
+            // Calcular separadamente VR (desjejum) e VT (transporte)
+            const beneficiosVR = round((p.valorDesjejumDia || 0) * (beneficiosDiasBase || 0));
+            const beneficiosVT = round((p.valorTransporteDia || 0) * (beneficiosDiasBase || 0));
+            // Para o resumo (lado esquerdo), apenas o VT deve ser considerado (VT é pago junto com o salário)
+            const beneficiosTotaisResumo = beneficiosVT;
+            // Total combinado (VR + VT) mantido no detalhe para o uso no card direito
+            const beneficiosTotaisCombined = round(beneficiosVR + beneficiosVT);
 
-            // 8) Remuneração total mensal
-            const remuneracaoTotal = round(salarioLiquido + beneficiosTotais);
+            // 8) Remuneração total mensal: Salário líquido + VT (apenas VT é pago junto com o salário)
+            const remuneracaoTotal = round(salarioLiquido + beneficiosVT);
 
             // 9) FGTS (8% sobre o bruto tributável) - encargo do empregador
             const fgts = round(0.08 * salarioBrutoTributavel);
@@ -3298,19 +3328,19 @@ const firebaseConfig = {
             // Monta retorno detalhado
             const result = {
                 resumo: {
-                    salarioBase: formatNumber(p.salarioBase),
+                    salarioBase: formatNumber(salarioBaseProrata),
                     adicionalPericulosidade: formatNumber(adicionalPericulosidade),
                     valorHorasExtras: formatNumber(valorHorasExtras),
                     salarioBrutoTributavel: formatNumber(salarioBrutoTributavel),
                     totalDescontos: formatNumber(totalDescontos),
                     salarioLiquido: formatNumber(salarioLiquido),
-                    beneficiosTotais: formatNumber(beneficiosTotais),
+                    beneficiosTotais: formatNumber(beneficiosTotaisResumo),
                     remuneracaoTotal: formatNumber(remuneracaoTotal),
                     fgts: formatNumber(fgts)
                 },
                 detalhe: {
                     proventos: {
-                        salarioBase: formatNumber(p.salarioBase),
+                        salarioBase: formatNumber(salarioBaseProrata),
                         adicionalPericulosidade: formatNumber(adicionalPericulosidade),
                         outrosProventosTributaveis: formatNumber(p.outrosProventosTributaveis || 0),
                         valorHorasExtras: formatNumber(valorHorasExtras)
@@ -3327,7 +3357,10 @@ const firebaseConfig = {
                         valorDesjejumDia: formatNumber(p.valorDesjejumDia || 0),
                         valorTransporteDia: formatNumber(p.valorTransporteDia || 0),
                         diasTrabalhados: p.diasTrabalhados,
-                        beneficiosTotais: formatNumber(beneficiosTotais)
+                        diasBaseParaBeneficios: beneficiosDiasBase,
+                        beneficiosVR: formatNumber(beneficiosVR),
+                        beneficiosVT: formatNumber(beneficiosVT),
+                        beneficiosTotais: formatNumber(beneficiosTotaisCombined)
                     },
                     encargos: {
                         fgts: formatNumber(fgts)
@@ -3765,13 +3798,26 @@ const firebaseConfig = {
             const row = ui.incomeTableBody.insertRow();
             row.dataset.id = income.id;
             row.className = 'border-b border-gray-200 hover:bg-gray-50 animate-fade-in';
+            // If this income looks like a salary (explicit flag, salaryMeta or description contains 'salari'), attach a hidden click access
+            const isSalary = !!income.isSalary || !!income.salaryMeta || /salari/i.test(String(income.description || ''));
+            // Keep the exact same visual as before: span with same typography (no underline). Access is 'hidden' but clickable.
+            const amountHtml = `<span class="salary-breakdown-hidden text-green-600 font-medium" data-id="${income.id}">${formatCurrency(income.amount)}</span>`;
+
             row.innerHTML = `
                 <td class="py-3 px-3" data-label="Descrição">${income.description} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
-                <td class="py-3 px-3 text-green-600 font-medium" data-label="Valor">${formatCurrency(income.amount)}</td>
+                <td class="py-3 px-3" data-label="Valor">${amountHtml}</td>
                 <td class="py-3 px-3 text-right actions-cell">
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>`;
+
+            // Attach click handler to the hidden span if this is a salary entry
+            if (isSalary) {
+                try {
+                    const span = row.querySelector('.salary-breakdown-hidden');
+                    if (span) span.addEventListener('click', (ev) => { ev.preventDefault(); openSalaryBreakdown(income); });
+                } catch (e) { console.error('attach salary breakdown click', e); }
+            }
         }
 
         function renderExpenseRow(expense) {
@@ -4732,6 +4778,363 @@ const firebaseConfig = {
             } catch (e) { console.error('toggleTransactionType', e); }
         }
 
+        // Salary breakdown modal helpers
+        function openSalaryBreakdown(income) {
+            try {
+                const modal = document.getElementById('salary-breakdown-modal');
+                const contentEl = document.getElementById('salary-breakdown-content');
+                const titleEl = document.getElementById('salary-breakdown-title');
+                if (!modal || !contentEl || !titleEl) return;
+
+                // Always compute for the currently viewed month
+                const year = state.currentDate.getFullYear();
+                const month = state.currentDate.getMonth() + 1;
+                // Prefer explicit salaryMeta on the income; otherwise try to find a salaryMeta in the current month's data
+                const md = getCurrentMonthData();
+                let meta = income.salaryMeta || null;
+                if (!meta) {
+                    const combined = [];
+                    if (Array.isArray(md.incomes)) combined.push(...md.incomes);
+                    if (Array.isArray(md.vrLedger)) combined.push(...md.vrLedger);
+                    if (Array.isArray(md.vtLedger)) combined.push(...md.vtLedger);
+                    const found = combined.slice().reverse().find(x => x && x.salaryMeta);
+                    if (found) meta = found.salaryMeta;
+                }
+                if (!meta) meta = {};
+
+                // helper: parse hours input which may be a number (decimal) or string like "117:20"
+                function parseHoursRaw(v) {
+                    if (v === undefined || v === null || v === '') return undefined;
+                    if (typeof v === 'number') return v;
+                    const s = String(v).trim();
+                    // support HH:MM
+                    const m = /^\s*(\d{1,3}):([0-5]?\d)\s*$/.exec(s);
+                    if (m) {
+                        const hh = parseInt(m[1], 10);
+                        const mm = parseInt(m[2], 10);
+                        return hh + (mm / 60);
+                    }
+                    // support decimal with comma or dot
+                    const dec = parseFloat(s.replace(/,/g, '.'));
+                    if (!isNaN(dec)) return dec;
+                    return undefined;
+                }
+                const parsedHours = parseHoursRaw(meta.hoursTrabalhadas || meta.horasTrabalhadas || meta.hoursWorked || meta.hours || '');
+                const params = {
+                    salarioBase: Number(meta.salarioBase || income.amount || 0),
+                    percentualPericulosidade: Number(meta.percentualPericulosidade || 0),
+                    outrosProventosTributaveis: Number(meta.outrosProventosTributaveis || 0),
+                    numeroDependentes: Number(meta.numeroDependentes || 0),
+                    valorDesjejumDia: Number(meta.valorDesjejumDia || 0),
+                    valorTransporteDia: Number(meta.valorTransporteDia || 0),
+                    diasTrabalhados: (typeof meta.diasTrabalhados !== 'undefined') ? Number(meta.diasTrabalhados) : undefined,
+                    horasExtrasSabado: Number(meta.horasExtrasSabado || 0),
+                    horasExtrasDomingo: Number(meta.horasExtrasDomingo || 0),
+                    jornadaMensalHoras: Number(meta.jornadaMensalHoras || 220),
+                    // pass month-specific hours if available (this impacts diasTrabalhados and valorHora)
+                    hoursTrabalhadas: parsedHours,
+                    year,
+                    month
+                };
+
+                const calc = calcularSalarioLiquido(params);
+                const resumo = calc.resumo || {};
+                const detalhe = calc.detalhe || {};
+
+                titleEl.textContent = `Detalhamento: ${income.description || 'Salário'} — ${state.currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}`;
+
+                // Determine whether VR/VT were previously edited (persisted) for this month so we only show the edit icon when relevant
+                const roundLocal = (v) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
+                // find ledger entries matching this salary meta (if present) or by description fallback
+                const findVREntry = (Array.isArray(md.vrLedger) ? md.vrLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(md.vrLedger) ? md.vrLedger.find(l => l && (l.description || '').toLowerCase().includes('benefício') && (l.description || '').toLowerCase().includes('vr')) : null);
+                const findVTEntry = (Array.isArray(md.vtLedger) ? md.vtLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(md.vtLedger) ? md.vtLedger.find(l => l && (l.description || '').toLowerCase().includes('benefício') && (l.description || '').toLowerCase().includes('vt')) : null);
+                // compute defaults used for comparison before checking if persisted ledgers were edited
+                const benDiasBase = diasUteisNoMes(year, month) + 1;
+                const vrPerDay = Number(detalhe.beneficios && detalhe.beneficios.valorDesjejumDia || params.valorDesjejumDia || 0);
+                const vtPerDay = Number(detalhe.beneficios && detalhe.beneficios.valorTransporteDia || params.valorTransporteDia || 0);
+                const vrDefault = Math.round((vrPerDay * benDiasBase + Number.EPSILON) * 100) / 100;
+                const vtDefault = Math.round((vtPerDay * benDiasBase + Number.EPSILON) * 100) / 100;
+                const vrEdited = !!findVREntry && roundLocal(Number(findVREntry.amount || 0)) !== roundLocal(vrDefault);
+                const vtEdited = !!findVTEntry && roundLocal(Number(findVTEntry.amount || 0)) !== roundLocal(vtDefault);
+                const showDaysIcon = vrEdited || vtEdited;
+
+                const pencilSvg = '<svg class="inline-block ml-1" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21v-3.75L14.81 5.44a1.5 1.5 0 0 1 2.12 0l1.63 1.63a1.5 1.5 0 0 1 0 2.12L6.75 21H3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                const vrIconHtml = vrEdited ? pencilSvg : '';
+                const vtIconHtml = vtEdited ? pencilSvg : '';
+                const daysIconHtml = showDaysIcon ? pencilSvg : '';
+
+                // Build card-based layout for clarity
+                let html = '';
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+
+                // Left column: resumo (salário, descontos, líquido, remuneração, FGTS)
+                html += `<div class="p-3 bg-white rounded shadow-sm">`;
+                html += `<h4 class="font-semibold mb-2">Resumo</h4>`;
+                html += `<div class="mb-1"><strong>Salário base:</strong> ${formatCurrency(Number(params.salarioBase) || 0)}</div>`;
+                if (typeof params.hoursTrabalhadas !== 'undefined') {
+                    // show hours used (decimal + HH:MM)
+                    const hh = Math.floor(params.hoursTrabalhadas);
+                    const mm = Math.round((params.hoursTrabalhadas - hh) * 60);
+                    const mmPadded = String(mm).padStart(2, '0');
+                    html += `<div class="mb-1 text-sm text-gray-600">Horas consideradas: ${params.hoursTrabalhadas.toFixed(2)} h (${hh}:${mmPadded})</div>`;
+                }
+                // Periculosidade (if present on the salary meta)
+                const perc = Number(params.percentualPericulosidade || 0);
+                if (perc && perc > 0) {
+                    try {
+                        const percVal = roundLocal((Number(params.salarioBase || 0) * perc) / 100);
+                        html += `<div class="mb-1"><strong>Periculosidade (${perc}%):</strong> ${formatCurrency(percVal)}</div>`;
+                    } catch(e) { /* ignore periculosidade render errors */ }
+                }
+                html += `<div class="mb-1"><strong>Salário bruto tributável:</strong> ${formatCurrency(Number(resumo.salarioBrutoTributavel || 0))}</div>`;
+                // INSS: show total and effective percent relative to bruto
+                const inssTotal = Number(detalhe.descontos && detalhe.descontos.inssTotal || detalhe.inssTotal || 0);
+                const inssPercent = resumo.salarioBrutoTributavel ? ((inssTotal / Number(resumo.salarioBrutoTributavel)) * 100) : 0;
+                html += `<div class="mb-1"><strong>INSS (total):</strong> ${formatCurrency(inssTotal)} (${inssPercent.toFixed(2)}%)</div>`;
+                // IRRF
+                const irrfValue = Number(detalhe.descontos && detalhe.descontos.irrfValue || detalhe.irrfValue || 0);
+                html += `<div class="mb-1"><strong>IRRF:</strong> ${formatCurrency(irrfValue)}</div>`;
+                html += `<div class="mb-1"><strong>Total descontos:</strong> ${formatCurrency(Number(resumo.totalDescontos || 0))}</div>`;
+                html += `<div class="mb-2"><strong>Salário líquido:</strong> <span class="text-indigo-600 font-semibold">${formatCurrency(Number(resumo.salarioLiquido || 0))}</span></div>`;
+                html += `<div class="mb-1"><strong>Benefícios (total):</strong> ${formatCurrency(Number(resumo.beneficiosTotais || 0))}</div>`;
+                html += `<div class="mb-1"><strong>Remuneração total:</strong> ${formatCurrency(Number(resumo.remuneracaoTotal || 0))}</div>`;
+                html += `<div class="mt-2 text-xs text-gray-500">FGTS (8% sobre o bruto tributável): ${formatCurrency(Number(detalhe.encargos && detalhe.encargos.fgts || 0))}</div>`;
+                html += `</div>`;
+
+                // Right column: cards for VR and VT benefits and detalhe de descontos
+                html += `<div class="space-y-3">`;
+                // base days and defaults are computed earlier (to support icon/display logic)
+
+                html += `<div class="p-3 bg-white rounded shadow-sm">`;
+                html += `<h4 class="font-semibold mb-2">Benefício VR (Desjejum)</h4>`;
+                html += `<div class="mb-1">Valor por dia: ${formatCurrency(vrPerDay)}</div>`;
+                html += `<div class="mb-1">Dias considerados: <span id="salary-days" class="text-indigo-600 cursor-pointer inline-block ml-2">${benDiasBase}${daysIconHtml ? ' ' + daysIconHtml : ''}</span></div>`;
+                // show total VR as clickable value (click to edit)
+                html += `<div class="mb-1"><label class="text-sm text-gray-600 inline">Total VR:</label> <span id="salary-vr-total" class="font-semibold text-indigo-600 cursor-pointer inline-block ml-2">${formatCurrency(vrDefault)}${vrIconHtml ? ' ' + vrIconHtml : ''}</span></div>`;
+                html += `</div>`;
+
+                html += `<div class="p-3 bg-white rounded shadow-sm">`;
+                html += `<h4 class="font-semibold mb-2">Benefício VT (Transporte)</h4>`;
+                html += `<div class="mb-1">Valor por dia: ${formatCurrency(vtPerDay)}</div>`;
+                html += `<div class="mb-1">Dias considerados: <span class="salary-days-display text-indigo-600 cursor-pointer inline-block ml-2">${benDiasBase}${daysIconHtml ? ' ' + daysIconHtml : ''}</span></div>`;
+                html += `<div class="mb-1"><label class="text-sm text-gray-600 inline">Total VT:</label> <span id="salary-vt-total" class="font-semibold text-indigo-600 cursor-pointer inline-block ml-2">${formatCurrency(vtDefault)}${vtIconHtml ? ' ' + vtIconHtml : ''}</span></div>`;
+                html += `</div>`;
+
+                // Combined benefits card
+                html += `<div class="p-3 bg-white rounded shadow-sm">`;
+                html += `<h4 class="font-semibold mb-2">Benefícios - Total</h4>`;
+                html += `<div class="mb-1 font-semibold">VR + VT = <span id="salary-benefits-total">${formatCurrency(Math.round((vrDefault + vtDefault) * 100) / 100)}</span></div>`;
+                html += `</div>`;
+
+                html += `</div>`; // end right column
+
+                html += `</div>`; // end grid
+
+                contentEl.innerHTML = html;
+
+                // wire up click-to-edit for VR/VT totals and days; support quick inline edit and persist
+                try {
+                    const vrEl = document.getElementById('salary-vr-total');
+                    const vtEl = document.getElementById('salary-vt-total');
+                    const daysEl = document.getElementById('salary-days');
+                    const benefitsTotalEl = document.getElementById('salary-benefits-total');
+
+                    const roundMoney = (v) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
+
+                    const getNumericFromSpan = (el, fallback) => {
+                        if (!el) return fallback || 0;
+                        const txt = (el.textContent || '').replace(/[R$\s\.]/g, '').replace(',', '.');
+                        const n = parseFloat(txt);
+                        return isNaN(n) ? (fallback || 0) : n;
+                    };
+
+                    const setSpanCurrency = (el, value) => { if (!el) return; el.textContent = formatCurrency(roundMoney(value)); };
+                    const setDaysDisplay = (v) => { const els = document.querySelectorAll('.salary-days-display'); els.forEach(e => { e.textContent = String(v); }); if (daysEl) daysEl.textContent = String(v); };
+
+                    const recalcBenefitsTotal = () => {
+                        const vr = getNumericFromSpan(vrEl, vrDefault);
+                        const vt = getNumericFromSpan(vtEl, vtDefault);
+                        if (benefitsTotalEl) benefitsTotalEl.textContent = formatCurrency(roundMoney(vr + vt));
+                    };
+
+                    const upsertLedger = async (typeName, amount) => {
+                        try {
+                            const mdNow = getCurrentMonthData();
+                            if (!mdNow) return;
+                            if (typeName === 'VR') {
+                                if (!Array.isArray(mdNow.vrLedger)) mdNow.vrLedger = [];
+                                let entry = mdNow.vrLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta));
+                                if (!entry) entry = mdNow.vrLedger.find(l => l && (l.description || '').toLowerCase().includes('benefício') && (l.description || '').toLowerCase().includes('vr'));
+                                if (entry) entry.amount = roundMoney(amount); else mdNow.vrLedger.push({ id: generateUUID(), description: 'Benefício - VR', amount: roundMoney(amount), recurringId: null, isRecurring: false, salaryMeta: meta || null });
+                            } else if (typeName === 'VT') {
+                                if (!Array.isArray(mdNow.vtLedger)) mdNow.vtLedger = [];
+                                let entry = mdNow.vtLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta));
+                                if (!entry) entry = mdNow.vtLedger.find(l => l && (l.description || '').toLowerCase().includes('benefício') && (l.description || '').toLowerCase().includes('vt'));
+                                if (entry) entry.amount = roundMoney(amount); else mdNow.vtLedger.push({ id: generateUUID(), description: 'Benefício - VT', amount: roundMoney(amount), recurringId: null, isRecurring: false, salaryMeta: meta || null });
+                            }
+                            try { await storage.saveData(state.appData); showToast('Benefício salvo para o mês.', 'bg-green-600'); } catch(e){ console.error('save benefit', e); showToast('Falha ao salvar benefício.', 'bg-red-600'); }
+                            render();
+                        } catch(e) { console.error('upsertLedger', e); }
+                    };
+
+                    const makeEditor = (anchorEl, initialValue, onCommit, opts) => {
+                        opts = opts || {};
+                        if (!anchorEl) return;
+                        const input = document.createElement('input');
+                        input.type = opts.type === 'number' ? 'number' : 'text';
+                        if (opts.step) input.step = opts.step;
+                        input.value = initialValue;
+                        input.className = 'inline-edit-input border px-1 py-0 rounded text-right';
+                        input.style.minWidth = '80px';
+                        // keep a reference to anchor id and classes so we can restore a similar element after commit
+                        const anchorId = anchorEl.id || '';
+                        const anchorClass = anchorEl.className || '';
+                        const anchorParent = anchorEl.parentNode;
+                        anchorEl.replaceWith(input);
+                        input.focus();
+                        input.select();
+                        const commit = async () => {
+                            let v = input.value;
+                            try {
+                                if (opts.type === 'number') v = parseFloat(String(v).replace(',', '.')) || 0; else v = v;
+                            } catch(e) { /* pass */ }
+                            let commitResult = null;
+                            try { commitResult = await onCommit(v); } catch(e){ console.error('onCommit editor', e); }
+                            // Build a replacement span to restore the UI where possible (text + optional icon)
+                            try {
+                                const displayText = (opts.type === 'number') ? (typeof commitResult === 'object' && commitResult.display ? commitResult.display : formatCurrency(Number(v) || 0)) : String(v);
+                                const span = document.createElement('span');
+                                if (anchorId) span.id = anchorId;
+                                span.className = anchorClass;
+                                span.style.minWidth = input.style.minWidth;
+                                span.textContent = displayText;
+                                // append icon HTML if provided by commitResult
+                                if (commitResult && commitResult.showIconHtml) {
+                                    const wrap = document.createElement('span');
+                                    wrap.innerHTML = ' ' + commitResult.showIconHtml;
+                                    // append icon node
+                                    if (wrap.firstChild) span.appendChild(wrap.firstChild);
+                                }
+                                if (anchorParent) anchorParent.replaceChild(span, input);
+                                // invoke optional restore handler so callers can re-attach click listeners
+                                if (opts.onRestore && typeof opts.onRestore === 'function') {
+                                    try { opts.onRestore(span, v, commitResult); } catch(e) { console.error('onRestore', e); }
+                                }
+                            } catch(e) { console.error('restore anchor after edit', e); }
+                            render();
+                        };
+                        input.addEventListener('blur', commit);
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } if (e.key === 'Escape') { render(); } });
+                    };
+
+                    if (vrEl) {
+                        const attachVREdit = (el) => {
+                            try {
+                                el.addEventListener('click', (ev) => {
+                                    ev.preventDefault();
+                                    const cur = getNumericFromSpan(el, vrDefault);
+                                    makeEditor(el, String(cur), async (newVal) => {
+                                        const num = parseFloat(String(newVal).replace(',', '.')) || 0;
+                                        // persist
+                                        await upsertLedger('VR', num);
+                                        // return display and icon for restoration
+                                        return { display: formatCurrency(num), showIconHtml: pencilSvg };
+                                    }, {
+                                        type: 'number', step: '0.01',
+                                        onRestore: (span) => {
+                                            // reattach edit handler to restored span
+                                            attachVREdit(span);
+                                            // update totals display
+                                            try { setSpanCurrency(document.getElementById('salary-vr-total'), parseFloat((span.textContent||'').replace(/[R$\s\.]/g,'').replace(',', '.'))||0); } catch(e){}
+                                            recalcBenefitsTotal();
+                                        }
+                                    });
+                                });
+                            } catch(e) { console.error('attachVREdit', e); }
+                        };
+                        attachVREdit(vrEl);
+                    }
+
+                    if (vtEl) {
+                        const attachVTEdit = (el) => {
+                            try {
+                                el.addEventListener('click', (ev) => {
+                                    ev.preventDefault();
+                                    const cur = getNumericFromSpan(el, vtDefault);
+                                    makeEditor(el, String(cur), async (newVal) => {
+                                        const num = parseFloat(String(newVal).replace(',', '.')) || 0;
+                                        await upsertLedger('VT', num);
+                                        return { display: formatCurrency(num), showIconHtml: pencilSvg };
+                                    }, {
+                                        type: 'number', step: '0.01',
+                                        onRestore: (span) => {
+                                            attachVTEdit(span);
+                                            try { setSpanCurrency(document.getElementById('salary-vt-total'), parseFloat((span.textContent||'').replace(/[R$\s\.]/g,'').replace(',', '.'))||0); } catch(e){}
+                                            recalcBenefitsTotal();
+                                        }
+                                    });
+                                });
+                            } catch(e) { console.error('attachVTEdit', e); }
+                        };
+                        attachVTEdit(vtEl);
+                    }
+
+                    // attach the days editor to both the main #salary-days and any .salary-days-display elements (VT card)
+                    const daysDisplays = [];
+                    if (daysEl) daysDisplays.push(daysEl);
+                    document.querySelectorAll('.salary-days-display').forEach(d => daysDisplays.push(d));
+                    daysDisplays.forEach(dd => {
+                        try {
+                            const attachDaysEdit = (el) => {
+                                el.addEventListener('click', (ev) => {
+                                    ev.preventDefault();
+                                    const cur = parseInt((el.textContent || String(benDiasBase)).replace(/[^0-9\-]/g, ''), 10) || benDiasBase;
+                                    makeEditor(el, String(cur), async (newVal) => {
+                                        const num = parseInt(String(newVal).replace(/[^0-9\-]/g, ''), 10) || benDiasBase;
+                                        // compute new totals
+                                        const vrPer = vrPerDay || 0;
+                                        const vtPer = vtPerDay || 0;
+                                        const newVR = Math.round((vrPer * num + Number.EPSILON) * 100) / 100;
+                                        const newVT = Math.round((vtPer * num + Number.EPSILON) * 100) / 100;
+                                        // persist both ledgers
+                                        await upsertLedger('VR', newVR);
+                                        await upsertLedger('VT', newVT);
+                                        // return display for days and signal icon
+                                        return { display: String(num), showIconHtml: pencilSvg };
+                                    }, {
+                                        type: 'number', step: '1',
+                                        onRestore: (span, v, commitResult) => {
+                                            // restore click handler
+                                            attachDaysEdit(span);
+                                            // update displayed VR/VT spans from persisted ledgers (or from computed values)
+                                            try {
+                                                const mdNow = getCurrentMonthData();
+                                                const vrEntry = (Array.isArray(mdNow.vrLedger) ? mdNow.vrLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(mdNow.vrLedger) ? mdNow.vrLedger.find(l => l && (l.description||'').toLowerCase().includes('vr')) : null);
+                                                const vtEntry = (Array.isArray(mdNow.vtLedger) ? mdNow.vtLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(mdNow.vtLedger) ? mdNow.vtLedger.find(l => l && (l.description||'').toLowerCase().includes('vt')) : null);
+                                                if (vrEntry) setSpanCurrency(document.getElementById('salary-vr-total'), Number(vrEntry.amount || 0));
+                                                if (vtEntry) setSpanCurrency(document.getElementById('salary-vt-total'), Number(vtEntry.amount || 0));
+                                            } catch(e) { console.error('restore days display', e); }
+                                            recalcBenefitsTotal();
+                                        }
+                                    });
+                                });
+                            };
+                            attachDaysEdit(dd);
+                        } catch(e) { console.error('attach days editor', e); }
+                    });
+
+                    // initial totals
+                    recalcBenefitsTotal();
+                } catch (e) { console.error('wire salary vr/vt click-to-edit', e); }
+
+                try { modal.showModal(); } catch(e){ console.error('openSalaryBreakdown show', e); }
+            } catch (e) { console.error('openSalaryBreakdown', e); }
+        }
+
+        function closeSalaryBreakdown() {
+            try { const m = document.getElementById('salary-breakdown-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeSalaryBreakdown', e); }
+        }
+
         function toggleInstallmentSection(paymentMethodName) {
             try {
                 const method = (state.appData.settings.paymentMethods || []).find(p => p.name === paymentMethodName);
@@ -4841,7 +5244,7 @@ const firebaseConfig = {
                             document.getElementById('salary-transporte-dia').value = meta.valorTransporteDia || '';
                             document.getElementById('salary-dias-trabalhados').value = meta.diasTrabalhados || '';
                             document.getElementById('salary-jornada-horas').value = meta.jornadaMensalHoras || '';
-                            document.getElementById('salary-horas-trabalhadas').value = meta.horasTrabalhadas || '';
+                            document.getElementById('salary-horas-trabalhadas').value = meta.horasTrabalhadasRaw || meta.horasTrabalhadas || '';
                         }
                         // For benefit entries (VT/VR) we keep them editable per-month (they are not auto-recurring when edited)
                         // but we still show salary meta so user can edit if needed.
@@ -5651,6 +6054,29 @@ const firebaseConfig = {
                         // read current recurring checkbox value at submit time
                         const isRecurringNow = document.getElementById('is-recurring') ? document.getElementById('is-recurring').checked : !!transactionData.isRecurring;
 
+                        // Helper: parse hours input which may be decimal or HH:MM (e.g. "117:20")
+                        const parseHoursString = (raw) => {
+                            try {
+                                if (raw === undefined || raw === null) return 0;
+                                if (typeof raw === 'number') return raw;
+                                let s = String(raw).trim();
+                                if (s === '') return 0;
+                                // If contains colon, treat as H:MM or HH:MM
+                                const colonMatch = s.match(/^(-?\d+):([0-5]?\d)$/);
+                                if (colonMatch) {
+                                    const h = parseInt(colonMatch[1], 10) || 0;
+                                    const m = parseInt(colonMatch[2], 10) || 0;
+                                    const totalMinutes = h * 60 + (h < 0 ? -m : m);
+                                    return Math.round((totalMinutes / 60) * 1000000) / 1000000; // keep reasonable precision
+                                }
+                                // Replace comma with dot for locales that use comma
+                                s = s.replace(',', '.');
+                                const fv = parseFloat(s);
+                                return isNaN(fv) ? 0 : fv;
+                            } catch (e) { return 0; }
+                        };
+
+                        const rawHoursRaw = (document.getElementById('salary-horas-trabalhadas') || { value: '' }).value;
                         const params = {
                             salarioBase: salarioBaseToUse,
                             percentualPericulosidade: parseFloat((document.getElementById('salary-periculosidade') || { value: 0 }).value) || 0,
@@ -5659,11 +6085,13 @@ const firebaseConfig = {
                             valorDesjejumDia: parseFloat((document.getElementById('salary-desjejum-dia') || { value: 0 }).value) || 0,
                             valorTransporteDia: parseFloat((document.getElementById('salary-transporte-dia') || { value: 0 }).value) || 0,
                             diasTrabalhados: parseInt((document.getElementById('salary-dias-trabalhados') || { value: '' }).value, 10) || undefined,
-                            // hoursTrabalhadas is used to compute valorHora when provided; default handled inside calcularSalarioLiquido
-                            hoursTrabalhadas: parseFloat((document.getElementById('salary-horas-trabalhadas') || { value: 0 }).value) || 0,
-                            horasExtrasSabado: parseFloat((document.getElementById('salary-h-extra-sab') || { value: 0 }).value) || 0,
-                            horasExtrasDomingo: parseFloat((document.getElementById('salary-h-extra-dom') || { value: 0 }).value) || 0,
-                            jornadaMensalHoras: parseFloat((document.getElementById('salary-jornada-horas') || { value: 220 }).value) || 220,
+                            // hoursTrabalhadas accepts decimal or HH:MM (e.g. "117:20"). Minutes will be converted to fractional hours.
+                            hoursTrabalhadas: parseHoursString(rawHoursRaw) || 0,
+                            // preserve the original string (e.g. "117:20") so we can store it in salaryMeta and show/edit later
+                            horasTrabalhadasRaw: rawHoursRaw || '',
+                            horasExtrasSabado: parseHoursString((document.getElementById('salary-h-extra-sab') || { value: 0 }).value) || 0,
+                            horasExtrasDomingo: parseHoursString((document.getElementById('salary-h-extra-dom') || { value: 0 }).value) || 0,
+                            jornadaMensalHoras: parseHoursString((document.getElementById('salary-jornada-horas') || { value: 220 }).value) || 220,
                             // hoursTrabalhadas will be set/used inside calcularSalarioLiquido when needed
                             year, month
                         };
@@ -6272,6 +6700,7 @@ const firebaseConfig = {
                 const vtuClose = document.getElementById('vt-usage-close'); if (vtuClose) vtuClose.addEventListener('click', () => App.closeVTUsageModal());
                 const vtuForm = document.getElementById('vt-usage-form'); if (vtuForm) vtuForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVTUsageEdit(e); });
                 const vtEntryForm = document.getElementById('vt-entry-form'); if (vtEntryForm) vtEntryForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVTLedgerEntry(); });
+                // ...salary modal wiring moved to bindEvents to ensure helper is in scope
                 // Mobile FAB: delegate to existing add-transaction button to preserve behavior
                 try {
                     const mobileFab = document.getElementById('mobile-add-transaction-fab');

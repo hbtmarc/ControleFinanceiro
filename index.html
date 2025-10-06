@@ -670,7 +670,7 @@
                                         <col style="width:120px"> <!-- actions -->
                                     </colgroup>
                                     <thead id="expenses-table-head"><tr class="border-b border-gray-200">
-                                        <th class="py-3 px-3 align-middle"><span class="material-symbols-outlined text-gray-500 text-base">done</span></th>
+                                        <th class="py-3 px-3 align-middle sortable-header" data-sort="isPaid" title="Ordenar por pago/não pago" style="cursor:pointer"><span class="material-symbols-outlined text-gray-500 text-base">done</span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="description">Descrição <span class="sort-icon material-symbols-outlined"></span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="payment">Pagamento <span class="sort-icon material-symbols-outlined"></span></th>
                                         <th class="py-3 px-3 font-medium text-sm text-gray-500 align-middle sortable-header" data-sort="category">Categoria <span class="sort-icon material-symbols-outlined"></span></th>
@@ -1592,6 +1592,9 @@ const firebaseConfig = {
             // A nova função `loadData` é robusta e sempre retorna um objeto de estado válido.
             // O `await` garante que o código abaixo só execute após o carregamento completo.
             state.appData = await storage.loadData();
+            // Limpa todos os filtros ao iniciar
+            state.filters = { searchTerm: '' };
+            state.filters.expenseFilters = {};
             if (!state.appData) {
                 console.error("Falha crítica: não foi possível carregar ou criar os dados da aplicação.");
                 // Idealmente, exibir uma mensagem de erro visível para o usuário aqui.
@@ -1965,8 +1968,17 @@ const firebaseConfig = {
             ui.exportDataBtn.addEventListener('click', handleExport);
 
             ui.expensesTableHead.addEventListener('click', (e) => {
-                const header = e.target.closest('.sortable-header');
-                if(header) handleSort(header.dataset.sort);
+                    const header = e.target.closest('.sortable-header');
+                    if(header) {
+                        // Toggle sort order if clicking same column
+                        if (state.sort.key === header.dataset.sort) {
+                            state.sort.order = state.sort.order === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            state.sort.key = header.dataset.sort;
+                            state.sort.order = 'asc';
+                        }
+                        renderExpenseTable();
+                    }
             });
             document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
             // Mobile bottom nav interactions
@@ -2102,12 +2114,11 @@ const firebaseConfig = {
                 if (kpiVr) {
                     kpiVr.style.cursor = 'pointer';
                     kpiVr.addEventListener('click', () => {
-                        // Apply filter for VR payments and show expenses (dashboard)
+                        // Navigate to the credit-cards (faturas) view and optionally highlight VR ledger
                         state.filters.expenseFilters = state.filters.expenseFilters || {};
                         state.filters.expenseFilters.payment = 'VR';
-                        // navigate to dashboard where expenses table is shown
-                        changeView('dashboard');
-                        // renderExpenseTable will be invoked by render(); ensure badge reflects active filters
+                        // navigate to credit-cards (faturas)
+                        changeView('credit-cards');
                         try { updateFilterBadge(); } catch(e) {}
                     });
                 }
@@ -2117,9 +2128,10 @@ const firebaseConfig = {
                 if (kpiVt) {
                     kpiVt.style.cursor = 'pointer';
                     kpiVt.addEventListener('click', () => {
+                        // Navigate to the credit-cards (faturas) view and optionally highlight VT ledger
                         state.filters.expenseFilters = state.filters.expenseFilters || {};
                         state.filters.expenseFilters.payment = 'VT';
-                        changeView('dashboard');
+                        changeView('credit-cards');
                         try { updateFilterBadge(); } catch(e) {}
                     });
                 }
@@ -3580,6 +3592,10 @@ const firebaseConfig = {
                 const key = state.sort.key;
                 const order = state.sort.order === 'asc' ? 1 : -1;
                 if (key === 'amount') return (a.amount - b.amount) * order;
+                if (key === 'isPaid') {
+                    // true > false (pagas primeiro se asc, não pagas primeiro se desc)
+                    return ((!!a.isPaid) - (!!b.isPaid)) * order;
+                }
                 const valA = a[key] || '';
                 const valB = b[key] || '';
                 return valA.localeCompare(valB) * order;
@@ -3811,9 +3827,9 @@ const firebaseConfig = {
             row.innerHTML = `
                 <td class="py-3 px-3" data-label="Descrição">${income.description} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
                 <td class="py-3 px-3" data-label="Valor">${amountHtml}</td>
-                <td class="py-3 px-3 text-right actions-cell">
-                    <button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
-                    <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                <td class="py-3 px-3 text-right actions-cell" style="display:flex;justify-content:flex-end;gap:0;align-items:center;">
+                    <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
+                    <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>`;
 
             // Attach click handler to the hidden span if this is a salary entry
@@ -3841,9 +3857,9 @@ const firebaseConfig = {
                 <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>
                 <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${formatCurrency(expense.amount)}</td>
-                <td class="py-3 px-3 text-right actions-cell align-middle">
-                    <button class="edit-btn p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
-                    <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                <td class="py-3 px-3 text-right actions-cell align-middle" style="display:flex;justify-content:flex-end;gap:0;align-items:center;">
+                    <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
+                    <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>`;
 
             // Attach click handler to jump to last installment when present (span will be visually identical)
@@ -4498,6 +4514,7 @@ const firebaseConfig = {
         function updateSortHeaders() {
             ui.expensesTableHead.querySelectorAll('.sortable-header').forEach(header => {
                 const icon = header.querySelector('.sort-icon');
+                if (!icon) return; // skip if icon not present
                 if (header.dataset.sort === state.sort.key) {
                     header.classList.add('sorted');
                     icon.textContent = state.sort.order === 'asc' ? 'arrow_upward' : 'arrow_downward';

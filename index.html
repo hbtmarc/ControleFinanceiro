@@ -7987,6 +7987,20 @@ const firebaseConfig = {
         <button data-view="credit-cards" class="mobile-nav-btn p-2 rounded-full" title="Faturas"><span class="material-symbols-outlined">credit_card</span></button>
         <button data-view="investments" class="mobile-nav-btn p-2 rounded-full" title="Investimentos"><span class="material-symbols-outlined">trending_up</span></button>
     </nav>
+    <!-- Mobile Action Sheet (hidden until FAB tapped) -->
+    <div id="mobile-action-sheet" class="hidden fixed inset-x-0 bottom-0 z-60 flex items-end justify-center">
+        <div id="mas-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);" aria-hidden="true"></div>
+        <div id="mas-sheet" role="dialog" aria-modal="true" class="w-full max-w-2xl bg-white rounded-t-xl shadow-2xl p-4" style="transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.9,.3,1);">
+            <div class="sheet-handle" style="width:56px;height:6px;background:#e5e7eb;border-radius:999px;margin:6px auto 10px;"></div>
+            <div class="grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+                <button id="mas-new-transaction" class="mobile-sheet-btn" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#06b6d4,#0369a1);color:#fff;font-weight:600;">Nova transação</button>
+                <button id="mas-new-income" class="mobile-sheet-btn" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#10b981,#059669);color:#fff;font-weight:600;">Nova receita</button>
+                <button id="mas-new-expense" class="mobile-sheet-btn" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#f97316,#dc2626);color:#fff;font-weight:600;">Nova despesa</button>
+                <button id="mas-import" class="mobile-sheet-btn" style="padding:14px;border-radius:12px;background:#f3f4f6;color:#111;font-weight:600;">Importar planilha</button>
+            </div>
+            <div style="margin-top:12px;text-align:center;"><button id="mas-cancel" style="padding:10px 14px;border-radius:10px;background:#fff;border:1px solid #e5e7eb;">Fechar</button></div>
+        </div>
+    </div>
     <!-- Mobile Floating Add Transaction Button -->
     <button id="mobile-add-transaction-fab" aria-label="Adicionar transação" title="Nova transação">+
     </button>
@@ -7995,26 +8009,30 @@ const firebaseConfig = {
     <style id="mobile-enhancements">
     /* Scope to small screens only so desktop is unchanged */
     @media (max-width: 768px) {
+        /* Gentle global typography scaling and spacing for mobile */
+        html, body { font-size: 16px !important; -webkit-font-smoothing:antialiased; }
+        body { padding-bottom: 6.5rem !important; /* avoid bottom nav overlap */ }
+
         /* Make bottom nav more prominent and finger-friendly */
         #mobile-bottom-nav {
             display: flex !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
-            bottom: 0.85rem !important;
+            bottom: 0.8rem !important;
             padding: 0.45rem 0.75rem !important;
             gap: 8px !important;
             border-radius: 9999px !important;
             box-shadow: 0 10px 30px rgba(2,6,23,0.12) !important;
             z-index: 140000 !important;
         }
-        #mobile-bottom-nav .mobile-nav-btn { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; }
+        #mobile-bottom-nav .mobile-nav-btn { width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; }
 
-        /* Floating action button: larger, high-contrast, positioned above bottom-nav */
+        /* Floating action button: larger, high-contrast, positioned above bottom-nav with smooth shadow */
         #mobile-add-transaction-fab {
             display: inline-flex !important;
             position: fixed !important;
             right: 1rem !important;
-            bottom: 5.6rem !important; /* above bottom nav */
+            bottom: 5.8rem !important; /* above bottom nav */
             width: 64px !important;
             height: 64px !important;
             border-radius: 9999px !important;
@@ -8023,11 +8041,18 @@ const firebaseConfig = {
             font-size: 34px !important;
             align-items: center !important;
             justify-content: center !important;
-            box-shadow: 0 12px 30px rgba(2,6,23,0.18) !important;
+            box-shadow: 0 14px 34px rgba(3,105,161,0.18) !important;
             z-index: 150000 !important;
             border: none !important;
             -webkit-tap-highlight-color: transparent;
+            transition: transform .14s ease, box-shadow .14s ease;
         }
+        #mobile-add-transaction-fab:active { transform: scale(.96); box-shadow: 0 8px 18px rgba(3,105,161,0.12) !important; }
+
+        /* Mobile action sheet styles */
+        #mobile-action-sheet { display: none; }
+        #mobile-action-sheet.show { display: flex; }
+        #mas-sheet.open { transform: translateY(0%); }
 
         /* Make modal dialogs full-screen and easier to scroll on mobile */
         dialog[open] {
@@ -8045,18 +8070,16 @@ const firebaseConfig = {
         }
         dialog::backdrop { background: rgba(0,0,0,0.6) !important; }
 
-        /* Increase touch target size for interactive elements inside modals */
-        dialog button, dialog .icon-select-button, dialog .modal-action-btn { padding: 0.9rem 1rem !important; font-size: 16px !important; border-radius: 10px !important; }
-
-        /* Make table rows appear as cards with increased spacing for touch */
-        .responsive-table tr { display: block !important; margin-bottom: 10px !important; border-radius: 10px; background: white; box-shadow: 0 6px 18px rgba(2,6,23,0.04); padding: 10px !important; }
+        /* Card-like rows for lists and transactions */
+        .responsive-table tr { display: block !important; margin-bottom: 12px !important; border-radius: 12px; background: linear-gradient(180deg,#ffffff,#fbfdff); box-shadow: 0 8px 24px rgba(2,6,23,0.06); padding: 12px !important; }
         .responsive-table td { display: flex !important; justify-content: space-between; padding: 8px 6px !important; border: none !important; }
         .responsive-table td .material-symbols-outlined { margin-right: 8px !important; }
 
-        /* Ensure action buttons are full-width for easier tapping */
-        .actions-cell button { min-width: 44px !important; height:44px !important; }
+        /* Dashboard card tweaks for mobile */
+        .dashboard-card, .fatura-card, .transaction-card { border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.06) !important; padding: 12px !important; background: linear-gradient(180deg,#ffffff,#fbfbff); }
 
-        /* Larger inputs and selects for comfortable typing */
+        /* Compact, tappable action buttons and inputs */
+        .actions-cell button { min-width: 48px !important; height:48px !important; }
         input, select, textarea { font-size: 16px !important; padding: 12px !important; }
 
         /* Improve focus outlines for keyboard and accessibility on mobile */
@@ -8075,15 +8098,47 @@ const firebaseConfig = {
                 const mobileNav = document.getElementById('mobile-bottom-nav');
                 if (mobileNav && isMobile()) mobileNav.classList.remove('hidden');
 
-                // Ensure mobile FAB is visible on small screens and focusable
+                // Action sheet elements
+                const actionSheet = document.getElementById('mobile-action-sheet');
+                const masSheet = document.getElementById('mas-sheet');
+                const masBackdrop = document.getElementById('mas-backdrop');
+                const masCancel = document.getElementById('mas-cancel');
+                const masNewTransaction = document.getElementById('mas-new-transaction');
+                const masNewIncome = document.getElementById('mas-new-income');
+                const masNewExpense = document.getElementById('mas-new-expense');
+                const masImport = document.getElementById('mas-import');
+
+                function openActionSheet(){
+                    if (!actionSheet || !masSheet) return;
+                    actionSheet.classList.add('show');
+                    // open with slight delay so transition works
+                    requestAnimationFrame(()=> masSheet.classList.add('open'));
+                    // prevent background scroll
+                    document.documentElement.style.overflow = 'hidden';
+                }
+                function closeActionSheet(){
+                    if (!actionSheet || !masSheet) return;
+                    masSheet.classList.remove('open');
+                    setTimeout(()=>{ actionSheet.classList.remove('show'); document.documentElement.style.overflow = ''; }, 280);
+                }
+
+                // Ensure mobile FAB is visible on small screens and focusable; override to open action sheet
                 const fab = document.getElementById('mobile-add-transaction-fab');
                 const addBtn = document.getElementById('add-transaction-btn');
                 if (fab && isMobile()) {
                     fab.style.display = 'inline-flex';
                     fab.setAttribute('role','button');
                     fab.setAttribute('aria-pressed','false');
-                    fab.addEventListener('click', function(e){ e.preventDefault(); try { if (addBtn) addBtn.click(); else openModal && openModal('expenses'); } catch(err) { try { openModal('expenses'); } catch(e){} } });
+                    fab.addEventListener('click', function(e){ e.preventDefault(); try { openActionSheet(); } catch(err) { try { if (addBtn) addBtn.click(); else openModal && openModal('expenses'); } catch(e){} } });
                 }
+
+                // Wire sheet buttons to existing handlers where possible
+                if (masCancel) masCancel.addEventListener('click', closeActionSheet);
+                if (masBackdrop) masBackdrop.addEventListener('click', closeActionSheet);
+                if (masNewTransaction) masNewTransaction.addEventListener('click', function(){ closeActionSheet(); setTimeout(()=>{ try { if (addBtn) addBtn.click(); else openModal && openModal('expenses'); } catch(e){} }, 260); });
+                if (masNewIncome) masNewIncome.addEventListener('click', function(){ closeActionSheet(); setTimeout(()=>{ try { const inc = document.getElementById('add-income-btn'); if (inc) inc.click(); else openModal && openModal('incomes'); } catch(e){} }, 260); });
+                if (masNewExpense) masNewExpense.addEventListener('click', function(){ closeActionSheet(); setTimeout(()=>{ try { const exp = document.getElementById('add-expense-btn'); if (exp) exp.click(); else openModal && openModal('expenses'); } catch(e){} }, 260); });
+                if (masImport) masImport.addEventListener('click', function(){ closeActionSheet(); setTimeout(()=>{ try { const imp = document.getElementById('open-import-modal-btn'); if (imp) imp.click(); else { const el = document.getElementById('import-spreadsheet-modal'); if (el && typeof el.showModal === 'function') el.showModal(); } } catch(e){} }, 260); });
 
                 // Make bottom nav buttons navigate views (reuse existing changeView bindings)
                 try {

@@ -216,6 +216,36 @@
         }
         /* Fallback when :placeholder-shown isn't available: use .has-value class toggled by JS */
         #installments-fields input.has-value, #financing-fields input.has-value { color: #111827 !important; }
+        /* Animated show/hide for advanced option rows (tighter spacing) */
+        #advanced-options .option-row {
+            overflow: hidden;
+            transition: opacity 220ms cubic-bezier(.22,.9,.25,1), max-height 260ms cubic-bezier(.22,.9,.25,1), margin 180ms ease, padding 180ms ease, transform 220ms ease;
+            opacity: 1;
+            max-height: 56px; /* enough to contain a label */
+            margin: 0.25rem 0; /* tighter spacing */
+            padding: 0.25rem 0.15rem;
+            display: block;
+            transform: translateY(0);
+            background: transparent !important;
+        }
+        #advanced-options .option-row.option-collapsed {
+            opacity: 0;
+            max-height: 0 !important;
+            margin: 0 !important;
+            padding-top: 0 !important; padding-bottom: 0 !important;
+            pointer-events: none;
+            transform: translateY(-4px);
+        }
+        /* Ensure label inside option-row has no border/shadow and is vertically centered */
+        #advanced-options .option-row label {
+            display: flex; align-items: center; gap: 0.45rem; width: 100%; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0.1rem 0.4rem;
+            line-height: 1.15;
+        }
+        #advanced-options .option-row label span.ml-2 { line-height: 1.15; }
+        /* Avoid accidental underlines or after pseudo-elements affecting option rows */
+        #advanced-options .option-row label::after, #advanced-options .option-row label::before { content: none !important; }
+        /* Reduce the gap used by the flex column container inside advanced options */
+        #advanced-options .flex.flex-col.gap-2 { gap: 0.35rem !important; }
         </style>
         <style>
         /* Salary breakdown tooltip card */
@@ -1332,26 +1362,54 @@
                 const financingLabel = document.querySelector('label[for="is-financing"]');
                 const salarySection = document.getElementById('salary-section');
                 // Recurrence label stays visible always, no change needed
+                // Use querySelectorAll to handle duplicated labels and set style.display to override other CSS
+                const installmentLabels = document.querySelectorAll('label[for="is-installment"]');
+                const financingLabels = document.querySelectorAll('label[for="is-financing"]');
+                function hideLabels(nodelist) {
+                    nodelist.forEach(l => {
+                        const row = l.closest('.option-row');
+                        if (row) {
+                            row.classList.add('option-collapsed');
+                        } else {
+                            l.classList.add('hidden'); l.style.display = 'none';
+                        }
+                    });
+                }
+                function showLabels(nodelist) {
+                    nodelist.forEach(l => {
+                        const row = l.closest('.option-row');
+                        if (row) {
+                            row.classList.remove('option-collapsed');
+                        } else {
+                            l.classList.remove('hidden'); l.style.display = '';
+                        }
+                    });
+                }
                 if (t === 'incomes') {
-                    if (financingLabel) financingLabel.classList.add('hidden');
-                    if (installmentLabel) {
-                        const txt = installmentLabel.querySelector('span.ml-2') || installmentLabel.querySelector('span:last-child');
+                    // Hide financing
+                    hideLabels(financingLabels);
+                    // Show installment but change text to 'receita'
+                    showLabels(installmentLabels);
+                    installmentLabels.forEach(lbl => {
+                        const txt = lbl.querySelector('span.ml-2') || lbl.querySelector('span:last-child');
                         if (txt) txt.textContent = 'É uma receita parcelada?';
-                        installmentLabel.classList.remove('hidden');
-                    }
+                    });
                     if (salarySection) salarySection.classList.remove('hidden');
+                    if (salarySection) salarySection.style.display = '';
                 } else if (t === 'expenses') {
-                    if (financingLabel) financingLabel.classList.remove('hidden');
-                    if (installmentLabel) {
-                        const txt = installmentLabel.querySelector('span.ml-2') || installmentLabel.querySelector('span:last-child');
+                    // Show financing and installment with expense wording
+                    showLabels(financingLabels);
+                    showLabels(installmentLabels);
+                    installmentLabels.forEach(lbl => {
+                        const txt = lbl.querySelector('span.ml-2') || lbl.querySelector('span:last-child');
                         if (txt) txt.textContent = 'É uma compra parcelada?';
-                        installmentLabel.classList.remove('hidden');
-                    }
-                    if (salarySection) salarySection.classList.add('hidden');
+                    });
+                    if (salarySection) { salarySection.classList.add('hidden'); salarySection.style.display = 'none'; }
                 } else { // reserve
-                    if (financingLabel) financingLabel.classList.add('hidden');
-                    if (installmentLabel) installmentLabel.classList.add('hidden');
-                    if (salarySection) salarySection.classList.add('hidden');
+                    // Hide both
+                    hideLabels(financingLabels);
+                    hideLabels(installmentLabels);
+                    if (salarySection) { salarySection.classList.add('hidden'); salarySection.style.display = 'none'; }
                 }
             } catch (e) {
                 console.error('updateModalTypeUI advanced options adjust error', e);
@@ -1763,23 +1821,29 @@
 
             <!-- Opções Avançadas -->
             <div id="advanced-options" class="modal-group border-t pt-2 mt-2 space-y-2 bg-gray-50 rounded-xl p-3 shadow-md">
-                <label class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque para repetir mensalmente">
-                    <input type="checkbox" id="is-recurring" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <span class="material-symbols-outlined text-blue-400">autorenew</span>
-                    <span class="ml-2 text-base text-gray-700">Tornar esta transação recorrente? (mensal)</span>
-                </label>
+                <div class="option-row">
+                    <label class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque para repetir mensalmente">
+                        <input type="checkbox" id="is-recurring" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="material-symbols-outlined text-blue-400">autorenew</span>
+                        <span class="ml-2 text-base text-gray-700">Tornar esta transação recorrente? (mensal)</span>
+                    </label>
+                </div>
                 <div class="flex flex-col gap-2 text-base">
                     <!-- opção 'aplicar também às futuras' removida -->
-                    <label class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for uma compra parcelada">
-                        <input type="checkbox" id="is-installment" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="material-symbols-outlined text-indigo-400">payments</span>
-                        <span class="ml-2 text-base text-gray-700">É uma compra parcelada?</span>
-                    </label>
-                    <label class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for um financiamento">
-                        <input type="checkbox" id="is-financing" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="material-symbols-outlined text-amber-400">account_balance</span>
-                        <span class="ml-2 text-base text-gray-700">É um financiamento?</span>
-                    </label>
+                    <div class="option-row">
+                        <label for="is-installment" class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for uma compra parcelada">
+                            <input type="checkbox" id="is-installment" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="material-symbols-outlined text-indigo-400">payments</span>
+                            <span class="ml-2 text-base text-gray-700">É uma compra parcelada?</span>
+                        </label>
+                    </div>
+                    <div class="option-row">
+                        <label for="is-financing" class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for um financiamento">
+                            <input type="checkbox" id="is-financing" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="material-symbols-outlined text-amber-400">account_balance</span>
+                            <span class="ml-2 text-base text-gray-700">É um financiamento?</span>
+                        </label>
+                    </div>
                 </div>
                 <!-- Campos específicos para Entrada: Salário (posicionados abaixo da opção recorrente) -->
                 <div id="salary-section" class="hidden mt-2 space-y-1 modal-group bg-gray-50 rounded-xl p-3 shadow-md">

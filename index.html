@@ -1,3 +1,170 @@
+        <style>
+        /* Animação de foco nos inputs */
+        .modal-group input:focus, .modal-group select:focus {
+            box-shadow: 0 0 0 2px #2563eb44;
+            transition: box-shadow 0.2s;
+        }
+        /* Botão de ação destacado */
+        .modal-action-btn {
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px #2563eb22;
+            padding: 0.75rem 2.5rem;
+            font-size: 1.15rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s, box-shadow 0.2s;
+            background-color: #e5e7eb;
+            opacity: 1;
+        }
+        /* Deterministic save button type classes */
+        .modal-action-btn.save-type-expenses {
+            background-color: #dc2626 !important; /* red */
+            border: 2px solid #b91c1c !important;
+            box-shadow: 0 2px 10px #dc262644 !important;
+            color: #fff !important;
+        }
+        .modal-action-btn.save-type-incomes {
+            background-color: #16a34a !important; /* green */
+            border: 2px solid #15803d !important;
+            box-shadow: 0 2px 10px #16a34a44 !important;
+            color: #fff !important;
+        }
+        .modal-action-btn.save-type-reserve {
+            background-color: #eab308 !important; /* yellow */
+            border: 2px solid #d6a013 !important;
+            box-shadow: 0 2px 10px #eab30844 !important;
+            color: #111827 !important;
+        }
+        /* Keep colors when disabled */
+        .modal-action-btn.save-type-expenses:disabled,
+        .modal-action-btn.save-type-expenses[disabled] {
+            background-color: #dc2626 !important;
+            border-color: #b91c1c !important;
+            box-shadow: 0 2px 10px #dc262644 !important;
+            color: #fff !important;
+            opacity: 1 !important;
+        }
+        .modal-action-btn.save-type-incomes:disabled,
+        .modal-action-btn.save-type-incomes[disabled] {
+            background-color: #16a34a !important;
+            border-color: #15803d !important;
+            box-shadow: 0 2px 10px #16a34a44 !important;
+            color: #fff !important;
+            opacity: 1 !important;
+        }
+        .modal-action-btn.save-type-reserve:disabled,
+        .modal-action-btn.save-type-reserve[disabled] {
+            background-color: #eab308 !important;
+            border-color: #d6a013 !important;
+            box-shadow: 0 2px 10px #eab30844 !important;
+            color: #111827 !important;
+            opacity: 1 !important;
+        }
+
+        /* ID-specific rules with higher specificity to override other styles */
+        #modal-save-btn.save-type-expenses,
+        #modal-save-btn.save-type-expenses[disabled] {
+            background-color: #dc2626 !important;
+            border-color: #b91c1c !important;
+            box-shadow: 0 2px 10px #dc262644 !important;
+            color: #fff !important;
+            opacity: 1 !important;
+        }
+        #modal-save-btn.save-type-incomes,
+        #modal-save-btn.save-type-incomes[disabled] {
+            background-color: #16a34a !important;
+            border-color: #15803d !important;
+            box-shadow: 0 2px 10px #16a34a44 !important;
+            color: #fff !important;
+            opacity: 1 !important;
+        }
+        #modal-save-btn.save-type-reserve,
+        #modal-save-btn.save-type-reserve[disabled] {
+            background-color: #eab308 !important;
+            border-color: #d6a013 !important;
+            box-shadow: 0 2px 10px #eab30844 !important;
+            color: #111827 !important;
+            opacity: 1 !important;
+        }
+        /* Force native appearance off and clip background to avoid gradient leaks */
+        #modal-save-btn {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            background-clip: padding-box !important;
+            -webkit-background-clip: padding-box !important;
+        }
+        .modal-action-btn:disabled {
+            cursor: not-allowed;
+        }
+        .modal-action-btn:hover {
+            box-shadow: 0 4px 16px #2563eb33;
+            filter: brightness(0.95);
+        }
+        /* Tooltip */
+        .modal-tooltip {
+            position: relative;
+            cursor: help;
+        }
+        .modal-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            top: 110%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #fff;
+            padding: 0.3em 0.7em;
+            border-radius: 0.5em;
+            font-size: 0.85em;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        /* Transaction modal spacing adjustments for a more airy layout */
+    #transaction-modal .modal-title-row { padding: 0.5rem 0.75rem; }
+    /* Increased bottom padding so the save button fits inside the modal without overlapping content */
+    #transaction-modal form { padding: 0.5rem 0.75rem 3.5rem 0.75rem; }
+        #transaction-modal .modal-group { padding: 0.9rem; }
+        #transaction-modal .flex.justify-end { padding: 0.75rem 0.5rem 0 0; }
+        @media (max-width: 639px) {
+            /* On narrow screens keep modal full-bleed and allow page scrolling instead of inner scroll */
+            #transaction-modal { width: 100vw !important; left: 0 !important; right: 0 !important; max-width: 100vw !important; border-radius: 0.75rem !important; }
+            #transaction-modal { padding: 1rem !important; }
+            #transaction-modal .modal-group { padding: 0.75rem !important; }
+        }
+        /* Select icon helper: leaves space and positions an icon inside select */
+        .select-with-icon { position: relative; }
+        .select-with-icon .select-icon {
+            position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 1.05rem; opacity: 0.95;
+        }
+        /* Custom icon-enabled select (replaces native dropdown visually but keeps native select hidden for form semantics) */
+        .icon-select { position: relative; display: inline-block; width: 100%; }
+        .icon-select-button {
+            display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left; padding: .5rem .75rem; border: 1px solid #e5e7eb; background: white; border-radius: .5rem; cursor: pointer;
+        }
+        .icon-select-button .material-symbols-outlined { font-size: 18px; margin-right: 6px; color: #6b7280; }
+        .icon-select-list { position: absolute; left: 0; right: 0; z-index: 50; background: white; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 6px 18px rgba(2,6,23,0.08); border-radius: 8px; margin-top: 6px; max-height: 260px; overflow: auto; }
+        .icon-select-list.hidden { display: none; }
+        .icon-select-item { display:flex; align-items:center; gap:0.5rem; padding: 0.55rem .75rem; cursor: pointer; }
+        .icon-select-item:hover { background: #f8fafc; }
+        .icon-select-item .material-symbols-outlined { font-size: 18px; color: #6b7280; }
+        /* Entradas table specific styling: keep rows single-line and prevent action icons from wrapping */
+        #income-table td, #income-table th {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+        /* Make first column (description) truncate with ellipsis and take remaining space */
+        #income-table td:first-child { min-width: 0; }
+    /* Keep actions cell compact and keep icons on one line; width adjusted so both icons fit */
+    #income-table td:last-child, #income-table th:last-child { width: 96px; text-align: right; }
+    /* Ensure actions cell content is not truncated with ellipsis */
+    #income-table td.actions-cell, #income-table th.actions-cell { overflow: visible; text-overflow: clip; white-space: nowrap; }
+    #income-table td.actions-cell .edit-btn, #income-table td.actions-cell .delete-btn, #income-table td.actions-cell button { display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem; }
+        </style>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -528,9 +695,10 @@
                             <div class="space-y-2 text-sm">
                                 <div class="grid grid-cols-1 gap-3">
                                     <div class="grid grid-cols-2 gap-2">
-                                        <div>
+                                        <div class="relative select-with-icon">
                                             <label class="block text-xs text-gray-500">Pagamento</label>
-                                            <select id="filter-payment-method" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                            <span class="material-symbols-outlined select-icon text-gray-400">payment</span>
+                                            <select id="filter-payment-method" class="w-full border-gray-200 rounded-md p-1 text-sm pl-8">
                                                 <option value="">Todos</option>
                                             </select>
                                         </div>
@@ -545,9 +713,10 @@
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2">
-                                        <div>
+                                        <div class="relative select-with-icon">
                                             <label class="block text-xs text-gray-500">Categoria</label>
-                                            <select id="filter-category" class="w-full border-gray-200 rounded-md p-1 text-sm">
+                                            <span class="material-symbols-outlined select-icon text-gray-400">category</span>
+                                            <select id="filter-category" class="w-full border-gray-200 rounded-md p-1 text-sm pl-8">
                                                 <option value="">Todas</option>
                                             </select>
                                         </div>
@@ -626,11 +795,11 @@
                                 <div id="vr-badge" class="text-sm text-gray-600"></div>
                             </div>
                              <div class="overflow-x-auto">
-                                <table class="w-full text-left responsive-table" style="table-layout:fixed;">
+                                <table id="income-table" class="w-full text-left responsive-table" style="table-layout:fixed;">
                                     <colgroup>
-                                        <col> <!-- descrição (auto, ocupa o restante) -->
+                                        <col style="width:calc(100% - 216px)"> <!-- descrição (auto, ocupa o restante) -->
                                         <col style="width:120px"> <!-- valor -->
-                                        <col style="width:80px"> <!-- ações -->
+                                        <col style="width:96px"> <!-- ações (reduced to fit two icons) -->
                                     </colgroup>
                                     <thead><tr class="border-b border-gray-200">
                                         <th class="py-2 px-3 font-medium text-sm text-gray-500">Descrição</th>
@@ -848,40 +1017,52 @@
     </div>
 
     <!-- Modal de Transação -->
-    <dialog id="transaction-modal" class="p-3 rounded-2xl shadow-2xl card w-full max-w-2xl">
-        <div class="flex items-center justify-between mb-3">
+    <dialog id="transaction-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-3xl" style="max-height:98vh;overflow:auto !important;">
+        <div class="flex items-center justify-between mb-3 modal-title-row">
             <h2 id="modal-title" class="text-2xl font-bold">Nova Transação</h2>
             <span id="modal-type-indicator" class="inline-flex items-center gap-2 px-3 py-1 rounded-full font-semibold text-sm bg-gray-100 text-gray-700 border border-gray-300"></span>
         </div>
-        <form id="transaction-form" class="space-y-2 text-sm h-full">
+    <form id="transaction-form" class="space-y-5 text-base mx-auto max-w-3xl">
             <input type="hidden" id="transaction-id">
             <div id="transaction-error" role="alert" class="hidden text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">&nbsp;</div>
-            <div class="flex items-center justify-center gap-4 mb-6">
-                <button type="button" data-type="expenses" class="modal-type-toggle group flex-1 flex flex-col items-center py-3 rounded-xl border-2 border-gray-200 bg-white shadow-sm font-semibold transition-all hover:border-blue-400 focus:outline-none">
-                    <span class="material-symbols-outlined text-red-500 text-3xl mb-1">trending_down</span>
-                    <span>Despesa</span>
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <button type="button" data-type="expenses" class="modal-type-toggle group flex-1 flex flex-col items-center py-0.5 rounded-xl border-2 shadow-sm font-semibold transition-all focus:outline-none">
+                    <span class="material-symbols-outlined text-2xl mb-0.5">trending_down</span>
+                    <span class="text-sm">Despesa</span>
                 </button>
-                <button type="button" data-type="incomes" class="modal-type-toggle group flex-1 flex flex-col items-center py-3 rounded-xl border-2 border-gray-200 bg-white shadow-sm font-semibold transition-all hover:border-green-400 focus:outline-none">
-                    <span class="material-symbols-outlined text-green-500 text-3xl mb-1">trending_up</span>
-                    <span>Entrada</span>
+                <button type="button" data-type="incomes" class="modal-type-toggle group flex-1 flex flex-col items-center py-0.5 rounded-xl border-2 shadow-sm font-semibold transition-all focus:outline-none">
+                    <span class="material-symbols-outlined text-2xl mb-0.5">trending_up</span>
+                    <span class="text-sm">Entrada</span>
                 </button>
-                <button type="button" data-type="savings" class="modal-type-toggle group flex-1 flex flex-col items-center py-3 rounded-xl border-2 border-gray-200 bg-white shadow-sm font-semibold transition-all hover:border-yellow-400 focus:outline-none">
-                    <span class="material-symbols-outlined text-yellow-500 text-3xl mb-1">savings</span>
-                    <span>Reserva</span>
+                <button type="button" data-type="savings" class="modal-type-toggle group flex-1 flex flex-col items-center py-0.5 rounded-xl border-2 shadow-sm font-semibold transition-all focus:outline-none">
+                    <span class="material-symbols-outlined text-2xl mb-0.5">savings</span>
+                    <span class="text-sm">Reserva</span>
                 </button>
             </div>
         <style>
-        .modal-type-toggle.selected, .modal-type-toggle:focus {
-            border-width: 2px;
-            border-color: #2563eb !important;
-            background: #f0f6ff;
-            box-shadow: 0 0 0 2px #2563eb22;
+        .modal-type-toggle.selected[data-type="expenses"] {
+            border-color: #dc2626 !important;
+            background: #fee2e2;
         }
-        .modal-type-toggle .material-symbols-outlined {
-            transition: color 0.2s;
+        .modal-type-toggle.selected[data-type="expenses"] .material-symbols-outlined,
+        .modal-type-toggle.selected[data-type="expenses"] .text-sm {
+            color: #dc2626 !important;
         }
-        .modal-type-toggle.selected .material-symbols-outlined {
-            color: #2563eb !important;
+        .modal-type-toggle.selected[data-type="incomes"] {
+            border-color: #16a34a !important;
+            background: #d1fae5;
+        }
+        .modal-type-toggle.selected[data-type="incomes"] .material-symbols-outlined,
+        .modal-type-toggle.selected[data-type="incomes"] .text-sm {
+            color: #16a34a !important;
+        }
+        .modal-type-toggle.selected[data-type="savings"] {
+            border-color: #eab308 !important;
+            background: #fef9c3;
+        }
+        .modal-type-toggle.selected[data-type="savings"] .material-symbols-outlined,
+        .modal-type-toggle.selected[data-type="savings"] .text-sm {
+            color: #eab308 !important;
         }
         #modal-type-indicator {
             min-width: 90px;
@@ -891,18 +1072,55 @@
         <script>
         // Modal UX: update type indicator and highlight selected type
         function updateModalTypeUI(type) {
+            // normalize various possible type strings into one of: 'expenses','incomes','reserve'
+            function normalizeType(t) {
+                if (!t) return 'expenses';
+                t = String(t).toLowerCase();
+                if (t === 'savings' || t === 'reserve' || t === 'savings' || t === 'saving') return 'reserve';
+                if (t === 'incomes' || t === 'income' || t === 'entrada' || t === 'in') return 'incomes';
+                if (t === 'expenses' || t === 'expense' || t === 'despesa' || t === 'out') return 'expenses';
+                return t;
+            }
+            const normType = normalizeType(type);
             const indicator = document.getElementById('modal-type-indicator');
             const btns = document.querySelectorAll('.modal-type-toggle');
             btns.forEach(btn => {
-                if (btn.dataset.type === type) {
+                btn.classList.remove('selected');
+                // compare normalized dataset type to normalized input type
+                const btnTypeNorm = normalizeType(btn.dataset.type);
+                if (btnTypeNorm === normType) {
                     btn.classList.add('selected');
                     let icon = btn.querySelector('.material-symbols-outlined').outerHTML;
                     let label = btn.querySelector('span:last-child').textContent;
                     indicator.innerHTML = icon + ' ' + label;
-                } else {
-                    btn.classList.remove('selected');
                 }
             });
+            // Atualiza classe do botão de salvar (determinístico)
+            const saveBtn = document.getElementById('modal-save-btn');
+            const saveIcon = document.getElementById('modal-save-icon');
+            // use normalized type
+            const t = normType;
+            // remove any tailwind background classes that could override our styles
+            saveBtn.classList.remove('bg-blue-600','bg-blue-500','bg-green-600','bg-green-500','bg-yellow-400','bg-yellow-500','bg-red-600','bg-red-500','hover:bg-blue-700','hover:bg-green-700','hover:bg-red-700');
+            saveBtn.classList.remove('save-type-expenses', 'save-type-incomes', 'save-type-reserve');
+            if (t === 'expenses') saveBtn.classList.add('save-type-expenses');
+            else if (t === 'incomes') saveBtn.classList.add('save-type-incomes');
+            else saveBtn.classList.add('save-type-reserve');
+            // icon color: dark for reserve (yellow background), white otherwise
+            if (saveBtn.classList.contains('save-type-reserve')) {
+                saveIcon.style.color = '#111827';
+            } else {
+                saveIcon.style.color = '#fff';
+            }
+            // Build a stable inline style string and set it directly to avoid CSS precedence issues
+            let color = '#dc2626';
+            let border = '#b91c1c';
+            let box = '0 2px 10px #dc262644';
+            let textCol = '#fff';
+            if (t === 'incomes') { color = '#16a34a'; border = '#15803d'; box = '0 2px 10px #16a34a44'; }
+            else if (t === 'reserve') { color = '#eab308'; border = '#d6a013'; box = '0 2px 10px #eab30844'; textCol = '#111827'; }
+            const styleString = `background:${color} !important; background-color:${color} !important; background-image:none !important; border:2px solid ${border} !important; box-shadow:${box} !important; color:${textCol} !important; opacity:1 !important; filter:none !important;`;
+            try { saveBtn.setAttribute('style', styleString); } catch(e) { /* ignore */ }
         }
         // Initial call and event listeners
         document.addEventListener('DOMContentLoaded', function() {
@@ -914,97 +1132,452 @@
                     updateModalTypeUI(btn.dataset.type);
                 });
             });
+            // Observa mudanças de habilitação do botão
+            const saveBtn = document.getElementById('modal-save-btn');
+            const observer = new MutationObserver(() => {
+                updateModalTypeUI(typeInput.value);
+            });
+            observer.observe(saveBtn, { attributes: true, attributeFilter: ['disabled'] });
+        });
+        // Populate select controls with icons and update icon spans
+        document.addEventListener('DOMContentLoaded', function() {
+            // Expose a global set of icon mappings so renderers across the app can
+            // show an icon whenever a payment method / category / type is rendered.
+            window.ICON_MAPPINGS = {
+                // Expanded and curated list of payment methods commonly used in a personal finance app
+                paymentMethods: [
+                    { value: 'BB (Débito)', label: 'BB (Débito)', icon: 'account_balance' },
+                    { value: 'Inter (Débito)', label: 'Inter (Débito)', icon: 'credit_card' },
+                    { value: 'Nubank', label: 'Nubank', icon: 'credit_card' },
+                    { value: 'Porto', label: 'Porto', icon: 'credit_card' },
+                    { value: 'VR', label: 'VR', icon: 'restaurant' },
+                    { value: 'VT', label: 'VT', icon: 'directions_bus' },
+                    { value: 'Dinheiro', label: 'Dinheiro', icon: 'paid' },
+                    { value: 'PIX', label: 'PIX', icon: 'bolt' },
+                    { value: 'Transferência', label: 'Transferência', icon: 'swap_horiz' },
+                    { value: 'Boleto', label: 'Boleto', icon: 'receipt_long' },
+                    { value: 'Apple Pay', label: 'Apple Pay', icon: 'smartphone' },
+                    { value: 'Outro', label: 'Outro', icon: 'more_horiz' }
+                ],
+
+                // Curated expense categories covering typical household, lifestyle and financial items
+                expenseCategories: [
+                    { value: 'Mercado', label: 'Mercado / Supermercado', icon: 'local_grocery_store' },
+                    { value: 'Alimentação', label: 'Alimentação (restaurantes, delivery)', icon: 'restaurant' },
+                    { value: 'Compras', label: 'Compras / Varejo', icon: 'shopping_bag' },
+                    { value: 'Assinaturas', label: 'Assinaturas (streaming, software)', icon: 'subscriptions' },
+                    { value: 'Contas', label: 'Contas (água, luz, internet)', icon: 'receipt' },
+                    { value: 'Moradia', label: 'Moradia (aluguel, condomínio)', icon: 'home' },
+                    { value: 'Transporte', label: 'Transporte (combustível, apps)', icon: 'local_taxi' },
+                    { value: 'Saúde', label: 'Saúde (remédios, consultas)', icon: 'medical_services' },
+                    { value: 'Educação', label: 'Educação (cursos, livros)', icon: 'school' },
+                    { value: 'Lazer', label: 'Lazer (cinema, bares, viagens curtas)', icon: 'local_play' },
+                    { value: 'Viagem', label: 'Viagem / Hospedagem', icon: 'flight' },
+                    { value: 'Vestuário', label: 'Vestuário / Moda', icon: 'checkroom' },
+                    { value: 'Casa', label: 'Casa / Manutenção', icon: 'build' },
+                    { value: 'Pets', label: 'Pets', icon: 'pets' },
+                    { value: 'Doações', label: 'Doações / Caridade', icon: 'favorite' },
+                    { value: 'Impostos', label: 'Impostos / Taxas', icon: 'paid' },
+                    { value: 'Parcelas', label: 'Parcelas / Financiamento', icon: 'payments' },
+                    { value: 'Investimentos', label: 'Investimentos (aporte)', icon: 'trending_up' },
+                    { value: 'Outros', label: 'Outros', icon: 'category' }
+                ],
+
+                // Expense types to help budgeting and classification
+                expenseTypes: [
+                    { value: 'Essenciais', label: 'Essenciais', icon: 'checklist' },
+                    { value: 'Não Essenciais', label: 'Não Essenciais', icon: 'local_offer' },
+                    { value: 'Reserva', label: 'Reserva / Poupança', icon: 'savings' },
+                    { value: 'Parcelada', label: 'Parcelada', icon: 'payments' },
+                    { value: 'Recorrente', label: 'Recorrente', icon: 'autorenew' },
+                    { value: 'Única', label: 'Única', icon: 'calendar_today' }
+                ],
+
+                // Saving categories that a typical personal finance project would include
+                savingCategories: [
+                    { value: 'Reserva Emergência', label: 'Reserva de Emergência', icon: 'savings' },
+                    { value: 'Ações', label: 'Ações', icon: 'trending_up' },
+                    { value: 'Fundos Imobiliários', label: 'Fundos Imobiliários (FII)', icon: 'apartment' },
+                    { value: 'Criptomoedas', label: 'Criptomoedas', icon: 'currency_bitcoin' },
+                    { value: 'Poupança', label: 'Poupança', icon: 'savings' },
+                    { value: 'Tesouro Direto', label: 'Tesouro Direto', icon: 'account_balance' },
+                    { value: 'Previdência', label: 'Previdência Privada', icon: 'shield' },
+                    { value: 'Viagem', label: 'Viagem (meta)', icon: 'flight' },
+                    { value: 'Reforma', label: 'Reforma / Casa', icon: 'home_repair_service' },
+                    { value: 'Educação', label: 'Educação / Cursos', icon: 'school' },
+                    { value: 'Carro', label: 'Carro / Transporte', icon: 'directions_car' },
+                    { value: 'Imóvel', label: 'Imóvel / Entrada', icon: 'house' },
+                    { value: 'Outros', label: 'Outros', icon: 'more_horiz' }
+                ]
+            };
+
+            // Helper: return an icon name for a given kind and value
+            window.getIconFor = function(kind, value) {
+                try {
+                    if (!value && value !== 0) return '';
+                    const v = value.toString();
+                    const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    if (kind === 'payment') {
+                        // prefer configured payment methods (cards) from settings when available
+                        try {
+                            const methods = (state && state.appData && state.appData.settings && state.appData.settings.paymentMethods) || [];
+                            // Methods may be strings or objects { name, type, icon }
+                            const found = (methods || []).find(m => {
+                                try {
+                                    const name = (m && (m.name || m) || '').toString();
+                                    return normalize(name) === normalize(v);
+                                } catch(e) { return false; }
+                            });
+                            if (found) return (found.icon || (found.type && (found.type || '').toString().indexOf('credit') !== -1 ? 'credit_card' : 'payment')) || 'paid';
+                        } catch (e) {}
+                        const m = (window.ICON_MAPPINGS.paymentMethods || []).find(m => {
+                            try { return normalize((m.value || '').toString()) === normalize(v) || normalize((m.label || '').toString()) === normalize(v); } catch(e) { return false; }
+                        });
+                        return (m && m.icon) ? m.icon : '';
+                    }
+                // NOTE: rendering of non-credit payment-method cards was previously misplaced inside this helper.
+                // That logic was moved into renderCreditCardView so DOM mutations happen in the proper view renderer.
+                    if (kind === 'category') {
+                        const m = (window.ICON_MAPPINGS.expenseCategories || []).find(m => (m.value || '') === v || m.label === v);
+                        if (m && m.icon) return m.icon;
+                        const s = (window.ICON_MAPPINGS.savingCategories || []).find(m => (m.value || '') === v || m.label === v);
+                        if (s && s.icon) return s.icon;
+                        return 'category';
+                    }
+                    if (kind === 'type') {
+                        const m = (window.ICON_MAPPINGS.expenseTypes || []).find(m => (m.value || '') === v || m.label === v);
+                        return (m && m.icon) ? m.icon : 'tune';
+                    }
+                } catch (e) { return ''; }
+                return '';
+            };
+
+            // Helper: return a human-friendly payment label for display (handles objects, settings and ICON_MAPPINGS)
+            window.getPaymentLabel = function(value) {
+                try {
+                    const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    let v = '';
+                    if (value && typeof value === 'object') v = (value.name || value.label || value.value || '').toString();
+                    else v = (value || '').toString();
+                    // prefer configured settings names when available
+                    try {
+                        const methods = (state && state.appData && state.appData.settings && state.appData.settings.paymentMethods) || [];
+                        const found = (methods || []).find(m => {
+                            try { const name = (m && (m.name || m) || '').toString(); return normalize(name) === normalize(v); } catch(e){ return false; }
+                        });
+                        if (found) return (found.name || found.label || found.value || v).toString();
+                    } catch(e){}
+                    // fallback to ICON_MAPPINGS labels
+                    try {
+                        const m = (window.ICON_MAPPINGS.paymentMethods || []).find(m => {
+                            try { return normalize((m.value||'').toString()) === normalize(v) || normalize((m.label||'').toString()) === normalize(v); } catch(e){ return false; }
+                        });
+                        if (m) return (m.label || m.value || v).toString();
+                    } catch(e){}
+                    return v.toString();
+                } catch (e) { return (value || '').toString(); }
+            };
+
+            // Helper: tolerant match between expense payment value and a configured payment name
+            window.paymentMatches = function(a, b) {
+                try {
+                    const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    const extract = v => {
+                        if (!v && v !== 0) return '';
+                        if (typeof v === 'object') return (v.name || v.label || v.value || '').toString();
+                        return v.toString();
+                    };
+                    const sa = normalize(extract(a));
+                    const sb = normalize(extract(b));
+                    if (!sa || !sb) return false;
+                    if (sa === sb) return true;
+                    // allow substring matches (handles cases where stored value has extra metadata)
+                    if (sa.indexOf(sb) !== -1) return true;
+                    if (sb.indexOf(sa) !== -1) return true;
+                    return false;
+                } catch (e) { return false; }
+            };
+
+            // Helper: return an HTML fragment for a material-symbol icon (small inline)
+            window.iconHtml = function(iconName, extraCls) {
+                if (!iconName) return '';
+                const cls = extraCls ? extraCls : 'text-gray-500';
+                return `<span class="material-symbols-outlined ${cls}" style="font-size:18px;margin-right:6px;vertical-align:middle">${iconName}</span>`;
+            };
+
+            function populateSelect(selectId, items, iconSpanSelector) {
+                const sel = document.getElementById(selectId);
+                if (!sel) return;
+                // clear
+                sel.innerHTML = '';
+                items.forEach(it => {
+                    const opt = document.createElement('option');
+                    opt.value = it.value;
+                    opt.textContent = it.label;
+                    opt.dataset.icon = it.icon;
+                    sel.appendChild(opt);
+                });
+                const iconSpan = sel.parentElement ? sel.parentElement.querySelector(iconSpanSelector) : null;
+                const updateIcon = () => {
+                    const cur = sel.options[sel.selectedIndex];
+                    if (iconSpan && cur && cur.dataset.icon) {
+                        iconSpan.textContent = cur.dataset.icon;
+                        iconSpan.classList.add('material-symbols-outlined');
+                    }
+                };
+                sel.addEventListener('change', updateIcon);
+                updateIcon();
+            }
+
+                populateSelect('payment-method', window.ICON_MAPPINGS.paymentMethods, '.material-symbols-outlined');
+            populateSelect('category-expense', window.ICON_MAPPINGS.expenseCategories, '.material-symbols-outlined');
+            populateSelect('expense-type', window.ICON_MAPPINGS.expenseTypes, null);
+            populateSelect('category-saving', window.ICON_MAPPINGS.savingCategories, '.material-symbols-outlined');
+            // Also populate filter selects so they contain the same options (icons stored on option.dataset)
+            populateSelect('filter-payment-method', window.ICON_MAPPINGS.paymentMethods, '.select-icon');
+            // build a category list for filters that includes expense + saving categories
+            const combinedCategories = (window.ICON_MAPPINGS.expenseCategories || []).concat(window.ICON_MAPPINGS.savingCategories || []).map(c => ({ value: c.value, label: c.label, icon: c.icon }));
+            populateSelect('filter-category', combinedCategories, '.select-icon');
+        });
+        // Enhancer: replace visual select with icon-enabled custom dropdown while keeping native select for data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small helper to toggle the payment recipient field from other UI entry points
+            window.toggleRecipientForPayment = function(rawValue) {
+                try {
+                    const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    const nv = normalize(rawValue || '');
+                    const recipientWrapper = document.getElementById('payment-recipient-wrapper');
+                    const recipientInput = document.getElementById('payment-recipient');
+                    const recipientHint = document.getElementById('payment-recipient-hint');
+                    if (!recipientWrapper || !recipientInput) return;
+                    const mustShow = (nv === 'pix' || nv.indexOf('transfer') !== -1 || nv === 'transferencia');
+                    if (mustShow) {
+                        recipientWrapper.classList.remove('hidden');
+                        recipientWrapper.setAttribute('aria-hidden', 'false');
+                        recipientInput.setAttribute('required', 'required');
+                        try { recipientInput.focus(); } catch(_) {}
+                        if (recipientHint) { recipientHint.classList.remove('hidden'); recipientHint.setAttribute('aria-hidden', 'false'); }
+                    } else {
+                        recipientWrapper.classList.add('hidden');
+                        recipientWrapper.setAttribute('aria-hidden', 'true');
+                        recipientInput.removeAttribute('required');
+                        if (recipientHint) { recipientHint.classList.add('hidden'); recipientHint.setAttribute('aria-hidden', 'true'); }
+                    }
+                } catch (e) { console.error('toggleRecipientForPayment', e); }
+            };
+            function enhanceSelectWithIcons(selectId, placeholder) {
+                const sel = document.getElementById(selectId);
+                if (!sel) return null;
+                // small helper to rebuild the visual list from current native select options
+                // detect kind to allow getIconFor fallback (payment vs category)
+                const kind = (selectId && selectId.indexOf('payment') !== -1) ? 'payment' : ((selectId && selectId.indexOf('category') !== -1) ? 'category' : null);
+                const rebuildList = (wrapper, iconSpan, labelSpan, list) => {
+                    list.innerHTML = '';
+                    Array.from(sel.options).forEach(opt => {
+                        const item = document.createElement('div'); item.className = 'icon-select-item';
+                        const i = document.createElement('span'); i.className = 'material-symbols-outlined';
+                        // compute icon: prefer dataset.icon, fallback to getIconFor(kind, value)
+                        let iconName = opt.dataset.icon || '';
+                        if ((!iconName || iconName === '') && typeof getIconFor === 'function' && kind) {
+                            try { iconName = getIconFor(kind, opt.value || opt.textContent || ''); } catch(e) { iconName = '';} 
+                        }
+                        i.textContent = iconName || '';
+                        const t = document.createElement('span'); t.textContent = opt.textContent || opt.value;
+                        item.appendChild(i); item.appendChild(t);
+                        item.addEventListener('click', () => {
+                            sel.value = opt.value; // keep native select in sync
+                            // update visible button (use same resolution logic)
+                            let selIcon = opt.dataset.icon || '';
+                            if ((!selIcon || selIcon === '') && typeof getIconFor === 'function' && kind) {
+                                try { selIcon = getIconFor(kind, opt.value || opt.textContent || ''); } catch(e) { selIcon = ''; }
+                            }
+                            iconSpan.textContent = selIcon || '';
+                            labelSpan.textContent = opt.textContent || opt.value;
+                            // close
+                            list.classList.add('hidden'); caret.textContent = 'arrow_drop_down';
+                            // dispatch change and also call toggle helper so visual overlay selections update recipient reliably
+                            sel.dispatchEvent(new Event('change', { bubbles: true }));
+                            try { if (window.toggleRecipientForPayment) window.toggleRecipientForPayment(opt.value); } catch(_){}}
+                        );
+                        list.appendChild(item);
+                    });
+                };
+                // build wrapper
+                const wrapper = document.createElement('div');
+                wrapper.className = 'icon-select';
+                // copy computed classes for width if needed
+                sel.parentElement.insertBefore(wrapper, sel);
+                // hide native select visually but keep it for form
+                sel.style.position = 'absolute'; sel.style.opacity = 0; sel.style.pointerEvents = 'none'; sel.style.height = '1px'; sel.style.width = '1px';
+                // create button
+                const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'icon-select-button';
+                const iconSpan = document.createElement('span'); iconSpan.className = 'material-symbols-outlined';
+                // determine initial icon for selected option (prefer dataset, fallback to getIconFor)
+                let initialIcon = '';
+                if (sel.selectedOptions && sel.selectedOptions[0]) initialIcon = sel.selectedOptions[0].dataset.icon || '';
+                if ((!initialIcon || initialIcon === '') && typeof getIconFor === 'function' && kind && sel.selectedOptions && sel.selectedOptions[0]) {
+                    try { initialIcon = getIconFor(kind, sel.selectedOptions[0].value || sel.selectedOptions[0].textContent || ''); } catch(e) { initialIcon = ''; }
+                }
+                iconSpan.textContent = initialIcon || '';
+                const labelSpan = document.createElement('span'); labelSpan.textContent = sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : (placeholder || sel.getAttribute('placeholder') || '');
+                const caret = document.createElement('span'); caret.className = 'material-symbols-outlined'; caret.textContent = 'arrow_drop_down'; caret.style.marginLeft = 'auto';
+                btn.appendChild(iconSpan); btn.appendChild(labelSpan); btn.appendChild(caret);
+                // build list
+                const list = document.createElement('div'); list.className = 'icon-select-list hidden';
+                // initial build
+                rebuildList(wrapper, iconSpan, labelSpan, list);
+                wrapper.appendChild(btn);
+                wrapper.appendChild(list);
+                // move native select inside wrapper (keeps form semantics/labels)
+                wrapper.appendChild(sel);
+                // toggle
+                btn.addEventListener('click', (ev) => { ev.stopPropagation(); list.classList.toggle('hidden'); caret.textContent = list.classList.contains('hidden') ? 'arrow_drop_down' : 'arrow_drop_up'; });
+                // close on outside
+                document.addEventListener('click', () => { if (!list.classList.contains('hidden')) { list.classList.add('hidden'); caret.textContent = 'arrow_drop_down'; } });
+                // Expose a small refresh hook so callers that replace native select options can rebuild the visual list
+                try { sel._refreshIconSelect = () => rebuildList(wrapper, iconSpan, labelSpan, list); } catch(e){}
+                return { wrapper, btn, list };
+            }
+
+            // Enhance the main modal selects and filters where we want prefixed icons
+            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category'].forEach(id => {
+                try { enhanceSelectWithIcons(id); } catch(e) { console.error('enhanceSelectWithIcons', id, e); }
+            });
         });
         </script>
             <input type="hidden" id="transaction-type-input" value="expenses">
-            <div>
-                <label for="description" class="block text-sm font-medium text-gray-700">Descrição</label>
-                <input type="text" id="description" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" list="description-suggestions">
-                <datalist id="description-suggestions"></datalist>
-                <!-- Hint explaining when description is auto-filled/disabled (visible for VT flows) -->
-                <p id="description-hint" class="text-xs text-gray-500 mt-1 hidden" aria-hidden="true">&nbsp;</p>
+            <div class="modal-group bg-gray-50 rounded-xl p-3 shadow-md flex flex-col gap-3">
+                <div class="flex flex-col gap-2">
+                    <label for="description" class="block text-base font-semibold text-gray-700 flex items-center gap-2 modal-tooltip" data-tooltip="Ex: Supermercado, Salário, Transferência">
+                        <span class="material-symbols-outlined text-blue-400">edit_note</span>
+                        Descrição
+                    </label>
+                    <input type="text" id="description" required class="mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-3 py-2 text-base" list="description-suggestions">
+                    <datalist id="description-suggestions"></datalist>
+                    <p id="description-hint" class="text-xs text-gray-500 mt-1 hidden" aria-hidden="true">&nbsp;</p>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label for="amount" class="block text-base font-semibold text-gray-700 flex items-center gap-2 modal-tooltip" data-tooltip="Valor da transação em reais">
+                        <span class="material-symbols-outlined text-green-400">attach_money</span>
+                        Valor (R$)
+                    </label>
+                    <input type="number" id="amount" step="0.01" required class="mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 px-3 py-2 text-base">
+                </div>
             </div>
 
-            <!-- salary-section moved into advanced options for better layout -->
-            <div>
-                <label for="amount" class="block text-sm font-medium text-gray-700">Valor (R$)</label>
-                <input type="number" id="amount" step="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-            </div>
 
             <!-- Campos Específicos -->
-            <div id="expense-fields" class="space-y-4">
-                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div id="expense-fields" class="modal-group space-y-2 bg-gray-50 rounded-xl p-3 shadow-md">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                        <label for="payment-method" class="block text-sm font-medium text-gray-700">Forma de Pagamento</label>
-                        <select id="payment-method" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
+                        <label for="payment-method" class="block text-base font-semibold text-gray-700 flex items-center gap-2 modal-tooltip" data-tooltip="Como foi paga a despesa?">
+                            <span class="material-symbols-outlined text-purple-400">credit_card</span>
+                            Forma de Pagamento
+                        </label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-purple-300 pointer-events-none">credit_card</span>
+                            <select id="payment-method" class="pl-8 mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 px-3 py-2 text-base appearance-none">
+                            </select>
+                        </div>
+                                <!-- Destinatário (obrigatório para PIX / Transferência) -->
+                                <div id="payment-recipient-wrapper" class="mt-2 hidden">
+                                    <label for="payment-recipient" class="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-gray-400">person</span>
+                                        Destinatário
+                                    </label>
+                                    <input type="text" id="payment-recipient" class="mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 px-3 py-2 text-base" placeholder="Nome do destinatário (PIX / Transferência)" aria-describedby="payment-recipient-hint">
+                                    <p id="payment-recipient-hint" class="text-xs text-gray-500 mt-1 hidden">Obrigatório para PIX e Transferência</p>
+                                </div>
                     </div>
-                     <div>
-                        <label for="category-expense" class="block text-sm font-medium text-gray-700">Categoria</label>
-                        <select id="category-expense" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
-                        <!-- Hint explaining when category is auto-selected/disabled (visible for VT/VR flows) -->
+                    <div>
+                        <label for="category-expense" class="block text-base font-semibold text-gray-700 flex items-center gap-2 modal-tooltip" data-tooltip="Classifique sua despesa">
+                            <span class="material-symbols-outlined text-orange-400">category</span>
+                            Categoria
+                        </label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none">category</span>
+                            <select id="category-expense" class="pl-8 mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 px-3 py-2 text-base appearance-none"></select>
+                        </div>
                         <p id="category-hint" class="text-xs text-gray-500 mt-1 hidden" aria-hidden="true">&nbsp;</p>
                     </div>
                 </div>
                 <div>
-                    <label for="expense-type" class="block text-sm font-medium text-gray-700">Tipo</label>
-                    <select id="expense-type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                       <option value="Essenciais">Essencial</option>
-                       <option value="Não Essenciais">Não Essencial</option>
+                    <label for="expense-type" class="block text-base font-semibold text-gray-700 flex items-center gap-2 modal-tooltip" data-tooltip="Tipo de despesa">
+                        <span class="material-symbols-outlined text-blue-400">tune</span>
+                        Tipo
+                    </label>
+                    <select id="expense-type" class="mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-3 py-2 text-base appearance-none">
+                        <option value="Essenciais">Essencial</option>
+                        <option value="Não Essenciais">Não Essencial</option>
                     </select>
                 </div>
             </div>
 
-            <div id="saving-fields" class="hidden space-y-4">
+            <div id="saving-fields" class="hidden modal-group space-y-2 bg-gray-50 rounded-xl p-3 shadow-md">
                 <div>
-                    <label for="category-saving" class="block text-sm font-medium text-gray-700">Categoria da Reserva</label>
-                    <select id="category-saving" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
+                    <label for="category-saving" class="block text-base font-semibold text-gray-700 flex items-center gap-2 modal-tooltip" data-tooltip="Classifique sua reserva">
+                        <span class="material-symbols-outlined text-orange-400">category</span>
+                        Categoria da Reserva
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none">category</span>
+                        <select id="category-saving" class="pl-8 mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 px-3 py-2 text-base appearance-none"></select>
+                    </div>
                 </div>
             </div>
 
             <!-- Opções Avançadas -->
-            <div id="advanced-options" class="border-t pt-4 mt-4 space-y-4">
-                 <label class="flex items-center cursor-pointer">
+            <div id="advanced-options" class="modal-group border-t pt-2 mt-2 space-y-2 bg-gray-50 rounded-xl p-3 shadow-md">
+                <label class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque para repetir mensalmente">
                     <input type="checkbox" id="is-recurring" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-gray-700">Tornar esta transação recorrente? (mensal)</span>
+                    <span class="material-symbols-outlined text-blue-400">autorenew</span>
+                    <span class="ml-2 text-base text-gray-700">Tornar esta transação recorrente? (mensal)</span>
                 </label>
-                <div class="flex items-center gap-2 text-sm">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="checkbox" id="apply-to-future" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">Aplicar também às futuras</span>
+                <div class="flex flex-col gap-2 text-base">
+                    <!-- opção 'aplicar também às futuras' removida -->
+                    <label class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for uma compra parcelada">
+                        <input type="checkbox" id="is-installment" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="material-symbols-outlined text-indigo-400">payments</span>
+                        <span class="ml-2 text-base text-gray-700">É uma compra parcelada?</span>
                     </label>
-                    <button type="button" id="preview-future-btn" class="text-xs text-blue-600 hover:underline">ver previsões</button>
+                    <label class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for um financiamento">
+                        <input type="checkbox" id="is-financing" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="material-symbols-outlined text-amber-400">account_balance</span>
+                        <span class="ml-2 text-base text-gray-700">É um financiamento?</span>
+                    </label>
                 </div>
                 <!-- Campos específicos para Entrada: Salário (posicionados abaixo da opção recorrente) -->
-                <div id="salary-section" class="hidden mt-2 space-y-1">
-                    <label class="flex items-center">
+                <div id="salary-section" class="hidden mt-2 space-y-1 modal-group bg-gray-50 rounded-xl p-3 shadow-md">
+                    <label class="flex items-center gap-2 modal-tooltip" data-tooltip="Marque se for salário">
                         <input type="checkbox" id="is-salary" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">É salário?</span>
+                        <span class="material-symbols-outlined text-green-400">work</span>
+                        <span class="ml-2 text-base text-gray-700">É salário?</span>
                     </label>
                     <div id="salary-fields" class="hidden">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-sm text-gray-700">Salário Base (R$)</label>
-                                <input type="number" id="salary-base" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                                <label for="salary-base" class="sr-only">Valor bruto do salário</label>
+                                <input type="number" id="salary-base" step="0.01" placeholder="Valor bruto do salário" title="Valor bruto do salário" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
                             </div>
                             <div>
-                                <label class="block text-sm text-gray-700">Periculosidade (%)</label>
-                                <input type="number" id="salary-periculosidade" step="0.1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                                <label for="salary-periculosidade" class="sr-only">Percentual de periculosidade</label>
+                                <input type="number" id="salary-periculosidade" step="0.1" placeholder="% Periculosidade" title="Percentual de periculosidade" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
                             </div>
                             <div>
-                                <label class="block text-sm text-gray-700">Outros Proventos (R$)</label>
-                                <input type="number" id="salary-outros-proventos" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                                <label for="salary-outros-proventos" class="sr-only">Outros valores recebidos</label>
+                                <input type="number" id="salary-outros-proventos" step="0.01" placeholder="Outros proventos" title="Outros valores recebidos" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
                             </div>
                             <div>
-                                <label class="block text-sm text-gray-700">Dependentes</label>
-                                <input type="number" id="salary-dependentes" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
+                                <label for="salary-dependentes" class="sr-only">Número de dependentes</label>
+                                <input type="number" id="salary-dependentes" placeholder="Dependentes" title="Número de dependentes" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
                             </div>
                             <div>
-                                <label class="block text-sm text-gray-700">Desjejum (R$/dia)</label>
-                                <input type="number" id="salary-desjejum-dia" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                                <label for="salary-desjejum-dia" class="sr-only">Valor diário de desjejum</label>
+                                <input type="number" id="salary-desjejum-dia" step="0.01" placeholder="Desjejum (R$/dia)" title="Valor diário de desjejum" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
                             </div>
                             <div>
-                                <label class="block text-sm text-gray-700">Transporte (R$/dia)</label>
-                                <input type="number" id="salary-transporte-dia" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
+                                <label for="salary-transporte-dia" class="sr-only">Valor diário de transporte</label>
+                                <input type="number" id="salary-transporte-dia" step="0.01" placeholder="Transporte (R$/dia)" title="Valor diário de transporte" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
                             </div>
                         </div>
 
@@ -1012,60 +1585,84 @@
                             <summary class="cursor-pointer text-sm text-gray-700">Mais opções do salário</summary>
                             <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1">
                                 <div>
-                                    <label class="block text-sm text-gray-700">Dias Trabalhados</label>
-                                    <input type="number" id="salary-dias-trabalhados" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
+                                    <label for="salary-dias-trabalhados" class="sr-only">Dias Trabalhados</label>
+                                    <input type="number" id="salary-dias-trabalhados" placeholder="Dias Trabalhados" title="Dias Trabalhados" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
                                 </div>
                                 <div>
-                                    <label class="block text-sm text-gray-700">HE Sáb (h)</label>
-                                    <input type="number" id="salary-h-extra-sab" step="0.1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
+                                    <label for="salary-h-extra-sab" class="sr-only">HE Sáb (h)</label>
+                                    <input type="number" id="salary-h-extra-sab" step="0.1" placeholder="HE Sáb (h)" title="Horas extras sábado (h)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
                                 </div>
                                 <div>
-                                    <label class="block text-sm text-gray-700">HE Dom (h)</label>
-                                    <input type="number" id="salary-h-extra-dom" step="0.1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
+                                    <label for="salary-h-extra-dom" class="sr-only">HE Dom (h)</label>
+                                    <input type="number" id="salary-h-extra-dom" step="0.1" placeholder="HE Dom (h)" title="Horas extras domingo (h)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
                                 </div>
                                 <div>
-                                    <label class="block text-sm text-gray-700">Jornada (h/mês)</label>
-                                    <input type="number" id="salary-jornada-horas" step="1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" value="220">
+                                    <label for="salary-jornada-horas" class="sr-only">Jornada (h/mês)</label>
+                                    <input type="number" id="salary-jornada-horas" step="1" placeholder="Jornada (h/mês)" title="Jornada (h/mês)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" value="220">
                                 </div>
                                 <div>
-                                    <label class="block text-sm text-gray-700">Horas trabalhadas (h)</label>
-                                    <input type="text" id="salary-horas-trabalhadas" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" placeholder="Ex: 117:20 (h:mm)">
+                                    <label for="salary-horas-trabalhadas" class="sr-only">Horas trabalhadas (h)</label>
+                                    <input type="text" id="salary-horas-trabalhadas" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" placeholder="Horas trabalhadas (Ex: 117:20)" title="Horas trabalhadas (Ex: 117:20 h:mm)">
                                 </div>
                             </div>
                         </details>
                     </div>
                 </div>
                 <div id="installments-section" class="hidden">
-                     <label class="flex items-center cursor-pointer">
-                        <input type="checkbox" id="is-installment" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">É uma compra parcelada?</span>
-                    </label>
-                    <div id="installments-fields" class="hidden mt-2">
-                        <label for="installments-count" class="block text-sm font-medium text-gray-700">Número de parcelas (Valor total será dividido)</label>
-                        <input type="number" id="installments-count" min="2" max="48" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 12">
-                        <label for="installments-current" class="block text-sm font-medium text-gray-700 mt-2">Parcela atual (se já estiver em andamento)</label>
-                        <input type="number" id="installments-current" min="1" max="48" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 4">
-                        <p class="text-xs text-gray-500 mt-1">Se >1, o valor informado será tratado como valor por parcela (não será dividido).</p>
-                    </div>
-                </div>
-                <div id="financing-section" class="hidden">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="checkbox" id="is-financing" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">É um financiamento?</span>
-                    </label>
-                    <div id="financing-fields" class="hidden mt-2">
-                        <label for="financing-total" class="block text-sm font-medium text-gray-700">Total de parcelas</label>
-                        <input type="number" id="financing-total" min="2" max="120" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 36">
-                        <label for="financing-current" class="block text-sm font-medium text-gray-700 mt-2">Parcela atual</label>
-                        <input type="number" id="financing-current" min="1" max="120" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 12">
+                    <!-- Compact visual for installments & financing (preserve fields/IDs for JS) -->
+                    <div id="installments-fields" class="mt-3 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-start gap-3">
+                                <span class="material-symbols-outlined text-indigo-500" style="font-size:28px; margin-top:4px">payments</span>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold text-gray-700">Parcelamento</div>
+                                    <div class="mt-2 flex items-center gap-3">
+                                        <div class="flex flex-col items-start">
+                                            <label for="installments-count" class="sr-only">Número de parcelas</label>
+                                            <input type="number" id="installments-count" min="2" max="48" class="block w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Total" title="Número de parcelas">
+                                            <span class="text-xs text-gray-400 mt-1">Total</span>
+                                        </div>
+                                        <div class="flex flex-col items-start">
+                                            <label for="installments-current" class="sr-only">Parcela atual</label>
+                                            <input type="number" id="installments-current" min="1" max="48" class="block w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Atual" title="Parcela atual (se em andamento)">
+                                            <span class="text-xs text-gray-400 mt-1">Atual</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">Se >1, o valor informado será tratado como valor por parcela (não será dividido).</p>
+                                </div>
+                            </div>
+
+                            <div id="financing-fields" class="bg-white border border-gray-200 rounded-lg p-3 flex items-start gap-3 hidden">
+                                <span class="material-symbols-outlined text-amber-500" style="font-size:28px; margin-top:4px">account_balance</span>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold text-gray-700">Financiamento</div>
+                                    <div class="mt-2 flex items-center gap-3">
+                                        <div class="flex flex-col items-start">
+                                            <label for="financing-total" class="sr-only">Total de parcelas</label>
+                                            <input type="number" id="financing-total" min="2" max="120" class="block w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Total" title="Total de parcelas (financiamento)">
+                                            <span class="text-xs text-gray-400 mt-1">Total</span>
+                                        </div>
+                                        <div class="flex flex-col items-start">
+                                            <label for="financing-current" class="sr-only">Parcela atual</label>
+                                            <input type="number" id="financing-current" min="1" max="120" class="block w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Atual" title="Parcela atual (financiamento)">
+                                            <span class="text-xs text-gray-400 mt-1">Atual</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-4 pt-4">
-                <button type="button" id="close-transaction-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium py-2 px-5 rounded-lg transition-colors">Cancelar</button>
-                <button type="submit" class="btn-primary font-medium py-2 px-5 rounded-lg transition-transform active:scale-95">Salvar</button>
+            <!-- Footer / Save button -->
+            <div class="flex justify-end mt-6 modal-footer" style="padding-right:0.75rem;">
+                <button type="submit" class="modal-action-btn" id="modal-save-btn" style="background-color:#16a34a;border:2px solid #15803d;color:#fff;box-shadow:0 2px 10px #16a34a44;opacity:1;filter:none;padding-left:1rem;padding-right:1rem;">
+                    <span class="material-symbols-outlined text-xl" id="modal-save-icon">check_circle</span>
+                    Salvar Transação
+                </button>
             </div>
+        
         </form>
     </dialog>
 
@@ -1468,12 +2065,53 @@ const firebaseConfig = {
                 settings: {
                     goals: [],
                     spendingGoals: [{ type: 'Essenciais', goal: 0.50 }, { type: 'Não Essenciais', goal: 0.30 }, { type: 'Reserva', goal: 0.20 }],
-                    expenseCategories: ["Assinaturas", "Compras", "Contas", "Lazer", "Mercado", "Alimentação", "Saúde", "Transporte", "Outros"],
-                    savingCategories: ["Reserva de Emergência", "Ações", "Fundos Imobiliários", "Criptomoedas", "Poupança", "Outros"],
+                    expenseCategories: [
+                        "Mercado",
+                        "Alimentação",
+                        "Compras",
+                        "Assinaturas",
+                        "Contas",
+                        "Moradia",
+                        "Transporte",
+                        "Saúde",
+                        "Educação",
+                        "Lazer",
+                        "Viagem",
+                        "Vestuário",
+                        "Casa",
+                        "Pets",
+                        "Doações",
+                        "Impostos",
+                        "Parcelas",
+                        "Investimentos",
+                        "Outros"
+                    ],
+                    savingCategories: [
+                        "Reserva Emergência",
+                        "Ações",
+                        "Fundos Imobiliários",
+                        "Criptomoedas",
+                        "Poupança",
+                        "Tesouro Direto",
+                        "Previdência",
+                        "Viagem",
+                        "Reforma",
+                        "Educação",
+                        "Carro",
+                        "Imóvel",
+                        "Outros"
+                    ],
                     paymentMethods: [
-                        { name: "Nubank", type: "credit_card", closingDay: 3, dueDay: 10 }, 
-                        { name: "Porto", type: "credit_card", closingDay: 20, dueDay: 1 },
-                        { name: "Pix", type: "debit" }, { name: "BB (Débito)", type: "debit" }, { name: "Inter (Débito)", type: "debit" }
+                        { name: "BB (Débito)", type: "debit" },
+                        { name: "Inter (Débito)", type: "debit" },
+                        { name: "Nubank", type: "credit_card" },
+                        { name: "Porto", type: "credit_card" },
+                        { name: "Dinheiro", type: "cash" },
+                        { name: "PIX", type: "pix" },
+                        { name: "Transferência", type: "transfer" },
+                        { name: "Boleto", type: "boleto" },
+                        { name: "Apple Pay", type: "wallet" },
+                        { name: "Outro", type: "other" }
                     ],
                     feedbackMessages: [
                         { id: 'A', text: "Ótimo trabalho! Você superou sua meta de reserva este mês!" },
@@ -1798,6 +2436,7 @@ const firebaseConfig = {
                 'expense-fields', 'dashboard-view', 'credit-cards-view', 'investments-view', 
                 'credit-cards-container', 'installments-section', 'is-installment', 'search-description',
                 'installments-fields', 'installments-current', 'payment-method', 'is-recurring', 
+                'payment-recipient', 'payment-recipient-wrapper',
                 'saving-fields', 'category-expense', 'category-saving', 'transaction-type-input', 
                 'advanced-options', 'expense-type', 'feedback-visual-container', 'feedback-message',
                 'import-data-btn', 'import-file-input', 'export-data-btn',
@@ -1839,8 +2478,8 @@ const firebaseConfig = {
                 if (picker.classList.contains('hidden')) return;
                 if (!picker.contains(e.target) && e.target !== ui.currentMonthDisplay) closeMonthPicker();
             });
-            ui.addTransactionBtn.addEventListener('click', () => openModal('expenses'));
-            ui.closeTransactionModalBtn.addEventListener('click', () => closeModal('transaction-modal'));
+            if (ui.addTransactionBtn) ui.addTransactionBtn.addEventListener('click', () => openModal('expenses'));
+            if (ui.closeTransactionModalBtn) ui.closeTransactionModalBtn.addEventListener('click', () => closeModal('transaction-modal'));
             // Require double-click on modal backdrop to avoid accidental closure
             const attachBackdropDoubleClickToClose = (modalEl, modalId, timeoutMs = 2000) => {
                 if (!modalEl) return;
@@ -2084,20 +2723,20 @@ const firebaseConfig = {
                             const toggle = ev.target.closest && ev.target.closest('.card-group-toggle');
                             if (!toggle) return;
                             ev.preventDefault();
-                            const name = toggle.dataset.cardName;
+                                const name = toggle.dataset.cardName;
                             // Determine new state as inverse of current state of clicked card
                             const newState = !state.cardGrouped[name];
                             // Apply to all cards
                             const container = document.getElementById('credit-cards-container');
                             if (!container) return;
                             const roots = Array.from(container.querySelectorAll('[data-card-root]'));
-                            roots.forEach(r => {
+                                roots.forEach(r => {
                                 const nm = r.dataset.cardRoot;
                                 state.cardGrouped[nm] = newState;
                                 // update per-card icon
                                 try { const b = r.querySelector('.card-group-toggle .material-symbols-outlined'); if (b) b.textContent = newState ? 'vertical_split' : 'merge_type'; } catch(e){}
-                                // repopulate each card
-                                try { const exps = (getCurrentMonthData().expenses || []).filter(e => e.payment === nm); populateCardExpenses(nm, exps); } catch(e){}
+                                // repopulate each card using tolerant matching
+                                try { const exps = (getCurrentMonthData().expenses || []).filter(e => paymentMatches(e.payment || '', nm)); populateCardExpenses(nm, exps); } catch(e){}
                             });
                         });
                     }
@@ -2106,6 +2745,31 @@ const firebaseConfig = {
             
             ui.paymentMethod.addEventListener('change', (e) => {
                 toggleInstallmentSection(e.target.value);
+                // Show recipient field for PIX and Transferência (tolerant matching)
+                try {
+                    const raw = (e.target.value || '').toString();
+                    const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    const nv = normalize(raw);
+                    const recipientWrapper = document.getElementById('payment-recipient-wrapper');
+                    const recipientInput = document.getElementById('payment-recipient');
+                    const recipientHint = document.getElementById('payment-recipient-hint');
+                    if (recipientWrapper && recipientInput) {
+                        // match 'pix' exactly and any token containing 'transfer' for Transferência variants
+                        const mustShow = (nv === 'pix' || nv.indexOf('transfer') !== -1 || nv === 'transferencia');
+                        if (mustShow) {
+                            recipientWrapper.classList.remove('hidden');
+                            recipientWrapper.setAttribute('aria-hidden', 'false');
+                            recipientInput.setAttribute('required', 'required');
+                            try { recipientInput.focus(); } catch(_){}
+                            if (recipientHint) { recipientHint.classList.remove('hidden'); recipientHint.setAttribute('aria-hidden', 'false'); }
+                        } else {
+                            recipientWrapper.classList.add('hidden');
+                            recipientWrapper.setAttribute('aria-hidden', 'true');
+                            recipientInput.removeAttribute('required');
+                            if (recipientHint) { recipientHint.classList.add('hidden'); recipientHint.setAttribute('aria-hidden', 'true'); }
+                        }
+                    }
+                } catch (recErr) { console.error('recipient toggle error', recErr); }
                 try {
                     const pm = (e.target.value || '').toString();
                     const settings = state.appData.settings || {};
@@ -2553,6 +3217,7 @@ const firebaseConfig = {
             const container = ui.creditCardsContainer;
             container.innerHTML = '';
             const currentMonthData = getCurrentMonthData();
+            const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
             // Render real credit cards
             const creditCards = ((state.appData.settings.paymentMethods || []).filter(p => p.type === 'credit_card')).slice().sort((a,b) => {
                 const A = (a && a.name || '').toLowerCase(); const B = (b && b.name || '').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0;
@@ -2560,7 +3225,7 @@ const firebaseConfig = {
             // Default: start with all cards grouped unless explicitly set otherwise
             creditCards.forEach(c => { if (state.cardGrouped[c.name] === undefined) state.cardGrouped[c.name] = true; });
             creditCards.forEach(card => {
-                let cardExpenses = (currentMonthData.expenses || []).filter(e => e.payment === card.name);
+                let cardExpenses = (currentMonthData.expenses || []).filter(e => normalize((typeof getPaymentLabel === 'function' ? getPaymentLabel(e.payment || '') : (e.payment || ''))) === normalize(card.name || ''));
                 // choose sort mode per-card: default alphabetical
                 ui.cardSorts = ui.cardSorts || {};
                 const sortMode = ui.cardSorts[card.name] || 'alf';
@@ -2600,6 +3265,12 @@ const firebaseConfig = {
                                 <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Venc. ${dueDate.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
                             </div>
                             <p class="text-3xl font-bold text-blue-600 mb-1">${formatCurrency(invoiceTotal)}</p>
+                            <!-- small icon row under badges: due, anticipated, purchases -->
+                            <div class="flex items-center gap-4 text-sm text-gray-500 mt-1 mb-2">
+                                <div class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">calendar_today</span><span>Venc.</span></div>
+                                <div class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">paid</span><span>Créd.</span></div>
+                                <div class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">shopping_cart</span><span>${cardExpenses.length} compras</span></div>
+                            </div>
                             <p class="text-sm text-green-600 mb-1">- <span class="anticipation-amount cursor-pointer" data-card-name="${card.name}">${formatCurrency(anticipated)}</span> antecipado</p>
                             <div class="space-y-1 max-h-48 overflow-y-auto pr-2 card-items-list" data-card-name="${card.name}"></div>
                         </div>
@@ -2621,8 +3292,63 @@ const firebaseConfig = {
                 } catch(e) { console.error('populateCardExpenses error', e); }
             });
 
+                // --- Render non-credit payment-method cards (e.g., Debito, Dinheiro, PIX, Transferência, Boleto, Apple Pay, Outro)
+                try {
+                    const currentMonthData = getCurrentMonthData();
+                    const paymentsSettings = (state.appData.settings.paymentMethods || []);
+                    // normalization helper to compare stored expense.payment with configured names
+                    const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                    const nonCardPayments = (paymentsSettings || []).filter(p => ((p && p.type) || '').toString() !== 'credit_card');
+                    nonCardPayments.forEach(pm => {
+                        const pmName = (typeof getPaymentLabel === 'function') ? getPaymentLabel(pm) : ((typeof pm === 'string') ? pm : (pm.name || pm.label || pm.value || ''));
+                        if (!pmName) return;
+                        const pmNorm = normalize(pmName);
+                        const pmExpenses = (currentMonthData.expenses || []).filter(e => normalize((typeof getPaymentLabel === 'function' ? getPaymentLabel(e.payment || '') : (e.payment || ''))) === pmNorm);
+                        if (!pmExpenses || pmExpenses.length === 0) return; // only show if there's at least one expense with this payment
+                        const totalPM = pmExpenses.reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
+                        container.innerHTML += `
+                            <div class="card p-6 rounded-2xl shadow-sm flex flex-col" data-payment-method="${pmName}">
+                                <div class="flex-grow">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="text-xl font-semibold">${pmName}</h3>
+                                        <span class="text-xs font-medium bg-gray-100 text-gray-800 px-2 py-1 rounded-full">${pmExpenses.length} compras</span>
+                                    </div>
+                                    <p class="text-3xl font-bold text-gray-800 mb-1">${formatCurrency(totalPM)}</p>
+                                    <div class="mt-3 text-sm text-gray-600">
+                                        <div class="space-y-1 mt-2">
+                                            ${pmExpenses.slice(0,8).map(u => `<div class="flex justify-between items-center text-sm"><div class="flex items-center"><span class="truncate pr-2">${(u.description||'Despesa')}</span></div><div class="flex items-center"><span class="font-medium mr-2">${formatCurrency(Number(u.amount)||0)}</span></div></div>`).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <div class="flex w-full items-center" style="gap:8px;">
+                                        <button data-payment="${pmName}" class="view-payment-expenses-btn flex-grow bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg">Ver Despesas</button>
+                                        <button data-payment="${pmName}" class="add-payment-expense-btn flex-shrink-0 w-12 bg-green-500 text-white font-semibold py-2 rounded-lg flex items-center justify-center"> <span class="material-symbols-outlined" style="font-size:20px; line-height:1;">add</span></button>
+                                    </div>
+                                </div>
+                            </div>`;
+                    });
+
+                    // Attach handlers for the payment-method cards (same as previous behavior)
+                    container.querySelectorAll('.view-payment-expenses-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                        const p = e.currentTarget.dataset.payment || e.target.dataset.payment;
+                        state.filters.expenseFilters = state.filters.expenseFilters || {};
+                        state.filters.expenseFilters.payment = p || '';
+                        changeView('dashboard');
+                        try { updateFilterBadge(); } catch(e){}
+                        try { renderExpenseTable(); } catch(e){}
+                    }));
+
+                    container.querySelectorAll('.add-payment-expense-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                        const p = e.currentTarget.dataset.payment || e.target.dataset.payment;
+                        const prefill = { payment: p, focusDescription: true };
+                        try { if (ui.lastTransactionDefaults && ui.lastTransactionDefaults.category) prefill.category = ui.lastTransactionDefaults.category; } catch(e){}
+                        openModal('expenses', null, prefill);
+                    }));
+                } catch (pmErr) { console.error('render non-credit payment-method cards error', pmErr); }
+
                 // If there's VR ledger balance or VR activity, render VR as a card-like payment instrument
-            const vrAmount = getMonthVRBalance(currentMonthData);
+                const vrAmount = getMonthVRBalance(currentMonthData);
             // Show VR card if there's any VR ledger entry or usage for the month,
             // even if the current available balance (credited - used) is zero.
             const hasLedger = Array.isArray(currentMonthData.vrLedger) && currentMonthData.vrLedger.length > 0;
@@ -2635,7 +3361,7 @@ const firebaseConfig = {
                 let usageTotal = (currentMonthData.vrUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
                 // Also include any expenses in the same month that were paid via VR but not recorded in vrUsage (migration edge-cases)
                 try {
-                    const expensesVR = (currentMonthData.expenses || []).filter(e => (e.payment || '') === 'VR');
+                    const expensesVR = (currentMonthData.expenses || []).filter(e => paymentMatches(e.payment || '', 'VR'));
                     const expensesVRSum = expensesVR.reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
                     if (expensesVRSum > 0) usageTotal = Math.round((usageTotal + expensesVRSum) * 100) / 100;
                 } catch (e) { console.error('compute expenses vr usage', e); }
@@ -2707,7 +3433,7 @@ const firebaseConfig = {
                         const vtCreditedTotal = (currentMonthData.vtLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
                         let vtUsageTotal = (currentMonthData.vtUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
                         try {
-                            const expensesVT = (currentMonthData.expenses || []).filter(e => (e.payment || '') === 'VT');
+                            const expensesVT = (currentMonthData.expenses || []).filter(e => paymentMatches(e.payment || '', 'VT'));
                             const expensesVTSum = expensesVT.reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
                             if (expensesVTSum > 0) vtUsageTotal = Math.round((vtUsageTotal + expensesVTSum) * 100) / 100;
                         } catch (e) { console.error('compute expenses vt usage', e); }
@@ -3748,7 +4474,9 @@ const firebaseConfig = {
                     row._items = items;
                     const breakdown = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')}`).join('\n');
                     row.title = breakdown; // small native tooltip on hover
-                    row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-group-key="${encodeURIComponent(key)}" style="gap:6px;"><span class="desc-text truncate">${escapeHtml(key)} <span class="text-xs text-gray-500">(${count} • ${formatCurrency(total)})</span></span><button class="group-info-btn invisible ml-2" data-group-key="${encodeURIComponent(key)}" title="Detalhes do grupo"><span class="material-symbols-outlined" style="font-size:16px;">info</span></button></div><span class="card-exp-amount font-medium flex-shrink-0">${formatCurrency(total)}</span>`;
+                    const groupIcon = (typeof getIconFor === 'function') ? getIconFor('category', key) : '';
+                    const groupLabel = (groupIcon && typeof iconHtml === 'function') ? iconHtml(groupIcon, 'text-sm text-gray-500') + `<span class="desc-text truncate">${escapeHtml(key)} <span class="text-xs text-gray-500">(${count} • ${formatCurrency(total)})</span></span>` : `<span class="desc-text truncate">${escapeHtml(key)} <span class="text-xs text-gray-500">(${count} • ${formatCurrency(total)})</span></span>`;
+                    row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-group-key="${encodeURIComponent(key)}" style="gap:6px;">${groupLabel}<button class="group-info-btn invisible ml-2" data-group-key="${encodeURIComponent(key)}" title="Detalhes do grupo"><span class="material-symbols-outlined" style="font-size:16px;">info</span></button></div><span class="card-exp-amount font-medium flex-shrink-0">${formatCurrency(total)}</span>`;
                     row.addEventListener('click', () => { try { const lines = items.map(it => `${formatCurrency(it.amount)} — ${escapeHtml(it.description || '')} (${escapeHtml(it.payment || it.category || '')})`); showModalList(`Detalhes: ${key}`, lines.join('\n')); } catch(e) { console.error('group click', e); } });
                     // add hover tooltip on the small info button
                     setTimeout(() => {
@@ -3783,7 +4511,9 @@ const firebaseConfig = {
                     const row = document.createElement('div');
                     row.className = 'flex justify-between text-sm items-center group-item py-0.5';
                     row.dataset.expId = exp.id || '';
-                    row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;"><span class="desc-text truncate">${escapeHtml(exp.description)} ${inst} ${fin}</span>${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="card-exp-amount font-medium flex-shrink-0" data-exp-id="${exp.id}">${formatCurrency(exp.amount)}</span>`;
+                    const smallCatIcon = (typeof getIconFor === 'function') ? getIconFor('category', exp.category || '') : '';
+                    const leftLabel = (smallCatIcon && typeof iconHtml === 'function') ? iconHtml(smallCatIcon, 'text-sm text-gray-500') + `<span class="desc-text truncate">${escapeHtml(exp.description)} ${inst} ${fin}</span>` : `<span class="desc-text truncate">${escapeHtml(exp.description)} ${inst} ${fin}</span>`;
+                    row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-exp-id="${exp.id}" style="gap:6px;">${leftLabel}${remainingHtml}<button class="edit-cat-btn invisible ml-2" data-exp-id="${exp.id}" title="Editar categoria"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button></div><span class="card-exp-amount font-medium flex-shrink-0" data-exp-id="${exp.id}">${formatCurrency(exp.amount)}</span>`;
                     groupsEl.appendChild(row);
                 }
             });
@@ -3882,8 +4612,10 @@ const firebaseConfig = {
             // Keep the exact same visual as before: span with same typography (no underline). Access is 'hidden' but clickable.
             const amountHtml = `<span class="salary-breakdown-hidden text-green-600 font-medium" data-id="${income.id}">${formatCurrency(income.amount)}</span>`;
 
+            const payIcon = (typeof getIconFor === 'function') ? getIconFor('payment', income.payment || '') : '';
+            const descLabel = (payIcon && typeof iconHtml === 'function') ? iconHtml(payIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(income.description || '')}</span>` : escapeHtml(income.description || '');
             row.innerHTML = `
-                <td class="py-3 px-3 description-cell" data-label="Descrição" title="${income.description}">${income.description} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
+                <td class="py-3 px-3 description-cell" data-label="Descrição" title="${escapeHtml(income.description)}">${descLabel} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
                 <td class="py-3 px-3" data-label="Valor">${amountHtml}</td>
                 <td class="py-3 px-3 text-right actions-cell" style="display:flex;justify-content:flex-end;gap:0;align-items:center;">
                     <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
@@ -3908,29 +4640,19 @@ const firebaseConfig = {
             const installmentHtml = expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/<span class="last-installment-btn" data-installment-id="${expense.installmentId}" data-total="${expense.totalInstallments}">${expense.totalInstallments}</span>)</span>` : '';
             const financingHtml = (expense.financingId && expense.totalFinancing) ? `<span class="text-xs text-gray-500">(${expense.currentFinancing}/<span class="last-installment-btn" data-financing-id="${expense.financingId}" data-total="${expense.totalFinancing}">${expense.totalFinancing}</span>)</span>` : '';
 
+            // Render payment and category with icons when possible. Use tolerant label lookup so stored values show nicely.
+            const displayPaymentLabel = (typeof getPaymentLabel === 'function') ? getPaymentLabel(expense.payment || '') : (expense.payment || '');
+            const paymentIcon = (typeof getIconFor === 'function') ? getIconFor('payment', displayPaymentLabel || expense.payment || '') : '';
+            const categoryIcon = (typeof getIconFor === 'function') ? getIconFor('category', expense.category || '') : '';
+            const paymentHtml = (typeof iconHtml === 'function' && paymentIcon) ? iconHtml(paymentIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(displayPaymentLabel || expense.payment || '')}</span>` : escapeHtml(displayPaymentLabel || expense.payment || '');
+            const categoryHtml = (typeof iconHtml === 'function' && categoryIcon) ? iconHtml(categoryIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(expense.category || '')}</span>` : escapeHtml(expense.category || '');
+
             row.innerHTML = `
                 <td class="py-3 px-3 checkbox-cell" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
-                <td class="py-3 px-3 description-cell" data-label="Descrição" title="${expense.description}">${expense.description} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${installmentHtml} ${financingHtml}</td>
-        <style>
-        .description-cell {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: clamp(0.75rem, 1vw, 1rem);
-            max-width: 1px;
-        }
-        .description-cell:hover {
-            text-overflow: unset;
-            overflow: visible;
-            white-space: normal;
-            background: #f9fafb;
-            z-index: 2;
-            position: relative;
-        }
-        </style>
+                <td class="py-3 px-3 description-cell" data-label="Descrição" title="${escapeHtml(expense.description)}">${escapeHtml(expense.description)} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${installmentHtml} ${financingHtml}</td>
 
-                <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${expense.payment}</td>
-                <td class="py-3 px-3 text-gray-600" data-label="Categoria">${expense.category}</td>
+                <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${paymentHtml}</td>
+                <td class="py-3 px-3 text-gray-600" data-label="Categoria">${categoryHtml}</td>
                 <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${formatCurrency(expense.amount)}</td>
                 <td class="py-3 px-3 text-right actions-cell align-middle" style="display:flex;justify-content:flex-end;gap:0;align-items:center;">
                     <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
@@ -3952,9 +4674,12 @@ const firebaseConfig = {
             const row = ui.savingsTableBody.insertRow();
             row.dataset.id = saving.id;
             row.className = 'border-b border-gray-200 hover:bg-gray-50 animate-fade-in';
+            const catIcon = (typeof getIconFor === 'function') ? getIconFor('category', saving.category || '') : '';
+            const catLabel = (state.appData.settings.goals||[]).some(g=>g.name===saving.category) ? 'Meta' : escapeHtml(saving.category || '');
+            const catHtml = (catIcon && typeof iconHtml === 'function') ? iconHtml(catIcon, 'text-sm text-gray-500') + `<span>${catLabel}</span>` : catLabel;
             row.innerHTML = `
-                <td class="py-3 px-3" data-label="Descrição">${saving.description} ${saving.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
-                <td class="py-3 px-3 text-gray-600" data-label="Categoria">${(state.appData.settings.goals||[]).some(g=>g.name===saving.category) ? 'Meta' : saving.category}</td>
+                <td class="py-3 px-3" data-label="Descrição">${escapeHtml(saving.description)} ${saving.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
+                <td class="py-3 px-3 text-gray-600" data-label="Categoria">${catHtml}</td>
                 <td class="py-3 px-3 font-medium text-indigo-600" data-label="Valor">${formatCurrency(saving.amount)}</td>
                 <td class="py-3 px-3 text-right actions-cell align-middle">
                     <button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
@@ -4002,12 +4727,14 @@ const firebaseConfig = {
                 // Compute total paid expenses but treat full-paid credit-card invoices as (sum of card expenses - anticipated)
                 const expensesAll = monthData.expenses || [];
                 const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
-                const creditCardNames = paymentMethods.filter(p => p.type === 'credit_card').map(p => p.name);
+                const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
                 const cardAnticipations = monthData.cardAnticipations || {};
-                const byPayment = expensesAll.reduce((acc, e) => { const k = e.payment || '_none_'; (acc[k] = acc[k] || []).push(e); return acc; }, {});
+                const byPayment = expensesAll.reduce((acc, e) => { const k = (typeof getPaymentLabel === 'function') ? getPaymentLabel(e.payment || '') : (e.payment || '_none_'); (acc[k] = acc[k] || []).push(e); return acc; }, {});
                 let totalExpenses = 0;
                 for (const [payment, group] of Object.entries(byPayment)) {
-                    if (creditCardNames.includes(payment)) {
+                    // payment here is a display label (getPaymentLabel). Check tolerant match against cardMethods
+                    const isCardPayment = cardMethods.some(c => paymentMatches(payment || '', c.name));
+                    if (isCardPayment) {
                         const paidCount = group.filter(g => g.isPaid).length;
                         if (group.length > 0 && paidCount === group.length) {
                             // full invoice paid: count invoice total (sum - antecipado)
@@ -4092,7 +4819,7 @@ const firebaseConfig = {
                     const creditedTotal = (monthData.vrLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
                     let usedTotal = (monthData.vrUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
                     // include legacy expenses paid with VR (edge-cases)
-                    try { const expensesVR = (monthData.expenses || []).filter(e => (e.payment || '') === 'VR'); usedTotal += expensesVR.reduce((s, e) => s + (Number(e && e.amount) || 0), 0); } catch(e) {}
+                    try { const expensesVR = (monthData.expenses || []).filter(e => paymentMatches(e.payment || '', 'VR')); usedTotal += expensesVR.reduce((s, e) => s + (Number(e && e.amount) || 0), 0); } catch(e) {}
                     const usedRounded = Math.round((usedTotal + Number.EPSILON) * 100) / 100;
                     const creditRounded = Math.round((creditedTotal + Number.EPSILON) * 100) / 100;
                     // displayAmount = available (credited - used) — same shown in Faturas card
@@ -4122,7 +4849,7 @@ const firebaseConfig = {
                 try {
                     const vtCredited = (monthData.vtLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
                     let vtUsed = (monthData.vtUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
-                    try { const expensesVT = (monthData.expenses || []).filter(e => (e.payment || '') === 'VT'); vtUsed += expensesVT.reduce((s,e) => s + (Number(e && e.amount) || 0), 0); } catch(e){}
+                    try { const expensesVT = (monthData.expenses || []).filter(e => paymentMatches(e.payment || '', 'VT')); vtUsed += expensesVT.reduce((s,e) => s + (Number(e && e.amount) || 0), 0); } catch(e){}
                     const vtUsedRounded = Math.round((vtUsed + Number.EPSILON) * 100) / 100;
                     const vtCreditRounded = Math.round((vtCredited + Number.EPSILON) * 100) / 100;
                     const vtDisplay = Math.max(0, Math.round((vtCreditRounded - vtUsedRounded) * 100) / 100);
@@ -4262,7 +4989,7 @@ const firebaseConfig = {
                 destroyChart('payment-method-chart');
                 const monthData = getCurrentMonthData();
                 const expenses = monthData.expenses || [];
-                const paymentSpending = expenses.reduce((acc, exp) => { acc[exp.payment] = (acc[exp.payment] || 0) + (exp.amount || 0); return acc; }, {});
+                const paymentSpending = expenses.reduce((acc, exp) => { const k = (typeof getPaymentLabel === 'function') ? getPaymentLabel(exp.payment || '') : (exp.payment || ''); acc[k] = (acc[k] || 0) + (exp.amount || 0); return acc; }, {});
                 const ctx = document.getElementById('payment-method-chart'); if (!ctx) return;
                 ui.charts['payment-method-chart'] = new Chart(ctx.getContext('2d'), { type:'pie', data:{ labels:Object.keys(paymentSpending), datasets:[{ data:Object.values(paymentSpending), backgroundColor:['#6D28D9','#BE185D','#047857','#B45309','#1E3A8A'] }] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} });
             } catch(e){console.error('renderPaymentMethodChart', e)}
@@ -4275,12 +5002,12 @@ const firebaseConfig = {
                 const savingsSum = (monthData && monthData.savings || []).reduce((s,t)=>s+(t.amount||0),0);
                 const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
                 const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
-                const cardNames = cardMethods.map(c => c.name);
-                const nonCardExpensesSum = expenses.filter(e => !cardNames.includes(e.payment)).reduce((s,t)=>s+(t.amount||0),0);
+                // non-card expenses: any expense that does not match a configured card (tolerant match)
+                const nonCardExpensesSum = expenses.filter(e => !cardMethods.some(c => paymentMatches(e.payment || '', c.name))).reduce((s,t)=>s+(t.amount||0),0);
                 const cardAnticipations = (state.appData.data[year] && state.appData.data[year][month] && state.appData.data[year][month].cardAnticipations) || {};
                 let totalInvoices = 0;
                 cardMethods.forEach(card => {
-                    const cardExpenses = expenses.filter(e => e.payment === card.name);
+                    const cardExpenses = expenses.filter(e => paymentMatches(e.payment || '', card.name));
                     const totalBeforeAnticipation = cardExpenses.reduce((s,t)=>s+(t.amount||0),0);
                     const anticipated = Number(cardAnticipations[card.name] || 0);
                     const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
@@ -4763,6 +5490,11 @@ const firebaseConfig = {
                         if (prefill.amount !== undefined) {
                             const amt = document.getElementById('amount'); if (amt) amt.value = prefill.amount;
                         }
+                        // prefill recipient if provided
+                        if (prefill.recipient) {
+                            const r = document.getElementById('payment-recipient');
+                            if (r) r.value = prefill.recipient;
+                        }
                         // If requested, focus and select description
                         if (desc && (prefill.focusDescription || prefill.description !== undefined)) {
                             try { desc.focus(); desc.select(); } catch (_) {}
@@ -4830,13 +5562,24 @@ const firebaseConfig = {
                 const savingCatsSorted = sortStrings(savingCategories || []);
                 const goalsSorted = sortStrings(goals.map(g => g.name || ''));
                 // Build payment method options from mergedPayments so VR is always present
-                if (ui.paymentMethod) ui.paymentMethod.innerHTML = paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
+                if (ui.paymentMethod) {
+                    ui.paymentMethod.innerHTML = paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
+                    // If a visual icon-select overlay exists, refresh its list so the visible UI stays in sync
+                    try { if (typeof ui.paymentMethod._refreshIconSelect === 'function') ui.paymentMethod._refreshIconSelect(); } catch(e){}
+                    // Ensure recipient visibility reflects the (possibly new) selected payment
+                    try { if (window.toggleRecipientForPayment) window.toggleRecipientForPayment(ui.paymentMethod.value); } catch(e){}
+                }
                 if (ui.categoryExpense) ui.categoryExpense.innerHTML = expenseCatsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
                 if (ui.categorySaving) {
                     let savingOptions = savingCatsSorted.map(c => `<option value="${c}">${c}</option>`);
                     if (goalsSorted.length) savingOptions = savingOptions.concat(goalsSorted.map(g => `<option value="${g}">${g} (Meta)</option>`));
                     ui.categorySaving.innerHTML = savingOptions.join('');
                 }
+                // attempt to refresh other icon-select overlays if present
+                try { if (ui.categoryExpense && typeof ui.categoryExpense._refreshIconSelect === 'function') ui.categoryExpense._refreshIconSelect(); } catch(e){}
+                try { if (ui.categorySaving && typeof ui.categorySaving._refreshIconSelect === 'function') ui.categorySaving._refreshIconSelect(); } catch(e){}
+                try { const fpm = document.getElementById('filter-payment-method'); if (fpm && typeof fpm._refreshIconSelect === 'function') fpm._refreshIconSelect(); } catch(e){}
+                try { const fcat = document.getElementById('filter-category'); if (fcat && typeof fcat._refreshIconSelect === 'function') fcat._refreshIconSelect(); } catch(e){}
             } catch (e) { console.error('populateDropdowns', e); }
         }
 
@@ -5457,14 +6200,13 @@ const firebaseConfig = {
                 const month = String(state.currentDate.getMonth() + 1).padStart(2, '0');
                 const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
                 const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
-                const cardNames = cardMethods.map(c => c.name);
-                // Sum expenses that are NOT paid with cards (they remain as-is)
-                const nonCardExpensesSum = expenses.filter(e => !cardNames.includes(e.payment)).reduce((s,t)=>s+(t.amount||0),0);
+                // Sum expenses that are NOT paid with cards (tolerant matching)
+                const nonCardExpensesSum = expenses.filter(e => !cardMethods.some(c => paymentMatches(e.payment || '', c.name))).reduce((s,t)=>s+(t.amount||0),0);
                 // Sum invoice totals per-card (total of card expenses minus any anticipations)
                 const cardAnticipations = (state.appData.data[year] && state.appData.data[year][month] && state.appData.data[year][month].cardAnticipations) || {};
                 let totalInvoices = 0;
                 cardMethods.forEach(card => {
-                    const cardExpenses = expenses.filter(e => e.payment === card.name);
+                    const cardExpenses = expenses.filter(e => paymentMatches(e.payment || '', card.name));
                     const totalBeforeAnticipation = cardExpenses.reduce((s,t)=>s+(t.amount||0),0);
                     const anticipated = Number(cardAnticipations[card.name] || 0);
                     const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
@@ -5485,13 +6227,13 @@ const firebaseConfig = {
                     if (topList) {
                         topList.innerHTML = '';
                         const contributors = [];
-                        // add non-card individual expenses
-                        (expenses || []).filter(e => !cardNames.includes(e.payment)).forEach(e => {
+                        // add non-card individual expenses (tolerant matching)
+                        (expenses || []).filter(e => !cardMethods.some(c => paymentMatches(e.payment || '', c.name))).forEach(e => {
                             contributors.push({ id: `exp-${generateUUID()}`, label: e.description || 'Despesa', amount: Number(e.amount)||0, count: 1, kind: 'expense' });
                         });
                         // add one entry per card: invoice total
                         cardMethods.forEach(card => {
-                            const cardExpenses = (expenses || []).filter(e => e.payment === card.name);
+                            const cardExpenses = (expenses || []).filter(e => paymentMatches(e.payment || '', card.name));
                             const totalBeforeAnticipation = cardExpenses.reduce((s,t)=>s+(t.amount||0),0);
                             const anticipated = Number(cardAnticipations[card.name] || 0);
                             const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
@@ -5505,9 +6247,25 @@ const firebaseConfig = {
                         if (topContributors.length === 0) topList.innerHTML = '<li class="text-gray-500">Nenhuma despesa registrada.</li>';
                         topContributors.forEach(c => {
                             const li = document.createElement('li');
-                            li.className = 'flex justify-between';
+                            li.className = 'flex justify-between items-center gap-3';
                             const left = document.createElement('span');
-                            left.textContent = c.count > 1 && c.kind === 'invoice' ? `${c.label} (${c.count})` : c.label;
+                            left.className = 'flex items-center gap-2';
+                            // determine icon: invoice -> payment/card icon, expense -> category icon
+                            let iconName = '';
+                            if (c.kind === 'invoice') {
+                                // extract card name from label 'Fatura <cardName>' or id
+                                const m = c.id && c.id.startsWith('card-') ? c.id.replace(/^card-/, '') : (c.label || '').replace(/^Fatura\s*/i, '');
+                                iconName = (typeof getIconFor === 'function') ? getIconFor('payment', m) : '';
+                            } else if (c.kind === 'expense') {
+                                // try to find an expense entry that matches this label to get category
+                                const match = (expenses || []).find(e => (e.description || '').toString() === c.label || (c.label || '').indexOf(e.description || '') !== -1);
+                                iconName = (typeof getIconFor === 'function') ? getIconFor('category', match ? match.category : '') : '';
+                            }
+                            if (iconName && typeof iconHtml === 'function') {
+                                left.innerHTML = iconHtml(iconName, 'text-sm text-gray-500') + escapeHtml(c.count > 1 && c.kind === 'invoice' ? `${c.label} (${c.count})` : c.label);
+                            } else {
+                                left.textContent = c.count > 1 && c.kind === 'invoice' ? `${c.label} (${c.count})` : c.label;
+                            }
                             const right = document.createElement('span');
                             right.className = 'font-medium';
                             right.textContent = formatCurrency(c.amount);
@@ -6025,6 +6783,22 @@ const firebaseConfig = {
                     type: document.getElementById('expense-type').value,
                     isPaid: false
                 });
+                // Attach recipient when present
+                try {
+                    const pmVal = (transactionData.payment || '').toString();
+                    const recipientEl = document.getElementById('payment-recipient');
+                    if ((pmVal === 'PIX' || pmVal === 'Transferência') && recipientEl) {
+                        const recVal = (recipientEl.value || '').toString().trim();
+                        if (!recVal) {
+                            setTransactionError('Informe o destinatário para PIX ou Transferência.');
+                            return; // block save
+                        }
+                        transactionData.recipient = recVal;
+                    } else if (recipientEl && recipientEl.value) {
+                        // include if user filled for other methods (optional)
+                        transactionData.recipient = recipientEl.value;
+                    }
+                } catch (rErr) { console.error('recipient collect error', rErr); }
                 // If financing fields are present in the modal, include them
                 const financingCheckbox = document.getElementById('is-financing');
                 if (financingCheckbox && financingCheckbox.checked) {

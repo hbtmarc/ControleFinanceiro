@@ -4536,15 +4536,52 @@ const firebaseConfig = {
                             let income = null;
                             if (md && Array.isArray(md.incomes)) income = md.incomes.find(i => i.id === id) || null;
 
-                            // Prefer cached calc (user may already have opened the breakdown modal)
-                            let calc = (window.salaryCalcCache && id && window.salaryCalcCache[id]) ? window.salaryCalcCache[id] : null;
+                            // Build a cache key that includes month and year so results are month-specific
+                            const y = (state.currentDate && state.currentDate.getFullYear()) ? state.currentDate.getFullYear() : (new Date()).getFullYear();
+                            const m = (state.currentDate && typeof state.currentDate.getMonth === 'function') ? (state.currentDate.getMonth() + 1) : ((new Date()).getMonth() + 1);
+                            const cacheKey = id ? `${id}@${y}-${m}` : null;
+                            // Prefer cached calc (user may already have opened the breakdown modal for this month)
+                            let calc = (window.salaryCalcCache && cacheKey && window.salaryCalcCache[cacheKey]) ? window.salaryCalcCache[cacheKey] : null;
 
                             // If not cached, build params from income.salaryMeta (or fallback to amount) and compute
                             if (!calc) {
                                 let params = null;
                                 if (income && income.salaryMeta) params = Object.assign({}, income.salaryMeta);
                                 else if (income && income.amount) params = { salarioBase: income.amount };
-                                if (params && typeof calcularSalarioLiquido === 'function') calc = calcularSalarioLiquido(params);
+                                // Ensure month/year are provided so dias úteis and benefícios use correct month
+                                if (params) {
+                                    params.year = y;
+                                    params.month = m;
+                                }
+                                // Normalize possible hours fields and parse HH:MM strings
+                                const parseHours = (v) => {
+                                    if (v === undefined || v === null || v === '') return undefined;
+                                    if (typeof v === 'number') return v;
+                                    let s = String(v).trim();
+                                    const mcol = /^\s*-?\d{1,3}:[0-5]?\d\s*$/.exec(s);
+                                    if (mcol) {
+                                        const parts = s.split(':');
+                                        const hh = parseInt(parts[0], 10) || 0;
+                                        const mm = parseInt(parts[1], 10) || 0;
+                                        return hh + (mm / 60);
+                                    }
+                                    s = s.replace(',', '.');
+                                    const fv = parseFloat(s);
+                                    return isNaN(fv) ? undefined : fv;
+                                };
+                                if (params) {
+                                    // Try multiple property names that might exist in salaryMeta
+                                    const rawHours = params.hoursTrabalhadas || params.horasTrabalhadas || params.hoursWorked || params.hours || params.horasTrabalhadasRaw || '';
+                                    const ph = parseHours(rawHours);
+                                    if (typeof ph !== 'undefined') params.hoursTrabalhadas = ph;
+                                    // ensure jornadaMensalHoras fallback
+                                    if (typeof params.jornadaMensalHoras === 'undefined' || params.jornadaMensalHoras === null) params.jornadaMensalHoras = 220;
+                                }
+                                if (params && typeof calcularSalarioLiquido === 'function') {
+                                    calc = calcularSalarioLiquido(params);
+                                    // store in cache per month-year
+                                    try { window.salaryCalcCache = window.salaryCalcCache || {}; if (cacheKey) window.salaryCalcCache[cacheKey] = calc; } catch(e){}
+                                }
                             }
 
                             if (!calc) return;

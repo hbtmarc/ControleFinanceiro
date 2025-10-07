@@ -8013,6 +8013,17 @@ const firebaseConfig = {
         html, body { font-size: 16px !important; -webkit-font-smoothing:antialiased; }
         body { padding-bottom: 6.5rem !important; /* avoid bottom nav overlap */ }
 
+        /* Make main layout use full viewport width with comfortable horizontal padding */
+        /* Target common wrapper/container names; these selectors are safe because they're scoped to mobile only */
+        .container, .app-container, .main, .content, .page, .panel, .wrap, #app {
+            width: calc(100vw - 1.5rem) !important;
+            max-width: calc(100vw - 1.5rem) !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+
         /* Make bottom nav more prominent and finger-friendly */
         #mobile-bottom-nav {
             display: flex !important;
@@ -8064,19 +8075,35 @@ const firebaseConfig = {
             bottom: 0 !important;
             margin: 0 !important;
             border-radius: 12px !important;
-            padding: 1rem !important;
+            padding: 0.75rem !important;
             overflow: auto !important;
             -webkit-overflow-scrolling: touch !important;
+            display: flex !important; flex-direction: column !important;
         }
         dialog::backdrop { background: rgba(0,0,0,0.6) !important; }
+        dialog .modal-body, dialog .dialog-body, dialog .content { width: calc(100vw - 2rem) !important; margin: 0 auto !important; }
 
-        /* Card-like rows for lists and transactions */
-        .responsive-table tr { display: block !important; margin-bottom: 12px !important; border-radius: 12px; background: linear-gradient(180deg,#ffffff,#fbfdff); box-shadow: 0 8px 24px rgba(2,6,23,0.06); padding: 12px !important; }
+        /* Full-bleed cards and forms: use nearly full viewport width and harmonize spacing like the transaction modal */
+        .dashboard-card, .fatura-card, .transaction-card, .card, .panel { width: calc(100vw - 1.5rem) !important; max-width: calc(100vw - 1.5rem) !important; margin: 0.6rem auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.06) !important; padding: 12px !important; background: linear-gradient(180deg,#ffffff,#fbfbff); }
+
+        /* Tables -> stacked full-width cards for compact lists */
+        .responsive-table, .responsive-table table { width: calc(100vw - 1.5rem) !important; max-width: calc(100vw - 1.5rem) !important; }
+        .responsive-table tr { display: block !important; margin-bottom: 12px !important; border-radius: 12px; background: linear-gradient(180deg,#ffffff,#fbfdff); box-shadow: 0 8px 24px rgba(2,6,23,0.06); padding: 10px !important; }
         .responsive-table td { display: flex !important; justify-content: space-between; padding: 8px 6px !important; border: none !important; }
         .responsive-table td .material-symbols-outlined { margin-right: 8px !important; }
 
-        /* Dashboard card tweaks for mobile */
-        .dashboard-card, .fatura-card, .transaction-card { border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.06) !important; padding: 12px !important; background: linear-gradient(180deg,#ffffff,#fbfbff); }
+        /* Forms and inputs take full width like the transaction modal */
+        form, .form-row, .field, .form-group { width: calc(100vw - 2rem) !important; max-width: calc(100vw - 2rem) !important; margin: 0.4rem auto !important; }
+        input, select, textarea, .select-wrapper, .icon-select-button { display: block !important; width: 100% !important; box-sizing: border-box !important; font-size: 16px !important; padding: 12px !important; border-radius: 10px !important; }
+        label { display:block; margin-bottom:6px; color:#374151; font-weight:600; }
+        .field small, .hint { display:block; color:#6b7280; margin-top:6px; }
+
+        /* Buttons full width in dialogs and action groups */
+        .modal-actions, .dialog-actions, .action-row { display:flex; flex-direction:column; gap:10px; }
+        .modal-actions button, .dialog-actions button, .modal-action-btn { width:100% !important; }
+
+        /* Dashboard compactness and legibility */
+        .dashboard-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
 
         /* Compact, tappable action buttons and inputs */
         .actions-cell button { min-width: 48px !important; height:48px !important; }

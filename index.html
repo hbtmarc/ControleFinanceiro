@@ -166,6 +166,28 @@
     #income-table td.actions-cell .edit-btn, #income-table td.actions-cell .delete-btn, #income-table td.actions-cell button { display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem; }
         </style>
         <style>
+        /* Modal mobile layout fixes: ensure modal content stacks and buttons fit on small screens */
+        @media (max-width: 639px) {
+            #transaction-modal { padding: 0.75rem !important; border-radius: 0.75rem !important; }
+            #transaction-modal .modal-group { padding: 0.6rem !important; }
+            #transaction-modal form { max-width: 100% !important; padding: 0.6rem !important; }
+            /* Stack the modal-type toggles horizontally in small buttons to save space */
+            .modal-type-toggle { padding: 0.5rem !important; gap: 6px !important; }
+            .modal-type-toggle span.text-sm { font-size: 0.85rem !important; }
+            /* Make inputs full width and avoid extra right padding that pushed elements off-screen */
+            #transaction-modal input, #transaction-modal select, #transaction-modal textarea { width: 100% !important; box-sizing: border-box !important; }
+            /* Ensure advanced option checkboxes layout in column for narrow screens */
+            #advanced-options .flex { flex-direction: column !important; }
+            /* Make save button full-width and pinned at bottom with comfortable margin */
+            #transaction-modal .modal-footer { position: sticky; bottom: 0; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1)); padding-top: 0.75rem; margin-top: 0.5rem; }
+            #modal-save-btn { width: 100% !important; display: inline-flex; justify-content: center; }
+            /* Reduce card shadows and borders to keep content readable on tiny screens */
+            #transaction-modal .card { box-shadow: none !important; border: none !important; }
+        }
+        /* Visible focus ring improvements for keyboard users */
+        #transaction-modal :focus { outline: 3px solid rgba(59,130,246,0.25); outline-offset: 2px; }
+        </style>
+        <style>
         /* Salary breakdown tooltip card */
         .salary-tooltip {
             position: absolute;
@@ -577,42 +599,20 @@
         }
     </style>
     <style>
-        /* Mobile swipe-to-reveal styles (mobile-only) */
+        /* Mobile table-friendly styles: keep transactions as one-line rows, prevent horizontal scrolling, increase touch targets */
         @media (max-width: 640px) {
-            .mobile-row-cell { padding: 6px 10px; }
-            .swipe-container { position: relative; }
-            .swipe-actions { right: 8px; }
-            .action-btn { width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;border-radius:9999px;background:transparent;border:1px solid transparent;box-shadow:none;color:inherit;transition:transform .18s ease, box-shadow .18s ease; }
-            .action-btn:disabled { opacity:0.45 }
-            .action-btn .material-symbols-outlined { font-size:18px;line-height:1; }
-            /* hide actions until row is swiped open to avoid visible pills on closed rows */
-            .swipe-actions { opacity:0; pointer-events:none; transform:translateX(6px); transition:opacity .18s cubic-bezier(.2,.9,.2,1), transform .18s cubic-bezier(.2,.9,.2,1); }
-            .swipe-open .swipe-actions { opacity:1; pointer-events:auto; transform:translateX(0); }
-            /* colored backgrounds only when open (visual affordance) */
-            .swipe-open .action-btn.edit-btn { background:#e6f0ff; border-color: rgba(99,102,241,0.12); color:#3730a3; transform:scale(1.03); box-shadow:0 6px 12px rgba(15,23,42,0.06); }
-            .swipe-open .action-btn.delete-btn { background:#fff1f2; border-color: rgba(239,68,68,0.12); color:#b91c1c; transform:scale(1.03); box-shadow:0 6px 12px rgba(15,23,42,0.06); }
-            /* remove any background on the amount to avoid pill look */
-            .mobile-right, .mobile-right .amount { background:transparent;border-radius:0; padding:0 }
-            .swipe-wrap { background:transparent }
-            /* enforce a left (flexible) / right (fixed) layout so descriptions align left and values align right */
-            .mobile-row { display:flex; align-items:center; gap:12px; width:100%; min-width:0; }
-            .mobile-row, .mobile-row * { white-space: nowrap; }
-            .mobile-row .mobile-left { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-            .mobile-row .mobile-left > div, .mobile-row .mobile-left span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-            /* Right column increased so currency values fit and don't truncate */
-            .mobile-row .mobile-right { flex: 0 0 clamp(120px, 28%, 220px); display:flex; align-items:center; justify-content:flex-end; gap:8px; box-sizing:border-box; padding-left:8px; }
-            .mobile-row .mobile-right .amount { flex: 0 0 auto; min-width: 0; white-space: nowrap; overflow: visible; text-overflow: clip; text-align: right; display:inline-block; font-weight:600; font-size:0.98rem; }
-            .mobile-right { gap:6px; }
-            /* Ensure desktop-style action cells still show their buttons on mobile (in case rows were rendered in desktop form) */
-            .responsive-table td.actions-cell button, .responsive-table td.actions-cell .edit-btn, .responsive-table td.actions-cell .delete-btn { display:inline-flex !important; align-items:center; justify-content:center; width:40px; height:40px; padding:6px !important; }
-            /* Show regular table cells on mobile too (some rows may be rendered in desktop form). Keep them single-line and truncated to avoid horizontal scroll. */
-            .responsive-table thead th { display:none !important; }
-            .responsive-table tbody td { display: table-cell !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; vertical-align: middle !important; }
-            /* When JS renders a mobile-friendly full-width cell use block layout */
-            .responsive-table td.mobile-row-cell { display: block !important; width:100% !important; box-sizing: border-box !important; }
-            /* prevent horizontal scroll from parent wrappers */
+            /* Hide table header on small screens for compact list-like display */
+            .responsive-table thead th { display: none !important; }
+            /* Keep cells single-line and truncate long descriptions */
+            .responsive-table tbody td { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; vertical-align: middle !important; }
+            /* Ensure the table wrapper does not allow horizontal scroll */
             .overflow-x-auto { overflow-x: hidden !important; }
             .responsive-table colgroup col { width: auto !important; }
+            /* Make action buttons larger for touch (applies in mobile and desktop when table collapses) */
+            .responsive-table td.actions-cell button, .responsive-table td.actions-cell .edit-btn, .responsive-table td.actions-cell .delete-btn { width:44px; height:44px; padding:8px; display:inline-flex !important; align-items:center; justify-content:center; }
+            /* Add clearer spacing for table rows on mobile */
+            .responsive-table tr { padding: 0.6rem 0 !important; }
+            .responsive-table td { padding: 0.6rem 0.6rem !important; }
         }
     </style>
     <style>
@@ -1062,14 +1062,19 @@
     </div>
 
     <!-- Modal de Transação -->
-    <dialog id="transaction-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-3xl" style="max-height:98vh;overflow:auto !important;">
+    <dialog id="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="transaction-error" class="p-6 rounded-2xl shadow-2xl card w-full max-w-3xl" style="max-height:98vh;overflow:auto !important;">
         <div class="flex items-center justify-between mb-3 modal-title-row">
             <h2 id="modal-title" class="text-2xl font-bold">Nova Transação</h2>
-            <span id="modal-type-indicator" class="inline-flex items-center gap-2 px-3 py-1 rounded-full font-semibold text-sm bg-gray-100 text-gray-700 border border-gray-300"></span>
+            <div style="display:flex;align-items:center;gap:8px">
+                <span id="modal-type-indicator" class="inline-flex items-center gap-2 px-3 py-1 rounded-full font-semibold text-sm bg-gray-100 text-gray-700 border border-gray-300"></span>
+                <button id="close-transaction-modal" type="button" class="p-2 rounded-full hover:bg-gray-100" aria-label="Fechar janela de nova transação">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
         </div>
     <form id="transaction-form" class="space-y-5 text-base mx-auto max-w-3xl">
             <input type="hidden" id="transaction-id">
-            <div id="transaction-error" role="alert" class="hidden text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">&nbsp;</div>
+            <div id="transaction-error" role="alert" aria-live="assertive" aria-atomic="true" class="hidden text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">&nbsp;</div>
             <div class="flex items-center justify-center gap-2 mb-4">
                 <button type="button" data-type="expenses" class="modal-type-toggle group flex-1 flex flex-col items-center py-0.5 rounded-xl border-2 shadow-sm font-semibold transition-all focus:outline-none">
                     <span class="material-symbols-outlined text-2xl mb-0.5">trending_down</span>
@@ -2014,6 +2019,60 @@
             });
         }
     });
+
+    // Transaction modal open/close + accessibility helpers
+    (function(){
+        const modal = document.getElementById('transaction-modal');
+        const openBtn = document.getElementById('add-transaction-btn') || document.getElementById('mobile-add-transaction-fab');
+        const closeBtn = document.getElementById('close-transaction-modal');
+        let lastFocused = null;
+
+        function trapFocus(e) {
+            if (!modal || !modal.open) return;
+            const focusable = modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.key === 'Tab') {
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault(); last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault(); first.focus();
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault(); closeModal();
+            }
+        }
+
+        function openModal() {
+            if (!modal) return;
+            try { lastFocused = document.activeElement; } catch(e) { lastFocused = null; }
+            try { modal.showModal(); } catch(e) { modal.setAttribute('open',''); }
+            modal.classList.add('modal-expanded');
+            // focus first input for quick entry
+            const firstInput = modal.querySelector('input, select, textarea, button');
+            if (firstInput) try { firstInput.focus(); } catch(e) {}
+            document.addEventListener('keydown', trapFocus);
+        }
+
+        function closeModal() {
+            if (!modal) return;
+            try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
+            modal.classList.remove('modal-expanded');
+            document.removeEventListener('keydown', trapFocus);
+            // restore focus
+            try { if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus(); } catch(e) {}
+        }
+
+        if (openBtn) openBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+        if (closeBtn) closeBtn.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
+        // close tappable backdrop or programmatic close if a cancel/close button inside form is used
+        // close on dialog close event to cleanup
+        if (modal) modal.addEventListener('close', () => { document.removeEventListener('keydown', trapFocus); });
+        // Also expose helpers globally if needed by other modules
+        window.openTransactionModal = openModal;
+        window.closeTransactionModal = closeModal;
+    })();
     // ETAPA 2: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI
     // Substitua o conteúdo abaixo pelas credenciais do seu projeto Firebase.
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -2921,70 +2980,7 @@ const firebaseConfig = {
                     }
             });
             document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
-            // 'More' button inside mobile rows: toggle swipe actions programmatically so users can access edit/delete without swiping
-            document.body.addEventListener('click', function(e){
-                const more = e.target.closest('.more-btn');
-                if (!more) return;
-                const container = more.closest('.swipe-container') || more.closest('tr');
-                if (!container) return;
-                // Find the nearest swipe-wrap and swipe-actions
-                const wrap = container.querySelector('.swipe-wrap');
-                const actions = container.querySelector('.swipe-actions');
-                if (!wrap || !actions) return;
-
-                // Accessibility: mark actions as hidden by default and update aria-expanded on the button
-                try { actions.setAttribute('aria-hidden', 'false'); } catch(_){}
-                if (!more.hasAttribute('role')) more.setAttribute('role', 'button');
-                // Toggle state
-                const isOpen = container.classList.contains('swipe-open');
-                // Close others and reset their aria attributes
-                document.querySelectorAll('.swipe-container.swipe-open').forEach(c => {
-                    if (c !== container) {
-                        const w = c.querySelector('.swipe-wrap'); if (w) w.style.transform = '';
-                        c.classList.remove('swipe-open');
-                        const otherMore = c.querySelector('.more-btn'); if (otherMore) otherMore.setAttribute('aria-expanded', 'false');
-                        const otherActions = c.querySelector('.swipe-actions'); if (otherActions) otherActions.setAttribute('aria-hidden', 'true');
-                    }
-                });
-
-                if (isOpen) {
-                    wrap.style.transform = '';
-                    container.classList.remove('swipe-open');
-                    more.setAttribute('aria-expanded', 'false');
-                    actions.setAttribute('aria-hidden', 'true');
-                } else {
-                    const to = -Math.min(actions.getBoundingClientRect().width + 8, 120);
-                    wrap.style.transform = `translateX(${to}px)`;
-                    container.classList.add('swipe-open');
-                    more.setAttribute('aria-expanded', 'true');
-                    actions.setAttribute('aria-hidden', 'false');
-                    // Focus the first actionable button inside actions for keyboard users
-                    const firstAction = actions.querySelector('button:not([disabled])');
-                    try { if (firstAction) firstAction.focus(); } catch(_){}
-                }
-                e.preventDefault();
-            });
-
-            // Keyboard accessibility: allow Enter/Space on more-btn and Escape to close open row
-            document.body.addEventListener('keydown', function(e){
-                const key = e.key;
-                if (key === 'Escape' || key === 'Esc') {
-                    // Close any open swipe rows and restore focus to their more-btn
-                    document.querySelectorAll('.swipe-container.swipe-open').forEach(c => {
-                        const w = c.querySelector('.swipe-wrap'); if (w) w.style.transform = '';
-                        c.classList.remove('swipe-open');
-                        const moreBtn = c.querySelector('.more-btn'); if (moreBtn) { moreBtn.setAttribute('aria-expanded', 'false'); try { moreBtn.focus(); } catch(_){} }
-                        const actions = c.querySelector('.swipe-actions'); if (actions) actions.setAttribute('aria-hidden', 'true');
-                    });
-                } else if (key === 'Enter' || key === ' ') {
-                    // If focused on a more-btn, simulate click (toggle)
-                    const active = document.activeElement;
-                    if (active && active.classList && active.classList.contains('more-btn')) {
-                        active.click();
-                        e.preventDefault();
-                    }
-                }
-            });
+            // 'more' swipe handlers removed to keep rows as standard table rows with inline action buttons
             // Mobile bottom nav interactions
             if (ui.mobileBottomNav) {
                 const buttons = ui.mobileBottomNav.querySelectorAll('.mobile-nav-btn');
@@ -5013,7 +5009,7 @@ const firebaseConfig = {
                     <td class="py-3 px-3 description-cell" data-label="Descrição" title="${escapeHtml(income.description)}">${descLabel} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
                     <td class="py-3 px-3" data-label="Valor">${amountHtml}</td>
                     <td class="py-3 px-3 text-right actions-cell" style="display:flex;justify-content:flex-end;gap:0;align-items:center;">
-                        <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
+                        <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar" aria-label="Editar transação"><span class="material-symbols-outlined text-xl">edit</span></button>
                         <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                     </td>`;
             }
@@ -5053,7 +5049,7 @@ const firebaseConfig = {
                     <td class="py-3 px-3 text-gray-600" data-label="Categoria">${categoryHtml}</td>
                     <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${formatCurrency(expense.amount)}</td>
                     <td class="py-3 px-3 text-right actions-cell align-middle" style="display:flex;justify-content:flex-end;gap:0;align-items:center;">
-                        <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
+                        <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" aria-label="Editar despesa" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
                         <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                     </td>`;
             }
@@ -5081,7 +5077,7 @@ const firebaseConfig = {
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${catHtml}</td>
                 <td class="py-3 px-3 font-medium text-indigo-600" data-label="Valor">${formatCurrency(saving.amount)}</td>
                 <td class="py-3 px-3 text-right actions-cell align-middle">
-                    <button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
+                        <button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="Editar" aria-label="Editar transação"><span class="material-symbols-outlined text-xl">edit</span></button>
                     <button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>`;
         }
@@ -8301,63 +8297,11 @@ const firebaseConfig = {
                 // Reduce motion for mobile to keep interactions snappy
                 try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('reduced-motion'); } catch(e) {}
 
-                // Initialize ARIA states for swipe rows and add keyboard support for more-btns
-                try {
-                    document.querySelectorAll('.swipe-container').forEach(c => {
-                        const actions = c.querySelector('.swipe-actions'); if (actions) actions.setAttribute('aria-hidden','true');
-                        const more = c.querySelector('.more-btn'); if (more) {
-                            more.setAttribute('aria-expanded', more.classList.contains('open') ? 'true' : 'false');
-                            more.setAttribute('tabindex', '0');
-                            more.addEventListener('keydown', function(ke){ if (ke.key === 'Enter' || ke.key === ' ') { ke.preventDefault(); this.click(); } });
-                        }
-                    });
-                } catch(e) { /* non-fatal */ }
+                // Swipe/ARIA-init removed: transactions use inline action buttons now
             } catch(e) { console.error('mobile-enhancements init', e); }
         });
     })();
     </script>
-    <script>
-    // Lightweight swipe-to-reveal initializer (safe to re-run)
-    (function(){
-        if (!('ontouchstart' in window)) return; // desktop: nothing to do
-        const THRESHOLD = 0.22; // fraction
-        const MAX_SWIPE = 120; // px
-        let openContainer = null;
-
-        function closeOpen() {
-            if (!openContainer) return;
-            const w = openContainer.querySelector('.swipe-wrap'); if (w) w.style.transform = '';
-            openContainer.classList.remove('swipe-open');
-            // update aria attributes
-            try {
-                const more = openContainer.querySelector('.more-btn'); if (more) more.setAttribute('aria-expanded', 'false');
-                const actions = openContainer.querySelector('.swipe-actions'); if (actions) actions.setAttribute('aria-hidden', 'true');
-            } catch(_){}
-            openContainer = null;
-        }
-
-        function attach(container) {
-            const wrap = container.querySelector('.swipe-wrap');
-            const actions = container.querySelector('.swipe-actions');
-            if (!wrap || !actions) return;
-            // ensure ARIA defaults
-            try { if (!actions.hasAttribute('role')) actions.setAttribute('role','group'); actions.setAttribute('aria-hidden','true'); } catch(_){}
-            try { const more = container.querySelector('.more-btn'); if (more) { more.setAttribute('aria-expanded', 'false'); if (!more.hasAttribute('aria-controls')) more.setAttribute('aria-controls', Array.from(actions.querySelectorAll('button')).map((b,i)=>`action-${i}`).join(' ')); } } catch(_){}
-            let startX = 0, curX = 0, dragging = false;
-
-            function start(e){ const t = e.touches ? e.touches[0] : e; startX = t.clientX; curX = startX; dragging = true; wrap.style.transition = 'none'; if (openContainer && openContainer !== container) closeOpen(); }
-            function move(e){ if (!dragging) return; const t = e.touches ? e.touches[0] : e; curX = t.clientX; let dx = curX - startX; if (dx > 0) dx = 0; const max = -Math.min(actions.getBoundingClientRect().width + 8, MAX_SWIPE); if (dx < max) dx = max; wrap.style.transform = `translateX(${dx}px)`; }
-            function end(){ if (!dragging) return; dragging = false; wrap.style.transition = ''; const moved = curX - startX; const actionsW = actions.getBoundingClientRect().width + 8; const shouldOpen = (-moved) > actionsW * THRESHOLD; if (shouldOpen) { const to = -Math.min(actionsW, MAX_SWIPE); wrap.style.transform = `translateX(${to}px)`; container.classList.add('swipe-open'); openContainer = container; try { const more = container.querySelector('.more-btn'); if (more) more.setAttribute('aria-expanded','true'); actions.setAttribute('aria-hidden','false'); } catch(_){} } else { closeOpen(); } }
-
-            container.addEventListener('touchstart', start, { passive: true });
-            container.addEventListener('touchmove', move, { passive: true });
-            container.addEventListener('touchend', end);
-            container.addEventListener('touchcancel', end);
-        }
-
-        function init(){ document.querySelectorAll('.swipe-container').forEach(attach); if (!window._swipe_close_installed) { document.addEventListener('touchstart', function(ev){ if (openContainer && !openContainer.contains(ev.target)) closeOpen(); }, { passive: true }); window._swipe_close_installed = true; } }
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-    })();
-    </script>
+    <!-- Swipe-to-reveal behavior removed: rows are standard table rows with inline action buttons -->
 </body>
 </html>

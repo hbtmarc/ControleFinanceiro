@@ -7990,5 +7990,147 @@ const firebaseConfig = {
     <!-- Mobile Floating Add Transaction Button -->
     <button id="mobile-add-transaction-fab" aria-label="Adicionar transação" title="Nova transação">+
     </button>
+
+    <!-- Mobile-only enhancements: CSS + JS (do not change desktop) -->
+    <style id="mobile-enhancements">
+    /* Scope to small screens only so desktop is unchanged */
+    @media (max-width: 768px) {
+        /* Make bottom nav more prominent and finger-friendly */
+        #mobile-bottom-nav {
+            display: flex !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            bottom: 0.85rem !important;
+            padding: 0.45rem 0.75rem !important;
+            gap: 8px !important;
+            border-radius: 9999px !important;
+            box-shadow: 0 10px 30px rgba(2,6,23,0.12) !important;
+            z-index: 140000 !important;
+        }
+        #mobile-bottom-nav .mobile-nav-btn { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; }
+
+        /* Floating action button: larger, high-contrast, positioned above bottom-nav */
+        #mobile-add-transaction-fab {
+            display: inline-flex !important;
+            position: fixed !important;
+            right: 1rem !important;
+            bottom: 5.6rem !important; /* above bottom nav */
+            width: 64px !important;
+            height: 64px !important;
+            border-radius: 9999px !important;
+            background: linear-gradient(180deg,#06b6d4,#0369a1) !important;
+            color: #fff !important;
+            font-size: 34px !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 12px 30px rgba(2,6,23,0.18) !important;
+            z-index: 150000 !important;
+            border: none !important;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Make modal dialogs full-screen and easier to scroll on mobile */
+        dialog[open] {
+            width: 100vw !important;
+            height: 100vh !important;
+            left: 0 !important;
+            right: 0 !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            margin: 0 !important;
+            border-radius: 12px !important;
+            padding: 1rem !important;
+            overflow: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        dialog::backdrop { background: rgba(0,0,0,0.6) !important; }
+
+        /* Increase touch target size for interactive elements inside modals */
+        dialog button, dialog .icon-select-button, dialog .modal-action-btn { padding: 0.9rem 1rem !important; font-size: 16px !important; border-radius: 10px !important; }
+
+        /* Make table rows appear as cards with increased spacing for touch */
+        .responsive-table tr { display: block !important; margin-bottom: 10px !important; border-radius: 10px; background: white; box-shadow: 0 6px 18px rgba(2,6,23,0.04); padding: 10px !important; }
+        .responsive-table td { display: flex !important; justify-content: space-between; padding: 8px 6px !important; border: none !important; }
+        .responsive-table td .material-symbols-outlined { margin-right: 8px !important; }
+
+        /* Ensure action buttons are full-width for easier tapping */
+        .actions-cell button { min-width: 44px !important; height:44px !important; }
+
+        /* Larger inputs and selects for comfortable typing */
+        input, select, textarea { font-size: 16px !important; padding: 12px !important; }
+
+        /* Improve focus outlines for keyboard and accessibility on mobile */
+        :focus { outline: 3px solid rgba(6, 182, 212, 0.18); outline-offset: 3px; }
+    }
+    </style>
+
+    <script>
+    (function(){
+        // Mobile runtime enhancements (no changes for desktop)
+        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
+
+        document.addEventListener('DOMContentLoaded', function(){
+            try {
+                // Show mobile bottom nav when appropriate
+                const mobileNav = document.getElementById('mobile-bottom-nav');
+                if (mobileNav && isMobile()) mobileNav.classList.remove('hidden');
+
+                // Ensure mobile FAB is visible on small screens and focusable
+                const fab = document.getElementById('mobile-add-transaction-fab');
+                const addBtn = document.getElementById('add-transaction-btn');
+                if (fab && isMobile()) {
+                    fab.style.display = 'inline-flex';
+                    fab.setAttribute('role','button');
+                    fab.setAttribute('aria-pressed','false');
+                    fab.addEventListener('click', function(e){ e.preventDefault(); try { if (addBtn) addBtn.click(); else openModal && openModal('expenses'); } catch(err) { try { openModal('expenses'); } catch(e){} } });
+                }
+
+                // Make bottom nav buttons navigate views (reuse existing changeView bindings)
+                try {
+                    const nav = document.getElementById('mobile-bottom-nav');
+                    if (nav) {
+                        nav.querySelectorAll('.mobile-nav-btn').forEach(b => b.addEventListener('click', function(){ const v = this.dataset.view; try { changeView(v); } catch(e){ const ev = new Event('click'); const el = document.querySelector(`.tab-button[data-view="${v}"]`); if (el) el.dispatchEvent(ev); } }));
+                    }
+                } catch(e){}
+
+                // Swipe to change month (touch gestures)
+                (function(){
+                    let startX = 0, startY = 0, startTime = 0;
+                    const threshold = 60; // px to consider swipe
+                    const restraint = 80; // max vertical movement
+                    const allowedTime = 500; // ms
+                    document.addEventListener('touchstart', function(e){
+                        const t = e.changedTouches[0]; startX = t.pageX; startY = t.pageY; startTime = new Date().getTime();
+                    }, { passive: true });
+                    document.addEventListener('touchend', function(e){
+                        try {
+                            const t = e.changedTouches[0]; const distX = t.pageX - startX; const distY = t.pageY - startY; const elapsed = new Date().getTime() - startTime;
+                            if (elapsed <= allowedTime && Math.abs(distX) >= threshold && Math.abs(distY) <= restraint) {
+                                // left swipe = next month, right swipe = prev month
+                                if (distX < 0) { const next = document.getElementById('next-month-btn'); if (next) next.click(); }
+                                else { const prev = document.getElementById('prev-month-btn'); if (prev) prev.click(); }
+                            }
+                        } catch(e) {}
+                    }, { passive: true });
+                })();
+
+                // Improve modal backdrop tap-to-close responsiveness on mobile (single tap closes)
+                try {
+                    document.querySelectorAll('dialog').forEach(d => {
+                        d.addEventListener('click', function(e){ if (e.target === d && isMobile()) { try { d.close(); } catch(_) { d.removeAttribute('open'); } } });
+                    });
+                } catch(e) {}
+
+                // Prevent accidental focus loss when keyboard opens on iOS by ensuring inputs are scrolled into view
+                try {
+                    document.body.addEventListener('focusin', function(e){ if (!isMobile()) return; try { setTimeout(()=>{ e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 240); } catch(_){} });
+                } catch(e) {}
+
+                // Reduce motion for mobile to keep interactions snappy
+                try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('reduced-motion'); } catch(e) {}
+            } catch(e) { console.error('mobile-enhancements init', e); }
+        });
+    })();
+    </script>
 </body>
 </html>

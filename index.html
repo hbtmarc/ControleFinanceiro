@@ -165,6 +165,31 @@
     #income-table td.actions-cell, #income-table th.actions-cell { overflow: visible; text-overflow: clip; white-space: nowrap; }
     #income-table td.actions-cell .edit-btn, #income-table td.actions-cell .delete-btn, #income-table td.actions-cell button { display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem; }
         </style>
+        <style>
+        /* Salary breakdown tooltip card */
+        .salary-tooltip {
+            position: absolute;
+            z-index: 99999;
+            min-width: 260px;
+            max-width: 360px;
+            background: linear-gradient(180deg, #ffffff, #fbfdff);
+            border: 1px solid rgba(16,24,40,0.06);
+            box-shadow: 0 10px 30px rgba(2,6,23,0.12);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: #0f172a;
+            display: none;
+            font-size: 0.95rem;
+        }
+        .salary-tooltip h4 { margin: 0 0 6px 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; }
+        .salary-tooltip .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+        .salary-tooltip .label { color: #6b7280; font-weight: 600; }
+        .salary-tooltip .value { font-weight: 700; }
+        .salary-tooltip .value.negative { color: #dc2626; }
+        .salary-tooltip .value.positive { color: #16a34a; }
+        .salary-tooltip .divider { height: 1px; background: rgba(0,0,0,0.04); margin: 8px 0; border-radius: 1px; }
+        .salary-tooltip .summary { display:flex; align-items:center; gap:8px; }
+        </style>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -211,6 +236,8 @@
 
     <!-- Confetti.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <!-- SheetJS for client-side XLSX/CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
 /* Animações para KPIs principais */
@@ -1958,7 +1985,15 @@
     document.addEventListener('DOMContentLoaded', () => {
         const importBtn = document.getElementById('import-data-btn');
         if (importBtn) {
-            importBtn.addEventListener('click', importJsonToFirebase);
+            // If the spreadsheet modal exists, open it; otherwise fallback to JSON import
+            importBtn.addEventListener('click', () => {
+                const modal = document.getElementById('import-spreadsheet-modal');
+                if (modal) {
+                    try { modal.showModal(); } catch(e) { modal.setAttribute('open',''); }
+                } else {
+                    importJsonToFirebase();
+                }
+            });
         }
     });
     // ETAPA 2: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI
@@ -1992,6 +2027,196 @@ const firebaseConfig = {
                     await this.saveData(initialData);
                     return initialData;
                 }
+
+                // --- Client-side XLSX/CSV import modal and logic ---
+                (function(){
+                    if (document.getElementById('import-spreadsheet-modal')) return;
+                    const modal = document.createElement('dialog');
+                    modal.id = 'import-spreadsheet-modal';
+                    modal.className = 'p-6 rounded-2xl shadow-2xl card w-full max-w-2xl';
+                    modal.innerHTML = `
+                        <h3 class="text-lg font-semibold mb-3">Importar Planilha (.xlsx / .csv)</h3>
+                        <p class="text-sm text-gray-600 mb-3">Use o modelo simples: <strong>Data, Descrição, Valor, FormaPagamento, Categoria, Pago</strong></p>
+                        <div class="space-y-3">
+                            <input type="file" id="import-spreadsheet-input" accept=".xlsx,.xls,.csv" />
+                            <div id="import-preview" style="max-height:300px;overflow:auto;border:1px solid rgba(0,0,0,0.04);padding:8px;border-radius:8px;display:none;"></div>
+                            <div class="flex justify-end gap-2 mt-3">
+                                <button id="import-preview-cancel" class="bg-gray-100 px-3 py-1 rounded">Fechar</button>
+                                <button id="import-preview-run" class="bg-blue-600 text-white px-3 py-1 rounded" disabled>Importar para o mês selecionado</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+
+                    const fileInput = modal.querySelector('#import-spreadsheet-input');
+                    const previewEl = modal.querySelector('#import-preview');
+                    const runBtn = modal.querySelector('#import-preview-run');
+                    const closeBtn = modal.querySelector('#import-preview-cancel');
+
+                    function normalizeHeader(h) { return String(h||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+                    function findHeaderMap(headers) {
+                        const map = {};
+                        const norm = headers.map(h => ({ raw:h, n:normalizeHeader(h) }));
+                        const keys = {
+                            date: ['date','data','dia'],
+                            desc: ['descricao','description','historico','hist'],
+                            amount: ['valor','amount','montante'],
+                            payment: ['formapagamento','payment','pagamento','meiopagamento'],
+                            category: ['categoria','category'],
+                            paid: ['pago','paid','ispaid']
+                        };
+                        for (const k of Object.keys(keys)) {
+                            for (const candidate of keys[k]) {
+                                const found = norm.find(h => h.n === candidate || h.n.indexOf(candidate) !== -1);
+                                if (found) { map[k] = found.raw; break; }
+                            }
+                        }
+                        return map;
+                    }
+
+                    fileInput.addEventListener('change', async (ev) => {
+                        const f = ev.target.files && ev.target.files[0];
+                        if (!f) return;
+                        previewEl.style.display = 'none'; previewEl.innerHTML = '';
+                        runBtn.disabled = true;
+                        try {
+                            const data = await f.arrayBuffer();
+                            let wb;
+                            if (f.name.toLowerCase().endsWith('.csv')) {
+                                const text = new TextDecoder('utf-8').decode(data);
+                                wb = XLSX.read(text, { type: 'string' });
+                            } else {
+                                wb = XLSX.read(data, { type: 'array' });
+                            }
+                            const sheetName = wb.SheetNames[0];
+                            const sheet = wb.Sheets[sheetName];
+                            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                            if (!rows || rows.length === 0) { previewEl.innerHTML = '<div class="text-sm text-red-600">Planilha vazia ou inválida.</div>'; previewEl.style.display = 'block'; return; }
+                            const headers = Object.keys(rows[0]);
+                            const map = findHeaderMap(headers);
+                            const tbl = document.createElement('table'); tbl.style.width='100%'; tbl.style.borderCollapse='collapse';
+                            const thead = document.createElement('thead'); const trh = document.createElement('tr');
+                            ['Data','Descrição','Valor','FormaPagamento','Categoria','Pago'].forEach(h => { const th = document.createElement('th'); th.textContent = h; th.style.textAlign='left'; th.style.padding='6px'; trh.appendChild(th); });
+                            thead.appendChild(trh); tbl.appendChild(thead);
+                            const tb = document.createElement('tbody');
+                            const mappedRows = [];
+                            for (const r of rows) {
+                                const dr = {};
+                                dr.date = map.date ? r[map.date] : r['Date'] || r['Data'] || '';
+                                dr.description = map.desc ? r[map.desc] : r['Description'] || r['Descrição'] || r['Historico'] || '';
+                                dr.amount = map.amount ? r[map.amount] : r['Amount'] || r['Valor'] || '';
+                                dr.payment = map.payment ? r[map.payment] : r['Payment'] || r['FormaPagamento'] || '';
+                                dr.category = map.category ? r[map.category] : r['Category'] || r['Categoria'] || '';
+                                dr.paid = map.paid ? r[map.paid] : r['Paid'] || r['Pago'] || '';
+                                mappedRows.push(dr);
+                                const tr = document.createElement('tr');
+                                [dr.date, dr.description, dr.amount, dr.payment, dr.category, dr.paid].forEach(v => { const td = document.createElement('td'); td.textContent = (v===null||v===undefined)?'':v; td.style.padding='6px'; td.style.borderTop='1px solid rgba(0,0,0,0.04)'; tr.appendChild(td); });
+                                tb.appendChild(tr);
+                            }
+                            tbl.appendChild(tb);
+                            previewEl.appendChild(tbl);
+                            previewEl.style.display = 'block';
+                            runBtn.disabled = false;
+
+                            // Instead of saving immediately, show a confirmation step with counts and backup
+                            runBtn.onclick = async () => {
+                                try {
+                                    // compute target year/month and target array
+                                    let targetYear = null; let targetMonth = null;
+                                    for (const rr of mappedRows) {
+                                        const dv = new Date(rr.date);
+                                        if (!isNaN(dv)) { targetYear = dv.getFullYear(); targetMonth = dv.getMonth()+1; break; }
+                                    }
+                                    if (!targetYear) { targetYear = (new Date()).getFullYear(); targetMonth = (new Date()).getMonth()+1; }
+
+                                    let positives=0, negatives=0;
+                                    for (const rr of mappedRows) { const n = parseFloat(String(rr.amount).replace(/[^0-9-,.]/g,'').replace(',','.')) || 0; if (n>0) positives++; if (n<0) negatives++; }
+                                    const targetArray = (negatives > positives) ? 'expenses' : 'incomes';
+
+                                    // Build a summary and show confirmation UI
+                                    const totalRows = mappedRows.length;
+                                    const sum = mappedRows.reduce((acc, rr) => { const v = parseFloat(String(rr.amount).replace(/[^0-9-,.]/g,'').replace(',','.')) || 0; return acc + v; }, 0);
+                                    previewEl.innerHTML = '';
+                                    previewEl.style.display = 'block';
+                                    const summary = document.createElement('div');
+                                    summary.innerHTML = `
+                                        <div class="mb-3 text-sm text-gray-700">Resumo antes de importar:</div>
+                                        <ul class="text-sm text-gray-800" style="padding-left:16px;">
+                                            <li><strong>Linhas detectadas:</strong> ${totalRows}</li>
+                                            <li><strong>Direção inferida:</strong> ${targetArray}</li>
+                                            <li><strong>Mês / Ano alvo:</strong> ${targetMonth}/${targetYear}</li>
+                                            <li><strong>Soma (considerando sinais):</strong> ${formatCurrency(sum)}</li>
+                                        </ul>
+                                    `;
+                                    const actions = document.createElement('div'); actions.className = 'flex justify-end gap-2 mt-4';
+
+                                    const backupBtn = document.createElement('button'); backupBtn.className = 'bg-gray-100 px-3 py-1 rounded text-sm'; backupBtn.textContent = 'Baixar backup do mês atual';
+                                    const backBtn = document.createElement('button'); backBtn.className = 'bg-white border px-3 py-1 rounded text-sm'; backBtn.textContent = 'Voltar';
+                                    const confirmBtn = document.createElement('button'); confirmBtn.className = 'bg-green-600 text-white px-3 py-1 rounded text-sm'; confirmBtn.textContent = 'Confirmar importação';
+
+                                    actions.appendChild(backupBtn); actions.appendChild(backBtn); actions.appendChild(confirmBtn);
+                                    previewEl.appendChild(summary); previewEl.appendChild(actions);
+
+                                    // backup function: download current month data as JSON
+                                    backupBtn.addEventListener('click', () => {
+                                        try {
+                                            const existing = (state && state.appData && state.appData.data && state.appData.data[targetYear] && state.appData.data[targetYear][targetMonth]) || { incomes:[], expenses:[], savings:[] };
+                                            const blob = new Blob([JSON.stringify(existing, null, 2)], { type: 'application/json' });
+                                            const url = URL.createObjectURL(blob);
+                                            const a = document.createElement('a'); a.href = url; a.download = `backup-${targetYear}-${String(targetMonth).padStart(2,'0')}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                                        } catch (e) { showToast('Falha ao gerar backup: ' + (e.message||e), 'bg-red-600'); }
+                                    });
+
+                                    backBtn.addEventListener('click', () => { previewEl.innerHTML = ''; previewEl.appendChild(tbl); previewEl.appendChild(runBtn); runBtn.disabled = false; });
+
+                                    confirmBtn.addEventListener('click', async () => {
+                                        try {
+                                            confirmBtn.disabled = true; backupBtn.disabled = true; backBtn.disabled = true; showLoading();
+                                            // Build payload items
+                                            const items = [];
+                                            for (const rr of mappedRows) {
+                                                const amt = Math.abs(parseFloat(String(rr.amount).replace(/[^0-9-,.]/g,'').replace(',','.') || 0));
+                                                const item = {
+                                                    id: 'imp-' + Math.random().toString(36).slice(2,9),
+                                                    description: String(rr.description || '').trim() || 'Importado',
+                                                    amount: Number((amt||0).toFixed(2)),
+                                                    payment: rr.payment || undefined,
+                                                    category: rr.category || undefined,
+                                                    isPaid: String(rr.paid || '').toLowerCase().indexOf('s') === 0 || String(rr.paid || '').toLowerCase().indexOf('t') === 0 || String(rr.paid || '') === '1'
+                                                };
+                                                items.push(item);
+                                            }
+
+                                            // Merge into existing app data safely
+                                            const saveTarget = JSON.parse(JSON.stringify(state.appData || {}));
+                                            saveTarget.data = saveTarget.data || {};
+                                            saveTarget.data[targetYear] = saveTarget.data[targetYear] || {};
+                                            saveTarget.data[targetYear][targetMonth] = saveTarget.data[targetYear][targetMonth] || { incomes: [], expenses: [], savings: [] };
+                                            saveTarget.data[targetYear][targetMonth][targetArray] = (saveTarget.data[targetYear][targetMonth][targetArray] || []).concat(items);
+                                            await storage.saveData(saveTarget);
+                                            hideLoading(); showToast('Importação concluída com sucesso!', 'bg-green-600');
+                                            try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
+                                            setTimeout(() => location.reload(), 900);
+                                        } catch (err) {
+                                            hideLoading(); showToast('Falha ao salvar: ' + (err && err.message ? err.message : String(err)), 'bg-red-600');
+                                            confirmBtn.disabled = false; backupBtn.disabled = false; backBtn.disabled = false;
+                                        }
+                                    });
+
+                                    // disable main runBtn while confirmation is visible
+                                    runBtn.disabled = true;
+
+                                } catch (e) { hideLoading(); showToast('Erro durante preparação da importação: '+ (e && e.message ? e.message : e), 'bg-red-600'); }
+                            };
+
+                        } catch (err) {
+                            previewEl.innerHTML = '<div class="text-sm text-red-600">Erro ao ler o arquivo: ' + (err && err.message ? err.message : err) + '</div>';
+                            previewEl.style.display = 'block';
+                        }
+                    });
+
+                    closeBtn.addEventListener('click', () => { try { modal.close(); } catch(e){ modal.removeAttribute('open'); } });
+                })();
                 const firebaseData = snapshot.val();
                 // Garante que a estrutura base (settings, data) exista, mesclando com o padrão.
                 // Isso previne erros se os dados no Firebase estiverem incompletos.
@@ -4180,7 +4405,93 @@ const firebaseConfig = {
             renderIncomeTable();
             renderExpenseTable();
             renderSavingsTable();
+            // Attach salary tooltip handlers after tables render
+            try { attachSalaryTooltipHandlers(); } catch(e) { /* ignore */ }
         }
+
+        // Salary tooltip: builds a floating card showing bruto tributável, INSS, IRRF, descontos totais and remuneração total
+        (function(){
+            let salaryTooltipEl = null;
+            function ensureTooltip() {
+                if (salaryTooltipEl) return salaryTooltipEl;
+                salaryTooltipEl = document.createElement('div');
+                salaryTooltipEl.className = 'salary-tooltip';
+                salaryTooltipEl.innerHTML = `<h4>Resumo do Salário</h4>
+                    <div class="row"><div class="label">Bruto tributável</div><div class="value" data-key="bruto">R$ 0,00</div></div>
+                    <div class="row"><div class="label">INSS</div><div class="value negative" data-key="inss">R$ 0,00</div></div>
+                    <div class="row"><div class="label">IRRF</div><div class="value negative" data-key="irrf">R$ 0,00</div></div>
+                    <div class="divider"></div>
+                    <div class="row"><div class="label">Total de descontos</div><div class="value negative" data-key="descontos">R$ 0,00</div></div>
+                    <div class="divider"></div>
+                    <div class="row summary"><div class="label">Remuneração total</div><div class="value positive" data-key="remuneracao">R$ 0,00</div></div>`;
+                document.body.appendChild(salaryTooltipEl);
+                return salaryTooltipEl;
+            }
+
+            // position tooltip near element (to the top-right of the hovered element when possible)
+            function positionTooltip(target, el) {
+                const rect = target.getBoundingClientRect();
+                const tooltipRect = el.getBoundingClientRect();
+                // default position: above the element, right-aligned
+                let top = window.scrollY + rect.top - tooltipRect.height - 8;
+                let left = window.scrollX + rect.right - tooltipRect.width;
+                // if not enough space above, place below
+                if (top < window.scrollY + 8) top = window.scrollY + rect.bottom + 8;
+                // keep inside viewport horizontally
+                left = Math.max(window.scrollX + 8, Math.min(left, window.scrollX + document.documentElement.clientWidth - tooltipRect.width - 8));
+                el.style.top = top + 'px';
+                el.style.left = left + 'px';
+            }
+
+            window.attachSalaryTooltipHandlers = function attachSalaryTooltipHandlers() {
+                const el = ensureTooltip();
+                // Remove any previous listeners by cloning the node list
+                const items = Array.from(document.querySelectorAll('.salary-breakdown-hidden'));
+                items.forEach(item => {
+                    // clear existing handlers to avoid duplication
+                    item.onmouseenter = null; item.onmouseleave = null; item.onmousemove = null;
+                    item.addEventListener('mouseenter', (ev) => {
+                        try {
+                            const id = item.dataset.id;
+                            // try to find the income object by id in current month
+                            const md = getCurrentMonthData();
+                            let income = null;
+                            if (md && Array.isArray(md.incomes)) income = md.incomes.find(i => i.id === id) || null;
+
+                            // Prefer cached calc (user may already have opened the breakdown modal)
+                            let calc = (window.salaryCalcCache && id && window.salaryCalcCache[id]) ? window.salaryCalcCache[id] : null;
+
+                            // If not cached, build params from income.salaryMeta (or fallback to amount) and compute
+                            if (!calc) {
+                                let params = null;
+                                if (income && income.salaryMeta) params = Object.assign({}, income.salaryMeta);
+                                else if (income && income.amount) params = { salarioBase: income.amount };
+                                if (params && typeof calcularSalarioLiquido === 'function') calc = calcularSalarioLiquido(params);
+                            }
+
+                            if (!calc) return;
+
+                            // Extract canonical values: bruto tributável, INSS total, IRRF value, total descontos and remuneracao total
+                            const brutoVal = Number((calc.resumo && (calc.resumo.salarioBrutoTributavel || calc.resumo.salarioBruto)) || 0);
+                            const inssVal = Number((calc.detalhe && calc.detalhe.descontos && (Number(calc.detalhe.descontos.inssTotal) || 0)) || (Number(calc.resumo && calc.resumo.inssTotal) || 0));
+                            const irrfVal = Number((calc.detalhe && calc.detalhe.descontos && (Number(calc.detalhe.descontos.irrfValue) || 0)) || (Number(calc.resumo && calc.resumo.irrfValue) || 0));
+                            const descontosVal = Number((calc.resumo && (Number(calc.resumo.totalDescontos) || 0)) || (inssVal + irrfVal));
+                            const remuneracaoVal = Number((calc.resumo && (Number(calc.resumo.remuneracaoTotal) || Number(calc.resumo.remuneracao) || 0)) || 0);
+
+                            const map = { bruto: brutoVal, inss: inssVal, irrf: irrfVal, descontos: descontosVal, remuneracao: remuneracaoVal };
+                            Object.keys(map).forEach(k => {
+                                const node = el.querySelector(`[data-key="${k}"]`);
+                                if (node) node.textContent = formatCurrency(Number(map[k] || 0));
+                            });
+                            el.style.display = 'block';
+                            positionTooltip(item, el);
+                        } catch (e) { console.error('salary tooltip show', e); }
+                    });
+                    item.addEventListener('mouseleave', () => { try { el.style.display = 'none'; } catch(e){} });
+                    item.addEventListener('mousemove', (ev) => { try { positionTooltip(item, el); } catch(e){} });
+                });
+            };
+        })();
 
         function renderIncomeTable() {
             // Inicializa array de entradas para evitar erro
@@ -5681,6 +5992,8 @@ const firebaseConfig = {
                 };
 
                 const calc = calcularSalarioLiquido(params);
+                // Cache the calculated result by income id for tooltip reuse
+                try { window.salaryCalcCache = window.salaryCalcCache || {}; if (income && income.id) window.salaryCalcCache[income.id] = calc; } catch(e){}
                 const resumo = calc.resumo || {};
                 const detalhe = calc.detalhe || {};
 

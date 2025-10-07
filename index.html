@@ -437,6 +437,11 @@
             .mobile-row .mobile-left { min-width:0; overflow:hidden; }
             .mobile-row .mobile-left > div, .mobile-row .mobile-left span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
             .mobile-row .mobile-right { flex-shrink:0; display:flex; align-items:center; gap:8px; }
+            /* Prevent any overflow on wrappers that used to be scrollable */
+            .overflow-x-auto { overflow-x: hidden !important; }
+            /* Constrain amount and action buttons to avoid forcing horizontal scroll */
+            .mobile-row .mobile-right .amount, .mobile-row .mobile-right span { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display:inline-block; }
+            .mobile-row .mobile-right button { min-width:36px; width:36px; height:36px; padding:6px; }
             /* Hide top tabs and enable bottom navigation on mobile */
             #tabs { display: none !important; }
             #mobile-bottom-nav { display: none; }
@@ -569,6 +574,45 @@
                 text-align: center;
             }
             .checkbox-cell input[type="checkbox"] { margin: 0 auto; display: inline-block; }
+        }
+    </style>
+    <style>
+        /* Mobile swipe-to-reveal styles (mobile-only) */
+        @media (max-width: 640px) {
+            .mobile-row-cell { padding: 6px 10px; }
+            .swipe-container { position: relative; }
+            .swipe-actions { right: 8px; }
+            .action-btn { width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:9999px;background:transparent;border:1px solid transparent;box-shadow:none;color:inherit }
+            .action-btn:disabled { opacity:0.45 }
+            .action-btn .material-symbols-outlined { font-size:18px;line-height:1; }
+            /* hide actions until row is swiped open to avoid visible pills on closed rows */
+            .swipe-actions { opacity:0; pointer-events:none; transform:translateX(6px); transition:opacity .18s ease, transform .18s ease; }
+            .swipe-open .swipe-actions { opacity:1; pointer-events:auto; transform:translateX(0); }
+            /* colored backgrounds only when open (visual affordance) */
+            .swipe-open .action-btn.edit-btn { background:#e6f0ff; border-color: rgba(99,102,241,0.12); color:#3730a3 }
+            .swipe-open .action-btn.delete-btn { background:#fff1f2; border-color: rgba(239,68,68,0.12); color:#b91c1c }
+            /* remove any background on the amount to avoid pill look */
+            .mobile-right, .mobile-right .amount { background:transparent;border-radius:0; padding:0 }
+            .swipe-wrap { background:transparent }
+            /* enforce a left (flexible) / right (fixed) layout so descriptions align left and values align right */
+            .mobile-row { display:flex; align-items:center; gap:12px; width:100%; min-width:0; }
+            .mobile-row, .mobile-row * { white-space: nowrap; }
+            .mobile-row .mobile-left { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+            .mobile-row .mobile-left > div, .mobile-row .mobile-left span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            /* Right column increased so currency values fit and don't truncate */
+            .mobile-row .mobile-right { flex: 0 0 170px; display:flex; align-items:center; justify-content:flex-end; gap:8px; box-sizing:border-box; padding-left:8px; }
+            .mobile-row .mobile-right .amount { flex: 0 0 auto; min-width: 0; white-space: nowrap; overflow: visible; text-overflow: clip; text-align: right; display:inline-block; font-weight:600; font-size:0.98rem; }
+            .mobile-right { gap:6px; }
+            /* Ensure desktop-style action cells still show their buttons on mobile (in case rows were rendered in desktop form) */
+            .responsive-table td.actions-cell button, .responsive-table td.actions-cell .edit-btn, .responsive-table td.actions-cell .delete-btn { display:inline-flex !important; align-items:center; justify-content:center; width:40px; height:40px; padding:6px !important; }
+            /* Show regular table cells on mobile too (some rows may be rendered in desktop form). Keep them single-line and truncated to avoid horizontal scroll. */
+            .responsive-table thead th { display:none !important; }
+            .responsive-table tbody td { display: table-cell !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; vertical-align: middle !important; }
+            /* When JS renders a mobile-friendly full-width cell use block layout */
+            .responsive-table td.mobile-row-cell { display: block !important; width:100% !important; box-sizing: border-box !important; }
+            /* prevent horizontal scroll from parent wrappers */
+            .overflow-x-auto { overflow-x: hidden !important; }
+            .responsive-table colgroup col { width: auto !important; }
         }
     </style>
     <style>
@@ -2877,6 +2921,24 @@ const firebaseConfig = {
                     }
             });
             document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
+            // 'More' button inside mobile rows: toggle swipe actions programmatically so users can access edit/delete without swiping
+            document.body.addEventListener('click', function(e){
+                const more = e.target.closest('.more-btn');
+                if (!more) return;
+                const container = more.closest('.swipe-container') || more.closest('tr');
+                if (!container) return;
+                // Find the nearest swipe-wrap and swipe-actions
+                const wrap = container.querySelector('.swipe-wrap');
+                const actions = container.querySelector('.swipe-actions');
+                if (!wrap || !actions) return;
+                // If already open, close; otherwise open and close any other open
+                const isOpen = container.classList.contains('swipe-open');
+                // Close others
+                document.querySelectorAll('.swipe-container.swipe-open').forEach(c => { if (c !== container) { const w = c.querySelector('.swipe-wrap'); if (w) w.style.transform = ''; c.classList.remove('swipe-open'); } });
+                if (isOpen) { wrap.style.transform = ''; container.classList.remove('swipe-open'); }
+                else { const to = -Math.min(actions.getBoundingClientRect().width + 8, 120); wrap.style.transform = `translateX(${to}px)`; container.classList.add('swipe-open'); }
+                e.preventDefault();
+            });
             // Mobile bottom nav interactions
             if (ui.mobileBottomNav) {
                 const buttons = ui.mobileBottomNav.querySelectorAll('.mobile-nav-btn');
@@ -4895,7 +4957,7 @@ const firebaseConfig = {
             // If this income looks like a salary (explicit flag, salaryMeta or description contains 'salari'), attach a hidden click access
             const isSalary = !!income.isSalary || !!income.salaryMeta || /salari/i.test(String(income.description || ''));
             // Keep the exact same visual as before: span with same typography (no underline). Access is 'hidden' but clickable.
-            const amountHtml = `<span class="salary-breakdown-hidden text-green-600 font-medium" data-id="${income.id}">${formatCurrency(income.amount)}</span>`;
+            const amountHtml = `<span class="amount salary-breakdown-hidden text-green-600 font-medium" data-id="${income.id}">${formatCurrency(income.amount)}</span>`;
             const payIcon = (typeof getIconFor === 'function') ? getIconFor('payment', income.payment || '') : '';
             const descLabel = (payIcon && typeof iconHtml === 'function') ? iconHtml(payIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(income.description || '')}</span>` : escapeHtml(income.description || '');
 
@@ -4904,15 +4966,22 @@ const firebaseConfig = {
                 // income table has 3 columns on desktop, use colspan=3 so mobile row occupies full width
                 row.innerHTML = `
                     <td colspan="3" class="mobile-row-cell" data-label="Entrada">
-                        <div class="mobile-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-                            <div class="mobile-left" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-                                ${descLabel}
-                                ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}
+                        <div class="swipe-container" style="position:relative;overflow:visible;">
+                            <div class="swipe-actions" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:8px;z-index:2;">
+                                <button class="action-btn edit-btn" aria-label="Editar" title="Editar"><span class="material-symbols-outlined" aria-hidden="true">edit</span></button>
+                                <button class="action-btn delete-btn" aria-label="Excluir" title="Excluir"><span class="material-symbols-outlined" aria-hidden="true">delete</span></button>
                             </div>
-                            <div class="mobile-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                                ${amountHtml}
-                                <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
-                                <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                            <div class="swipe-wrap" style="transition:transform .18s ease;will-change:transform;">
+                                <div class="mobile-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                                    <div class="mobile-left" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                                        ${descLabel}
+                                        ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}
+                                    </div>
+                                    <div class="mobile-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                                        ${amountHtml}
+                                        <button class="action-btn more-btn" aria-label="Mais" title="Mais"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </td>`;
@@ -4956,18 +5025,25 @@ const firebaseConfig = {
                 // expenses table has 6 columns on desktop, use colspan=6 so mobile row occupies full width
                 row.innerHTML = `
                     <td colspan="6" class="mobile-row-cell" data-label="Despesa">
-                        <div class="mobile-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-                            <div class="mobile-left" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-                                <input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''} style="margin-right:8px;flex:0 0 auto;" />
-                                <div style="min-width:0;">
-                                    <div style="font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(expense.description)} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</div>
-                                    <div style="color:#6b7280;font-size:.95rem;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${paymentHtml} <span style="margin:0 6px;color:#9ca3af;">•</span> ${categoryHtml}</div>
-                                </div>
+                        <div class="swipe-container" style="position:relative;overflow:visible;">
+                            <div class="swipe-actions" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:8px;z-index:2;">
+                                <button class="action-btn edit-btn" aria-label="Editar" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined" aria-hidden="true">${expense.installmentId ? 'lock' : 'edit'}</span></button>
+                                <button class="action-btn delete-btn" aria-label="Excluir" title="Excluir"><span class="material-symbols-outlined" aria-hidden="true">delete</span></button>
                             </div>
-                            <div class="mobile-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                                <span class="text-red-600 font-medium">${formatCurrency(expense.amount)}</span>
-                                <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
-                                <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                            <div class="swipe-wrap" style="transition:transform .18s ease;will-change:transform;">
+                                <div class="mobile-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                                    <div class="mobile-left" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                                        <input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''} style="margin-right:8px;flex:0 0 auto;" />
+                                        <div style="min-width:0;">
+                                            <div style="font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(expense.description)} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</div>
+                                            <div style="color:#6b7280;font-size:.95rem;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${paymentHtml} <span style="margin:0 6px;color:#9ca3af;">•</span> ${categoryHtml}</div>
+                                        </div>
+                                    </div>
+                                    <div class="mobile-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                                        <span class="amount text-red-600 font-medium">${formatCurrency(expense.amount)}</span>
+                                        <button class="action-btn more-btn" aria-label="Mais" title="Mais"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </td>`;
@@ -8103,6 +8179,8 @@ const firebaseConfig = {
 
     /* Tables: keep natural table layout (rows stacked vertically). Use subtle dividers between rows for mobile readability. */
     .responsive-table, .responsive-table table { width: 100% !important; max-width: 100% !important; }
+    /* Prevent fixed col widths from forcing horizontal scroll on mobile */
+    .responsive-table colgroup col { width: auto !important; }
     .responsive-table tr { display: table-row !important; margin: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
     .responsive-table td { display: table-cell !important; vertical-align: middle !important; padding: 10px 8px !important; border: none !important; border-bottom: 1px solid rgba(0,0,0,0.06) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .responsive-table td .material-symbols-outlined { margin-right: 8px !important; }
@@ -8227,6 +8305,40 @@ const firebaseConfig = {
                 try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('reduced-motion'); } catch(e) {}
             } catch(e) { console.error('mobile-enhancements init', e); }
         });
+    })();
+    </script>
+    <script>
+    // Lightweight swipe-to-reveal initializer (safe to re-run)
+    (function(){
+        if (!('ontouchstart' in window)) return; // desktop: nothing to do
+        const THRESHOLD = 0.22; // fraction
+        const MAX_SWIPE = 120; // px
+        let openContainer = null;
+
+        function closeOpen() {
+            if (!openContainer) return;
+            const w = openContainer.querySelector('.swipe-wrap'); if (w) w.style.transform = '';
+            openContainer.classList.remove('swipe-open'); openContainer = null;
+        }
+
+        function attach(container) {
+            const wrap = container.querySelector('.swipe-wrap');
+            const actions = container.querySelector('.swipe-actions');
+            if (!wrap || !actions) return;
+            let startX = 0, curX = 0, dragging = false;
+
+            function start(e){ const t = e.touches ? e.touches[0] : e; startX = t.clientX; curX = startX; dragging = true; wrap.style.transition = 'none'; if (openContainer && openContainer !== container) closeOpen(); }
+            function move(e){ if (!dragging) return; const t = e.touches ? e.touches[0] : e; curX = t.clientX; let dx = curX - startX; if (dx > 0) dx = 0; const max = -Math.min(actions.getBoundingClientRect().width + 8, MAX_SWIPE); if (dx < max) dx = max; wrap.style.transform = `translateX(${dx}px)`; }
+            function end(){ if (!dragging) return; dragging = false; wrap.style.transition = ''; const moved = curX - startX; const actionsW = actions.getBoundingClientRect().width + 8; const shouldOpen = (-moved) > actionsW * THRESHOLD; if (shouldOpen) { const to = -Math.min(actionsW, MAX_SWIPE); wrap.style.transform = `translateX(${to}px)`; container.classList.add('swipe-open'); openContainer = container; } else { closeOpen(); } }
+
+            container.addEventListener('touchstart', start, { passive: true });
+            container.addEventListener('touchmove', move, { passive: true });
+            container.addEventListener('touchend', end);
+            container.addEventListener('touchcancel', end);
+        }
+
+        function init(){ document.querySelectorAll('.swipe-container').forEach(attach); if (!window._swipe_close_installed) { document.addEventListener('touchstart', function(ev){ if (openContainer && !openContainer.contains(ev.target)) closeOpen(); }, { passive: true }); window._swipe_close_installed = true; } }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     })();
     </script>
 </body>

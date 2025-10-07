@@ -186,6 +186,36 @@
         }
         /* Visible focus ring improvements for keyboard users */
         #transaction-modal :focus { outline: 3px solid rgba(59,130,246,0.25); outline-offset: 2px; }
+        /* Make inputs inside installments/financing cards cleaner by removing extra bottom borders */
+        #installments-section .bg-white input, #installments-section .bg-white select, #installments-section .bg-white textarea {
+            border-bottom: none !important;
+        }
+        /* Show both cards but low-opacity by default; when .active is set, make them fully opaque */
+        #installments-fields, #financing-fields {
+            opacity: 0.1;
+            transition: opacity 160ms ease-in-out, box-shadow 160ms ease-in-out;
+            pointer-events: none; /* prevent interaction when not active */
+        }
+        #installments-fields.active, #financing-fields.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Make placeholder / input text inside the small cards low-opacity until user types */
+        #installments-fields input, #financing-fields input {
+            color: rgba(17,24,39,0.10); /* very light text for placeholders/initial state */
+            transition: color 120ms ease;
+        }
+        #installments-fields input::placeholder, #financing-fields input::placeholder {
+            color: rgba(17,24,39,0.12);
+            opacity: 1; /* use explicit color above */
+        }
+        /* If the input has a value (placeholder not shown) show full opacity text */
+        #installments-fields input:not(:placeholder-shown), #financing-fields input:not(:placeholder-shown) {
+            color: #111827;
+        }
+        /* Fallback when :placeholder-shown isn't available: use .has-value class toggled by JS */
+        #installments-fields input.has-value, #financing-fields input.has-value { color: #111827 !important; }
         </style>
         <style>
         /* Salary breakdown tooltip card */
@@ -359,6 +389,15 @@
         .infrequent-controls {
             opacity: 0;
             pointer-events: none;
+            transform: translateY(6px);
+            transition: opacity .15s ease, transform .15s ease;
+        }
+
+        /* Make visible when JS toggles .visible on desktop */
+        .infrequent-controls.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
         }
 
         .material-symbols-outlined {
@@ -685,6 +724,12 @@
                         <button id="import-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Importar dados (JSON)">
                             <span class="material-symbols-outlined text-gray-600">upload</span>
                         </button>
+                        <button id="create-backup-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Criar backup completo" aria-label="Criar backup">
+                            <span class="material-symbols-outlined text-gray-600">save</span>
+                        </button>
+                        <button id="restore-backup-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Restaurar backup" aria-label="Restaurar backup">
+                            <span class="material-symbols-outlined text-gray-600">restore_from_trash</span>
+                        </button>
                         <button id="export-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Exportar dados (JSON)">
                             <span class="material-symbols-outlined text-gray-600">download</span>
                         </button>
@@ -702,6 +747,63 @@
                     </button>
                     <!-- quick links removed from this position (moved next to title) -->
                 </div>
+                <!-- Backup / Restore Modal (hidden by default) -->
+                <dialog id="backup-restore-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-3xl">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold">Gerenciar Backups</h3>
+                        <button id="close-backup-modal" class="px-2 py-1 rounded bg-gray-100">Fechar</button>
+                    </div>
+                    <div class="flex gap-4">
+                        <div style="flex:1;min-width:260px;max-width:420px;">
+                            <div class="flex items-center justify-between mb-2">
+                                <strong>Backups</strong>
+                                <button id="refresh-backups-btn" class="px-2 py-0.5 rounded bg-gray-100 text-sm">Atualizar</button>
+                            </div>
+                            <div id="backups-list" style="max-height:420px;overflow:auto;border:1px solid rgba(0,0,0,0.04);padding:8px;border-radius:8px;">
+                                <div class="text-sm text-gray-500">Nenhum backup encontrado.</div>
+                            </div>
+                        </div>
+                        <div style="flex:1;min-width:320px;">
+                            <div class="flex items-center justify-between mb-2">
+                                <strong>Preview</strong>
+                                <div>
+                                    <button id="download-preview-btn" class="px-2 py-0.5 rounded bg-gray-100 text-sm">Baixar</button>
+                                    <button id="restore-selected-btn" class="px-2 py-0.5 ml-2 rounded bg-red-600 text-white text-sm">Restaurar</button>
+                                </div>
+                            </div>
+                            <div id="backup-preview" style="max-height:420px;overflow:auto;border:1px solid rgba(0,0,0,0.04);padding:8px;border-radius:8px;background:#fff"></div>
+                        </div>
+                    </div>
+                </dialog>
+                <!-- Import JSON Modal -->
+                <dialog id="import-json-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-3xl">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold">Importar Dados (.json)</h3>
+                        <button id="close-import-modal" class="px-2 py-1 rounded bg-gray-100">Fechar</button>
+                    </div>
+                    <div class="space-y-3">
+                        <p class="text-sm text-gray-600">Selecione um arquivo <strong>.json</strong> exportado pelo aplicativo. O arquivo pode conter o objeto principal <code>financeAppDB_v10</code> ou diretamente a estrutura de dados da aplicação. O processo irá substituir os dados locais.</p>
+                        <div class="flex gap-4">
+                            <div style="flex:1;min-width:260px;max-width:420px;">
+                                <label class="block text-sm font-medium mb-1">Arquivo (.json)</label>
+                                <input type="file" id="import-file-input-modal" accept=".json,application/json" class="w-full border rounded p-2" />
+                                <div id="import-file-info" class="text-xs text-gray-500 mt-2">Nenhum arquivo selecionado.</div>
+                                <div class="mt-3">
+                                    <button id="parse-import-btn" class="px-3 py-1 rounded bg-blue-600 text-white">Ler e Validar</button>
+                                    <button id="clear-import-btn" class="px-3 py-1 ml-2 rounded bg-gray-100">Limpar</button>
+                                </div>
+                            </div>
+                            <div style="flex:1;min-width:320px;">
+                                <label class="block text-sm font-medium mb-1">Preview / Validação</label>
+                                <div id="import-preview" style="max-height:420px;overflow:auto;border:1px solid rgba(0,0,0,0.04);padding:8px;border-radius:8px;background:#fff;font-family:monospace;font-size:12px;white-space:pre-wrap;">Nenhum preview disponível.</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button id="import-cancel-btn" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
+                            <button id="import-confirm-btn" class="px-3 py-1 rounded bg-red-600 text-white" disabled>Importar e Substituir</button>
+                        </div>
+                    </div>
+                </dialog>
                 <div class="flex items-center gap-1 card !shadow-sm !hover:scale-100 rounded-full p-0.5">
                     <button id="prev-month-btn" class="p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
                         <span class="material-symbols-outlined">chevron_left</span>
@@ -1134,6 +1236,8 @@
             const normType = normalizeType(type);
             const indicator = document.getElementById('modal-type-indicator');
             const btns = document.querySelectorAll('.modal-type-toggle');
+            // use normalized type early so subsequent code can rely on it
+            const t = normType;
             btns.forEach(btn => {
                 btn.classList.remove('selected');
                 // compare normalized dataset type to normalized input type
@@ -1145,12 +1249,61 @@
                     indicator.innerHTML = icon + ' ' + label;
                 }
             });
+            // Also set inline styles on the selected toggle to guarantee highlight (override any other rules)
+            btns.forEach(b => {
+                // reset inline visual styles
+                b.style.borderColor = '';
+                b.style.background = '';
+                const iconEl = b.querySelector('.material-symbols-outlined');
+                const textEl = b.querySelector('span.text-sm') || b.querySelector('span:last-child');
+                if (iconEl) iconEl.style.color = '';
+                if (textEl) textEl.style.color = '';
+                // apply to the selected one
+                if (b.classList.contains('selected')) {
+                    if (t === 'incomes') {
+                        b.style.borderColor = '#16a34a';
+                        b.style.background = '#d1fae5';
+                        if (iconEl) iconEl.style.color = '#16a34a';
+                        if (textEl) textEl.style.color = '#16a34a';
+                    } else if (t === 'expenses') {
+                        b.style.borderColor = '#dc2626';
+                        b.style.background = '#fee2e2';
+                        if (iconEl) iconEl.style.color = '#dc2626';
+                        if (textEl) textEl.style.color = '#dc2626';
+                    } else { // reserve/savings
+                        b.style.borderColor = '#eab308';
+                        b.style.background = '#fef9c3';
+                        if (iconEl) iconEl.style.color = '#eab308';
+                        if (textEl) textEl.style.color = '#eab308';
+                    }
+                }
+            });
             // Atualiza classe do botão de salvar (determinístico)
             const saveBtn = document.getElementById('modal-save-btn');
             const saveIcon = document.getElementById('modal-save-icon');
-            // use normalized type
-            const t = normType;
             // remove any tailwind background classes that could override our styles
+            // Keep input text dimmed until user types — add/remove .has-value for browsers without :placeholder-shown
+            function setupValueListeners(container) {
+                var inputs = container.querySelectorAll('input, textarea');
+                inputs.forEach(function (inp) {
+                    function update() {
+                        if (inp.value && inp.value.trim() !== '') {
+                            inp.classList.add('has-value');
+                        }
+                        else {
+                            inp.classList.remove('has-value');
+                        }
+                    }
+                    inp.addEventListener('input', update);
+                    // initialize
+                    update();
+                });
+            }
+            // Prefer direct element lookup so this function can run before the `ui` map is initialized
+            const installmentsFieldsEl = document.getElementById('installments-fields');
+            const financingFieldsEl = document.getElementById('financing-fields');
+            if (installmentsFieldsEl) setupValueListeners(installmentsFieldsEl);
+            if (financingFieldsEl) setupValueListeners(financingFieldsEl);
             saveBtn.classList.remove('bg-blue-600','bg-blue-500','bg-green-600','bg-green-500','bg-yellow-400','bg-yellow-500','bg-red-600','bg-red-500','hover:bg-blue-700','hover:bg-green-700','hover:bg-red-700');
             saveBtn.classList.remove('save-type-expenses', 'save-type-incomes', 'save-type-reserve');
             if (t === 'expenses') saveBtn.classList.add('save-type-expenses');
@@ -1171,6 +1324,38 @@
             else if (t === 'reserve') { color = '#eab308'; border = '#d6a013'; box = '0 2px 10px #eab30844'; textCol = '#111827'; }
             const styleString = `background:${color} !important; background-color:${color} !important; background-image:none !important; border:2px solid ${border} !important; box-shadow:${box} !important; color:${textCol} !important; opacity:1 !important; filter:none !important;`;
             try { saveBtn.setAttribute('style', styleString); } catch(e) { /* ignore */ }
+
+            // Adjust advanced options visibility and labels depending on the selected type
+            try {
+                // Select labels deterministically by for="..." so we don't depend on DOM nesting
+                const installmentLabel = document.querySelector('label[for="is-installment"]');
+                const financingLabel = document.querySelector('label[for="is-financing"]');
+                const salarySection = document.getElementById('salary-section');
+                // Recurrence label stays visible always, no change needed
+                if (t === 'incomes') {
+                    if (financingLabel) financingLabel.classList.add('hidden');
+                    if (installmentLabel) {
+                        const txt = installmentLabel.querySelector('span.ml-2') || installmentLabel.querySelector('span:last-child');
+                        if (txt) txt.textContent = 'É uma receita parcelada?';
+                        installmentLabel.classList.remove('hidden');
+                    }
+                    if (salarySection) salarySection.classList.remove('hidden');
+                } else if (t === 'expenses') {
+                    if (financingLabel) financingLabel.classList.remove('hidden');
+                    if (installmentLabel) {
+                        const txt = installmentLabel.querySelector('span.ml-2') || installmentLabel.querySelector('span:last-child');
+                        if (txt) txt.textContent = 'É uma compra parcelada?';
+                        installmentLabel.classList.remove('hidden');
+                    }
+                    if (salarySection) salarySection.classList.add('hidden');
+                } else { // reserve
+                    if (financingLabel) financingLabel.classList.add('hidden');
+                    if (installmentLabel) installmentLabel.classList.add('hidden');
+                    if (salarySection) salarySection.classList.add('hidden');
+                }
+            } catch (e) {
+                console.error('updateModalTypeUI advanced options adjust error', e);
+            }
         }
         // Initial call and event listeners
         document.addEventListener('DOMContentLoaded', function() {
@@ -1660,42 +1845,37 @@
                 </div>
                 <div id="installments-section" class="hidden">
                     <!-- Compact visual for installments & financing (preserve fields/IDs for JS) -->
-                    <div id="installments-fields" class="mt-3 hidden">
+                    <div class="mt-3">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="bg-white border border-gray-200 rounded-lg p-3 flex items-start gap-3">
+                            <div id="installments-fields" class="bg-white border border-gray-200 rounded-lg p-3 flex items-start gap-3">
                                 <span class="material-symbols-outlined text-indigo-500" style="font-size:28px; margin-top:4px">payments</span>
                                 <div class="flex-1">
                                     <div class="text-sm font-semibold text-gray-700">Parcelamento</div>
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <div class="flex flex-col items-start">
-                                            <label for="installments-count" class="sr-only">Número de parcelas</label>
-                                            <input type="number" id="installments-count" min="2" max="48" class="block w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Total" title="Número de parcelas">
-                                            <span class="text-xs text-gray-400 mt-1">Total</span>
+                                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+                                        <div>
+                                            <label for="installments-count" class="block text-xs text-gray-500 mb-1">Total</label>
+                                            <input type="number" id="installments-count" min="2" max="48" class="block w-full sm:w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Total" title="Número de parcelas">
                                         </div>
-                                        <div class="flex flex-col items-start">
-                                            <label for="installments-current" class="sr-only">Parcela atual</label>
-                                            <input type="number" id="installments-current" min="1" max="48" class="block w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Atual" title="Parcela atual (se em andamento)">
-                                            <span class="text-xs text-gray-400 mt-1">Atual</span>
+                                        <div>
+                                            <label for="installments-current" class="block text-xs text-gray-500 mb-1">Atual</label>
+                                            <input type="number" id="installments-current" min="1" max="48" class="block w-full sm:w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Atual" title="Parcela atual (se em andamento)">
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-2">Se >1, o valor informado será tratado como valor por parcela (não será dividido).</p>
                                 </div>
                             </div>
 
-                            <div id="financing-fields" class="bg-white border border-gray-200 rounded-lg p-3 flex items-start gap-3 hidden">
+                            <div id="financing-fields" class="bg-white border border-gray-200 rounded-lg p-3 flex items-start gap-3">
                                 <span class="material-symbols-outlined text-amber-500" style="font-size:28px; margin-top:4px">account_balance</span>
                                 <div class="flex-1">
                                     <div class="text-sm font-semibold text-gray-700">Financiamento</div>
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <div class="flex flex-col items-start">
-                                            <label for="financing-total" class="sr-only">Total de parcelas</label>
-                                            <input type="number" id="financing-total" min="2" max="120" class="block w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Total" title="Total de parcelas (financiamento)">
-                                            <span class="text-xs text-gray-400 mt-1">Total</span>
+                                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+                                        <div>
+                                            <label for="financing-total" class="block text-xs text-gray-500 mb-1">Total</label>
+                                            <input type="number" id="financing-total" min="2" max="120" class="block w-full sm:w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Total" title="Total de parcelas (financiamento)">
                                         </div>
-                                        <div class="flex flex-col items-start">
-                                            <label for="financing-current" class="sr-only">Parcela atual</label>
-                                            <input type="number" id="financing-current" min="1" max="120" class="block w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Atual" title="Parcela atual (financiamento)">
-                                            <span class="text-xs text-gray-400 mt-1">Atual</span>
+                                        <div>
+                                            <label for="financing-current" class="block text-xs text-gray-500 mb-1">Atual</label>
+                                            <input type="number" id="financing-current" min="1" max="120" class="block w-full sm:w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Atual" title="Parcela atual (financiamento)">
                                         </div>
                                     </div>
                                 </div>
@@ -1985,39 +2165,103 @@
     function showLoading() { try { ensureLoadingOverlay(); const o = document.getElementById('global-loading-overlay'); if (o) o.style.display = 'flex'; } catch(e) { console.error('showLoading', e); } }
     function hideLoading() { try { const o = document.getElementById('global-loading-overlay'); if (o) o.style.display = 'none'; } catch(e) { console.error('hideLoading', e); } }
 
-    // Função para importar dados do import.json para o Firebase
-    async function importJsonToFirebase() {
-        try {
-            // Busca o arquivo import.json via fetch
-            const response = await fetch('import.json');
-            if (!response.ok) throw new Error('Não foi possível carregar import.json');
-            const json = await response.json();
-            // O arquivo já está no formato correto, basta salvar
-            if (json.financeAppDB_v10) {
-                await storage.saveData(json.financeAppDB_v10);
-                showToast('Dados importados com sucesso!', 'bg-green-600');
-                setTimeout(() => location.reload(), 1200);
-            } else {
-                showToast('Estrutura do import.json inválida.', 'bg-red-600');
-            }
-        } catch (e) {
-            showToast('Erro ao importar dados: ' + e.message, 'bg-red-600');
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
+    // File-based JSON import flow (opens modal, parse, preview, validate, import)
+    (function(){
         const importBtn = document.getElementById('import-data-btn');
+        const importModal = document.getElementById('import-json-modal');
+        const importFileInputModal = document.getElementById('import-file-input-modal');
+        const importFileInfo = document.getElementById('import-file-info');
+        const parseImportBtn = document.getElementById('parse-import-btn');
+        const clearImportBtn = document.getElementById('clear-import-btn');
+        const importPreview = document.getElementById('import-preview');
+        const importConfirmBtn = document.getElementById('import-confirm-btn');
+        const importCancelBtn = document.getElementById('import-cancel-btn');
+        const closeImportModal = document.getElementById('close-import-modal');
+
+        let parsedData = null;
+
+        function resetImportModal() {
+            parsedData = null;
+            importFileInputModal.value = '';
+            importFileInfo.textContent = 'Nenhum arquivo selecionado.';
+            importPreview.textContent = 'Nenhum preview disponível.';
+            importConfirmBtn.disabled = true;
+        }
+
+        async function parseSelectedFile(file) {
+            try {
+                const text = await file.text();
+                let json = null;
+                try { json = JSON.parse(text); } catch (e) { throw new Error('Arquivo JSON inválido: ' + e.message); }
+                // Accept either { financeAppDB_v10: {...} } or the direct payload
+                const payload = json.financeAppDB_v10 ? json.financeAppDB_v10 : json;
+                // Basic validation: expect an object with keys (accounts, transactions or similar)
+                if (!payload || typeof payload !== 'object') throw new Error('Estrutura inválida no JSON. Esperado objeto principal.');
+                // store parsed
+                parsedData = payload;
+                // show preview (first 2000 chars)
+                const pretty = JSON.stringify(payload, null, 2);
+                importPreview.textContent = pretty.length > 20000 ? pretty.slice(0,20000) + '\n\n...conteúdo truncado...' : pretty;
+                importFileInfo.textContent = `${file.name} — ${Math.round(file.size/1024)} KB`;
+                importConfirmBtn.disabled = false;
+                showToast('Arquivo validado com sucesso. Revise o preview e confirme.', 'bg-green-600');
+            } catch (err) {
+                parsedData = null;
+                importPreview.textContent = 'Erro: ' + err.message;
+                importConfirmBtn.disabled = true;
+                showToast('Erro ao ler arquivo: ' + err.message, 'bg-red-600');
+            }
+        }
+
         if (importBtn) {
-            // If the spreadsheet modal exists, open it; otherwise fallback to JSON import
             importBtn.addEventListener('click', () => {
-                const modal = document.getElementById('import-spreadsheet-modal');
-                if (modal) {
-                    try { modal.showModal(); } catch(e) { modal.setAttribute('open',''); }
-                } else {
-                    importJsonToFirebase();
-                }
+                if (!importModal) return;
+                try { importModal.showModal(); } catch(e) { importModal.setAttribute('open',''); }
+                resetImportModal();
             });
         }
+
+        if (closeImportModal) closeImportModal.addEventListener('click', resetImportModal);
+        if (importCancelBtn) importCancelBtn.addEventListener('click', () => { if (!importModal) return; try { importModal.close(); } catch(e){ importModal.removeAttribute('open'); } resetImportModal(); });
+        if (clearImportBtn) clearImportBtn.addEventListener('click', resetImportModal);
+
+        if (importFileInputModal) {
+            importFileInputModal.addEventListener('change', (e) => {
+                const f = e.target.files && e.target.files[0];
+                if (!f) return resetImportModal();
+                importFileInfo.textContent = `Arquivo: ${f.name} — ${Math.round(f.size/1024)} KB`;
+                // do not auto-parse until user clicks 'Ler e Validar'
+                importPreview.textContent = 'Arquivo selecionado. Clique em "Ler e Validar" para ver o preview.';
+                importConfirmBtn.disabled = true;
+                parsedData = null;
+            });
+        }
+
+        if (parseImportBtn) parseImportBtn.addEventListener('click', async () => {
+            const f = importFileInputModal.files && importFileInputModal.files[0];
+            if (!f) { showToast('Selecione um arquivo .json primeiro.', 'bg-yellow-600'); return; }
+            await parseSelectedFile(f);
+        });
+
+        if (importConfirmBtn) importConfirmBtn.addEventListener('click', async () => {
+            if (!parsedData) { showToast('Nenhum dado válido para importar.', 'bg-yellow-600'); return; }
+            try {
+                showLoading();
+                // Persist using existing storage API
+                await storage.saveData(parsedData);
+                hideLoading();
+                showToast('Dados importados com sucesso! Aplicando alterações...', 'bg-green-600');
+                setTimeout(() => location.reload(), 1100);
+            } catch (err) {
+                hideLoading();
+                showToast('Erro ao importar dados: ' + (err.message || err), 'bg-red-600');
+            }
+        });
+
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Legacy import button is wired to open the import modal (handled above)
     });
 
     // Transaction modal open/close + accessibility helpers
@@ -2966,6 +3210,145 @@ const firebaseConfig = {
             ui.importFileInput.addEventListener('change', handleImport);
             ui.exportDataBtn.addEventListener('click', handleExport);
 
+            // Backup / Restore handlers
+            try {
+                const createBackupBtn = document.getElementById('create-backup-btn');
+                const restoreBackupBtn = document.getElementById('restore-backup-btn');
+                const backupModal = document.getElementById('backup-restore-modal');
+                const backupsListEl = document.getElementById('backups-list');
+                const backupPreviewEl = document.getElementById('backup-preview');
+                const refreshBackupsBtn = document.getElementById('refresh-backups-btn');
+                const closeBackupModalBtn = document.getElementById('close-backup-modal');
+                const restoreSelectedBtn = document.getElementById('restore-selected-btn');
+                const downloadPreviewBtn = document.getElementById('download-preview-btn');
+
+                function formatTS(d) {
+                    try {
+                        const pad = (n,len=2) => String(n).padStart(len,'0');
+                        const y = d.getFullYear(); const m = pad(d.getMonth()+1); const day = pad(d.getDate());
+                        const hh = pad(d.getHours()); const mm = pad(d.getMinutes()); const ss = pad(d.getSeconds());
+                        return `${y}${m}${day}_${hh}${mm}${ss}`;
+                    } catch(e){ return String(Date.now()); }
+                }
+
+                async function createBackup() {
+                    try {
+                        showLoading();
+                        const payload = JSON.parse(JSON.stringify(state.appData || {}));
+                        const createdAt = Date.now();
+                        // Build name: projeto-data
+                        const project = (firebaseConfig && firebaseConfig.projectId) ? firebaseConfig.projectId : 'manual';
+                        const name = `${project}-${formatTS(new Date(createdAt))}`;
+                        const record = { name, createdAt, data: payload };
+                        // Save under /backups using push() so we have stable ids
+                        const ref = database.ref('/backups').push();
+                        await ref.set(record);
+                        hideLoading();
+                        showToast('Backup criado com sucesso: ' + name, 'bg-green-600');
+                        return record;
+                    } catch (err) {
+                        hideLoading();
+                        showToast('Falha ao criar backup: ' + (err && err.message ? err.message : String(err)), 'bg-red-600');
+                        throw err;
+                    }
+                }
+
+                async function listBackups() {
+                    try {
+                        const snapshot = await database.ref('/backups').orderByChild('createdAt').get();
+                        const arr = [];
+                        snapshot.forEach(s => { arr.push({ id: s.key, ...(s.val()||{}) }); });
+                        // sort desc by createdAt
+                        arr.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+                        return arr;
+                    } catch (e) { console.error('listBackups', e); return []; }
+                }
+
+                function renderBackupsList(list) {
+                    if (!backupsListEl) return;
+                    backupsListEl.innerHTML = '';
+                    if (!list || list.length === 0) {
+                        backupsListEl.innerHTML = '<div class="text-sm text-gray-500">Nenhum backup encontrado.</div>';
+                        return;
+                    }
+                    list.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = 'w-full text-left p-2 rounded hover:bg-gray-50 flex justify-between items-center';
+                        btn.dataset.backupid = item.id;
+                        const left = document.createElement('div');
+                        left.innerHTML = `<div style="font-weight:600">${escapeHtml(item.name||'Sem nome')}</div><div class="text-xs text-gray-500">${new Date(item.createdAt||0).toLocaleString()}</div>`;
+                        const right = document.createElement('div');
+                        right.innerHTML = '<span class="material-symbols-outlined text-gray-500">chevron_right</span>';
+                        btn.appendChild(left); btn.appendChild(right);
+                        btn.addEventListener('click', async () => {
+                            // load preview
+                            try {
+                                showLoading();
+                                const snap = await database.ref('/backups/' + item.id).get();
+                                const val = snap.val();
+                                hideLoading();
+                                showBackupPreview(val, item.id);
+                            } catch (err) { hideLoading(); showToast('Falha ao carregar backup: ' + (err && err.message ? err.message : err), 'bg-red-600'); }
+                        });
+                        backupsListEl.appendChild(btn);
+                    });
+                }
+
+                function showBackupPreview(val, id) {
+                    if (!backupPreviewEl) return;
+                    if (!val) { backupPreviewEl.innerHTML = '<div class="text-sm text-gray-500">Sem dados de backup.</div>'; return; }
+                    const meta = `<div class="text-sm text-gray-600 mb-2">Nome: <strong>${escapeHtml(val.name||'')}</strong> — Criado: ${new Date(val.createdAt||0).toLocaleString()}</div>`;
+                    // render a small summary: years count and totals
+                    let summary = '';
+                    try {
+                        const years = Object.keys(val.data && val.data.data ? val.data.data : (val.data || {}).data || {});
+                        // Fallback when data stored directly in data property
+                        const topData = val.data || {};
+                        const countYears = topData.data ? Object.keys(topData.data).length : Object.keys(topData).length;
+                        summary += `<div class="text-sm text-gray-700 mb-2">Anos: <strong>${countYears}</strong></div>`;
+                    } catch(e) { summary += '<div class="text-sm text-gray-500">Resumo indisponível.</div>'; }
+                    backupPreviewEl.innerHTML = meta + summary + `<pre style="white-space:pre-wrap;word-break:break-word;max-height:300px;overflow:auto;border-top:1px solid rgba(0,0,0,0.04);padding-top:8px">${escapeHtml(JSON.stringify(val.data || val, null, 2))}</pre>`;
+                    // attach download/restore handlers
+                    downloadPreviewBtn.onclick = () => {
+                        try {
+                            const blob = new Blob([JSON.stringify(val.data || val, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a'); a.href = url; a.download = `${(val.name||'backup')}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                            showToast('Download iniciado', 'bg-gray-700');
+                        } catch (e) { showToast('Falha ao baixar: ' + e.message, 'bg-red-600'); }
+                    };
+                    restoreSelectedBtn.onclick = async () => {
+                        try {
+                            if (!confirm('Deseja restaurar este backup? Isso substituirá os dados atuais.')) return;
+                            showLoading();
+                            const payload = val.data || val;
+                            // Overwrite current state and persist
+                            state.appData = JSON.parse(JSON.stringify(payload));
+                            await storage.saveData(state.appData);
+                            hideLoading();
+                            showToast('Restauração concluída. Recarregando...', 'bg-green-600');
+                            setTimeout(() => location.reload(), 800);
+                        } catch (err) { hideLoading(); showToast('Falha ao restaurar: ' + (err && err.message ? err.message : err), 'bg-red-600'); }
+                    };
+                }
+
+                function escapeHtml(s) { return String(s||'').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+                // open modal and list backups
+                async function openBackupModal() {
+                    if (!backupModal) return;
+                    try { backupModal.showModal(); } catch(e) { backupModal.setAttribute('open',''); }
+                    backupModal.classList.add('modal-expanded');
+                    try { const list = await listBackups(); renderBackupsList(list); } catch(e) { renderBackupsList([]); }
+                }
+
+                if (createBackupBtn) createBackupBtn.addEventListener('click', async () => { try { await createBackup(); } catch(e){} });
+                if (restoreBackupBtn) restoreBackupBtn.addEventListener('click', () => openBackupModal());
+                if (refreshBackupsBtn) refreshBackupsBtn.addEventListener('click', async () => { try { const list = await listBackups(); renderBackupsList(list); } catch(e){} });
+                if (closeBackupModalBtn) closeBackupModalBtn.addEventListener('click', () => { try { backupModal.close(); } catch(e){ backupModal.removeAttribute('open'); } });
+
+            } catch(e) { console.error('attach backup handlers', e); }
+
             ui.expensesTableHead.addEventListener('click', (e) => {
                     const header = e.target.closest('.sortable-header');
                     if(header) {
@@ -2995,14 +3378,22 @@ const firebaseConfig = {
                 window.addEventListener('resize', updateMobileNavVisibility);
                 buttons.forEach(btn => btn.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
             }
-            ui.isInstallment.addEventListener('change', () => ui.installmentsFields.classList.toggle('hidden', !ui.isInstallment.checked));
-            // Ensure financing checkbox always toggles financing fields even if payment-method change hasn't attached an onchange
+            // Independent handler: installment checkbox only controls installments card
+            ui.isInstallment.addEventListener('change', () => {
+                try {
+                    ui.installmentsFields.classList.toggle('active', ui.isInstallment.checked);
+                } catch (e) { console.error('isInstallment change handler', e); }
+            });
+
+            // Independent handler: financing checkbox only controls financing card
             try {
                 const financingCheckbox = document.getElementById('is-financing');
                 if (financingCheckbox) {
                     financingCheckbox.addEventListener('change', () => {
-                        const ff = document.getElementById('financing-fields');
-                        if (ff) ff.classList.toggle('hidden', !financingCheckbox.checked);
+                        try {
+                            const ff = document.getElementById('financing-fields');
+                            if (ff) ff.classList.toggle('active', financingCheckbox.checked);
+                        } catch (e) { console.error('financing change handler', e); }
                     });
                 }
             } catch (e) { console.error('bindEvents attach financing handler', e); }
@@ -6491,7 +6882,12 @@ const firebaseConfig = {
                 if (ui.financingSection && ui.transactionTypeInput && ui.transactionTypeInput.value === 'expenses') {
                     ui.financingSection.classList.remove('hidden');
                     const financingCheckbox = document.getElementById('is-financing');
-                    if (financingCheckbox) financingCheckbox.onchange = function() { document.getElementById('financing-fields').classList.toggle('hidden', !this.checked); };
+                    if (financingCheckbox) {
+                        // Use addEventListener to avoid overwriting other handlers and ensure independence
+                        financingCheckbox.addEventListener && financingCheckbox.addEventListener('change', function() {
+                            const ff = document.getElementById('financing-fields'); if (ff) ff.classList.toggle('active', this.checked);
+                        });
+                    }
                 }
             } catch (e) { console.error('toggleInstallmentSection', e); }
         }
@@ -6514,10 +6910,10 @@ const firebaseConfig = {
                 const expenseCats = (state.appData.settings && state.appData.settings.expenseCategories) || [];
                 let defaultCat = expenseCats.find(c => (c||'').toString().toLowerCase().includes('conta')) || expenseCats[0] || 'Contas';
                 if (document.getElementById('category-expense')) document.getElementById('category-expense').value = defaultCat;
-                // Uncheck recurring and financing/installment checkboxes and hide fields
+                // Reset recurring and hide installment/financing fields but do not force-uncheck the checkboxes
                 const recurring = document.getElementById('is-recurring'); if (recurring) recurring.checked = false;
-                const instal = document.getElementById('is-installment'); if (instal) instal.checked = false; const instFields = document.getElementById('installments-fields'); if (instFields) instFields.classList.add('hidden');
-                const financ = document.getElementById('is-financing'); if (financ) financ.checked = false; const financFields = document.getElementById('financing-fields'); if (financFields) financFields.classList.add('hidden');
+                const instFields = document.getElementById('installments-fields'); if (instFields) instFields.classList.remove('active');
+                const financFields = document.getElementById('financing-fields'); if (financFields) financFields.classList.remove('active');
                 // Clear description and amount inputs
                 const desc = document.getElementById('description'); if (desc) desc.value = '';
                 const amt = document.getElementById('amount'); if (amt) amt.value = '';
@@ -6560,7 +6956,7 @@ const firebaseConfig = {
                             financingCheckbox.checked = true;
                             // ensure the financing fields are shown (some handlers show/hide on change)
                             if (typeof financingCheckbox.onchange === 'function') financingCheckbox.onchange();
-                            const ff = document.getElementById('financing-fields'); if (ff) ff.classList.remove('hidden');
+                            const ff = document.getElementById('financing-fields'); if (ff) ff.classList.add('active');
                         }
                         const ft = document.getElementById('financing-total'); if (ft) ft.value = transaction.totalFinancing || '';
                         const fc = document.getElementById('financing-current'); if (fc) fc.value = transaction.currentFinancing || '';

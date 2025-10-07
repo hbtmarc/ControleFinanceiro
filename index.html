@@ -415,43 +415,28 @@
             #kpi-projected-balance {
                 font-size: 1rem !important;
             }
-            .responsive-table thead {
-                display: none !important;
-            }
-            .responsive-table, .responsive-table table { width: 100% !important; table-layout: auto !important; border-collapse: separate !important; }
-            .responsive-table tbody, .responsive-table tr { display: block !important; }
-
-            /* Make rows behave as full-bleed cards occupying available mobile width */
-            .responsive-table tr {
+            .responsive-table thead { display: none !important; }
+            /* Make each table row a full-width block on mobile so transactions stack vertically. */
+            .responsive-table, .responsive-table table {
                 width: 100% !important;
-                box-shadow: 0 8px 18px rgba(2,6,23,0.06) !important;
-                border-radius: 12px !important;
-                background: linear-gradient(180deg,#ffffff,#fbfdff) !important;
-                margin: 0.6rem 0 !important;
-                padding: 0.6rem !important;
-                border: none !important;
+                border-collapse: separate !important;
+                table-layout: auto !important;
+                overflow-x: hidden !important;
             }
-
-            /* Stack cells inside the card for clarity: description on top, meta and value/actions below */
-            .responsive-table td { display:block !important; width:100% !important; padding: 8px 10px !important; border: none !important; }
-            .responsive-table td.description-cell { font-weight: 700 !important; color: #111827 !important; padding-bottom: 6px !important; }
-            .responsive-table td.description-cell .material-symbols-outlined { margin-right: 6px !important; }
-
-            /* Meta row: payment/category/value/actions grouped visually */
-            .responsive-table .meta-row { display:flex !important; gap:8px !important; align-items:center !important; justify-content:space-between !important; }
-            .responsive-table .meta-left { display:flex; gap:8px; align-items:center; color:#6b7280; font-size:0.95rem; }
-            .responsive-table .meta-right { display:flex; gap:8px; align-items:center; justify-content:flex-end; }
-
-            /* Keep checkbox and paid indicator compact and aligned to left inside card */
-            .responsive-table td.checkbox-cell { display:flex !important; align-items:center !important; padding: 4px 10px !important; }
-            .responsive-table td.checkbox-cell input { width:20px !important; height:20px !important; margin:0 !important; }
-
-            /* Actions row/buttons: full-width but aligned right within the card */
-            .responsive-table td.actions-cell { display:flex !important; justify-content:flex-end !important; gap:8px !important; padding-top:6px !important; }
-            .responsive-table td.actions-cell button { padding:8px !important; border-radius:8px; background:transparent; }
-
-            /* Hide the auto data-label pseudo when stacking cells, we'll keep visual labels inside cells where needed */
-            .responsive-table td::before { display:none !important; }
+            .responsive-table tbody, .responsive-table tr {
+                display: block !important;
+                width: 100% !important;
+                margin: 6px 0 !important; /* small spacing between rows */
+                padding: 0 !important;
+                background: transparent !important;
+            }
+            /* Each cell inside mobile row should be hidden except the full-width mobile-row-cell (rendered by JS with colspan). */
+            .responsive-table td { display: none !important; }
+            .mobile-row-cell { display: block !important; width: 100% !important; padding: 8px 10px !important; box-sizing: border-box !important; background: white !important; border-radius: 8px; border: 1px solid rgba(0,0,0,0.04); }
+            .mobile-row { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-width:0; }
+            .mobile-row .mobile-left { min-width:0; overflow:hidden; }
+            .mobile-row .mobile-left > div, .mobile-row .mobile-left span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .mobile-row .mobile-right { flex-shrink:0; display:flex; align-items:center; gap:8px; }
             /* Hide top tabs and enable bottom navigation on mobile */
             #tabs { display: none !important; }
             #mobile-bottom-nav { display: none; }
@@ -4914,21 +4899,21 @@ const firebaseConfig = {
             const payIcon = (typeof getIconFor === 'function') ? getIconFor('payment', income.payment || '') : '';
             const descLabel = (payIcon && typeof iconHtml === 'function') ? iconHtml(payIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(income.description || '')}</span>` : escapeHtml(income.description || '');
 
-            // Mobile-optimized rendering: compact card with description + meta row
+            // Mobile-optimized rendering: use single full-width cell with internal flex so it stacks cleanly (no horizontal scroll)
             if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+                // income table has 3 columns on desktop, use colspan=3 so mobile row occupies full width
                 row.innerHTML = `
-                    <td class="description-cell" data-label="Descrição" title="${escapeHtml(income.description)}">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            ${descLabel}
-                            ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}
-                        </div>
-                    </td>
-                    <td class="meta-row">
-                        <div class="meta-left"></div>
-                        <div class="meta-right">
-                            ${amountHtml}
-                            <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
-                            <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                    <td colspan="3" class="mobile-row-cell" data-label="Entrada">
+                        <div class="mobile-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                            <div class="mobile-left" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                                ${descLabel}
+                                ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}
+                            </div>
+                            <div class="mobile-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                                ${amountHtml}
+                                <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar"><span class="material-symbols-outlined text-xl">edit</span></button>
+                                <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                            </div>
                         </div>
                     </td>`;
             } else {
@@ -4966,15 +4951,21 @@ const firebaseConfig = {
             const paymentHtml = (typeof iconHtml === 'function' && paymentIcon) ? iconHtml(paymentIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(displayPaymentLabel || expense.payment || '')}</span>` : escapeHtml(displayPaymentLabel || expense.payment || '');
             const categoryHtml = (typeof iconHtml === 'function' && categoryIcon) ? iconHtml(categoryIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(expense.category || '')}</span>` : escapeHtml(expense.category || '');
 
-            // Mobile-optimized rendering: single card with stacked fields for small screens
+            // Mobile-optimized rendering: use single full-width cell with internal flex so each expense is one horizontal line
             if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+                // expenses table has 6 columns on desktop, use colspan=6 so mobile row occupies full width
                 row.innerHTML = `
-                    <td class="checkbox-cell" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
-                    <td class="description-cell" data-label="Descrição" title="${escapeHtml(expense.description)}">
-                        <div style="font-weight:700;color:#111827;">${escapeHtml(expense.description)} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</div>
-                        <div class="meta-row" style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                            <div class="meta-left">${paymentHtml} <span style="margin:0 6px;color:#9ca3af;">•</span> ${categoryHtml}</div>
-                            <div class="meta-right"><span class="text-red-600 font-medium">${formatCurrency(expense.amount)}</span>
+                    <td colspan="6" class="mobile-row-cell" data-label="Despesa">
+                        <div class="mobile-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                            <div class="mobile-left" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                                <input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''} style="margin-right:8px;flex:0 0 auto;" />
+                                <div style="min-width:0;">
+                                    <div style="font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(expense.description)} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</div>
+                                    <div style="color:#6b7280;font-size:.95rem;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${paymentHtml} <span style="margin:0 6px;color:#9ca3af;">•</span> ${categoryHtml}</div>
+                                </div>
+                            </div>
+                            <div class="mobile-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                                <span class="text-red-600 font-medium">${formatCurrency(expense.amount)}</span>
                                 <button class="edit-btn p-0.5 text-gray-500 hover:text-blue-600" title="Editar" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
                                 <button class="delete-btn p-0.5 text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                             </div>
@@ -8107,14 +8098,14 @@ const firebaseConfig = {
         dialog::backdrop { background: rgba(0,0,0,0.6) !important; }
         dialog .modal-body, dialog .dialog-body, dialog .content { width: calc(100vw - 2rem) !important; margin: 0 auto !important; }
 
-        /* Full-bleed cards and forms: use nearly full viewport width and harmonize spacing like the transaction modal */
-        .dashboard-card, .fatura-card, .transaction-card, .card, .panel { width: calc(100vw - 1.5rem) !important; max-width: calc(100vw - 1.5rem) !important; margin: 0.6rem auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.06) !important; padding: 12px !important; background: linear-gradient(180deg,#ffffff,#fbfbff); }
+    /* Keep cards and panels full-bleed where intended, but keep tables as normal rows to avoid horizontal scroll on mobile */
+    .dashboard-card, .fatura-card, .transaction-card, .card, .panel { width: calc(100vw - 1.5rem) !important; max-width: calc(100vw - 1.5rem) !important; margin: 0.6rem auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.06) !important; padding: 12px !important; background: linear-gradient(180deg,#ffffff,#fbfbff); }
 
-        /* Tables -> stacked full-width cards for compact lists */
-        .responsive-table, .responsive-table table { width: calc(100vw - 1.5rem) !important; max-width: calc(100vw - 1.5rem) !important; }
-        .responsive-table tr { display: block !important; margin-bottom: 12px !important; border-radius: 12px; background: linear-gradient(180deg,#ffffff,#fbfdff); box-shadow: 0 8px 24px rgba(2,6,23,0.06); padding: 10px !important; }
-        .responsive-table td { display: flex !important; justify-content: space-between; padding: 8px 6px !important; border: none !important; }
-        .responsive-table td .material-symbols-outlined { margin-right: 8px !important; }
+    /* Tables: keep natural table layout (rows stacked vertically). Use subtle dividers between rows for mobile readability. */
+    .responsive-table, .responsive-table table { width: 100% !important; max-width: 100% !important; }
+    .responsive-table tr { display: table-row !important; margin: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+    .responsive-table td { display: table-cell !important; vertical-align: middle !important; padding: 10px 8px !important; border: none !important; border-bottom: 1px solid rgba(0,0,0,0.06) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .responsive-table td .material-symbols-outlined { margin-right: 8px !important; }
 
         /* Forms and inputs take full width like the transaction modal */
         form, .form-row, .field, .form-group { width: calc(100vw - 2rem) !important; max-width: calc(100vw - 2rem) !important; margin: 0.4rem auto !important; }

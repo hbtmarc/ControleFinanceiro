@@ -1733,7 +1733,7 @@
             }
 
             // Enhance the main modal selects and filters where we want prefixed icons
-            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category'].forEach(id => {
+            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category','vt-fuel-vehicle'].forEach(id => {
                 try { enhanceSelectWithIcons(id); } catch(e) { console.error('enhanceSelectWithIcons', id, e); }
             });
         });
@@ -2168,10 +2168,17 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Veículo</label>
-                            <select id="vt-fuel-vehicle" class="mt-1 block w-full border-gray-300 rounded-md p-2">
-                                <option value="Carro">Carro</option>
-                                <option value="Moto">Moto</option>
-                            </select>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">directions_car</span>
+                                <select id="vt-fuel-vehicle" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2">
+                                    <option value="Carro">Carro</option>
+                                    <option value="Moto" selected>Moto</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700">Data do abastecimento</label>
+                            <input id="vt-fuel-date" type="date" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Odômetro (km)</label>
@@ -2191,17 +2198,17 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Preço / L (R$)</label>
-                            <input id="vt-fuel-price" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 5.49" />
+                            <input id="vt-fuel-price" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 5,49" />
                             <p id="vt-error-price" class="text-xs text-red-600 hidden"></p>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Litros (L)</label>
-                            <input id="vt-fuel-liters" type="number" step="0.001" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 30.0" />
+                            <input id="vt-fuel-liters" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 30,0" />
                             <p id="vt-error-liters" class="text-xs text-red-600 hidden"></p>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Valor total (R$)</label>
-                            <input id="vt-fuel-total" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 164.70" />
+                            <input id="vt-fuel-total" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 164,70" />
                             <p id="vt-error-total" class="text-xs text-red-600 hidden"></p>
                         </div>
                     </div>
@@ -2297,15 +2304,53 @@
             const modal = q('vt-fuel-modal'); if (!modal) return;
             // show register tab
             activateVtTab('register');
-            // prefill total if present
-            try { const tot = (pendingTransaction && pendingTransaction.amount) ? Number(pendingTransaction.amount) : ''; q('vt-fuel-total').value = tot !== '' ? String(tot) : ''; } catch(e){}
-            try { modal.showModal(); } catch(e){ modal.setAttribute('open',''); }
+            // prefill total if present (format to pt-BR style)
+            try {
+                const tot = (pendingTransaction && pendingTransaction.amount) ? Number(pendingTransaction.amount) : '';
+                if (tot !== '') q('vt-fuel-total').value = (Number(tot) || 0).toFixed(2).replace('.', ',');
+                else q('vt-fuel-total').value = '';
+                // pref-fill date to today if available
+                try { const d = new Date(); q('vt-fuel-date').value = d.toISOString().slice(0,10); } catch(e){}
+            } catch(e){}
+            // ensure the dialog is visible and on top. Some environments may not support showModal
+            try {
+                modal.style.zIndex = '200000';
+                modal.style.display = 'block';
+                if (typeof modal.showModal === 'function') modal.showModal();
+                else modal.setAttribute('open','');
+            } catch(e){
+                console.warn('openVtFuelModal: showModal failed, applying fallback open attribute and styles', e);
+                try { modal.setAttribute('open',''); } catch(err){}
+                try { modal.style.display = 'block'; } catch(_){}
+            }
             // If total prefilled, enable save button
-            try { const pre = parseFloat(q('vt-fuel-total').value) || 0; if (pre > 0) { try { q('vt-fuel-save').removeAttribute('disabled'); } catch(e){} } } catch(e){}
+            try { const pre = parseLocaleNumber(q('vt-fuel-total').value) || 0; if (pre > 0) { try { q('vt-fuel-save').removeAttribute('disabled'); } catch(e){} } } catch(e){}
             renderVtHistory();
         }
 
-        function closeVtFuelModal(){ const modal = q('vt-fuel-modal'); if(!modal) return; try{ modal.close(); }catch(e){ modal.removeAttribute('open'); } window._pendingVtTransaction = null; }
+        // Open VT modal and switch to the history tab
+        function openVtFuelHistory(){
+            const modal = q('vt-fuel-modal'); if (!modal) return;
+            // Clear any pending transaction context
+            window._pendingVtTransaction = null;
+            activateVtTab('history');
+            try { modal.style.zIndex = '200000'; modal.style.display = 'block'; if (typeof modal.showModal === 'function') modal.showModal(); else modal.setAttribute('open',''); } catch(e) { try { modal.setAttribute('open',''); modal.style.display = 'block'; } catch(_){} }
+            renderVtHistory();
+        }
+
+        function closeVtFuelModal(){
+            const modal = q('vt-fuel-modal'); if(!modal) return;
+            try{
+                if (typeof modal.close === 'function') modal.close();
+                else modal.removeAttribute('open');
+            }catch(e){
+                console.warn('closeVtFuelModal: modal.close failed, removing open attribute', e);
+                try { modal.removeAttribute('open'); } catch(_){}
+            }
+            // hide and reset styles as an extra fallback
+            try { modal.style.display = 'none'; modal.style.zIndex = ''; } catch(_){}
+            window._pendingVtTransaction = null;
+        }
 
         // Tab handling
         function activateVtTab(name){
@@ -2318,7 +2363,8 @@
         function collectAllVtUsage(){
             try{
                 const out = [];
-                const data = state.appData && state.appData.data || {};
+                // Be defensive: prefer internal `state`, fallback to `window.state`, otherwise empty
+                const data = (typeof state !== 'undefined' && state.appData && state.appData.data) ? state.appData.data : ((window.state && window.state.appData && window.state.appData.data) ? window.state.appData.data : {});
                 Object.keys(data).forEach(y => { Object.keys(data[y] || {}).forEach(m => { const md = data[y][m] || {}; (md.vtUsage || []).forEach(u => out.push(u)); }); });
                 // sort desc by date
                 out.sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -2328,12 +2374,50 @@
 
         // render history table and stats (with filters and charts)
         let vtPriceChart = null, vtAutonomyChart = null;
+        // ResizeObservers for charts so we can control size manually and avoid Chart.js resize feedback loops
+        let vtPriceResizeObserver = null, vtAutonomyResizeObserver = null;
+
+        // Compute chart height based on breakpoint (desktop larger)
+        function getChartHeightForViewport() {
+            try {
+                return (window.innerWidth >= 1024) ? 220 : 160;
+            } catch (e) { return 160; }
+        }
+
+        // Attach a ResizeObserver to keep the chart sized correctly. Returns a disconnect function.
+        function attachChartResizeObserver(canvas, chartInstance, parent) {
+            if (!canvas || !chartInstance) return function(){};
+            const resizeFn = () => {
+                try {
+                    const h = getChartHeightForViewport();
+                    // set CSS height and request chart resize
+                    canvas.style.height = h + 'px';
+                    // let Chart.js recalculate with current CSS size
+                    try { chartInstance.resize(); } catch(e) { /* ignore */ }
+                } catch (e) { console.error('chart resizeFn error', e); }
+            };
+            // Call once to set initial size
+            resizeFn();
+            // Observe parent size changes; fallback to window resize if ResizeObserver not available
+            if (typeof ResizeObserver !== 'undefined') {
+                const ro = new ResizeObserver(() => resizeFn());
+                try { ro.observe(parent || canvas.parentElement || document.body); } catch(e){}
+                return function(){ try{ ro.disconnect(); }catch(e){} };
+            } else {
+                const handler = () => resizeFn();
+                window.addEventListener('resize', handler);
+                return function(){ try{ window.removeEventListener('resize', handler); }catch(e){} };
+            }
+        }
         function renderVtHistory(){
             const all = collectAllVtUsage();
-            // apply filters
-            const vf = q('vt-filter-vehicle').value || '';
-            const ff = q('vt-filter-fuel').value || '';
-            const search = (q('vt-filter-search').value || '').toLowerCase().trim();
+            // apply filters (defensive DOM access)
+            const vfEl = q('vt-filter-vehicle');
+            const ffEl = q('vt-filter-fuel');
+            const searchEl = q('vt-filter-search');
+            const vf = vfEl ? (vfEl.value || '') : '';
+            const ff = ffEl ? (ffEl.value || '') : '';
+            const search = (searchEl && searchEl.value) ? String(searchEl.value).toLowerCase().trim() : '';
             const rows = all.filter(r => {
                 if (vf && (r.vehicle || '') !== vf) return false;
                 if (ff && (r.fuelType || '') !== ff) return false;
@@ -2346,69 +2430,280 @@
 
             const tb = q('vt-history-tbody'); if(!tb) return; tb.innerHTML = '';
             let total = 0; let liters = 0; let priceSum = 0; let priceCount = 0; const byVehicle = {};
-            // prepare series for charts
+            // prepare series for charts (use chronological order)
             const priceSeries = []; const priceLabels = [];
             const autonomyIntervals = [];
+
+            // Use a chronological copy for charts/metrics
+            const rowsForCharts = (rows || []).slice().sort((a,b) => new Date(a.date) - new Date(b.date));
 
             rows.forEach(r => {
                 const d = new Date(r.date || '');
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="px-2 py-1">${isNaN(d.getTime()) ? '' : d.toLocaleDateString()}</td>
-                                <td class="px-2 py-1">${escapeHtml(r.description||'Abastecimento')}</td>
-                                <td class="px-2 py-1">${escapeHtml(r.vehicle||'')}</td>
-                                <td class="px-2 py-1">${r.odometer!=null? String(r.odometer) : ''}</td>
-                                <td class="px-2 py-1">${r.liters!=null? Number(r.liters).toFixed(3) : ''}</td>
-                                <td class="px-2 py-1">${r.pricePerLiter!=null? formatCurrency(r.pricePerLiter) : ''}</td>
-                                <td class="px-2 py-1">${formatCurrency(r.amount||0)}</td>`;
+                // create editable cells (click to edit). We'll use data-id attr to identify the entry
+                function mkCell(content, field, formatter) {
+                    const td = document.createElement('td'); td.className = 'px-2 py-1';
+                    const span = document.createElement('span'); span.className = 'vt-cell'; span.textContent = formatter ? formatter(content) : (content==null? '' : String(content));
+                    span.style.cursor = 'pointer';
+                    span.title = 'Clique para editar';
+                    span.addEventListener('click', function () {
+                        // prevent multiple inputs
+                        if (td.querySelector('input') || td.querySelector('textarea') || td.querySelector('select')) return;
+                        // create appropriate editor based on field
+                        let inputEl;
+                        if (field === 'date') {
+                            inputEl = document.createElement('input'); inputEl.type = 'date'; inputEl.value = (content ? new Date(content).toISOString().slice(0,10) : '');
+                        } else if (field === 'vehicle' || field === 'fuelType') {
+                            inputEl = document.createElement('input'); inputEl.type = 'text'; inputEl.value = content || '';
+                        } else if (field === 'description') {
+                            inputEl = document.createElement('input'); inputEl.type = 'text'; inputEl.value = content || '';
+                        } else if (field === 'odometer') {
+                            inputEl = document.createElement('input'); inputEl.type = 'number'; inputEl.step = '1'; inputEl.value = content!=null? String(content) : '';
+                        } else if (field === 'liters') {
+                            inputEl = document.createElement('input'); inputEl.type = 'text'; inputEl.value = content!=null? String(content) : '';
+                        } else if (field === 'pricePerLiter' || field === 'amount') {
+                            inputEl = document.createElement('input'); inputEl.type = 'text'; inputEl.value = content!=null? String(content) : '';
+                        } else {
+                            inputEl = document.createElement('input'); inputEl.type = 'text'; inputEl.value = content!=null? String(content) : '';
+                        }
+                        inputEl.className = 'w-full border rounded p-1';
+                        td.innerHTML = ''; td.appendChild(inputEl);
+                        inputEl.focus();
+                        // save on blur or Enter
+                        const saveFn = async () => {
+                            try {
+                                let val = inputEl.value;
+                                const updated = { id: r.id };
+                                if (field === 'date') updated.date = val ? new Date(val).toISOString() : null;
+                                else if (field === 'odometer') updated.odometer = val !== '' ? Number(val) : null;
+                                else if (field === 'liters') updated.liters = val !== '' ? parseLocaleNumber(val) : null;
+                                else if (field === 'pricePerLiter') updated.pricePerLiter = val !== '' ? parseLocaleNumber(val) : null;
+                                else if (field === 'amount') updated.amount = val !== '' ? parseLocaleNumber(val) : null;
+                                else if (field === 'vehicle') updated.vehicle = val;
+                                else if (field === 'fuelType') updated.fuelType = val;
+                                else if (field === 'description') updated.description = val;
+                                // call appApi.updateVtEntry if available
+                                if (window.appApi && typeof window.appApi.updateVtEntry === 'function') {
+                                    await window.appApi.updateVtEntry(updated);
+                                } else {
+                                    // fallback: modify window.state directly
+                                    try {
+                                        const data = window.state && window.state.appData && window.state.appData.data ? window.state.appData.data : null;
+                                        if (data) {
+                                            Object.keys(data).forEach(y => { Object.keys(data[y]||{}).forEach(m => { (data[y][m].vtUsage||[]).forEach((it, idx) => { if (it && it.id === r.id) { data[y][m].vtUsage[idx] = Object.assign({}, it, updated); } }); }); });
+                                            await storage.saveData(window.state.appData);
+                                        }
+                                    } catch(e){ console.error('fallback update inline', e); }
+                                }
+                                showToast('Abastecimento atualizado', 'bg-green-600');
+                                // refresh UI
+                                renderVtHistory(); if (window.appApi && typeof window.appApi.render === 'function') window.appApi.render();
+                            } catch (err) { console.error('inline edit save error', err); showToast('Falha ao salvar alteração', 'bg-red-600'); renderVtHistory(); }
+                        };
+                        inputEl.addEventListener('blur', saveFn);
+                        inputEl.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); inputEl.blur(); } else if (ev.key === 'Escape') { renderVtHistory(); } });
+                    });
+                    td.appendChild(span);
+                    return td;
+                }
+
+                tr.dataset.vtId = r.id || '';
+                tr.appendChild(mkCell(r.date, 'date', c => { try { return c ? new Date(c).toLocaleDateString() : ''; } catch(e){ return ''; } }));
+                tr.appendChild(mkCell(r.description || 'Abastecimento', 'description'));
+                tr.appendChild(mkCell(r.vehicle || '', 'vehicle'));
+                tr.appendChild(mkCell(r.odometer!=null? String(r.odometer) : '', 'odometer'));
+                tr.appendChild(mkCell(r.liters!=null? Number(r.liters).toFixed(3) : '', 'liters'));
+                tr.appendChild(mkCell(r.pricePerLiter!=null? r.pricePerLiter : '', 'pricePerLiter', v => v ? formatCurrency(v) : ''));
+                tr.appendChild(mkCell(r.amount!=null? r.amount : 0, 'amount', v => formatCurrency(v||0)));
                 tb.appendChild(tr);
                 total += Number(r.amount||0);
                 if (r.liters) liters += Number(r.liters||0);
                 if (r.pricePerLiter) { priceSum += Number(r.pricePerLiter||0); priceCount++; }
                 const v = r.vehicle || 'unknown'; if(!byVehicle[v]) byVehicle[v] = []; byVehicle[v].push(r);
-
-                // chart points
-                priceLabels.push(isNaN(d.getTime()) ? '' : d.toLocaleDateString());
-                priceSeries.push(Number(r.pricePerLiter||0));
             });
+
+            // Build chart series from chronological data, skipping invalid values
+            rowsForCharts.forEach(r => {
+                const d = new Date(r.date || '');
+                const price = Number(r.pricePerLiter || 0);
+                if (!isNaN(d.getTime()) && price > 0) {
+                    priceLabels.push(d.toLocaleDateString());
+                    priceSeries.push(price);
+                }
+            });
+
+            // If there are no rows, show a friendly empty message in the table
+            if (!rows || rows.length === 0) {
+                if (tb) tb.innerHTML = '<tr><td colspan="7" class="p-6 text-sm text-gray-500">Nenhum abastecimento encontrado para os filtros selecionados.</td></tr>';
+            }
 
             q('vt-stat-total').textContent = formatCurrency(total);
             q('vt-stat-liters').textContent = `${liters.toFixed(3)} L`;
             q('vt-stat-avgprice').textContent = priceCount ? formatCurrency(priceSum / priceCount) : formatCurrency(0);
 
-            // compute autonomy intervals per vehicle
+            // compute autonomy intervals per vehicle using chronological order
             Object.keys(byVehicle).forEach(v => {
                 const arr = (byVehicle[v]||[]).slice().filter(it => it.odometer!=null).sort((a,b)=> new Date(a.date)-new Date(b.date));
                 for(let i=1;i<arr.length;i++){
                     const prev = arr[i-1]; const cur = arr[i];
-                    const km = Number(cur.odometer) - Number(prev.odometer);
-                    const litersUsed = Number(cur.liters||0);
-                    if (km>0 && litersUsed>0) autonomyIntervals.push({ vehicle: v, km: km, liters: litersUsed, ratio: km / litersUsed, date: cur.date });
+                    const prevOdo = Number(prev.odometer || 0);
+                    const curOdo = Number(cur.odometer || 0);
+                    const km = curOdo - prevOdo;
+                    // liters consumed between prev and cur is generally the liters recorded in cur
+                    const litersUsed = Number(cur.liters || 0);
+                    if (km > 0 && litersUsed > 0) {
+                        autonomyIntervals.push({ vehicle: v, km: km, liters: litersUsed, ratio: km / litersUsed, date: cur.date });
+                    }
                 }
             });
-            q('vt-stat-autonomy').textContent = autonomyIntervals.length ? `${(autonomyIntervals.reduce((s,i)=>s+i.ratio,0)/autonomyIntervals.length).toFixed(2)} km/L` : 'Insuficiente (sem pares de odômetro)';
+            q('vt-stat-autonomy').textContent = autonomyIntervals.length ? `${(autonomyIntervals.reduce((s,i)=>s+i.ratio,0)/autonomyIntervals.length).toFixed(3)} km/L` : 'Insuficiente (sem pares de odômetro)';
+
+            // Add a small informative tooltip/icon next to the autonomy stat to explain 'Insuficiente'
+            try {
+                const autonomyEl = q('vt-stat-autonomy');
+                if (autonomyEl) {
+                    autonomyEl.setAttribute('title', 'A autonomia média é calculada a partir de pares de odômetro registrados entre dois abastecimentos. Preencha odômetro em dois abastecimentos para calcular.');
+                    // append a subtle info icon if not present
+                    if (!autonomyEl.querySelector('.vt-autonomy-info')) {
+                        const info = document.createElement('span');
+                        info.className = 'vt-autonomy-info material-symbols-outlined text-xs ml-2 text-gray-400';
+                        info.style.verticalAlign = 'middle';
+                        info.title = 'A autonomia média é calculada a partir de pares de odômetro registrados entre dois abastecimentos.';
+                        info.textContent = 'info';
+                        autonomyEl.appendChild(info);
+                    }
+                }
+            } catch (e) { /* ignore tooltip failures */ }
 
             // populate vehicle filter options
             const vehicles = Array.from(new Set(collectAllVtUsage().map(u => u.vehicle || '').filter(Boolean)));
-            const vfEl = q('vt-filter-vehicle'); if(vfEl){ vfEl.innerHTML = '<option value="">Todos</option>' + vehicles.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join(''); if(vf) vfEl.value = vf; }
+            const vfEl2 = q('vt-filter-vehicle'); if(vfEl2){ vfEl2.innerHTML = '<option value="">Todos</option>' + vehicles.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join(''); if(vf) vfEl2.value = vf; }
 
-            // Draw charts using Chart.js (if available)
+            // Draw charts using Chart.js (if available). Guard canvas lookup to avoid exceptions.
             try{
-                const priceCtx = document.getElementById('vt-chart-price').getContext('2d');
-                if (vtPriceChart) { vtPriceChart.data.labels = priceLabels; vtPriceChart.data.datasets[0].data = priceSeries; vtPriceChart.update(); }
-                else { vtPriceChart = new Chart(priceCtx, { type:'line', data:{ labels: priceLabels, datasets:[{ label:'R$/L', data: priceSeries, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.08)', fill:true }] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ display:true }, y:{ display:true } } } }); }
+                const priceCanvas = document.getElementById('vt-chart-price');
+                // Friendly empty-state overlay handling for charts
+                try {
+                    const priceEmptyId = 'vt-chart-price-empty';
+                    if (priceCanvas) {
+                        const priceParent = priceCanvas.parentElement;
+                        // Prevent Chart.js from growing the canvas by enforcing a min-height on the parent
+                        try { if (priceParent) priceParent.style.minHeight = priceSeries && priceSeries.length ? '160px' : ''; } catch(e){}
+                        // show/hide canvas based on data
+                        if (!priceSeries || priceSeries.length === 0) {
+                            priceCanvas.style.display = 'none';
+                            if (priceParent && !priceParent.querySelector('#' + priceEmptyId)) {
+                                const d = document.createElement('div'); d.id = priceEmptyId; d.className = 'p-6 text-sm text-gray-500'; d.textContent = 'Sem histórico de preço por litro.'; if (priceParent) priceParent.appendChild(d);
+                            }
+                        } else {
+                            // ensure canvas has an explicit height so Chart.js doesn't compute a problematic size
+                            try { priceCanvas.style.display = ''; priceCanvas.style.height = '160px'; } catch(e){}
+                            const existing = priceParent ? priceParent.querySelector('#' + priceEmptyId) : null; if (existing) existing.remove();
+                        }
+                    }
+                } catch(e){}
+                if (priceCanvas && priceCanvas.getContext) {
+                    // If there's no data, ensure any existing chart is destroyed and canvas hidden
+                    if (!priceSeries || priceSeries.length === 0) {
+                        try { if (vtPriceChart) { vtPriceChart.destroy(); vtPriceChart = null; } } catch(e){}
+                    }
+                    // Prepare the canvas for a stable rendering: set drawing buffer height and CSS height
+                    try { priceCanvas.height = 160; priceCanvas.style.height = '160px'; } catch(e){}
+                    const priceCtx = priceCanvas.getContext('2d');
+                    try {
+                        // Always recreate chart to avoid stale/responsive resize loops; destroy first if exists
+                        if (vtPriceChart) { try { vtPriceChart.destroy(); } catch(e){} vtPriceChart = null; }
+                        if (vtPriceResizeObserver) { try { vtPriceResizeObserver(); } catch(e){} vtPriceResizeObserver = null; }
+                        if (priceSeries && priceSeries.length) {
+                            vtPriceChart = new Chart(priceCtx, {
+                                type: 'line',
+                                data: { labels: priceLabels, datasets: [{ label: 'R$/L', data: priceSeries, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)', fill: true }] },
+                                options: {
+                                    // we manage resizing externally via ResizeObserver to avoid feedback loops
+                                    responsive: false,
+                                    maintainAspectRatio: false,
+                                    scales: { x: { display: true }, y: { display: true } }
+                                }
+                            });
+                            // attach observer to resize chart when parent changes
+                            vtPriceResizeObserver = attachChartResizeObserver(priceCanvas, vtPriceChart, priceCanvas.parentElement);
+                        }
+                    } catch (e) { console.error('vtPriceChart render error', e); }
+                }
 
                 // autonomy chart: show each interval ratio in chronological order
                 const autonomyLabels = autonomyIntervals.map(i => new Date(i.date).toLocaleDateString());
                 const autonomyData = autonomyIntervals.map(i => Number(i.ratio.toFixed(3)));
-                const autoCtx = document.getElementById('vt-chart-autonomy').getContext('2d');
-                if (vtAutonomyChart) { vtAutonomyChart.data.labels = autonomyLabels; vtAutonomyChart.data.datasets[0].data = autonomyData; vtAutonomyChart.update(); }
-                else { vtAutonomyChart = new Chart(autoCtx, { type:'bar', data:{ labels: autonomyLabels, datasets:[{ label:'km/L', data: autonomyData, backgroundColor:'#10b981' }] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ display:true }, y:{ display:true } } } }); }
+                const autoCanvas = document.getElementById('vt-chart-autonomy');
+                try {
+                    const autoEmptyId = 'vt-chart-autonomy-empty';
+                    if (autoCanvas) {
+                        const autoParent = autoCanvas.parentElement;
+                        if (!autonomyIntervals || autonomyIntervals.length === 0) {
+                            autoCanvas.style.display = 'none';
+                            if (autoParent && !autoParent.querySelector('#' + autoEmptyId)) {
+                                const d = document.createElement('div'); d.id = autoEmptyId; d.className = 'p-6 text-sm text-gray-500'; d.textContent = 'Autonomia insuficiente para gerar gráfico.'; if (autoParent) autoParent.appendChild(d);
+                            }
+                        } else {
+                            autoCanvas.style.display = '';
+                            const existing = autoParent ? autoParent.querySelector('#' + autoEmptyId) : null; if (existing) existing.remove();
+                        }
+                    }
+                } catch(e){}
+                if (autoCanvas && autoCanvas.getContext) {
+                    const autoParent = autoCanvas.parentElement;
+                    // If no data, destroy any existing chart and hide canvas
+                    if (!autonomyIntervals || autonomyIntervals.length === 0) {
+                        try { if (vtAutonomyChart) { vtAutonomyChart.destroy(); vtAutonomyChart = null; } } catch(e){}
+                    }
+                    // enforce a stable drawing buffer height and CSS height
+                    try { autoCanvas.height = 160; autoCanvas.style.height = '160px'; if (autoParent) autoParent.style.minHeight = autonomyIntervals && autonomyIntervals.length ? '160px' : ''; } catch(e){}
+                    const autoCtx = autoCanvas.getContext('2d');
+                    try {
+                        // Recreate chart freshly to avoid responsive resize feedback problems
+                        if (vtAutonomyChart) { try { vtAutonomyChart.destroy(); } catch(e){} vtAutonomyChart = null; }
+                        if (vtAutonomyResizeObserver) { try { vtAutonomyResizeObserver(); } catch(e){} vtAutonomyResizeObserver = null; }
+                        if (autonomyIntervals && autonomyIntervals.length) {
+                            vtAutonomyChart = new Chart(autoCtx, {
+                                type: 'bar',
+                                data: { labels: autonomyLabels, datasets: [{ label: 'km/L', data: autonomyData, backgroundColor: '#10b981' }] },
+                                options: {
+                                    responsive: false,
+                                    maintainAspectRatio: false,
+                                    scales: { x: { display: true }, y: { display: true } }
+                                }
+                            });
+                            vtAutonomyResizeObserver = attachChartResizeObserver(autoCanvas, vtAutonomyChart, autoCanvas.parentElement);
+                        }
+                    } catch (e) { console.error('vtAutonomyChart render error', e); }
+                }
             }catch(e){ /* Chart.js not available or canvas not ready */ }
         }
 
         // helpers: formatting & escape
         function formatCurrency(v){ try{ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); }catch(e){ return String(v); } }
         function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+            // Parse numbers entered in pt-BR style (e.g. "1.234,56" or "59,52") into JS numbers
+            function parseLocaleNumber(s) {
+                try {
+                    if (s === undefined || s === null) return NaN;
+                    if (typeof s === 'number') return s;
+                    let str = String(s).trim();
+                    if (str === '') return NaN;
+                    // Remove thousands separator '.' and replace decimal ',' with '.'
+                    str = str.replace(/\./g, '').replace(/,/g, '.');
+                    const v = parseFloat(str);
+                    return isNaN(v) ? NaN : v;
+                } catch (e) { return NaN; }
+            }
+
+            // Safe id generator: prefer global generateUUID if available, otherwise fallback
+            function safeGenerateId() {
+                try { if (typeof generateUUID === 'function') return generateUUID(); } catch(e) {}
+                // fallback simple id
+                return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+            }
 
         // auto-calculation and validation wiring
         document.addEventListener('DOMContentLoaded', function(){
@@ -2419,21 +2714,73 @@
             const inpPrice = q('vt-fuel-price'); const inpLiters = q('vt-fuel-liters'); const inpTotal = q('vt-fuel-total');
             const inpVehicle = q('vt-fuel-vehicle'); const inpOdo = q('vt-fuel-odometer'); const inpType = q('vt-fuel-type');
 
-            let lastChanged = null; let programmatic = false;
+            let programmatic = false;
 
             function validateAndToggle(){
-                const total = parseFloat(inpTotal.value) || 0;
-                if (total > 0) { saveBtn.removeAttribute('disabled'); q('vt-error-total').classList.add('hidden'); }
-                else { saveBtn.setAttribute('disabled',''); q('vt-error-total').classList.remove('hidden'); q('vt-error-total').textContent = 'Informe o valor total.'; }
+                const total = parseLocaleNumber(inpTotal.value) || 0;
+                if (total > 0) { try{ saveBtn.removeAttribute('disabled'); }catch(e){} q('vt-error-total').classList.add('hidden'); }
+                else { try{ saveBtn.setAttribute('disabled',''); }catch(e){} q('vt-error-total').classList.remove('hidden'); q('vt-error-total').textContent = 'Informe o valor total.'; }
             }
 
-            function onPriceChange(){ if(programmatic) return; lastChanged='price'; const price = parseFloat(inpPrice.value) || 0; const liters = parseFloat(inpLiters.value) || 0; const total = parseFloat(inpTotal.value) || 0; programmatic = true; try{ if(price>0 && liters>0){ inpTotal.value = (Math.round((price*liters+Number.EPSILON)*100)/100).toFixed(2); } else if(price>0 && total>0){ inpLiters.value = (total/price).toFixed(3); } }catch(e){} programmatic=false; validateAndToggle(); }
-            function onLitersChange(){ if(programmatic) return; lastChanged='liters'; const price = parseFloat(inpPrice.value) || 0; const liters = parseFloat(inpLiters.value) || 0; const total = parseFloat(inpTotal.value) || 0; programmatic = true; try{ if(price>0 && liters>0){ inpTotal.value = (Math.round((price*liters+Number.EPSILON)*100)/100).toFixed(2); } else if(liters>0 && total>0){ inpPrice.value = (total/liters).toFixed(3); } }catch(e){} programmatic=false; validateAndToggle(); }
-            function onTotalChange(){ if(programmatic) return; lastChanged='total'; const price = parseFloat(inpPrice.value) || 0; const liters = parseFloat(inpLiters.value) || 0; const total = parseFloat(inpTotal.value) || 0; programmatic = true; try{ if(price>0 && total>0 && !liters){ inpLiters.value = (total/price).toFixed(3); } else if(liters>0 && total>0 && !price){ inpPrice.value = (total/liters).toFixed(3); } }catch(e){} programmatic=false; validateAndToggle(); }
+            // Unified recalculation: works regardless of which field the user edits first.
+            function recalcFields(trigger){
+                if (programmatic) return;
+                programmatic = true;
+                try{
+                    const price = parseLocaleNumber(inpPrice.value) || 0;
+                    const liters = parseLocaleNumber(inpLiters.value) || 0;
+                    const total = parseLocaleNumber(inpTotal.value) || 0;
 
-            inpPrice.addEventListener('input', onPriceChange);
-            inpLiters.addEventListener('input', onLitersChange);
-            inpTotal.addEventListener('input', onTotalChange);
+                    // Priority: when we have price and liters => total
+                    if (price > 0 && liters > 0) {
+                        const calcTotal = Math.round((price * liters + Number.EPSILON) * 100) / 100;
+                        inpTotal.value = calcTotal.toFixed(2).replace('.', ',');
+                    }
+                    // If not enough for above, but have price and total => liters
+                    else if (price > 0 && total > 0) {
+                        const calcLiters = total / price;
+                        inpLiters.value = calcLiters.toFixed(3).replace('.', ',');
+                    }
+                    // If not above, but have liters and total => price (2 decimals)
+                    else if (liters > 0 && total > 0) {
+                        const calcPrice = total / liters;
+                        inpPrice.value = calcPrice.toFixed(2).replace('.', ',');
+                    }
+                    // If user cleared fields, leave inputs as-is
+                } catch (e) {
+                    console.error('recalcFields error', e);
+                } finally {
+                    programmatic = false;
+                    validateAndToggle();
+                }
+            }
+
+            inpPrice.addEventListener('input', () => recalcFields('price'));
+            inpLiters.addEventListener('input', () => recalcFields('liters'));
+            inpTotal.addEventListener('input', () => recalcFields('total'));
+
+            // Format values on blur (local pt-BR style)
+            inpPrice.addEventListener('blur', () => {
+                try {
+                    const v = parseLocaleNumber(inpPrice.value);
+                    if (!isNaN(v)) inpPrice.value = v.toFixed(2).replace('.', ',');
+                    recalcFields('price');
+                } catch(e){}
+            });
+            inpLiters.addEventListener('blur', () => {
+                try {
+                    const v = parseLocaleNumber(inpLiters.value);
+                    if (!isNaN(v)) inpLiters.value = v.toFixed(3).replace('.', ',');
+                    recalcFields('liters');
+                } catch(e){}
+            });
+            inpTotal.addEventListener('blur', () => {
+                try {
+                    const v = parseLocaleNumber(inpTotal.value);
+                    if (!isNaN(v)) inpTotal.value = v.toFixed(2).replace('.', ',');
+                    recalcFields('total');
+                } catch(e){}
+            });
 
             btnReg.addEventListener('click', () => activateVtTab('register'));
             btnHist.addEventListener('click', () => activateVtTab('history'));
@@ -2444,16 +2791,50 @@
             q('vt-fuel-form').addEventListener('submit', function(e){
                 e.preventDefault();
                 const vehicle = inpVehicle.value; const odometer = inpOdo.value ? Number(inpOdo.value) : null; const fuelType = inpType.value;
-                const price = parseFloat(inpPrice.value) || null; const liters = parseFloat(inpLiters.value) || null; const total = parseFloat(inpTotal.value) || null;
+                const price = isNaN(parseLocaleNumber(inpPrice.value)) ? null : parseLocaleNumber(inpPrice.value);
+                const liters = isNaN(parseLocaleNumber(inpLiters.value)) ? null : parseLocaleNumber(inpLiters.value);
+                const total = isNaN(parseLocaleNumber(inpTotal.value)) ? null : parseLocaleNumber(inpTotal.value);
                 if (!total || total <= 0) { q('vt-error-total').classList.remove('hidden'); q('vt-error-total').textContent = 'Valor total inválido.'; return; }
-                // Build entry and persist
-                const md = getCurrentMonthData(); if(!Array.isArray(md.vtUsage)) md.vtUsage = [];
                 const base = window._pendingVtTransaction || {};
-                const entry = { id: generateUUID(), description: base.description || 'Abastecimento', amount: Number(total)||0, date: new Date().toISOString(), vehicle: vehicle, odometer: odometer, fuelType: fuelType, pricePerLiter: price, liters: liters };
+                    const dateValue = (q('vt-fuel-date') && q('vt-fuel-date').value) ? new Date(q('vt-fuel-date').value).toISOString() : new Date().toISOString();
+                    const entry = { id: (typeof safeGenerateId === 'function' ? safeGenerateId() : (typeof generateUUID === 'function' ? generateUUID() : ('id-' + Math.random().toString(36).slice(2,8)))), description: base.description || 'Abastecimento', amount: Number(total)||0, date: dateValue, vehicle: vehicle, odometer: odometer, fuelType: fuelType, pricePerLiter: price, liters: liters };
+
+                // Prefer App API save wrapper when available (clean dependency on internal state)
+                const saveViaAppApi = (window.appApi && typeof window.appApi.saveVtEntry === 'function');
+                if (saveViaAppApi) {
+                    window.appApi.saveVtEntry(entry).then(()=>{
+                            showToast('Abastecimento registrado no VT.', 'bg-green-600');
+                            closeVtFuelModal(); (window.appApi && typeof window.appApi.render === 'function' ? window.appApi.render() : (typeof render === 'function' ? render() : null));
+                    }).catch(err=>{ console.error('save vt fuel via appApi', err); showToast('Falha ao salvar abastecimento VT.', 'bg-red-600'); });
+                    return;
+                }
+
+                // Fallback: replicate previous best-effort save behavior if App API not present
+                let md = null; let winState;
+                try {
+                    if (typeof getCurrentMonthData === 'function') md = getCurrentMonthData();
+                    else if (typeof window.getCurrentMonthData === 'function') md = window.getCurrentMonthData();
+                } catch (e) { md = null; }
+                if (!md) {
+                    try {
+                        const date = (window.state && window.state.currentDate) ? window.state.currentDate : new Date();
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        winState = window.state || (window.state = { currentDate: date, appData: { data: {} } });
+                        if (!winState.appData) winState.appData = { data: {} };
+                        if (!winState.appData.data[year]) winState.appData.data[year] = {};
+                        if (!winState.appData.data[year][month]) winState.appData.data[year][month] = { incomes: [], expenses: [], savings: [], vtUsage: [] };
+                        md = winState.appData.data[year][month];
+                    } catch (e) {
+                        md = { vtUsage: [] };
+                    }
+                }
+                if(!Array.isArray(md.vtUsage)) md.vtUsage = [];
                 md.vtUsage.push(entry);
-                storage.saveData(state.appData).then(()=>{
+                const appDataToSave = (window.state && window.state.appData) ? window.state.appData : (typeof winState !== 'undefined' && winState.appData ? winState.appData : (window.state && window.state.appData ? window.state.appData : { data: {} }));
+                storage.saveData(appDataToSave).then(()=>{
                     showToast('Abastecimento registrado no VT.', 'bg-green-600');
-                    closeVtFuelModal(); render();
+                    closeVtFuelModal(); (window.appApi && typeof window.appApi.render === 'function' ? window.appApi.render() : (typeof render === 'function' ? render() : null));
                 }).catch(err=>{ console.error('save vt fuel', err); showToast('Falha ao salvar abastecimento VT.', 'bg-red-600'); });
             });
 
@@ -2465,8 +2846,38 @@
             if(filterClear) filterClear.addEventListener('click', () => { if(filterSearch) filterSearch.value = ''; if(filterVehicle) filterVehicle.value = ''; if(filterFuel) filterFuel.value = ''; renderVtHistory(); });
 
             // expose helpers
-            window.openVtFuelModal = openVtFuelModal; window.closeVtFuelModal = closeVtFuelModal; window.renderVtHistory = renderVtHistory;
+            window.openVtFuelModal = openVtFuelModal; window.closeVtFuelModal = closeVtFuelModal; window.renderVtHistory = renderVtHistory; window.openVtFuelHistory = openVtFuelHistory;
+            // Test helper: seed two VT fuel entries (useful to reproduce charts/autonomy)
+            window.seedVtTestData = async function(){
+                const entries = [
+                    { description: 'Abastecimento 1', vehicle: 'Moto', odometer: 17875, fuelType: 'Gasolina', pricePerLiter: 5.79, liters: 9.51, amount: 55.06, date: new Date().toISOString()},
+                    { description: 'Abastecimento 2', vehicle: 'Moto', odometer: 18163, fuelType: 'Gasolina', pricePerLiter: 5.79, liters: 10.28, amount: 59.52, date: new Date(new Date().getTime() + 1000).toISOString() }
+                ];
+                try {
+                    if (window.appApi && typeof window.appApi.saveVtEntry === 'function') {
+                        for (const e of entries) await window.appApi.saveVtEntry(e);
+                    } else {
+                        // fallback: directly push to window.state if present
+                        const date = (window.state && window.state.currentDate) ? window.state.currentDate : new Date();
+                        const y = String(date.getFullYear()); const m = String(String(date.getMonth()+1).padStart(2,'0'));
+                        window.state = window.state || { currentDate: date, appData: { data: {} } };
+                        if (!window.state.appData) window.state.appData = { data: {} };
+                        if (!window.state.appData.data[y]) window.state.appData.data[y] = {};
+                        if (!window.state.appData.data[y][m]) window.state.appData.data[y][m] = { incomes: [], expenses: [], savings: [], vtUsage: [] };
+                        for (const e of entries) {
+                            e.id = e.id || ('seed-' + Math.random().toString(36).slice(2,8));
+                            window.state.appData.data[y][m].vtUsage.push(e);
+                        }
+                        try { await storage.saveData(window.state.appData); } catch(e) {}
+                    }
+                    showToast('Dados de teste adicionados (VT).', 'bg-green-600');
+                    renderVtHistory(); if (window.appApi && typeof window.appApi.render === 'function') window.appApi.render(); else if (typeof render === 'function') render();
+                } catch (err) { console.error('seedVtTestData', err); showToast('Falha ao inserir dados de teste.', 'bg-red-600'); }
+            };
         });
+        // VT KPI card click handler intentionally removed to avoid multiple access points to the VT modal.
+        // Access to the VT — Abastecimentos modal is restricted to the '+' button inside the VT card on the
+        // credit-cards (Faturas) view to prevent conflicts.
     })();
     </script>
     
@@ -3079,6 +3490,9 @@ const firebaseConfig = {
             cardGrouped: {}
         };
 
+    // Expose the internal state globally so legacy/global handlers can access it safely
+    try { window.state = state; } catch (e) { /* ignore if env prevents assignment */ }
+
         const ui = {
             charts: {}
         };
@@ -3093,6 +3507,88 @@ const firebaseConfig = {
                 return v.toString(16);
             });
         }
+
+            // Parse numbers entered in pt-BR style (e.g. "1.234,56" or "59,52") into JS numbers
+            function parseLocaleNumber(s) {
+                try {
+                    if (s === undefined || s === null) return NaN;
+                    if (typeof s === 'number') return s;
+                    let str = String(s).trim();
+                    if (str === '') return NaN;
+                    // Remove thousands separator '.' and replace decimal ',' with '.'
+                    str = str.replace(/\./g, '').replace(/,/g, '.');
+                    const v = parseFloat(str);
+                    return isNaN(v) ? NaN : v;
+                } catch (e) { return NaN; }
+            }
+
+            // Safe id generator: prefer global generateUUID if available, otherwise fallback
+            function safeGenerateId() {
+                try { if (typeof generateUUID === 'function') return generateUUID(); } catch(e) {}
+                // fallback simple id
+                return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+            }
+
+        // Public API: save a VT fuel entry using App's internal state and storage.
+        // This avoids callers needing direct access to `state` or to replicate
+        // month/data lookup logic. Returns a Promise.
+        async function saveVtEntry(entry) {
+            try {
+                if (!entry) throw new Error('empty entry');
+                // Normalize state.appData structure
+                if (!state.appData) state.appData = { data: {} };
+                if (!state.appData.data) state.appData.data = {};
+                const date = state.currentDate || new Date();
+                const year = String(date.getFullYear());
+                const month = String(String(date.getMonth() + 1).padStart(2, '0'));
+                if (!state.appData.data[year]) state.appData.data[year] = {};
+                if (!state.appData.data[year][month]) state.appData.data[year][month] = { incomes: [], expenses: [], savings: [], vtUsage: [] };
+                const md = state.appData.data[year][month];
+                if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
+                // Ensure id and normalized fields
+                entry.id = entry.id || generateUUID();
+                entry.date = entry.date || new Date().toISOString();
+                // push and persist
+                md.vtUsage.push(entry);
+                await storage.saveData(state.appData);
+                return { success: true };
+            } catch (e) {
+                console.error('saveVtEntry error', e);
+                throw e;
+            }
+        }
+
+        async function updateVtEntry(updated) {
+            try {
+                if (!updated || !updated.id) throw new Error('invalid update');
+                if (!state.appData || !state.appData.data) throw new Error('no app data');
+                // find entry by id across months
+                let found = false;
+                Object.keys(state.appData.data).forEach(y => {
+                    Object.keys(state.appData.data[y] || {}).forEach(m => {
+                        const md = state.appData.data[y][m] || {};
+                        if (!Array.isArray(md.vtUsage)) return;
+                        for (let i = 0; i < md.vtUsage.length; i++) {
+                            const it = md.vtUsage[i];
+                            if (it && it.id === updated.id) {
+                                // merge changes
+                                md.vtUsage[i] = Object.assign({}, it, updated);
+                                found = true;
+                                break;
+                            }
+                        }
+                    });
+                });
+                if (!found) throw new Error('entry not found');
+                await storage.saveData(state.appData);
+                return { success: true };
+            } catch (e) { console.error('updateVtEntry error', e); throw e; }
+        }
+
+        // Expose a small app API so isolated UI modules can call saving without
+        // relying on window.state or internal helpers. This is intentionally
+        // minimal and keeps the implementation inside App.
+    try { window.appApi = window.appApi || {}; window.appApi.saveVtEntry = saveVtEntry; window.appApi.updateVtEntry = updateVtEntry; window.appApi.render = function(){ try { if (typeof render === 'function') return render(); } catch(e){ console.error('appApi.render wrapper error', e); } }; } catch(e) { /* ignore env failures */ }
 
         function formatCurrency(value) {
             if (typeof value !== 'number') value = parseFloat(value) || 0;
@@ -3415,13 +3911,7 @@ const firebaseConfig = {
                 if (!picker.contains(e.target) && e.target !== ui.currentMonthDisplay) closeMonthPicker();
             });
             if (ui.addTransactionBtn) ui.addTransactionBtn.addEventListener('click', () => {
-                try {
-                    // If user is on credit-cards (faturas) view, open VT fuel modal directly
-                    if (state.currentView === 'credit-cards' && typeof window.openVtFuelModal === 'function') {
-                        window.openVtFuelModal(null);
-                        return;
-                    }
-                } catch(e) { /* fallback */ }
+                // Always open the standard transaction modal from the global '+' button.
                 openModal('expenses');
             });
             if (ui.closeTransactionModalBtn) ui.closeTransactionModalBtn.addEventListener('click', () => closeModal('transaction-modal'));
@@ -4728,9 +5218,12 @@ const firebaseConfig = {
                                     <div class="mt-3 text-sm text-gray-600">
                                         <h4 class="font-semibold text-sm text-gray-700 flex items-center gap-2">
                                             <span>Compras</span>
-                                            <button id="add-vt-usage-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" title="Adicionar compra VT">
-                                                <span class="material-symbols-outlined" style="font-size:18px;">add</span>
-                                            </button>
+                                                <button id="open-vt-history-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 mr-1" title="Abrir histórico VT">
+                                                    <span class="material-symbols-outlined" style="font-size:18px;">history</span>
+                                                </button>
+                                                <button id="add-vt-usage-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" title="Adicionar compra VT">
+                                                    <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+                                                </button>
                                         </h4>
                                         ${(currentMonthData.vtUsage && currentMonthData.vtUsage.length > 0) ? (() => {
                                             const usagesSorted = (currentMonthData.vtUsage || []).slice().sort((a,b) => { const A=(a.description||'').toLowerCase(); const B=(b.description||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
@@ -4792,7 +5285,17 @@ const firebaseConfig = {
                 // VT handlers: add, edit, delete
                     try {
                         const addVtBtn = container.querySelector('#add-vt-usage-btn');
+                        const openVtHistBtn = container.querySelector('#open-vt-history-btn');
+                        if (openVtHistBtn) openVtHistBtn.addEventListener('click', (ev) => {
+                            try { if (typeof window.openVtFuelHistory === 'function') return window.openVtFuelHistory(); } catch(e) {}
+                            try { if (typeof window.openVtFuelModal === 'function') return window.openVtFuelModal(null); } catch(e) {}
+                            openModal('expenses', null, { payment: 'VT', focusDescription: true });
+                        });
                         if (addVtBtn) addVtBtn.addEventListener('click', (ev) => {
+                            // Open the dedicated VT fuel modal when available; fall back to transaction modal otherwise
+                            try {
+                                if (typeof window.openVtFuelModal === 'function') return window.openVtFuelModal(null);
+                            } catch(e) {}
                             openModal('expenses', null, { payment: 'VT', focusDescription: true });
                         });
                         container.querySelectorAll('.delete-vt-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
@@ -8305,14 +8808,9 @@ const firebaseConfig = {
                         clearTransactionError();
                     }
 
-                    // Open VT-specific modal to collect fuel/abastecimento details
-                    try {
-                        if (window.openVtFuelModal) {
-                            window.openVtFuelModal(transactionData);
-                            return; // modal will handle save
-                        }
-                    } catch (e) { console.error('openVtFuelModal call failed', e); }
-                    // Fallback: if modal not available, store minimal vtUsage as before
+                    // Note: opening the dedicated VT modal from the transaction flow was removed to avoid multiple access
+                    // points. The VT modal should be opened only from the '+' button inside the VT card. Fall back to
+                    // storing a minimal vtUsage entry immediately.
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
                     const usageEntry = { id: generateUUID(), amount: Number(transactionData.amount) || 0, description: transactionData.description || '', date: new Date().toISOString() };

@@ -300,6 +300,32 @@
             };
         })();
     </script>
+    <script>
+        // Early safe definition of populateSelect so other scripts can call it before full init.
+        // This will be replaced by the more feature-complete definition later, but prevents
+        // ReferenceError when other blocks call populateSelect during DOMContentLoaded.
+        window.populateSelect = function(selectId, items, iconSpanSelector){
+            try{
+                const sel = document.getElementById(selectId);
+                if (!sel) return;
+                sel.innerHTML = '';
+                (items || []).forEach(it => {
+                    const opt = document.createElement('option'); opt.value = it.value; opt.textContent = it.label; opt.dataset.icon = it.icon || '';
+                    sel.appendChild(opt);
+                });
+                const iconSpan = sel.parentElement ? sel.parentElement.querySelector(iconSpanSelector) : null;
+                const updateIcon = () => {
+                    try { const cur = sel.options[sel.selectedIndex]; if (iconSpan && cur && cur.dataset.icon) { iconSpan.textContent = cur.dataset.icon; iconSpan.classList.add('material-symbols-outlined'); } } catch(e){}
+                };
+                try { sel.addEventListener('change', updateIcon); } catch(e){}
+                try { updateIcon(); } catch(e){}
+            } catch (e) { console.error('early populateSelect error', e); }
+        };
+        // Provide a global function name as well (some code calls populateSelect unqualified)
+        try { if (typeof populateSelect === 'undefined') {
+            function populateSelect(selectId, items, iconSpanSelector) { return window.populateSelect(selectId, items, iconSpanSelector); }
+        } } catch(e) {}
+    </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
@@ -1502,6 +1528,19 @@
                     { value: 'Imóvel', label: 'Imóvel / Entrada', icon: 'house' },
                     { value: 'Outros', label: 'Outros', icon: 'more_horiz' }
                 ]
+                ,
+                // Vehicle mappings for VT modal (used to show icons next to vehicle options)
+                vehicles: [
+                    { value: 'Carro', label: 'Carro', icon: 'directions_car' },
+                    { value: 'Moto', label: 'Moto', icon: 'two_wheeler' }
+                ]
+                ,
+                // Fuel type mappings for VT modal
+                fuelTypes: [
+                    { value: 'Gasolina', label: 'Gasolina', icon: 'local_gas_station' },
+                    { value: 'Gasolina Aditivada', label: 'Gas. Aditivada', icon: 'local_gas_station' },
+                    { value: 'Etanol', label: 'Etanol', icon: 'eco' }
+                ]
             };
 
             // Helper: return an icon name for a given kind and value
@@ -1631,6 +1670,33 @@
             // build a category list for filters that includes expense + saving categories
             const combinedCategories = (window.ICON_MAPPINGS.expenseCategories || []).concat(window.ICON_MAPPINGS.savingCategories || []).map(c => ({ value: c.value, label: c.label, icon: c.icon }));
             populateSelect('filter-category', combinedCategories, '.select-icon');
+            // Populate vehicle selects for VT feature (add a 'Todos' option for the filter)
+            populateSelect('vt-fuel-vehicle', (window.ICON_MAPPINGS.vehicles || []).map(v=>({ value: v.value, label: v.label, icon: v.icon })), '.select-icon');
+            populateSelect('vt-filter-vehicle', [{ value: '', label: 'Todos', icon: '' }].concat((window.ICON_MAPPINGS.vehicles || []).map(v=>({ value: v.value, label: v.label, icon: v.icon }))), '.select-icon');
+            // Populate fuel type select for VT and filter
+            populateSelect('vt-fuel-type', (window.ICON_MAPPINGS.fuelTypes || []).map(f=>({ value: f.value, label: f.label, icon: f.icon })), '.select-icon');
+            populateSelect('vt-filter-fuel', [{ value: '', label: 'Todos', icon: '' }].concat((window.ICON_MAPPINGS.fuelTypes || []).map(f=>({ value: f.value, label: f.label, icon: f.icon }))), '.select-icon');
+
+            // Ensure default selections and refresh any visual icon-select overlays created by enhanceSelectWithIcons
+            try {
+                const setAndRefresh = (id, defaultValue) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    if (defaultValue !== undefined && Array.from(el.options).some(o => o.value === defaultValue)) {
+                        el.value = defaultValue;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    if (typeof el._refreshIconSelect === 'function') {
+                        try { el._refreshIconSelect(); } catch (e) { console.error('refresh icon-select', id, e); }
+                    }
+                };
+                // Set defaults: Moto for vehicle, Gasolina for fuel when available
+                setAndRefresh('vt-fuel-vehicle', 'Moto');
+                setAndRefresh('vt-fuel-type', 'Gasolina');
+                // Refresh filters as well so their placeholders/icons appear
+                setAndRefresh('vt-filter-vehicle');
+                setAndRefresh('vt-filter-fuel');
+            } catch (e) { console.error('vt selects default/refresh error', e); }
         });
         // Enhancer: replace visual select with icon-enabled custom dropdown while keeping native select for data
         document.addEventListener('DOMContentLoaded', function() {
@@ -1732,8 +1798,10 @@
                 return { wrapper, btn, list };
             }
 
+            // (vehicle selects populated earlier where populateSelect is defined)
+
             // Enhance the main modal selects and filters where we want prefixed icons
-            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category','vt-fuel-vehicle'].forEach(id => {
+            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category','vt-fuel-vehicle','vt-filter-vehicle','vt-fuel-type','vt-filter-fuel'].forEach(id => {
                 try { enhanceSelectWithIcons(id); } catch(e) { console.error('enhanceSelectWithIcons', id, e); }
             });
         });
@@ -2145,7 +2213,7 @@
     </dialog>
     
     <!-- VT Fuel Detail Modal (Registrar + Histórico) -->
-    <dialog id="vt-fuel-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-3xl" style="max-height:92vh;overflow:auto;">
+    <dialog id="vt-fuel-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-4xl" style="max-height:92vh;overflow:auto;max-width:900px;">
         <div class="flex items-start justify-between mb-4">
             <h2 class="text-xl font-bold">VT — Abastecimentos</h2>
             <div class="flex items-center gap-2">
@@ -2168,47 +2236,66 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Veículo</label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">directions_car</span>
+                            <div class="relative select-with-icon">
+                                <span class="select-icon material-symbols-outlined">directions_car</span>
                                 <select id="vt-fuel-vehicle" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2">
                                     <option value="Carro">Carro</option>
                                     <option value="Moto" selected>Moto</option>
                                 </select>
                             </div>
                         </div>
+
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Data do abastecimento</label>
-                            <input id="vt-fuel-date" type="date" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">calendar_today</span>
+                                <input id="vt-fuel-date" type="date" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" />
+                            </div>
                         </div>
+
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Odômetro (km)</label>
-                            <input id="vt-fuel-odometer" type="number" step="1" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 12345" />
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">speed</span>
+                                <input id="vt-fuel-odometer" type="number" step="1" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 12345" />
+                            </div>
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700">Combustível</label>
-                        <select id="vt-fuel-type" class="mt-1 block w-full border-gray-300 rounded-md p-2">
-                            <option value="Gasolina">Gasolina</option>
-                            <option value="Gasolina Aditivada">Gas. Aditivada</option>
-                            <option value="Etanol">Etanol</option>
-                        </select>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700">Combustível</label>
+                            <div class="relative select-with-icon">
+                                <span class="select-icon material-symbols-outlined">local_gas_station</span>
+                                <select id="vt-fuel-type" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2">
+                                    <option value="Gasolina">Gasolina</option>
+                                    <option value="Gasolina Aditivada">Gas. Aditivada</option>
+                                    <option value="Etanol">Etanol</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Preço / L (R$)</label>
-                            <input id="vt-fuel-price" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 5,49" />
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">attach_money</span>
+                                <input id="vt-fuel-price" type="text" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 5,49" />
+                            </div>
                             <p id="vt-error-price" class="text-xs text-red-600 hidden"></p>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Litros (L)</label>
-                            <input id="vt-fuel-liters" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 30,0" />
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">opacity</span>
+                                <input id="vt-fuel-liters" type="text" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 30,0" />
+                            </div>
                             <p id="vt-error-liters" class="text-xs text-red-600 hidden"></p>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">Valor total (R$)</label>
-                            <input id="vt-fuel-total" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 164,70" />
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">payments</span>
+                                <input id="vt-fuel-total" type="text" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 164,70" />
+                            </div>
                             <p id="vt-error-total" class="text-xs text-red-600 hidden"></p>
                         </div>
                     </div>
@@ -2227,17 +2314,26 @@
                 <div class="flex flex-col md:flex-row md:items-center md:gap-4 mb-3">
                     <div class="flex gap-2 items-center flex-1">
                         <label class="text-sm text-gray-600">Veículo</label>
-                        <select id="vt-filter-vehicle" class="border-gray-200 rounded p-1"></select>
+                        <div class="relative select-with-icon">
+                            <span class="select-icon material-symbols-outlined">directions_car</span>
+                            <select id="vt-filter-vehicle" class="pl-8 border-gray-200 rounded p-1"></select>
+                        </div>
                         <label class="text-sm text-gray-600 ml-3">Combustível</label>
-                        <select id="vt-filter-fuel" class="border-gray-200 rounded p-1">
-                            <option value="">Todos</option>
-                            <option value="Gasolina">Gasolina</option>
-                            <option value="Gasolina Aditivada">Gas. Aditivada</option>
-                            <option value="Etanol">Etanol</option>
-                        </select>
+                        <div class="relative select-with-icon">
+                            <span class="select-icon material-symbols-outlined">local_gas_station</span>
+                            <select id="vt-filter-fuel" class="pl-8 border-gray-200 rounded p-1">
+                                <option value="">Todos</option>
+                                <option value="Gasolina">Gasolina</option>
+                                <option value="Gasolina Aditivada">Gas. Aditivada</option>
+                                <option value="Etanol">Etanol</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="flex items-center gap-2 mt-2 md:mt-0">
-                        <input id="vt-filter-search" class="border-gray-200 rounded p-1" placeholder="Pesquisar descrição..." />
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">search</span>
+                            <input id="vt-filter-search" class="pl-8 border-gray-200 rounded p-1" placeholder="Pesquisar descrição..." />
+                        </div>
                         <button id="vt-filter-clear" class="bg-gray-100 px-2 py-1 rounded">Limpar</button>
                     </div>
                 </div>
@@ -2311,6 +2407,27 @@
                 else q('vt-fuel-total').value = '';
                 // pref-fill date to today if available
                 try { const d = new Date(); q('vt-fuel-date').value = d.toISOString().slice(0,10); } catch(e){}
+                // Prefill other fields from last recorded VT entry for convenience
+                try {
+                    const all = (typeof collectAllVtUsage === 'function') ? collectAllVtUsage() : [];
+                    const last = (all && all.length) ? all[0] : null;
+                    if (last) {
+                        // vehicle and fuel type defaults
+                        try {
+                            if (q('vt-fuel-vehicle') && (!q('vt-fuel-vehicle').value || q('vt-fuel-vehicle').value === '')) q('vt-fuel-vehicle').value = last.vehicle || q('vt-fuel-vehicle').value;
+                            // if the enhanced icon-select overlay exists, refresh its button/label
+                            try { const sel = q('vt-fuel-vehicle'); if (sel && typeof sel._refreshIconSelect === 'function') sel._refreshIconSelect(); } catch(e){}
+                        } catch(e){}
+                        try { if (q('vt-fuel-type') && (!q('vt-fuel-type').value || q('vt-fuel-type').value === '')) q('vt-fuel-type').value = last.fuelType || q('vt-fuel-type').value; } catch(e){}
+                        try { const t = q('vt-fuel-type'); if (t && typeof t._refreshIconSelect === 'function') t._refreshIconSelect(); } catch(e){}
+                        // placeholders for numeric fields so user sees last values
+                        try { if (q('vt-fuel-price') && (!q('vt-fuel-price').value)) q('vt-fuel-price').placeholder = (last.pricePerLiter!=null ? Number(last.pricePerLiter).toFixed(2).replace('.', ',') : q('vt-fuel-price').placeholder); } catch(e){}
+                        try { if (q('vt-fuel-liters') && (!q('vt-fuel-liters').value)) q('vt-fuel-liters').placeholder = (last.liters!=null ? Number(last.liters).toFixed(3).replace('.', ',') : q('vt-fuel-liters').placeholder); } catch(e){}
+                        try { if (q('vt-fuel-odometer') && (!q('vt-fuel-odometer').value)) q('vt-fuel-odometer').placeholder = (last.odometer!=null ? String(last.odometer) : q('vt-fuel-odometer').placeholder); } catch(e){}
+                        try { if (q('vt-fuel-total') && (!q('vt-fuel-total').value)) q('vt-fuel-total').placeholder = (last.amount!=null ? Number(last.amount).toFixed(2).replace('.', ',') : q('vt-fuel-total').placeholder); } catch(e){}
+                        try { const f = q('vt-filter-vehicle'); if (f && typeof f._refreshIconSelect === 'function') f._refreshIconSelect(); } catch(e){}
+                    }
+                } catch(e) { /* ignore prefill errors */ }
             } catch(e){}
             // ensure the dialog is visible and on top. Some environments may not support showModal
             try {
@@ -2411,6 +2528,18 @@
         }
         function renderVtHistory(){
             const all = collectAllVtUsage();
+            // If there are no records in memory, attempt a one-time reload from persistent storage
+            try {
+                if ((!(all && all.length) || all.length === 0) && !window._vtHistoryReloadAttempted) {
+                    window._vtHistoryReloadAttempted = true;
+                    if (storage && typeof storage.loadData === 'function') {
+                        storage.loadData().then(d => {
+                            try { window.state = window.state || {}; window.state.appData = d; } catch(e){}
+                            try { renderVtHistory(); showToast('Dados carregados do armazenamento.', 'bg-green-600'); } catch(e){}
+                        }).catch(err => { console.error('storage.loadData for VT history', err); });
+                    }
+                }
+            } catch (e) { /* ignore reload errors */ }
             // apply filters (defensive DOM access)
             const vfEl = q('vt-filter-vehicle');
             const ffEl = q('vt-filter-fuel');
@@ -2576,8 +2705,12 @@
             } catch (e) { /* ignore tooltip failures */ }
 
             // populate vehicle filter options
-            const vehicles = Array.from(new Set(collectAllVtUsage().map(u => u.vehicle || '').filter(Boolean)));
-            const vfEl2 = q('vt-filter-vehicle'); if(vfEl2){ vfEl2.innerHTML = '<option value="">Todos</option>' + vehicles.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join(''); if(vf) vfEl2.value = vf; }
+            const vehicles = Array.from(new Set(collectAllVtUsage().map(u => u.vehicle || '').filter(Boolean))).map(v => ({ value: v, label: v, icon: ((window.ICON_MAPPINGS && window.ICON_MAPPINGS.vehicles) || []).find(x=>x.value===v)?.icon || '' }));
+            const vfEl2 = q('vt-filter-vehicle'); if (vfEl2) {
+                if (vehicles && vehicles.length) populateSelect('vt-filter-vehicle', [{ value: '', label: 'Todos', icon: '' }].concat(vehicles), '.select-icon');
+                if (vf) vfEl2.value = vf;
+                try { if (typeof vfEl2._refreshIconSelect === 'function') vfEl2._refreshIconSelect(); } catch(e) { /* ignore */ }
+            }
 
             // Draw charts using Chart.js (if available). Guard canvas lookup to avoid exceptions.
             try{
@@ -5287,16 +5420,22 @@ const firebaseConfig = {
                         const addVtBtn = container.querySelector('#add-vt-usage-btn');
                         const openVtHistBtn = container.querySelector('#open-vt-history-btn');
                         if (openVtHistBtn) openVtHistBtn.addEventListener('click', (ev) => {
-                            try { if (typeof window.openVtFuelHistory === 'function') return window.openVtFuelHistory(); } catch(e) {}
-                            try { if (typeof window.openVtFuelModal === 'function') return window.openVtFuelModal(null); } catch(e) {}
-                            openModal('expenses', null, { payment: 'VT', focusDescription: true });
+                            // Prefer the dedicated VT history/modal when available. If not available or it errors,
+                            // show a friendly toast instead of opening the generic transaction modal unexpectedly.
+                            if (typeof window.openVtFuelHistory === 'function') {
+                                try { window.openVtFuelHistory(); return; } catch(e) { console.error('openVtFuelHistory failed', e); }
+                            }
+                            if (typeof window.openVtFuelModal === 'function') {
+                                try { window.openVtFuelModal(null); return; } catch(e) { console.error('openVtFuelModal failed', e); }
+                            }
+                            showToast('Modal de VT indisponível no momento.', 'bg-yellow-600');
                         });
                         if (addVtBtn) addVtBtn.addEventListener('click', (ev) => {
-                            // Open the dedicated VT fuel modal when available; fall back to transaction modal otherwise
-                            try {
-                                if (typeof window.openVtFuelModal === 'function') return window.openVtFuelModal(null);
-                            } catch(e) {}
-                            openModal('expenses', null, { payment: 'VT', focusDescription: true });
+                            // Open the dedicated VT fuel modal when available. If it's missing or errors, show a toast instead
+                            if (typeof window.openVtFuelModal === 'function') {
+                                try { window.openVtFuelModal(null); return; } catch(e) { console.error('openVtFuelModal failed', e); }
+                            }
+                            showToast('Modal de VT indisponível no momento.', 'bg-yellow-600');
                         });
                         container.querySelectorAll('.delete-vt-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
                         const id = ev.currentTarget.getAttribute('data-vt-usage-id');

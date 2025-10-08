@@ -3319,12 +3319,36 @@ const firebaseConfig = {
 
                 async function listBackups() {
                     try {
-                        const snapshot = await database.ref('/backups').orderByChild('createdAt').get();
-                        const arr = [];
-                        snapshot.forEach(s => { arr.push({ id: s.key, ...(s.val()||{}) }); });
-                        // sort desc by createdAt
-                        arr.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-                        return arr;
+                        // Try server-side ordered query first (fast when index exists)
+                        try {
+                            const snapshot = await database.ref('/backups').orderByChild('createdAt').get();
+                            const arr = [];
+                            snapshot.forEach(s => { arr.push({ id: s.key, ...(s.val()||{}) }); });
+                            // sort desc by createdAt
+                            arr.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+                            return arr;
+                        } catch (innerErr) {
+                            // If the error is about missing index, fallback to client-side sort
+                            if (innerErr && innerErr.message && innerErr.message.indexOf && innerErr.message.indexOf('Index not defined') !== -1) {
+                                // Friendly log + UI hint in Portuguese for maintainers
+                                console.info('listBackups: índice ausente em "/backups.createdAt" — ordenação será feita localmente como fallback.');
+                                try { showToast('Aviso: índice ausente em /backups.createdAt — listagem usando ordenação local. Para melhor performance adicione ".indexOn": ["createdAt"] nas regras do Realtime Database.', 'bg-yellow-600'); } catch(e){}
+                            } else if (innerErr && innerErr.code && innerErr.code === 'permission-denied') {
+                                // Permission issues should still be surfaced
+                                throw innerErr;
+                            } else if (innerErr && innerErr.message && innerErr.message.indexOf && innerErr.message.indexOf('.indexOn') !== -1) {
+                                console.info('listBackups: índice ausente em "/backups.createdAt" — ordenação será feita localmente como fallback.');
+                            } else {
+                                // Other errors: rethrow
+                                throw innerErr;
+                            }
+                            // fallback: read all backups and sort locally
+                            const snapshot = await database.ref('/backups').once('value');
+                            const arr = [];
+                            snapshot.forEach(s => { arr.push({ id: s.key, ...(s.val()||{}) }); });
+                            arr.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+                            return arr;
+                        }
                     } catch (e) { console.error('listBackups', e); return []; }
                 }
 
@@ -3371,8 +3395,29 @@ const firebaseConfig = {
                         const countYears = topData.data ? Object.keys(topData.data).length : Object.keys(topData).length;
                         summary += `<div class="text-sm text-gray-700 mb-2">Anos: <strong>${countYears}</strong></div>`;
                     } catch(e) { summary += '<div class="text-sm text-gray-500">Resumo indisponível.</div>'; }
-                    backupPreviewEl.innerHTML = meta + summary + `<pre style="white-space:pre-wrap;word-break:break-word;max-height:300px;overflow:auto;border-top:1px solid rgba(0,0,0,0.04);padding-top:8px">${escapeHtml(JSON.stringify(val.data || val, null, 2))}</pre>`;
+                    // Build preview area with a 'Preview' action that renders JSON as cards
+                    backupPreviewEl.innerHTML = meta + summary + `
+                        <div class="flex items-center gap-2 mb-2">
+                            <button id="render-backup-cards-btn" class="px-3 py-1 rounded bg-blue-50 border text-sm text-blue-600">Preview</button>
+                            <span class="text-xs text-gray-400">Visualizar conteúdo do backup como cards para comparação</span>
+                        </div>
+                        <div id="backup-cards-container" style="margin-bottom:8px"></div>
+                        <pre id="backup-raw-json" style="white-space:pre-wrap;word-break:break-word;max-height:200px;overflow:auto;border-top:1px solid rgba(0,0,0,0.04);padding-top:8px">${escapeHtml(JSON.stringify(val.data || val, null, 2))}</pre>`;
                     // attach download/restore handlers
+                    // attach preview button handler
+                    const renderBtn = document.getElementById('render-backup-cards-btn');
+                    const cardsContainer = document.getElementById('backup-cards-container');
+                    if (renderBtn) {
+                        renderBtn.addEventListener('click', function () {
+                            try {
+                                // try to get the payload that contains the app data
+                                const payload = val.data || val;
+                                renderBackupDataCards(payload, cardsContainer);
+                            } catch (err) {
+                                showToast('Falha ao renderizar preview: ' + (err && err.message ? err.message : err), 'bg-red-600');
+                            }
+                        });
+                    }
                     downloadPreviewBtn.onclick = () => {
                         try {
                             const blob = new Blob([JSON.stringify(val.data || val, null, 2)], { type: 'application/json' });
@@ -3394,6 +3439,122 @@ const firebaseConfig = {
                             setTimeout(() => location.reload(), 800);
                         } catch (err) { hideLoading(); showToast('Falha ao restaurar: ' + (err && err.message ? err.message : err), 'bg-red-600'); }
                     };
+                }
+
+                // Render backup data into simple comparison cards
+                function renderBackupDataCards(payload, container) {
+                    if (!container) return;
+                    container.innerHTML = '';
+                    // normalize payload to ensure payload.data exists in expected shape
+                    const normalized = normalizeBackupPayload(payload);
+                    if (!normalized || !normalized.data) {
+                        container.innerHTML = '<div class="text-sm text-gray-500">Formato inesperado: conteúdo não contém propriedade "data" após normalização.</div>';
+                        return;
+                    }
+                    // payload.data is expected as { year: { month: { incomes:[], expenses:[], savings:[] }}}
+                    const years = Object.keys(normalized.data).sort((a,b) => b - a);
+                    // render a quick diff comparing backup vs current state
+                    const diffEl = document.createElement('div'); diffEl.className = 'mb-3';
+                    diffEl.innerHTML = renderBackupVsCurrentSummary(normalized.data, state.appData && state.appData.data ? state.appData.data : {});
+                    container.appendChild(diffEl);
+                    years.forEach(year => {
+                        const yearEl = document.createElement('div');
+                        yearEl.className = 'mb-3';
+                        const months = Object.keys(payload.data[year] || {}).sort((a,b) => b - a);
+                        months.forEach(month => {
+                            const m = normalized.data[year][month] || { incomes: [], expenses: [], savings: [] };
+                            const incomes = Array.isArray(m.incomes) ? m.incomes : [];
+                            const expenses = Array.isArray(m.expenses) ? m.expenses : [];
+                            const savings = Array.isArray(m.savings) ? m.savings : [];
+                            const sum = arr => (arr || []).reduce((s, it) => s + (Number(it.amount) || 0), 0);
+                            const card = document.createElement('div');
+                            card.className = 'p-3 rounded-lg border bg-white mb-2';
+                            card.innerHTML = `
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="text-sm font-semibold">${escapeHtml(year)} / ${escapeHtml(month)}</div>
+                                    <div class="text-xs text-gray-500">Lançamentos: ${incomes.length + expenses.length + savings.length}</div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-sm mb-2">
+                                    <div class="p-2 rounded bg-green-50">Entradas<br><strong>${formatCurrency(sum(incomes))}</strong></div>
+                                    <div class="p-2 rounded bg-red-50">Despesas<br><strong>${formatCurrency(sum(expenses))}</strong></div>
+                                    <div class="p-2 rounded bg-yellow-50">Reservas<br><strong>${formatCurrency(sum(savings))}</strong></div>
+                                </div>
+                                <div class="text-xs text-gray-600">
+                                    <div><strong>Amostras:</strong></div>
+                                    <div class="mt-1">
+                                        ${renderSampleList(incomes, 'Entrada')}
+                                        ${renderSampleList(expenses, 'Despesa')}
+                                        ${renderSampleList(savings, 'Reserva')}
+                                    </div>
+                                </div>
+                            `;
+                            yearEl.appendChild(card);
+                        });
+                        container.appendChild(yearEl);
+                    });
+                }
+
+                // Try to normalize common backup payload shapes into { data: { year: { month: {...} }}}
+                function normalizeBackupPayload(p) {
+                    if (!p) return null;
+                    // if wrapped as { financeAppDB_v10: { data: ... } }
+                    if (p.financeAppDB_v10 && p.financeAppDB_v10.data) return { data: p.financeAppDB_v10.data };
+                    // if already { data: ... }
+                    if (p.data && typeof p.data === 'object') return { data: p.data };
+                    // if payload directly contains years (top-level years keys)
+                    const maybeYears = Object.keys(p).filter(k => /^\d{4}$/.test(k));
+                    if (maybeYears.length > 0) return { data: p };
+                    // some backups might nest under data.data
+                    if (p.data && p.data.data) return { data: p.data.data };
+                    // fallback: try to find first prop that looks like years
+                    for (const k in p) {
+                        if (p[k] && typeof p[k] === 'object') {
+                            const subKeys = Object.keys(p[k]);
+                            if (subKeys.some(sk => /^\d{2}$/.test(sk) || /^\d{1,2}$/.test(sk))) {
+                                return { data: p };
+                            }
+                        }
+                    }
+                    return null;
+                }
+
+                // Render a compact comparison summary between backupData and currentData
+                function renderBackupVsCurrentSummary(backupData, currentData) {
+                    // collect union of years and months
+                    const years = Array.from(new Set([].concat(Object.keys(backupData||{}), Object.keys(currentData||{})))).sort((a,b) => b - a);
+                    if (years.length === 0) return '<div class="text-sm text-gray-500">Sem dados para comparar.</div>';
+                    let html = '<div class="text-sm font-medium mb-2">Resumo (Backup vs Atual)</div>';
+                    html += '<div class="space-y-2">';
+                    years.forEach(y => {
+                        const months = Array.from(new Set([].concat(Object.keys((backupData[y]||{})), Object.keys((currentData[y]||{}))))).sort((a,b) => b - a);
+                        months.forEach(m => {
+                            const bM = (backupData[y] && backupData[y][m]) || { incomes:[], expenses:[], savings:[] };
+                            const cM = (currentData[y] && currentData[y][m]) || { incomes:[], expenses:[], savings:[] };
+                            const sum = arr => (Array.isArray(arr) ? arr.reduce((s,it)=> s + (Number(it.amount)||0), 0) : 0);
+                            const bIn = sum(bM.incomes), bEx = sum(bM.expenses), bSa = sum(bM.savings);
+                            const cIn = sum(cM.incomes), cEx = sum(cM.expenses), cSa = sum(cM.savings);
+                            html += `<div class="flex items-center justify-between p-2 rounded bg-gray-50 border">
+                                <div class="text-xs">${escapeHtml(y)} / ${escapeHtml(m)}</div>
+                                <div class="text-xs grid grid-cols-3 gap-2 text-right" style="min-width:320px">
+                                    <div class="text-xs">In: ${formatCurrency(bIn)} → ${formatCurrency(cIn)}</div>
+                                    <div class="text-xs">Ex: ${formatCurrency(bEx)} → ${formatCurrency(cEx)}</div>
+                                    <div class="text-xs">Sa: ${formatCurrency(bSa)} → ${formatCurrency(cSa)}</div>
+                                </div>
+                            </div>`;
+                        });
+                    });
+                    html += '</div>';
+                    return html;
+                }
+
+                function renderSampleList(arr, label) {
+                    if (!Array.isArray(arr) || arr.length === 0) return '';
+                    const items = arr.slice(0,3).map(it => `<div class="truncate">${escapeHtml(label + ': ' + (it.description || it.desc || it.label || '—') + ' — ' + (formatCurrency(Number(it.amount)||0)))}</div>`).join('');
+                    return `<div class="mt-1 text-xs">${items}</div>`;
+                }
+
+                function formatCurrency(v) {
+                    try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v)||0); } catch(e) { return String(v); }
                 }
 
                 function escapeHtml(s) { return String(s||'').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }

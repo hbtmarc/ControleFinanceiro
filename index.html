@@ -892,12 +892,12 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Expenses Filter Popover -->
-                        <div id="expenses-filter-popover" class="hidden absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-64">
+                        <!-- Expenses Filter Popover (responsive) -->
+                        <div id="expenses-filter-popover" class="hidden absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-auto max-w-xs md:max-w-md lg:max-w-lg" style="max-width:calc(100vw - 2rem); right:0;">
                             <h3 class="text-sm font-semibold mb-2">Filtrar Despesas</h3>
                             <div class="space-y-2 text-sm">
                                 <div class="grid grid-cols-1 gap-3">
-                                    <div class="grid grid-cols-2 gap-2">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <div class="relative select-with-icon">
                                             <label class="block text-xs text-gray-500">Pagamento</label>
                                             <span class="material-symbols-outlined select-icon text-gray-400">payment</span>
@@ -915,7 +915,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-2">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <div class="relative select-with-icon">
                                             <label class="block text-xs text-gray-500">Categoria</label>
                                             <span class="material-symbols-outlined select-icon text-gray-400">category</span>
@@ -932,7 +932,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-4">
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                                         <div class="flex items-center gap-2"><input type="checkbox" id="filter-recurring" /> <label for="filter-recurring" class="text-sm">Recorrente</label></div>
                                         <div class="flex items-center gap-2"><input type="checkbox" id="filter-installment" /> <label for="filter-installment" class="text-sm">Parcelada / Financiamento</label></div>
                                     </div>
@@ -1128,10 +1128,7 @@
                              <p id="feedback-message" class="text-gray-600 text-sm mb-4">...</p>
                              <div id="feedback-visual-container" class="space-y-3"></div>
                         </div>
-                        <div class="card p-6 rounded-xl">
-                            <h2 class="text-xl font-semibold mb-4">Metas de Gastos</h2>
-                            <div class="h-56"><canvas id="spending-goals-chart"></canvas></div>
-                        </div>
+                        <!-- Metas de Gastos removed per request -->
                         <div class="card p-6 rounded-xl">
                             <h2 class="text-xl font-semibold mb-4">Gastos por Categoria</h2>
                             <div class="h-56"><canvas id="category-spending-chart"></canvas></div>
@@ -4753,12 +4750,9 @@ const firebaseConfig = {
                 if (kpiVr) {
                     kpiVr.style.cursor = 'pointer';
                     kpiVr.addEventListener('click', () => {
-                        // Navigate to the credit-cards (faturas) view and optionally highlight VR ledger
-                        state.filters.expenseFilters = state.filters.expenseFilters || {};
-                        state.filters.expenseFilters.payment = 'VR';
-                        // navigate to credit-cards (faturas)
+                        // Navigate to the credit-cards (faturas) view.
+                        // NOTE: do NOT modify state.filters here to avoid applying filters automatically.
                         changeView('credit-cards');
-                        try { updateFilterBadge(); } catch(e) {}
                     });
                 }
             } catch (e) { console.error('attach kpi-vr click handler', e); }
@@ -4767,11 +4761,9 @@ const firebaseConfig = {
                 if (kpiVt) {
                     kpiVt.style.cursor = 'pointer';
                     kpiVt.addEventListener('click', () => {
-                        // Navigate to the credit-cards (faturas) view and optionally highlight VT ledger
-                        state.filters.expenseFilters = state.filters.expenseFilters || {};
-                        state.filters.expenseFilters.payment = 'VT';
+                        // Navigate to the credit-cards (faturas) view.
+                        // NOTE: do NOT modify state.filters here to avoid applying filters automatically.
                         changeView('credit-cards');
-                        try { updateFilterBadge(); } catch(e) {}
                     });
                 }
             } catch (e) { console.error('attach kpi-vt click handler', e); }
@@ -7012,31 +7004,13 @@ const firebaseConfig = {
         function renderCharts() {
             // Defensive: if Chart is not available, skip rendering charts
             if (typeof Chart === 'undefined') return;
-            renderSpendingGoalsChart();
+            // renderSpendingGoalsChart(); // removed (Metas de Gastos removed)
             renderCategorySpendingChart();
             renderPaymentMethodChart();
             renderAnnualSummaryChart();
         }
 
-        function renderSpendingGoalsChart() {
-            try {
-                destroyChart('spending-goals-chart');
-                const monthData = getCurrentMonthData();
-                const totalIncome = (monthData.incomes || []).reduce((s, t) => s + (t.amount || 0), 0);
-                if (totalIncome === 0) return;
-                const essentials = (monthData.expenses || []).filter(e => e.type === 'Essenciais').reduce((s,e)=>s+(e.amount||0),0);
-                const nonEssentials = (monthData.expenses || []).filter(e => e.type === 'Não Essenciais').reduce((s,e)=>s+(e.amount||0),0);
-                const reserve = (monthData.savings || []).reduce((s,e)=>s+(e.amount||0),0);
-                const percentages = { 'Essenciais': essentials, 'Não Essenciais': nonEssentials, 'Reserva': reserve };
-                const ctx = document.getElementById('spending-goals-chart');
-                if (!ctx) return;
-                ui.charts['spending-goals-chart'] = new Chart(ctx.getContext('2d'), {
-                    type: 'doughnut',
-                    data: { labels: Object.keys(percentages), datasets: [{ data: Object.values(percentages), backgroundColor: ['#3B82F6','#F59E0B','#10B981'] }] },
-                    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} }
-                });
-            } catch(e){console.error('renderSpendingGoalsChart',e)}
-        }
+        // renderSpendingGoalsChart removed (Metas de Gastos KPI no longer used)
 
         function renderCategorySpendingChart() {
             try {

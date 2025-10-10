@@ -768,9 +768,9 @@
                     <button id="desktop-investments-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Investimentos">
                         <span class="material-symbols-outlined text-gray-600">trending_up</span>
                     </button>
-                    <button id="desktop-trip-planner-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Planejadora de Viagens">
-                        <span class="material-symbols-outlined text-gray-600">flight_takeoff</span>
-                    </button>
+                        <button id="desktop-travelplanner-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Planejadora de viagens" aria-label="Planejadora de viagens">
+                            <span class="material-symbols-outlined text-gray-600">flight</span>
+                        </button>
                     <button id="add-transaction-btn" class="bg-blue-600 p-2 rounded-full shadow-sm hover:bg-blue-700 transition-colors text-white ml-1" title="Nova Transação">
                         <span class="material-symbols-outlined">add</span>
                     </button>
@@ -963,7 +963,7 @@
                  <button data-view="dashboard" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Visão Geral</button>
                  <button data-view="credit-cards" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Faturas</button>
                  <button data-view="investments" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Investimentos</button>
-                 <button data-view="trip-planner" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Planejadora de Viagens</button>
+                 <button data-view="travel-planner" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Planejadora</button>
             </div>
         </div>
         
@@ -1217,54 +1217,27 @@
                     </div>
                 </div>
             </div>
-            <!-- Planejadora de Viagens -->
-            <div id="trip-planner-view" class="hidden space-y-8">
+            <!-- Conteúdo da Planejadora de Viagens -->
+            <div id="travel-planner-view" class="hidden space-y-6">
                 <div class="card p-6 rounded-xl">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-semibold">Planejadora de Viagens</h2>
-                        <div class="flex items-center gap-2">
-                            <button id="tp-add-item" class="px-3 py-1 rounded bg-blue-600 text-white">Adicionar Item</button>
-                            <button id="tp-create-goal" class="px-3 py-1 rounded bg-green-600 text-white">Criar Meta de Investimento</button>
-                        </div>
+                        <button id="tp-add-plan-btn" class="btn-primary font-medium py-2 px-3 rounded-lg flex items-center gap-2">
+                            <span class="material-symbols-outlined">flight_takeoff</span>
+                            <span>Adicionar Viagem</span>
+                        </button>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2">
-                            <div class="overflow-x-auto">
-                                <table id="tp-items-table" class="w-full text-left responsive-table" style="table-layout:fixed;">
-                                    <colgroup>
-                                        <col style="width:40px">
-                                        <col>
-                                        <col style="width:140px">
-                                        <col style="width:80px">
-                                    </colgroup>
-                                    <thead><tr class="border-b border-gray-200">
-                                        <th class="py-2 px-3 text-sm text-gray-500">#</th>
-                                        <th class="py-2 px-3 text-sm text-gray-500">Descrição</th>
-                                        <th class="py-2 px-3 text-sm text-gray-500">Custo (R$)</th>
-                                        <th class="py-2 px-3 text-sm text-gray-500">Ações</th>
-                                    </tr></thead>
-                                    <tbody id="tp-items-body"></tbody>
-                                </table>
-                            </div>
-                            <div class="flex justify-end mt-4">
-                                <div class="text-lg font-semibold">Total estimado: <span id="tp-total">R$ 0,00</span></div>
-                            </div>
+                    <p class="text-sm text-gray-600 mb-3">Planeje seus próximos sonhos: defina destino, custo estimado e data alvo. Aqui você pode acompanhar quanto precisa poupar.</p>
+                    <div id="tp-plans" class="space-y-3"></div>
+                    <div id="tp-form" class="mt-4 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <input id="tp-destination" placeholder="Destino" class="border p-2 rounded" />
+                            <input id="tp-date" type="date" class="border p-2 rounded" />
+                            <input id="tp-cost" placeholder="Custo estimado (R$)" class="border p-2 rounded" />
                         </div>
-                        <div>
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Notas de Planejamento</label>
-                                    <textarea id="tp-notes" rows="8" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="Anotações, reservas, documentos, contatos..."></textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Checklist</label>
-                                    <div id="tp-checklist" class="space-y-2 mt-2">
-                                        <div class="flex items-center gap-2"><input type="checkbox" id="tp-check-1"><label for="tp-check-1" class="text-sm">Passaporte válido</label></div>
-                                        <div class="flex items-center gap-2"><input type="checkbox" id="tp-check-2"><label for="tp-check-2" class="text-sm">Seguro viagem</label></div>
-                                        <div class="flex items-center gap-2"><input type="checkbox" id="tp-check-3"><label for="tp-check-3" class="text-sm">Vacinas</label></div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="flex items-center gap-2 mt-3">
+                            <button id="tp-save-btn" class="px-3 py-1 rounded bg-indigo-600 text-white">Salvar</button>
+                            <button id="tp-cancel-btn" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
                         </div>
                     </div>
                 </div>
@@ -3366,34 +3339,14 @@ const firebaseConfig = {
     const storage = {
         DB_KEY: 'financeAppDB_v10',
         loadData: async function() {
-            const initialData = this.getInitialData();
             try {
-                // Attempt to fetch from Firebase
-                try {
-                    const snapshot = await database.ref(this.DB_KEY).get();
-                    if (!snapshot.exists()) {
-                        // console.debug("Firebase está vazio. Inicializando com dados padrão e salvando no banco.");
-                        await this.saveData(initialData);
-                        return initialData;
-                    }
-                    // Got snapshot from Firebase
-                    const val = snapshot.val();
-                    try { localStorage.setItem(this.DB_KEY, JSON.stringify(val)); } catch(e) {}
-                    return val;
-                } catch(firebaseErr) {
-                    console.warn('Firebase load error, will try local fallback', firebaseErr);
-                    // If client offline or other firebase issue, try to load from localStorage
-                    try {
-                        const raw = localStorage.getItem(this.DB_KEY);
-                        if (raw) {
-                            const parsed = JSON.parse(raw);
-                            showToast('Offline: usando dados locais armazenados.', 'bg-yellow-600');
-                            return parsed;
-                        }
-                    } catch(e) { console.error('localStorage parse error', e); }
-                    // No local fallback available: persist initial data locally and return it
-                    try { localStorage.setItem(this.DB_KEY, JSON.stringify(initialData)); } catch(e) {}
-                    showToast('Erro crítico ao carregar dados do Firebase. Usando estrutura de dados inicial.', 'bg-red-600');
+                // Ensure we have the default structure available
+                const initialData = this.getInitialData();
+                // console.debug('storage.loadData: fetching data from Firebase...');
+                const snapshot = await database.ref(this.DB_KEY).get();
+                if (!snapshot.exists()) {
+                    // console.debug("Firebase está vazio. Inicializando com dados padrão e salvando no banco.");
+                    await this.saveData(initialData);
                     return initialData;
                 }
 
@@ -3640,15 +3593,9 @@ const firebaseConfig = {
                 const safe = this.sanitizeForFirebase(data);
                 // Persist without verbose logging of the entire object
                 return database.ref(this.DB_KEY).set(safe)
-                    .then(() => { 
-                        try { localStorage.setItem(this.DB_KEY, JSON.stringify(safe)); } catch(e){}
-                        hideLoading(); 
-                        return Promise.resolve(); 
-                    })
+                    .then(() => { /* saved successfully */ hideLoading(); return Promise.resolve(); })
                     .catch(e => {
                         console.error("Erro ao salvar no Firebase:", e);
-                        // fallback: save local copy so user doesn't lose changes
-                        try { localStorage.setItem(this.DB_KEY, JSON.stringify(safe)); showToast('Salvo localmente (sem conexão com Firebase).', 'bg-yellow-600'); } catch(localErr) { console.error('local save failed', localErr); }
                         hideLoading();
                         showToast('Erro ao salvar dados no Firebase: ' + (e && e.message ? e.message : e), 'bg-red-600');
                         return Promise.reject(e);
@@ -3852,11 +3799,10 @@ const firebaseConfig = {
             // Ensure recurring transactions exist for months and propagate future recurrences for expenses and savings
             try {
                 const today = new Date();
-                // Ensure arrays exist for each month (defensive: guard data structure)
-                Object.keys(state.appData.data || {}).forEach(year => {
-                    Object.keys(state.appData.data[year] || {}).forEach(month => {
-                        const monthData = state.appData.data[year] ? state.appData.data[year][month] : null;
-                        if (!monthData) return;
+                // Ensure arrays exist for each month
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const monthData = state.appData.data[year][month];
                         ['incomes','expenses','savings'].forEach(type => {
                             if (!Array.isArray(monthData[type])) monthData[type] = [];
                         });
@@ -3865,10 +3811,9 @@ const firebaseConfig = {
 
                 // Collect recurring templates from existing months (only for expenses and savings)
                 const templates = {}; // recurringId -> { type, template }
-                Object.keys(state.appData.data || {}).forEach(year => {
-                    Object.keys(state.appData.data[year] || {}).forEach(month => {
-                        const monthData = state.appData.data[year] ? state.appData.data[year][month] : null;
-                        if (!monthData) return;
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const monthData = state.appData.data[year][month];
                         ['expenses','savings'].forEach(type => {
                             (monthData[type] || []).forEach(item => {
                                 try {
@@ -3999,8 +3944,8 @@ const firebaseConfig = {
             bindEvents();
             // Migrate any existing VR income items into a dedicated vrLedger per month
             try {
-                Object.keys(state.appData.data || {}).forEach(year => {
-                    Object.keys(state.appData.data[year] || {}).forEach(month => {
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
                         const md = state.appData.data[year][month];
                         if (!md) return;
                         if (!Array.isArray(md.incomes)) md.incomes = [];
@@ -4035,8 +3980,8 @@ const firebaseConfig = {
             } catch(e){ console.error('VR migration', e); }
             // Migrate any existing VT income items into vtLedger and legacy VT expenses into vtUsage
             try {
-                Object.keys(state.appData.data || {}).forEach(year => {
-                    Object.keys(state.appData.data[year] || {}).forEach(month => {
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
                         const md = state.appData.data[year][month];
                         if (!md) return;
                         if (!Array.isArray(md.incomes)) md.incomes = [];
@@ -4082,8 +4027,8 @@ const firebaseConfig = {
             // Additionally migrate any legacy expenses that used payment === 'VR' into the vrUsage ledger
             try {
                 let migratedCount = 0;
-                Object.keys(state.appData.data || {}).forEach(year => {
-                    Object.keys(state.appData.data[year] || {}).forEach(month => {
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
                         const md = state.appData.data[year][month];
                         if (!md) return;
                         if (!Array.isArray(md.expenses)) md.expenses = [];
@@ -4120,7 +4065,7 @@ const firebaseConfig = {
                 'income-table-body', 'expenses-table-body', 'savings-table-body', 'expenses-table-head', 
                 'toggle-expense-grouped', 'toggle-expense-grouped-label', 'expenses-grouped-container', 'expenses-groups',
                 'add-transaction-btn', 'transaction-modal', 'close-transaction-modal-btn', 'transaction-form', 
-                'expense-fields', 'dashboard-view', 'credit-cards-view', 'investments-view', 
+                'expense-fields', 'dashboard-view', 'credit-cards-view', 'investments-view', 'travel-planner-view', 
                 'credit-cards-container', 'installments-section', 'is-installment', 'search-description',
                 'installments-fields', 'installments-current', 'payment-method', 'is-recurring', 
                 'payment-recipient', 'payment-recipient-wrapper',
@@ -4128,13 +4073,12 @@ const firebaseConfig = {
                 'advanced-options', 'expense-type', 'feedback-visual-container', 'feedback-message',
                 'import-data-btn', 'import-file-input', 'export-data-btn',
                 'monthly-report-btn', 'annual-report-btn', 'monthly-report-modal', 'annual-report-modal',
-                'desktop-dashboard-btn', 'desktop-creditcards-btn', 'desktop-investments-btn', 'desktop-trip-planner-btn',
+                'desktop-dashboard-btn', 'desktop-creditcards-btn', 'desktop-investments-btn',
+                'desktop-travelplanner-btn',
                 'expenses-filter-btn', 'expenses-filter-popover', 'filter-payment-method', 'filter-spending-type', 'filter-category', 'filter-type', 'filter-recurring', 'filter-installment', 'filter-apply-btn', 'filter-clear-btn',
                 'close-monthly-report-btn', 'close-annual-report-btn', 'add-goal-btn', 'goal-modal', 'close-goal-modal-btn',
                 'goal-form', 'goals-container', 'financing-section'
             ];
-            // Trip Planner specific
-            ids.push('tp-add-item','tp-items-table','tp-items-body','tp-total','tp-notes','tp-create-goal','tp-checklist');
             ids.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -4144,6 +4088,10 @@ const firebaseConfig = {
                     else ui[id.replace(/-./g, m => m[1].toUpperCase())] = element;
                 }
             });
+            // Attach click handlers for desktop quick links if available
+            try {
+                const dt = document.getElementById('desktop-travelplanner-btn'); if (dt) dt.addEventListener('click', () => changeView('travel-planner'));
+            } catch(e) { /* ignore */ }
                 // map new modal controls if present
                 ui.applyToFuture = document.getElementById('apply-to-future');
                 ui.previewFutureBtn = document.getElementById('preview-future-btn');
@@ -4171,7 +4119,6 @@ const firebaseConfig = {
                 // Always open the standard transaction modal from the global '+' button.
                 openModal('expenses');
             });
-            if (ui.desktopTripPlannerBtn) ui.desktopTripPlannerBtn.addEventListener('click', () => changeView('trip-planner'));
             if (ui.closeTransactionModalBtn) ui.closeTransactionModalBtn.addEventListener('click', () => closeModal('transaction-modal'));
             // Require double-click on modal backdrop to avoid accidental closure
             const attachBackdropDoubleClickToClose = (modalEl, modalId, timeoutMs = 2000) => {
@@ -4205,16 +4152,6 @@ const firebaseConfig = {
                 const salaryCloseBtn = document.getElementById('close-salary-breakdown'); if (salaryCloseBtn) salaryCloseBtn.addEventListener('click', () => closeSalaryBreakdown());
             }
             ui.transactionForm.addEventListener('submit', (e) => handleFormSubmit(e));
-            // Trip Planner bindings
-            try {
-                if (ui.tpAddItem) ui.tpAddItem.addEventListener('click', (e) => { e.preventDefault(); tpAddItem(); });
-                if (ui.tpCreateGoal) ui.tpCreateGoal.addEventListener('click', (e) => { e.preventDefault(); tpCreateGoalFromTotal(); });
-                // delegate remove item clicks
-                if (ui.tpItemsBody) ui.tpItemsBody.addEventListener('click', (e) => {
-                    const rm = e.target.closest('[data-tp-remove]'); if (!rm) return;
-                    const idx = Number(rm.getAttribute('data-tp-remove')); tpRemoveItem(idx);
-                });
-            } catch(e) { console.error('trip planner bind events error', e); }
             // Mostrar/ocultar seção Salário quando em Entradas
             const isSalaryCheckbox = document.getElementById('is-salary');
             const salaryFields = document.getElementById('salary-fields');
@@ -5198,13 +5135,13 @@ const firebaseConfig = {
                 case 'dashboard': renderDashboard(); break;
                 case 'credit-cards': renderCreditCardView(); break;
                 case 'investments': renderInvestmentsView(); break;
-                case 'trip-planner': renderTripPlannerView(); break;
+                case 'travel-planner': renderTravelPlannerView(); break;
             }
         }
 
         function changeView(view) {
             state.currentView = view;
-            ['dashboard', 'credit-cards', 'investments', 'trip-planner'].forEach(v => {
+            ['dashboard', 'credit-cards', 'investments', 'travel-planner'].forEach(v => {
                 const el = document.getElementById(`${v}-view`);
                 if (el) el.classList.toggle('hidden', view !== v);
                 const tabBtn = document.querySelector(`.tab-button[data-view="${v}"]`);
@@ -5929,6 +5866,60 @@ const firebaseConfig = {
             renderMonthlySavingsChart();
             renderPortfolioCompositionChart();
         }
+
+        // Simple Travel Planner view renderer
+        function renderTravelPlannerView() {
+            try {
+                const container = document.getElementById('tp-plans');
+                container.innerHTML = '';
+                const plans = state.travelPlans || [];
+                if (plans.length === 0) {
+                    container.innerHTML = '<div class="text-sm text-gray-600">Nenhuma viagem planejada. Clique em "Adicionar Viagem" para começar.</div>';
+                } else {
+                    plans.forEach((p, idx) => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 bg-white rounded border flex items-center justify-between';
+                        const left = document.createElement('div');
+                        left.innerHTML = `<div class="font-semibold">${escapeHtml(p.destination || '')}</div><div class="text-xs text-gray-500">Meta: ${p.date || '—'} • Custo: ${formatCurrency(Number(p.cost) || 0)}</div>`;
+                        const right = document.createElement('div');
+                        right.innerHTML = `<button data-idx="${idx}" class="tp-delete text-red-600 px-2 py-1 rounded">Excluir</button>`;
+                        div.appendChild(left); div.appendChild(right);
+                        container.appendChild(div);
+                    });
+                    // attach delete handlers
+                    container.querySelectorAll('.tp-delete').forEach(btn => btn.addEventListener('click', async function(){
+                        const i = Number(this.dataset.idx);
+                        if (!Number.isFinite(i)) return;
+                        if (!confirm('Excluir essa viagem?')) return;
+                        state.travelPlans.splice(i, 1);
+                        try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e) { /* ignore persistence errors */ }
+                        renderTravelPlannerView();
+                    }));
+                }
+
+                // Wire add/cancel/save
+                const addBtn = document.getElementById('tp-add-plan-btn');
+                const form = document.getElementById('tp-form');
+                const saveBtn = document.getElementById('tp-save-btn');
+                const cancelBtn = document.getElementById('tp-cancel-btn');
+                const dest = document.getElementById('tp-destination');
+                const dt = document.getElementById('tp-date');
+                const cost = document.getElementById('tp-cost');
+                if (addBtn) addBtn.onclick = () => { form.classList.toggle('hidden'); };
+                if (cancelBtn) cancelBtn.onclick = () => { form.classList.add('hidden'); dest.value = ''; dt.value = ''; cost.value = ''; };
+                if (saveBtn) saveBtn.onclick = async () => {
+                    const destination = dest.value.trim(); const date = dt.value; const c = parseFloat((cost.value || '').toString().replace(/\./g,'').replace(/,/g,'.')) || 0;
+                    if (!destination) { alert('Informe o destino.'); return; }
+                    state.travelPlans.push({ destination, date, cost: c });
+                    form.classList.add('hidden'); dest.value = ''; dt.value = ''; cost.value = '';
+                    try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e) { /* ignore */ }
+                    renderTravelPlannerView();
+                };
+            } catch (e) { console.error('renderTravelPlannerView', e); }
+        }
+
+        // small helper: escape text for innerHTML usage
+        function escapeHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
         // Simple handler for paying a card invoice (placeholder)
         async function payCardInvoice(cardName) {
@@ -7135,83 +7126,6 @@ const firebaseConfig = {
             } catch(e){console.error('renderPaymentMethodChart', e)}
         }
 
-        // --- Trip Planner Helpers ---
-        (function(){
-            // in-memory items for the current session (not persisted unless user creates goal or saves elsewhere)
-            const tpState = { items: [] };
-
-            function tpFormatCurrency(v) { return 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-
-            window.tpAddItem = function(desc = '', cost = 0) {
-                tpState.items.push({ description: desc || 'Novo item', cost: Number(cost) || 0 });
-                tpRenderItems();
-            };
-
-            window.tpRemoveItem = function(index) {
-                if (index < 0 || index >= tpState.items.length) return;
-                tpState.items.splice(index,1);
-                tpRenderItems();
-            };
-
-            window.tpRenderItems = function(){
-                try {
-                    const tbody = ui.tpItemsBody;
-                    if (!tbody) return;
-                    tbody.innerHTML = '';
-                    tpState.items.forEach((it, idx) => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `<td class="py-2 px-3">${idx+1}</td><td class="py-2 px-3"><input data-tp-idx="${idx}" class="block w-full border-gray-200 rounded p-1" value="${(it.description||'').replace(/"/g,'&quot;')}"></td><td class="py-2 px-3"><input data-tp-cost-idx="${idx}" type="number" step="0.01" class="block w-full border-gray-200 rounded p-1 text-right" value="${Number(it.cost||0)}"></td><td class="py-2 px-3 text-right"><button data-tp-remove="${idx}" class="px-2 py-1 text-sm rounded bg-red-500 text-white">Remover</button></td>`;
-                        tbody.appendChild(tr);
-                    });
-                    // attach listeners for inline edits
-                    tbody.querySelectorAll('input[data-tp-idx]').forEach(inp => {
-                        inp.addEventListener('input', (e) => { const i = Number(e.target.getAttribute('data-tp-idx')); tpState.items[i].description = e.target.value; });
-                    });
-                    tbody.querySelectorAll('input[data-tp-cost-idx]').forEach(inp => {
-                        inp.addEventListener('input', (e) => { const i = Number(e.target.getAttribute('data-tp-cost-idx')); tpState.items[i].cost = Number(e.target.value) || 0; tpUpdateTotal(); });
-                    });
-                    tpUpdateTotal();
-                } catch(e){console.error('tpRenderItems',e)}
-            };
-
-            function tpUpdateTotal(){
-                try {
-                    const total = tpState.items.reduce((s,i) => s + (Number(i.cost)||0), 0);
-                    if (ui.tpTotal) ui.tpTotal.textContent = tpFormatCurrency(total);
-                    return total;
-                } catch(e){ console.error('tpUpdateTotal', e); return 0; }
-            }
-
-            window.tpCreateGoalFromTotal = function(){
-                try {
-                    const total = tpUpdateTotal();
-                    // open existing goal modal and prefill values
-                    if (ui.goalModal && ui.goalForm) {
-                        const goalName = (document.getElementById('tp-notes') && document.getElementById('tp-notes').value) ? document.getElementById('tp-notes').value.split('\n')[0].slice(0,60) : 'Meta: Viagem';
-                        document.getElementById('goal-name').value = goalName;
-                        document.getElementById('goal-amount').value = total ? Number(total.toFixed(2)) : '';
-                        try { ui.goalModal.showModal(); } catch(e){ ui.goalModal.setAttribute('open',''); }
-                    } else {
-                        // fallback: create goal programmatically if appApi exposes one
-                        if (window.appApi && typeof window.appApi.createGoal === 'function') {
-                            window.appApi.createGoal({ name: 'Viagem', amount: total });
-                            showToast('Meta criada a partir do planejador de viagens', 'bg-green-600');
-                        } else {
-                            showToast('Abra o modal de Meta para salvar (nenhuma API disponível).', 'bg-yellow-600');
-                        }
-                    }
-                } catch(e){ console.error('tpCreateGoalFromTotal', e); showToast('Erro ao criar meta', 'bg-red-600'); }
-            };
-
-            window.renderTripPlannerView = function(){
-                // ensure UI exists
-                try { if (!ui.tpItemsBody) { /* not mounted yet */ return; } tpRenderItems(); } catch(e){ console.error('renderTripPlannerView', e); }
-            };
-
-            // expose a small initializer to add sample item if needed
-            window.tpInitState = function(){ tpState.items = []; tpRenderItems(); };
-        })();
-
         // helper: compute month outcome using card invoice totals (to keep annual totals consistent with faturas)
         function invoiceAwareOutcomeForMonth(year, month, monthData) {
             try {
@@ -7562,9 +7476,9 @@ const firebaseConfig = {
                 // Collect all matching installments and find the one with the latest date
                 let last = null; // { year, month, id }
                 // Iterate over state data to find the last installment
-                Object.keys(state.appData.data || {}).forEach(year => {
-                    Object.keys(state.appData.data[year] || {}).forEach(month => {
-                        const monthData = state.appData.data[year] ? state.appData.data[year][month] : null;
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const monthData = state.appData.data[year][month];
                         const expenses = monthData.expenses || [];
                         expenses.forEach(exp => {
                             if (financingId && exp.financingId === financingId) {
@@ -8566,9 +8480,9 @@ const firebaseConfig = {
 
         // Funções auxiliares (definidas antes do uso para evitar ReferenceError)
         function updateFutureRecurrences(recurringId, newTransaction, type) {
-            Object.keys(state.appData.data || {}).forEach(year => {
-                Object.keys(state.appData.data[year] || {}).forEach(month => {
-                    const monthData = state.appData.data[year] ? state.appData.data[year][month] : null;
+            Object.keys(state.appData.data).forEach(year => {
+                Object.keys(state.appData.data[year]).forEach(month => {
+                    const monthData = state.appData.data[year][month];
                     if (monthData[type] && Array.isArray(monthData[type])) {
                         monthData[type] = monthData[type].map(item => {
                             const itemDate = new Date(year, month - 1);
@@ -8764,10 +8678,10 @@ const firebaseConfig = {
         }
 
         function deleteFutureInstallments(installmentId, currentInstallment) {
-            Object.keys(state.appData.data || {}).forEach(year => {
-                Object.keys(state.appData.data[year] || {}).forEach(month => {
-                    const monthData = state.appData.data[year] ? state.appData.data[year][month] : null;
-                    if (monthData && monthData.expenses && Array.isArray(monthData.expenses)) {
+            Object.keys(state.appData.data).forEach(year => {
+                Object.keys(state.appData.data[year]).forEach(month => {
+                    const monthData = state.appData.data[year][month];
+                    if (monthData.expenses && Array.isArray(monthData.expenses)) {
                         monthData.expenses = monthData.expenses.filter(exp => 
                             !(exp.installmentId === installmentId && exp.currentInstallment >= currentInstallment)
                         );
@@ -8777,16 +8691,16 @@ const firebaseConfig = {
         }
 
         function deleteFutureFinancing(financingId, fromCurrentFinancing) {
-            Object.keys(state.appData.data || {}).forEach(year => {
-                Object.keys(state.appData.data[year] || {}).forEach(month => {
-                    const monthData = state.appData.data[year] ? state.appData.data[year][month] : null;
-                    if (monthData && monthData.expenses && Array.isArray(monthData.expenses)) {
+            Object.keys(state.appData.data).forEach(year => {
+                Object.keys(state.appData.data[year]).forEach(month => {
+                    const monthData = state.appData.data[year][month];
+                    if (monthData.expenses && Array.isArray(monthData.expenses)) {
                         monthData.expenses = monthData.expenses.filter(exp => 
                             !(exp.financingId === financingId && (exp.currentFinancing || 0) >= fromCurrentFinancing)
                         );
                     }
                     // Also remove income financings if present
-                    if (monthData && monthData.incomes && Array.isArray(monthData.incomes)) {
+                    if (monthData.incomes && Array.isArray(monthData.incomes)) {
                         monthData.incomes = monthData.incomes.filter(inc => 
                             !(inc.financingId === financingId && (inc.currentFinancing || 0) >= fromCurrentFinancing)
                         );
@@ -9340,8 +9254,8 @@ const firebaseConfig = {
 
                             if (origRecurringId && applyToFuture) {
                                 // Update this and future months for this recurringId
-                                Object.keys(state.appData.data || {}).forEach(yearKey => {
-                                    Object.keys(state.appData.data[yearKey] || {}).forEach(monthKey => {
+                                Object.keys(state.appData.data).forEach(yearKey => {
+                                    Object.keys(state.appData.data[yearKey]).forEach(monthKey => {
                                         const monthStart = new Date(Number(yearKey), Number(monthKey) - 1, 1);
                                         const editedMonthStart = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1);
                                         if (monthStart >= editedMonthStart) {
@@ -9462,9 +9376,9 @@ const firebaseConfig = {
 
             function applyToFutureVREntries(recurringId, newAmount) {
                 try {
-                    Object.keys(state.appData.data || {}).forEach(year => {
-                        Object.keys(state.appData.data[year] || {}).forEach(month => {
-                            const md = state.appData.data[year] ? state.appData.data[year][month] : null;
+                    Object.keys(state.appData.data).forEach(year => {
+                        Object.keys(state.appData.data[year]).forEach(month => {
+                            const md = state.appData.data[year][month];
                             if (!md || !Array.isArray(md.vrLedger)) return;
                             md.vrLedger = md.vrLedger.map(l => {
                                 if (l.recurringId === recurringId) {
@@ -9521,9 +9435,9 @@ const firebaseConfig = {
 
                 function applyToFutureVTEntries(recurringId, newAmount) {
                     try {
-                        Object.keys(state.appData.data || {}).forEach(year => {
-                            Object.keys(state.appData.data[year] || {}).forEach(month => {
-                                const md = state.appData.data[year] ? state.appData.data[year][month] : null;
+                        Object.keys(state.appData.data).forEach(year => {
+                            Object.keys(state.appData.data[year]).forEach(month => {
+                                const md = state.appData.data[year][month];
                                 if (!md || !Array.isArray(md.vtLedger)) return;
                                 md.vtLedger = md.vtLedger.map(l => {
                                     if (l.recurringId === recurringId) {
@@ -9559,13 +9473,13 @@ const firebaseConfig = {
                     if (removeFuture && entry && entry.recurringId) {
                         const rid = entry.recurringId;
                         const currentMonthStart = new Date(y, m - 1, 1);
-                        Object.keys(state.appData.data || {}).forEach(yearKey => {
-                            Object.keys(state.appData.data[yearKey] || {}).forEach(monthKey => {
+                        Object.keys(state.appData.data).forEach(yearKey => {
+                            Object.keys(state.appData.data[yearKey]).forEach(monthKey => {
                                 const yearNum = Number(yearKey);
                                 const monthNum = Number(monthKey);
                                 const candidate = new Date(yearNum, monthNum - 1, 1);
                                 if (candidate >= currentMonthStart) {
-                                    const md = state.appData.data[yearKey] ? state.appData.data[yearKey][monthKey] : null;
+                                    const md = state.appData.data[yearKey][monthKey];
                                     if (md && Array.isArray(md.vrLedger)) {
                                         md.vrLedger = md.vrLedger.filter(v => v.recurringId !== rid);
                                     }
@@ -9596,13 +9510,13 @@ const firebaseConfig = {
                     if (removeFuture && entry && entry.recurringId) {
                         const rid = entry.recurringId;
                         const currentMonthStart = new Date(y, m - 1, 1);
-                        Object.keys(state.appData.data || {}).forEach(yearKey => {
-                            Object.keys(state.appData.data[yearKey] || {}).forEach(monthKey => {
+                        Object.keys(state.appData.data).forEach(yearKey => {
+                            Object.keys(state.appData.data[yearKey]).forEach(monthKey => {
                                 const yearNum = Number(yearKey);
                                 const monthNum = Number(monthKey);
                                 const candidate = new Date(yearNum, monthNum - 1, 1);
                                 if (candidate >= currentMonthStart) {
-                                    const md = state.appData.data[yearKey] ? state.appData.data[yearKey][monthKey] : null;
+                                    const md = state.appData.data[yearKey][monthKey];
                                     if (md && Array.isArray(md.vtLedger)) {
                                         md.vtLedger = md.vtLedger.filter(v => v.recurringId !== rid);
                                     }
@@ -9899,7 +9813,7 @@ const firebaseConfig = {
         <button data-view="dashboard" class="mobile-nav-btn p-2 rounded-full" title="Visão Geral"><span class="material-symbols-outlined">dashboard</span></button>
         <button data-view="credit-cards" class="mobile-nav-btn p-2 rounded-full" title="Faturas"><span class="material-symbols-outlined">credit_card</span></button>
     <button data-view="investments" class="mobile-nav-btn p-2 rounded-full" title="Investimentos"><span class="material-symbols-outlined">trending_up</span></button>
-    <button data-view="trip-planner" class="mobile-nav-btn p-2 rounded-full" title="Planejadora de Viagens"><span class="material-symbols-outlined">flight_takeoff</span></button>
+    <button data-view="travel-planner" class="mobile-nav-btn p-2 rounded-full" title="Planejadora"><span class="material-symbols-outlined">flight</span></button>
     </nav>
     <!-- Mobile Action Sheet (hidden until FAB tapped) -->
     <div id="mobile-action-sheet" class="hidden fixed inset-x-0 bottom-0 z-60 flex items-end justify-center">

@@ -3689,6 +3689,8 @@ const firebaseConfig = {
             // Per-card grouping state for credit card invoices
             cardGrouped: {}
         };
+        // defensive default for travelPlans (some edits add/remove this field)
+        if (!Array.isArray(state.travelPlans)) state.travelPlans = [];
 
     // Expose the internal state globally so legacy/global handlers can access it safely
     try { window.state = state; } catch (e) { /* ignore if env prevents assignment */ }
@@ -3920,6 +3922,16 @@ const firebaseConfig = {
             // A nova função `loadData` é robusta e sempre retorna um objeto de estado válido.
             // O `await` garante que o código abaixo só execute após o carregamento completo.
             state.appData = await storage.loadData();
+            // MIGRATE: if there are any transient travel plans on the in-memory state, move them to persisted settings
+            try {
+                if (!state.appData.settings) state.appData.settings = {};
+                if ((!Array.isArray(state.appData.settings.travelPlans) || state.appData.settings.travelPlans.length === 0) && Array.isArray(state.travelPlans) && state.travelPlans.length > 0) {
+                    state.appData.settings.travelPlans = (state.appData.settings.travelPlans || []).concat(state.travelPlans);
+                    try { await storage.saveData(state.appData); } catch(e) { /* non-fatal */ }
+                }
+                // ensure settings.travelPlans exists
+                state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
+            } catch(e) { console.error('travelPlans migration', e); }
             // Limpa todos os filtros ao iniciar
             state.filters = { searchTerm: '' };
             state.filters.expenseFilters = {};
@@ -5872,7 +5884,7 @@ const firebaseConfig = {
             try {
                 const container = document.getElementById('tp-plans');
                 container.innerHTML = '';
-                const plans = state.travelPlans || [];
+                const plans = (state.appData && state.appData.settings && Array.isArray(state.appData.settings.travelPlans)) ? state.appData.settings.travelPlans : [];
                 if (plans.length === 0) {
                     container.innerHTML = '<div class="text-sm text-gray-600">Nenhuma viagem planejada. Clique em "Adicionar Viagem" para começar.</div>';
                 } else {
@@ -5891,7 +5903,9 @@ const firebaseConfig = {
                         const i = Number(this.dataset.idx);
                         if (!Number.isFinite(i)) return;
                         if (!confirm('Excluir essa viagem?')) return;
-                        state.travelPlans.splice(i, 1);
+                        // operate on persistent settings travelPlans
+                        state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
+                        state.appData.settings.travelPlans.splice(i, 1);
                         try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e) { /* ignore persistence errors */ }
                         renderTravelPlannerView();
                     }));
@@ -5910,7 +5924,8 @@ const firebaseConfig = {
                 if (saveBtn) saveBtn.onclick = async () => {
                     const destination = dest.value.trim(); const date = dt.value; const c = parseFloat((cost.value || '').toString().replace(/\./g,'').replace(/,/g,'.')) || 0;
                     if (!destination) { alert('Informe o destino.'); return; }
-                    state.travelPlans.push({ destination, date, cost: c });
+                    state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
+                    state.appData.settings.travelPlans.push({ destination, date, cost: c });
                     form.classList.add('hidden'); dest.value = ''; dt.value = ''; cost.value = '';
                     try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e) { /* ignore */ }
                     renderTravelPlannerView();

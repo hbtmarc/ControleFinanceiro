@@ -1230,10 +1230,24 @@
                     <p class="text-sm text-gray-600 mb-3">Planeje seus próximos sonhos: defina destino, custo estimado e data alvo. Aqui você pode acompanhar quanto precisa poupar.</p>
                     <div id="tp-plans" class="space-y-3"></div>
                     <div id="tp-form" class="mt-4 hidden">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <input id="tp-destination" placeholder="Destino" class="border p-2 rounded" />
-                            <input id="tp-date" type="date" class="border p-2 rounded" />
-                            <input id="tp-cost" placeholder="Custo estimado (R$)" class="border p-2 rounded" />
+                        <input type="hidden" id="tp-id" />
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                            <div>
+                                <input id="tp-destination" placeholder="Destino" class="border p-2 rounded w-full" />
+                                <div id="tp-destination-error" class="text-xs text-red-600 mt-1 hidden"></div>
+                            </div>
+                            <div>
+                                <input id="tp-date" type="date" class="border p-2 rounded w-full" />
+                                <div id="tp-date-error" class="text-xs text-red-600 mt-1 hidden"></div>
+                            </div>
+                            <div>
+                                <input id="tp-cost" placeholder="Custo estimado (R$)" class="border p-2 rounded w-full" />
+                                <div id="tp-cost-error" class="text-xs text-red-600 mt-1 hidden"></div>
+                            </div>
+                            <div>
+                                <input id="tp-saved" placeholder="Já poupado (R$)" class="border p-2 rounded w-full" />
+                                <div id="tp-saved-error" class="text-xs text-red-600 mt-1 hidden"></div>
+                            </div>
                         </div>
                         <div class="flex items-center gap-2 mt-3">
                             <button id="tp-save-btn" class="px-3 py-1 rounded bg-indigo-600 text-white">Salvar</button>
@@ -1691,6 +1705,7 @@
             populateSelect('category-expense', window.ICON_MAPPINGS.expenseCategories, '.material-symbols-outlined');
             populateSelect('expense-type', window.ICON_MAPPINGS.expenseTypes, null);
             populateSelect('category-saving', window.ICON_MAPPINGS.savingCategories, '.material-symbols-outlined');
+            // (goal-selector removed)
             // Also populate filter selects so they contain the same options (icons stored on option.dataset)
             populateSelect('filter-payment-method', window.ICON_MAPPINGS.paymentMethods, '.select-icon');
             // build a category list for filters that includes expense + saving categories
@@ -1911,6 +1926,7 @@
                         <select id="category-saving" class="pl-8 mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 px-3 py-2 text-base appearance-none"></select>
                     </div>
                 </div>
+                <!-- goal-selector removed: not functional -->
             </div>
 
             <!-- Opções Avançadas -->
@@ -2690,7 +2706,7 @@
                 delBtn.addEventListener('click', async (ev) => {
                     try {
                         ev.stopPropagation();
-                        if (!confirm('Excluir este abastecimento?')) return;
+                        try { const ok = await confirmAsync('Excluir este abastecimento?', 'Confirmar exclusão'); if (!ok) return; } catch(e) { return; }
                         const idToDelete = r.id;
                         let found = false;
                         try {
@@ -2883,15 +2899,32 @@
         function formatCurrency(v){ try{ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); }catch(e){ return String(v); } }
         function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-            // Parse numbers entered in pt-BR style (e.g. "1.234,56" or "59,52") into JS numbers
+            // Parse numbers entered in pt-BR style (e.g. "1.234,56", "R$ 1.234,56", or "59,52") into JS numbers
             function parseLocaleNumber(s) {
                 try {
                     if (s === undefined || s === null) return NaN;
                     if (typeof s === 'number') return s;
                     let str = String(s).trim();
                     if (str === '') return NaN;
-                    // Remove thousands separator '.' and replace decimal ',' with '.'
-                    str = str.replace(/\./g, '').replace(/,/g, '.');
+                    // Normalize NBSP to space
+                    str = str.replace(/\u00A0/g, ' ');
+                    // Remove any currency symbols, letters or other characters except digits, comma, dot and minus
+                    str = str.replace(/[^0-9,\.\-]/g, '');
+                    // Protect minus: allow only leading minus
+                    str = str.replace(/(?!^)-/g, '');
+                    if (str === '' || str === '-' ) return NaN;
+                    // If both dot and comma present, assume format like 1.234,56 (pt-BR): remove dots and replace comma with dot
+                    if (str.indexOf('.') !== -1 && str.indexOf(',') !== -1) {
+                        str = str.replace(/\./g, '').replace(/,/g, '.');
+                    } else if (str.indexOf(',') !== -1) {
+                        // only comma present -> decimal separator
+                        str = str.replace(/,/g, '.');
+                    }
+                    // If multiple dots remain, keep first as decimal separator
+                    const parts = str.split('.');
+                    if (parts.length > 2) {
+                        str = parts.shift() + '.' + parts.join('');
+                    }
                     const v = parseFloat(str);
                     return isNaN(v) ? NaN : v;
                 } catch (e) { return NaN; }
@@ -3078,6 +3111,11 @@
         // Access to the VT — Abastecimentos modal is restricted to the '+' button inside the VT card on the
         // credit-cards (Faturas) view to prevent conflicts.
     })();
+    // Async confirm helper used across the app; uses modal when available
+    function confirmAsync(message, title) {
+        if (window.showConfirm) return window.showConfirm(message, title);
+        return Promise.resolve(window.confirm(message));
+    }
     </script>
     
     <script>
@@ -4470,7 +4508,7 @@ const firebaseConfig = {
                     };
                     restoreSelectedBtn.onclick = async () => {
                         try {
-                            if (!confirm('Deseja restaurar este backup? Isso substituirá os dados atuais.')) return;
+                            try { const ok = await confirmAsync('Deseja restaurar este backup? Isso substituirá os dados atuais.', 'Restaurar backup'); if (!ok) return; } catch(e){ return; }
                             showLoading();
                             const payload = val.data || val;
                             // Overwrite current state and persist
@@ -5485,11 +5523,11 @@ const firebaseConfig = {
                 render();
             }));
             // Attach per-item delete and edit buttons for VR usages
-            try {
-                container.querySelectorAll('.delete-vr-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
+                try {
+                    container.querySelectorAll('.delete-vr-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
                     const id = ev.currentTarget.getAttribute('data-vr-usage-id');
                     if (!id) return;
-                    if (!confirm('Excluir este uso de VR?')) return;
+                    try { const ok = await confirmAsync('Excluir este uso de VR?', 'Confirmar exclusão'); if (!ok) return; } catch(e){ return; }
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
                     const idx = md.vrUsage.findIndex(u => u.id === id);
@@ -5522,7 +5560,7 @@ const firebaseConfig = {
                         container.querySelectorAll('.delete-vt-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
                         const id = ev.currentTarget.getAttribute('data-vt-usage-id');
                         if (!id) return;
-                        if (!confirm('Excluir este uso de VT?')) return;
+                        try { const ok = await confirmAsync('Excluir este uso de VT?', 'Confirmar exclusão'); if (!ok) return; } catch(e) { return; }
                         const md = getCurrentMonthData();
                         if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
                         const idx = md.vtUsage.findIndex(u => u.id === id);
@@ -5854,8 +5892,15 @@ const firebaseConfig = {
         function renderInvestmentsView() {
             const allData = Object.values(state.appData.data).flatMap(year => Object.values(year));
             const allSavings = allData.flatMap(month => month.savings || []);
-            const totalInvested = allSavings.reduce((sum, s) => sum + s.amount, 0);
-            const currentMonthSavings = (getCurrentMonthData().savings || []).reduce((sum, s) => sum + s.amount, 0);
+            const totalInvestedFromSavings = allSavings.reduce((sum, s) => sum + s.amount, 0);
+            // include saved amounts from travel plans
+            const travelSavedAll = (state.appData.settings.travelPlans || []).reduce((sum, p) => sum + (Number(p.saved) || 0), 0);
+            const totalInvested = totalInvestedFromSavings + travelSavedAll;
+            // current month savings should include saving entries plus travel plan saves whose date falls in current month
+            const currentMonth = state.currentDate.getMonth() + 1; const currentYear = state.currentDate.getFullYear();
+            const currentMonthSavings = (getCurrentMonthData().savings || []).reduce((sum, s) => sum + s.amount, 0) + (state.appData.settings.travelPlans || []).filter(p => {
+                try { if (!p.date) return false; const d = new Date(p.date); return d.getFullYear() === currentYear && (d.getMonth() + 1) === currentMonth; } catch(e) { return false; }
+            }).reduce((sum, p) => sum + (Number(p.saved) || 0), 0);
             const monthsWithSavings = allData.filter(m => ((m.savings || []).reduce((s, t) => s + t.amount, 0)) > 0);
             const avgMonthlyInvestment = monthsWithSavings.length > 0 ? totalInvested / monthsWithSavings.length : 0;
             
@@ -5892,49 +5937,447 @@ const firebaseConfig = {
                         const div = document.createElement('div');
                         div.className = 'p-3 bg-white rounded border flex items-center justify-between';
                         const left = document.createElement('div');
-                        left.innerHTML = `<div class="font-semibold">${escapeHtml(p.destination || '')}</div><div class="text-xs text-gray-500">Meta: ${p.date || '—'} • Custo: ${formatCurrency(Number(p.cost) || 0)}</div>`;
+                        const cost = Number(p.cost) || 0;
+                        const saved = Number(p.saved) || 0;
+                        // calculate months remaining
+                        const today = new Date();
+                        let monthsRemaining = 0;
+                        if (p.date) {
+                            try {
+                                const target = new Date(p.date + 'T00:00:00');
+                                monthsRemaining = Math.max(0, (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth()));
+                            } catch (e) { monthsRemaining = 0; }
+                        }
+                        const remaining = Math.max(0, cost - saved);
+                        const monthlyNeeded = monthsRemaining > 0 ? Math.max(0, remaining / monthsRemaining) : remaining;
+                        const percent = cost > 0 ? Math.min(100, Math.round((saved / cost) * 100)) : (saved > 0 ? 100 : 0);
+                        left.innerHTML = `
+                            <div class="font-semibold">${escapeHtml(p.destination || '')}</div>
+                            <div class="text-xs text-gray-500">Meta: ${p.date || '—'} • Custo: ${formatCurrency(cost)}</div>
+                            <div class="text-xs text-gray-500">Já poupado: ${formatCurrency(saved)} • ${percent}%</div>
+                            <div class="mt-2 w-full bg-gray-200 rounded h-2 overflow-hidden relative">
+                                <div class="bg-green-500 h-2" style="width:${percent}%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">Necessário/mês: ${formatCurrency(monthlyNeeded)}</div>
+                        `;
                         const right = document.createElement('div');
-                        right.innerHTML = `<button data-idx="${idx}" class="tp-delete text-red-600 px-2 py-1 rounded">Excluir</button>`;
+                        right.innerHTML = `
+                            <button data-idx="${idx}" class="tp-edit text-blue-600 px-2 py-1 rounded">Editar</button>
+                            <button data-idx="${idx}" class="tp-delete text-red-600 px-2 py-1 rounded ml-2">Excluir</button>
+                        `;
                         div.appendChild(left); div.appendChild(right);
                         container.appendChild(div);
                     });
-                    // attach delete handlers
-                    container.querySelectorAll('.tp-delete').forEach(btn => btn.addEventListener('click', async function(){
-                        const i = Number(this.dataset.idx);
-                        if (!Number.isFinite(i)) return;
-                        if (!confirm('Excluir essa viagem?')) return;
-                        // operate on persistent settings travelPlans
-                        state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
-                        state.appData.settings.travelPlans.splice(i, 1);
-                        try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e) { /* ignore persistence errors */ }
-                        renderTravelPlannerView();
-                    }));
-                }
 
-                // Wire add/cancel/save
-                const addBtn = document.getElementById('tp-add-plan-btn');
-                const form = document.getElementById('tp-form');
-                const saveBtn = document.getElementById('tp-save-btn');
-                const cancelBtn = document.getElementById('tp-cancel-btn');
-                const dest = document.getElementById('tp-destination');
-                const dt = document.getElementById('tp-date');
-                const cost = document.getElementById('tp-cost');
-                if (addBtn) addBtn.onclick = () => { form.classList.toggle('hidden'); };
-                if (cancelBtn) cancelBtn.onclick = () => { form.classList.add('hidden'); dest.value = ''; dt.value = ''; cost.value = ''; };
-                if (saveBtn) saveBtn.onclick = async () => {
-                    const destination = dest.value.trim(); const date = dt.value; const c = parseFloat((cost.value || '').toString().replace(/\./g,'').replace(/,/g,'.')) || 0;
-                    if (!destination) { alert('Informe o destino.'); return; }
-                    state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
-                    state.appData.settings.travelPlans.push({ destination, date, cost: c });
-                    form.classList.add('hidden'); dest.value = ''; dt.value = ''; cost.value = '';
-                    try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e) { /* ignore */ }
-                    renderTravelPlannerView();
-                };
+                    // attach edit handlers -> open modal and populate
+                        container.querySelectorAll('.tp-edit').forEach(btn => btn.addEventListener('click', function(){
+                            const i = Number(this.dataset.idx);
+                            if (!Number.isFinite(i)) return;
+                            const p = plans[i];
+                            if (!p) return;
+                            const dlg = document.getElementById('tp-modal');
+                            document.getElementById('tp-modal-id').value = p.id || '';
+                            document.getElementById('tp-modal-destination').value = p.destination || '';
+                            document.getElementById('tp-modal-date').value = p.date || '';
+                            document.getElementById('tp-modal-cost').value = p.cost != null ? formatCurrency(Number(p.cost) || 0) : '';
+                            document.getElementById('tp-modal-saved').value = p.saved != null ? formatCurrency(Number(p.saved) || 0) : '';
+                            try { attachCurrencyHandlers(); } catch(e){}
+                            try { if (dlg && typeof dlg.showModal === 'function') dlg.showModal(); } catch(e){ alert('Abrindo editor...'); }
+                        }));
+
+                        // attach delete handlers
+                        container.querySelectorAll('.tp-delete').forEach(btn => btn.addEventListener('click', async function(){
+                            const i = Number(this.dataset.idx);
+                            if (!Number.isFinite(i)) return;
+                            try { const ok = await (window.showConfirm ? window.showConfirm('Excluir essa viagem?', 'Confirmar exclusão') : Promise.resolve(window.confirm('Excluir essa viagem?'))); if (!ok) return; } catch(e){ return; }
+                            // operate on persistent settings travelPlans
+                            state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
+                            const removed = state.appData.settings.travelPlans.splice(i, 1)[0];
+                            // if this plan had a linked goal, remove it as well
+                            try {
+                                if (removed && removed.goalId) {
+                                    state.appData.settings.goals = state.appData.settings.goals || [];
+                                    const gidx = state.appData.settings.goals.findIndex(g => g.id === removed.goalId);
+                                    if (gidx >= 0) state.appData.settings.goals.splice(gidx, 1);
+                                }
+                            } catch(e) { /* ignore */ }
+                            try { if (storage && storage.saveData) await storage.saveData(state.appData); if (typeof showToast === 'function') showToast('Viagem excluída.','bg-gray-600'); } catch(e) { /* ignore persistence errors */ }
+                            renderTravelPlannerView();
+                        }));
+                    }
+
+                    // Wire modal add/save/cancel
+                    const addBtn = document.getElementById('tp-add-plan-btn');
+                    const modal = document.getElementById('tp-modal');
+                    const modalForm = document.getElementById('tp-modal-form');
+                    const modalCancel = document.getElementById('tp-modal-cancel');
+                    const modalDest = document.getElementById('tp-modal-destination');
+                    const modalDate = document.getElementById('tp-modal-date');
+                    const modalCost = document.getElementById('tp-modal-cost');
+                    const modalSaved = document.getElementById('tp-modal-saved');
+                    const modalId = document.getElementById('tp-modal-id');
+                    if (addBtn) addBtn.onclick = () => {
+                        modalId.value = '';
+                        modalDest.value = '';
+                        modalDate.value = '';
+                        modalCost.value = '';
+                        modalSaved.value = '';
+                        try { attachCurrencyHandlers(); } catch(e){}
+                        try { if (modal && typeof modal.showModal === 'function') modal.showModal(); } catch(e) { /* fallback */ }
+                    };
+                    // ensure cancel handler attached only once
+                    if (modalCancel && !modalCancel.dataset.tpCancelAttached) {
+                        modalCancel.addEventListener('click', () => { try { if (modal && typeof modal.close === 'function') modal.close(); } catch(e){} });
+                        modalCancel.dataset.tpCancelAttached = '1';
+                    }
+                    // attach submit handler only once to prevent duplicate submissions when render is called multiple times
+                    if (modalForm && !modalForm.dataset.tpHandlerAttached) {
+                        modalForm.addEventListener('submit', async function(ev){
+                            try {
+                                ev.preventDefault(); showFieldError('tp-modal-destination'); showFieldError('tp-modal-cost');
+                                const destination = modalDest.value.trim();
+                                const date = modalDate.value;
+                                // robust parsing for currency-like inputs (accepts 'R$ 1.234,56', '1.234,56', '1234.56', etc.)
+                                function safeParseMoney(v) {
+                                    try {
+                                        // prefer global helper if available
+                                        if (typeof parseLocaleNumber === 'function') {
+                                            const pv = parseLocaleNumber(v);
+                                            if (!isNaN(pv)) return pv;
+                                        }
+                                        if (v === undefined || v === null) return 0;
+                                        let s = String(v).trim();
+                                        if (s === '') return 0;
+                                        // normalize nbsp
+                                        s = s.replace(/\u00A0/g, ' ');
+                                        // remove currency symbols and letters
+                                        s = s.replace(/[^0-9,\.\-]/g, '');
+                                        // protect stray minus signs
+                                        s = s.replace(/(?!^)-/g, '');
+                                        if (s === '' || s === '-') return 0;
+                                        if (s.indexOf('.') !== -1 && s.indexOf(',') !== -1) {
+                                            s = s.replace(/\./g,'').replace(/,/g,'.');
+                                        } else if (s.indexOf(',') !== -1) {
+                                            s = s.replace(/,/g,'.');
+                                        }
+                                        const parts = s.split('.');
+                                        if (parts.length > 2) s = parts.shift() + '.' + parts.join('');
+                                        const num = parseFloat(s);
+                                        return isNaN(num) ? 0 : num;
+                                    } catch (e) { return 0; }
+                                }
+                                const c = safeParseMoney(modalCost.value);
+                                const s = safeParseMoney(modalSaved.value);
+                                let hasError = false;
+                                if (!destination) { showFieldError('tp-modal-destination','Informe o destino.'); hasError = true; }
+                                if (!(c > 0)) { showFieldError('tp-modal-cost','Informe um custo válido maior que 0.'); hasError = true; }
+                                if (hasError) return;
+                                state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
+                                const existingId = modalId.value && String(modalId.value).trim();
+                                if (existingId) {
+                                    const idx = state.appData.settings.travelPlans.findIndex(x => x.id === existingId);
+                                    if (idx >= 0) {
+                                        // update existing plan
+                                        const existingPlan = state.appData.settings.travelPlans[idx];
+                                        const updatedPlan = Object.assign({}, existingPlan, { destination, date, cost: c, saved: s });
+                                        state.appData.settings.travelPlans[idx] = updatedPlan;
+                                        // update linked goal if exists
+                                        try {
+                                            if (existingPlan && existingPlan.goalId) {
+                                                state.appData.settings.goals = state.appData.settings.goals || [];
+                                                const gidx = state.appData.settings.goals.findIndex(g => g.id === existingPlan.goalId);
+                                                if (gidx >= 0) {
+                                                    state.appData.settings.goals[gidx].name = `Viagem - ${destination}`;
+                                                    state.appData.settings.goals[gidx].amount = c;
+                                                    // ensure category list reflects the goal name
+                                                    state.appData.settings.investmentCategories = state.appData.settings.investmentCategories || [];
+                                                    if (!state.appData.settings.investmentCategories.includes(state.appData.settings.goals[gidx].name)) {
+                                                        state.appData.settings.investmentCategories.push(state.appData.settings.goals[gidx].name);
+                                                    }
+                                                    // Note: do not auto-create/update separate savings entries here.
+                                                    // Goal progress will derive from the travel plan's `saved` field plus any explicit savings the user adds.
+                                                }
+                                            }
+                                        } catch(e) { /* ignore */ }
+                                        if (typeof showToast === 'function') showToast('Viagem atualizada.','bg-green-600');
+                                        // Sync savings ledger to match travelPlan.saved for this plan's goal
+                                        try {
+                                            if (existingPlan && existingPlan.goalId) {
+                                                const target = Number(s) || 0;
+                                                const currentSum = sumSavingsForGoal(existingPlan.goalId);
+                                                if (Math.abs(currentSum - target) > 0.005) {
+                                                    const res = await applySavedToSavings(existingPlan.goalId, target);
+                                                    try { await storage.saveData(state.appData); } catch(e){}
+                                                }
+                                            }
+                                        } catch(e) { /* ignore sync */ }
+                                    } else {
+                                        // create new plan and linked goal
+                                        const planId = generateUUID();
+                                        const goalName = `Viagem - ${destination}`;
+                                        const goalId = generateUUID();
+                                        // ensure goals array exists
+                                        state.appData.settings.goals = state.appData.settings.goals || [];
+                                        state.appData.settings.goals.push({ id: goalId, name: goalName, amount: c });
+                                        state.appData.settings.travelPlans.push({ id: planId, destination, date, cost: c, saved: s, goalId: goalId });
+                                        // Sync savings ledger to match travelPlan.saved for this new plan's goal
+                                        try {
+                                            const target = Number(s) || 0;
+                                            if (Math.abs(sumSavingsForGoal(goalId) - target) > 0.005) {
+                                                const res = await applySavedToSavings(goalId, target);
+                                                try { await storage.saveData(state.appData); } catch(e){}
+                                            }
+                                        } catch(e) { /* ignore sync */ }
+                                        if (typeof showToast === 'function') showToast('Viagem adicionada. Meta de investimento criada.','bg-green-600');
+                                    }
+                                } else {
+                                        // create new plan and linked goal (no existingId path)
+                                    const planId = generateUUID();
+                                    const goalName = `Viagem - ${destination}`;
+                                    const goalId = generateUUID();
+                                    state.appData.settings.goals = state.appData.settings.goals || [];
+                                    state.appData.settings.goals.push({ id: goalId, name: goalName, amount: c });
+                                    state.appData.settings.travelPlans.push({ id: planId, destination, date, cost: c, saved: s, goalId: goalId });
+                                        // Ensure there's a 'Meta' category or add a specific goal category so users can add savings easily
+                                        try {
+                                            state.appData.settings.investmentCategories = state.appData.settings.investmentCategories || [];
+                                            // make sure the goal name is available as a selectable category
+                                            if (!state.appData.settings.investmentCategories.includes(goalName)) {
+                                                state.appData.settings.investmentCategories.push(goalName);
+                                            }
+                                        } catch (e) { /* ignore category creation errors */ }
+                                    if (typeof showToast === 'function') showToast('Viagem adicionada. Meta de investimento criada.','bg-green-600');
+                                }
+                                try { if (modal && typeof modal.close === 'function') modal.close(); } catch(e){}
+                                try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e) { /* ignore */ }
+                                renderTravelPlannerView();
+                            } catch(e) { console.error('tp-modal save', e); }
+                        }, false);
+                        modalForm.dataset.tpHandlerAttached = '1';
+                    }
             } catch (e) { console.error('renderTravelPlannerView', e); }
         }
 
         // small helper: escape text for innerHTML usage
         function escapeHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        // --- Travel planner helpers ---
+        // compute months remaining from today to target date string (YYYY-MM-DD)
+        function computeMonthsRemaining(targetDateStr) {
+            if (!targetDateStr) return 0;
+            try {
+                const today = new Date();
+                const target = new Date(targetDateStr + 'T00:00:00');
+                let months = (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth());
+                // if target day is earlier in month than today, reduce one month (not a full month)
+                if (target.getDate() < today.getDate()) months = months - 1;
+                return Math.max(0, months);
+            } catch (e) { return 0; }
+        }
+
+        // --- Goal <-> Savings synchronization helpers ---
+        function sumSavingsForGoal(goalId) {
+            try {
+                const allSavings = Object.values(state.appData.data).flatMap(y => Object.values(y)).flatMap(m => m.savings || []);
+                return allSavings.filter(s => s.goalId === goalId).reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+            } catch (e) { return 0; }
+        }
+
+        // Apply a desired travelPlan.saved value into savings ledger by creating/updating/deleting entries
+        // We will operate on savings entries that reference the goalId, adjusting newest entries first when reducing.
+        function auditSync(action, details) {
+            try {
+                state.appData.metaSyncLog = state.appData.metaSyncLog || [];
+                state.appData.metaSyncLog.push({ id: generateUUID(), ts: new Date().toISOString(), action: action, details });
+            } catch (e) { console.error('auditSync error', e); }
+        }
+
+        async function applySavedToSavings(goalId, targetAmount) {
+            try {
+                const current = sumSavingsForGoal(goalId);
+                const diff = Math.round((Number(targetAmount) || 0) * 100) / 100 - Math.round((current) * 100) / 100;
+                if (Math.abs(diff) < 0.01) return { created:0, removed:0, adjusted:0 };
+
+                if (diff > 0) {
+                    // create additional saving in current month
+                    const md = getCurrentMonthData(); if (!Array.isArray(md.savings)) md.savings = [];
+                    const amt = Math.round(diff * 100) / 100;
+                    const entry = { id: generateUUID(), description: `Aporte p/ meta`, category: (state.appData.settings.goals.find(g=>g.id===goalId)||{}).name || '', amount: amt, date: new Date().toISOString(), goalId };
+                    md.savings.push(entry);
+                    auditSync('create_saving', { goalId, amount: amt, entryId: entry.id });
+
+                    // create undo token and push to global undo stack
+                    window.__autoCreateUndoStack = window.__autoCreateUndoStack || [];
+                    const undoItem = { createdEntries: [{ entryId: entry.id, year: state.currentDate.getFullYear(), month: (state.currentDate.getMonth()+1) }], ts: new Date().toISOString() };
+                    window.__autoCreateUndoStack.push(undoItem);
+
+                    // show toast with Undo action
+                    if (typeof showToast === 'function') {
+                        // build a temporary interactive toast: overwrite showToast behavior by adding a click handler to undo
+                        const message = `Aporte automático de ${formatCurrency(amt)} criado para a meta. `;
+                        showToast(message + 'Clique para desfazer.', 'bg-green-600');
+                        try {
+                            const toast = document.getElementById('toast');
+                            if (toast) {
+                                // make it clickable for undo
+                                const clickHandler = async function(){
+                                    try {
+                                        // perform undo: remove created entries
+                                        for (const e of undoItem.createdEntries) {
+                                            const y = String(e.year);
+                                            const m = String(e.month).padStart(2,'0');
+                                            const md2 = (state.appData.data && state.appData.data[y] && state.appData.data[y][m]) ? state.appData.data[y][m] : null;
+                                            if (md2 && Array.isArray(md2.savings)) {
+                                                const idx = md2.savings.findIndex(s => s.id === e.entryId);
+                                                if (idx >= 0) md2.savings.splice(idx,1);
+                                            }
+                                        }
+                                        auditSync('undo_create_saving', { goalId, entryIds: undoItem.createdEntries.map(x=>x.entryId) });
+                                        try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e){}
+                                        toast.style.display = 'none';
+                                        render();
+                                    } catch(err) { console.error('undo auto-create', err); }
+                                };
+                                toast.addEventListener('click', clickHandler, { once:true });
+                                // auto-dismiss after 7s (leave existing toast timeout behavior too)
+                                setTimeout(() => { try { toast.removeEventListener('click', clickHandler); } catch(e){} }, 7000);
+                            }
+                        } catch(e) { /* ignore toast wiring errors */ }
+                    }
+                    return { created:1, removed:0, adjusted:0 };
+                } else {
+                    // plan to remove/decrement entries: show confirm to the user
+                    let remainingToRemove = Math.abs(diff);
+                    // collect entries sorted by date descending
+                    const entries = [];
+                    Object.keys(state.appData.data).forEach(year => {
+                        Object.keys(state.appData.data[year]).forEach(month => {
+                            const md = state.appData.data[year][month];
+                            if (Array.isArray(md.savings)) {
+                                md.savings.forEach(s => { if (s.goalId === goalId) entries.push({ entry: s, md }); });
+                            }
+                        });
+                    });
+                    entries.sort((a,b) => { const da = new Date(a.entry.date || 0); const db = new Date(b.entry.date || 0); return db - da; });
+
+                    // prepare a preview of intended removals
+                    const plan = [];
+                    let tempRem = remainingToRemove;
+                    for (const item of entries) {
+                        if (tempRem <= 0) break;
+                        const amt = Number(item.entry.amount) || 0;
+                        if (amt <= tempRem + 0.0001) {
+                            plan.push({ type:'remove', id: item.entry.id, amount: amt, date: item.entry.date });
+                            tempRem = Math.round((tempRem - amt) * 100) / 100;
+                        } else {
+                            plan.push({ type:'decrement', id: item.entry.id, from: amt, to: Math.round((amt - tempRem) * 100) / 100, date: item.entry.date });
+                            tempRem = 0;
+                        }
+                    }
+
+                    const summary = plan.map(p => p.type === 'remove' ? `Remover ${formatCurrency(p.amount)} (${p.date||'—'})` : `Reduzir ${formatCurrency(p.from)} → ${formatCurrency(p.to)} (${p.date||'—'})`).join('\n');
+                    try {
+                        const ok = await confirmAsync(`A meta está maior do que os aportes registrados. Aplicar ajustes automáticos?\n\n${summary}`, 'Ajustar aportes');
+                        if (!ok) return { created:0, removed:0, adjusted:0 };
+                    } catch(e) { return { created:0, removed:0, adjusted:0 }; }
+
+                    // apply the plan
+                    let removed = 0, adjusted = 0;
+                    for (const p of plan) {
+                        if (p.type === 'remove') {
+                            // find and remove
+                            for (const year of Object.keys(state.appData.data)) {
+                                for (const month of Object.keys(state.appData.data[year])) {
+                                    const md = state.appData.data[year][month];
+                                    if (!Array.isArray(md.savings)) continue;
+                                    const idx = md.savings.findIndex(x => x.id === p.id);
+                                    if (idx >= 0) { md.savings.splice(idx,1); removed++; break; }
+                                }
+                            }
+                        } else if (p.type === 'decrement') {
+                            for (const year of Object.keys(state.appData.data)) {
+                                for (const month of Object.keys(state.appData.data[year])) {
+                                    const md = state.appData.data[year][month];
+                                    if (!Array.isArray(md.savings)) continue;
+                                    const e = md.savings.find(x => x.id === p.id);
+                                    if (e) { e.amount = p.to; adjusted++; break; }
+                                }
+                            }
+                        }
+                    }
+                    auditSync('adjust_savings', { goalId, removed, adjusted, plan });
+                    if (typeof showToast === 'function') showToast(`Ajustes automáticos aplicados: removidos ${removed}, ajustados ${adjusted}.`, 'bg-yellow-600');
+                    return { created:0, removed, adjusted };
+                }
+            } catch (e) { console.error('applySavedToSavings error', e); return { created:0, removed:0, adjusted:0 }; }
+        }
+
+        // Recompute total savings for a goal and update any travelPlans linked to that goal to reflect it
+        function updateTravelPlanSavedFromSavings(goalId) {
+            try {
+                const total = sumSavingsForGoal(goalId);
+                const plans = (state.appData.settings.travelPlans || []).filter(p => p.goalId === goalId);
+                plans.forEach(p => { p.saved = Math.round((Number(total) + Number.EPSILON) * 100) / 100; });
+            } catch (e) { console.error('updateTravelPlanSavedFromSavings error', e); }
+        }
+
+        function showFieldError(fieldId, msg) {
+            try {
+                const errEl = document.getElementById(fieldId + '-error');
+                if (!errEl) return;
+                if (msg) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+                else { errEl.textContent = ''; errEl.classList.add('hidden'); }
+            } catch (e) { /* ignore */ }
+        }
+
+        // Attach handlers to currency fields to format on blur and unformat on focus
+        function attachCurrencyHandlers() {
+            try {
+                const curIds = ['tp-cost','tp-saved'];
+                curIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el || el._currencyAttached) return;
+                    el._currencyAttached = true;
+                    el.addEventListener('focus', function() {
+                        // unformat to plain number for easier editing
+                        const n = parseLocaleNumber(this.value);
+                        this.value = (Number.isFinite(n) && !isNaN(n)) ? (n % 1 === 0 ? String(n) : String(n)) : '';
+                    });
+                    // realtime input handler: keep only digits, comma and dot; format thousands as user types
+                    el.addEventListener('input', function(e) {
+                        const pos = this.selectionStart;
+                        let v = this.value || '';
+                        // replace NBSP
+                        v = v.replace(/\u00A0/g, ' ');
+                        // remove everything except digits, comma, dot and minus
+                        v = v.replace(/[^0-9,\.\-]/g, '');
+                        // if both comma and dot present, assume dot is thousand and comma decimal -> normalize
+                        if (v.indexOf('.') !== -1 && v.indexOf(',') !== -1) {
+                            v = v.replace(/\./g, '').replace(/,/g, '.');
+                        }
+                        // split decimals
+                        const parts = v.split(/[,\.]/);
+                        let intPart = parts[0] || '';
+                        let decPart = parts.length > 1 ? parts.slice(1).join('') : '';
+                        // remove leading zeros
+                        intPart = intPart.replace(/^0+(?=\d)/, '') || '0';
+                        // insert thousands separator for display (dot)
+                        intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        // rebuild value with comma as decimal separator (if decimals exist)
+                        this.value = decPart ? (intPart + ',' + decPart.slice(0,2)) : intPart;
+                        // try to restore caret (approximate)
+                        try { this.selectionStart = this.selectionEnd = this.value.length; } catch(e) {}
+                    });
+                    el.addEventListener('blur', function() {
+                        const n = parseLocaleNumber(this.value);
+                        if (Number.isFinite(n) && !isNaN(n)) this.value = formatCurrency(n); else this.value = '';
+                    });
+                    // initial format if there's a value
+                    const init = parseLocaleNumber(el.value);
+                    if (Number.isFinite(init) && !isNaN(init)) el.value = formatCurrency(init);
+                });
+            } catch (e) { console.error('attachCurrencyHandlers', e); }
+        }
 
         // Simple handler for paying a card invoice (placeholder)
         async function payCardInvoice(cardName) {
@@ -5960,7 +6403,7 @@ const firebaseConfig = {
 
         async function deleteGoal(id) {
             if (!id) return;
-            if (!confirm('Tem certeza que deseja excluir esta meta?')) return;
+            try { const ok = await confirmAsync('Tem certeza que deseja excluir esta meta?', 'Confirmar exclusão'); if (!ok) return; } catch(e){ return; }
             const idx = (state.appData.settings.goals || []).findIndex(g => g.id === id);
             if (idx > -1) {
                 state.appData.settings.goals.splice(idx, 1);
@@ -6390,14 +6833,19 @@ const firebaseConfig = {
                     const md = getCurrentMonthData();
                     const entry = (md.vrLedger || []).find(v => v.id === id) || null;
                     if (!entry) return;
-                    if (entry.isRecurring && entry.recurringId) {
-                        const delAll = confirm('Este benefício é recorrente. Deseja excluir este e todas as recorrências futuras? (OK = Sim)');
-                        if (!delAll) return;
-                        await deleteVRLedgerEntry(id);
-                        render();
-                    } else {
-                        if (confirm('Excluir lançamento de VR?')) { await deleteVRLedgerEntry(id); render(); }
-                    }
+                    try {
+                        if (entry.isRecurring && entry.recurringId) {
+                            const delAll = await confirmAsync('Este benefício é recorrente. Deseja excluir este e todas as recorrências futuras?', 'Confirmar exclusão');
+                            if (!delAll) return;
+                            await deleteVRLedgerEntry(id);
+                            render();
+                        } else {
+                            const ok = await confirmAsync('Excluir lançamento de VR?', 'Confirmar exclusão');
+                            if (!ok) return;
+                            await deleteVRLedgerEntry(id);
+                            render();
+                        }
+                    } catch (e) { return; }
                 }));
                 // VT handlers
                 ui.incomeTableBody.querySelectorAll('.vt-amount').forEach(el => el.addEventListener('click', (e) => (typeof startInlineVTEdit === 'function') ? startInlineVTEdit(e.currentTarget, e.currentTarget.dataset.vtId) : null));
@@ -6408,14 +6856,19 @@ const firebaseConfig = {
                     const md = getCurrentMonthData();
                     const entry = (md.vtLedger || []).find(v => v.id === id) || null;
                     if (!entry) return;
-                    if (entry.isRecurring && entry.recurringId) {
-                        const delAll = confirm('Este benefício é recorrente. Deseja excluir este e todas as recorrências futuras? (OK = Sim)');
-                        if (!delAll) return;
-                        await deleteVTLedgerEntry(id);
-                        render();
-                    } else {
-                        if (confirm('Excluir lançamento de VT?')) { await deleteVTLedgerEntry(id); render(); }
-                    }
+                    try {
+                        if (entry.isRecurring && entry.recurringId) {
+                            const delAll = await confirmAsync('Este benefício é recorrente. Deseja excluir este e todas as recorrências futuras?', 'Confirmar exclusão');
+                            if (!delAll) return;
+                            await deleteVTLedgerEntry(id);
+                            render();
+                        } else {
+                            const ok = await confirmAsync('Excluir lançamento de VT?', 'Confirmar exclusão');
+                            if (!ok) return;
+                            await deleteVTLedgerEntry(id);
+                            render();
+                        }
+                    } catch (e) { return; }
                 }));
             } catch(e) { console.error('renderIncomeTable benefit rows', e); }
         }
@@ -6855,11 +7308,21 @@ const firebaseConfig = {
             const container = ui.goalsContainer;
             const goals = (state.appData.settings.goals || []).slice().sort((a,b) => { const A=(a.name||'').toLowerCase(); const B=(b.name||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
             const allSavings = Object.values(state.appData.data).flatMap(y => Object.values(y)).flatMap(m => m.savings || []);
-            
-            container.innerHTML = goals.length === 0 ? '<p class="text-center text-gray-500">Nenhuma meta definida.</p>' : '';
+
+            // Header
+            container.innerHTML = `<div class="flex justify-between items-center mb-2"><h4 class="font-semibold">Metas</h4></div>`;
+
+            if (goals.length === 0) container.innerHTML += '<p class="text-center text-gray-500">Nenhuma meta definida.</p>';
 
             goals.forEach(goal => {
-                const totalSavedForGoal = allSavings.filter(s => s.category === goal.name).reduce((sum, s) => sum + s.amount, 0);
+                // sum of savings items that target this goal (category == goal.name OR explicit goalId link)
+                const totalFromSavings = allSavings.filter(s => ((s.category === goal.name) || (s.goalId && s.goalId === goal.id))).reduce((sum, s) => sum + s.amount, 0);
+                // include amounts saved in travel plans linked to this goal
+                const linkedPlans = (state.appData.settings.travelPlans || []).filter(p => p.goalId === goal.id);
+                const travelPlanSaved = linkedPlans.reduce((sum, p) => sum + (Number(p.saved) || 0), 0);
+                // If the goal is linked to one or more travel plans, prefer the travel-plan 'saved' value as authoritative
+                // so the meta shows the same "Já poupado" value as the trip(s). Otherwise fall back to explicit savings entries.
+                const totalSavedForGoal = (linkedPlans.length > 0) ? travelPlanSaved : totalFromSavings;
                 const percentage = Math.min((totalSavedForGoal / goal.amount) * 100, 100);
                 const isCompleted = percentage >= 100;
                 if (isCompleted) {
@@ -6881,6 +7344,8 @@ const firebaseConfig = {
                     </div>`;
             });
             container.querySelectorAll('.delete-goal-btn').forEach(btn => btn.addEventListener('click', (e) => deleteGoal(e.currentTarget.dataset.id)));
+
+            // audit log feature removed
         }
 
         // --- KPIs, Feedback and Charts ---
@@ -8758,14 +9223,15 @@ const firebaseConfig = {
 
                     // If there's a recurringId or financingId, consult the 'apply-to-future' checkbox (if present)
                     const applyToFutureChecked = (ui.applyToFuture && ui.applyToFuture.checked) ? true : null;
-                    if (originalTransaction.recurringId) {
+                            if (originalTransaction.recurringId) {
                         if (applyToFutureChecked === true) {
                             updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
                         } else if (applyToFutureChecked === null) {
                             // fallback to old confirm dialog when checkbox not available
-                            if (confirm('Esta é uma transação recorrente. Deseja atualizar as futuras também?')) {
-                                updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
-                            }
+                            try {
+                                const ok = await confirmAsync('Esta é uma transação recorrente. Deseja atualizar as futuras também?', 'Aplicar às futuras');
+                                if (ok) updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
+                            } catch(e) { /* user cancelled */ }
                         }
                     }
 
@@ -8773,16 +9239,45 @@ const firebaseConfig = {
                         if (applyToFutureChecked === true) {
                             updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
                         } else if (applyToFutureChecked === null) {
-                            if (confirm('Esta é uma transação de financiamento. Deseja atualizar as parcelas futuras também?')) {
-                                updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
-                            }
+                            try {
+                                const okf = await confirmAsync('Esta é uma transação de financiamento. Deseja atualizar as parcelas futuras também?', 'Aplicar às futuras parcelas');
+                                if (okf) updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
+                            } catch(e) { /* cancelled */ }
                         }
+                    }
+
+                    // If editing a savings entry, try to preserve or update the goal link
+                    if (type === 'savings') {
+                        try {
+                            // preserve existing goalId unless the category/description indicates another goal
+                            const goals = state.appData.settings.goals || [];
+                            let linkedGoalId = originalTransaction.goalId || null;
+                            // Try to detect a goal by category first
+                            if (transaction.category) {
+                                const g = goals.find(x => (x.name || '').toString().toLowerCase() === (transaction.category || '').toString().toLowerCase());
+                                if (g) linkedGoalId = g.id;
+                            }
+                            // If still not found, try matching by description text
+                            if (!linkedGoalId && transaction.description) {
+                                const desc = (transaction.description || '').toString().toLowerCase();
+                                const g2 = goals.find(x => desc.indexOf((x.name || '').toString().toLowerCase()) !== -1 || (transaction.description||'').toString().trim() === (x.name||''));
+                                if (g2) linkedGoalId = g2.id;
+                            }
+                            if (linkedGoalId) transaction.goalId = linkedGoalId;
+                        } catch (e) { /* ignore linking errors */ }
                     }
 
                     currentMonthData[type][index] = { ...originalTransaction, ...transaction };
                     try {
                         await storage.saveData(state.appData);
                         showToast('Transação editada com sucesso!', 'bg-green-600');
+                        // If this was a savings entry linked to a goal, synchronize travelPlan.saved
+                        try {
+                            if (type === 'savings' && currentMonthData[type][index] && currentMonthData[type][index].goalId) {
+                                updateTravelPlanSavedFromSavings(currentMonthData[type][index].goalId);
+                                await storage.saveData(state.appData);
+                            }
+                        } catch(e) { /* ignore sync errors */ }
                     } catch (e) {
                         console.error('Erro ao salvar transação editada:', e);
                         showToast('Falha ao salvar transação no Firebase.', 'bg-red-600');
@@ -8792,10 +9287,33 @@ const firebaseConfig = {
                 if (transaction.isRecurring) {
                     transaction.recurringId = generateUUID();
                 }
+                // For savings entries, attempt to auto-link to a goal by category or description
+                if (type === 'savings') {
+                    try {
+                        const goals = state.appData.settings.goals || [];
+                        let linked = null;
+                        if (transaction.category) {
+                            linked = goals.find(g => (g.name || '').toString().toLowerCase() === (transaction.category || '').toString().toLowerCase());
+                        }
+                        if (!linked && transaction.description) {
+                            const desc = (transaction.description || '').toString().toLowerCase();
+                            linked = goals.find(g => desc.indexOf((g.name || '').toString().toLowerCase()) !== -1 || (transaction.description||'').toString().trim() === (g.name||''));
+                        }
+                        if (linked) transaction.goalId = linked.id;
+                    } catch (e) { /* ignore */ }
+                }
+
                 currentMonthData[type].push(transaction);
                 try {
                     await storage.saveData(state.appData);
                     showToast('Transação salva com sucesso!', 'bg-green-600');
+                    // If this is a savings transaction linked to a goal, synchronize travelPlan.saved
+                    try {
+                        if (type === 'savings' && transaction.goalId) {
+                            updateTravelPlanSavedFromSavings(transaction.goalId);
+                            await storage.saveData(state.appData);
+                        }
+                    } catch(e) { /* ignore sync errors */ }
                     // Persist session 'last used' payment/category for faster subsequent entries (in-memory only)
                     try {
                         const lastPayment = document.getElementById('payment-method') ? document.getElementById('payment-method').value : null;
@@ -8851,49 +9369,53 @@ const firebaseConfig = {
 
             if (transaction.installmentId) {
                 // Ask the user whether to delete only this installment or this + future installments
-                const deleteOnlyThis = confirm('Esta é uma transação parcelada. Deseja excluir apenas esta parcela? (OK = Sim, Cancel = Não)');
-                if (deleteOnlyThis) {
-                    confirmMessage = 'Confirma exclusão desta parcela?';
-                    action = () => {
-                        const index = currentMonthData[type].findIndex(t => t.id === id);
-                        if (index > -1) currentMonthData[type].splice(index, 1);
-                        return 'Parcela excluída com sucesso!';
-                    };
-                } else {
-                    const deleteFuture = confirm('Deseja excluir esta e todas as parcelas futuras? (OK = Sim, Cancel = Não)');
-                    if (deleteFuture) {
-                        confirmMessage = 'Confirma exclusão desta e das parcelas futuras?';
+                try {
+                    const deleteOnlyThis = await confirmAsync('Esta é uma transação parcelada. Deseja excluir apenas esta parcela? (OK = Sim, Cancel = Não)', 'Excluir parcela');
+                    if (deleteOnlyThis) {
+                        confirmMessage = 'Confirma exclusão desta parcela?';
                         action = () => {
-                            deleteFutureInstallments(transaction.installmentId, transaction.currentInstallment);
-                            return 'Parcelas excluídas com sucesso!';
+                            const index = currentMonthData[type].findIndex(t => t.id === id);
+                            if (index > -1) currentMonthData[type].splice(index, 1);
+                            return 'Parcela excluída com sucesso!';
                         };
                     } else {
-                        // user cancelled
-                        return;
+                        const deleteFuture = await confirmAsync('Deseja excluir esta e todas as parcelas futuras? (OK = Sim, Cancel = Não)', 'Excluir parcelas futuras');
+                        if (deleteFuture) {
+                            confirmMessage = 'Confirma exclusão desta e das parcelas futuras?';
+                            action = () => {
+                                deleteFutureInstallments(transaction.installmentId, transaction.currentInstallment);
+                                return 'Parcelas excluídas com sucesso!';
+                            };
+                        } else {
+                            // user cancelled
+                            return;
+                        }
                     }
-                }
+                } catch(e) { return; }
             } else if (transaction.financingId) {
                 // Financing case: offer to delete only this financing installment or this + future financing installments
-                const delOnly = confirm('Esta é uma parcela de financiamento. Deseja excluir apenas esta parcela? (OK = Sim, Cancel = Não)');
-                if (delOnly) {
-                    confirmMessage = 'Confirma exclusão desta parcela?';
-                    action = () => {
-                        const index = currentMonthData[type].findIndex(t => t.id === id);
-                        if (index > -1) currentMonthData[type].splice(index, 1);
-                        return 'Parcela excluída com sucesso!';
-                    };
-                } else {
-                    const delFuture = confirm('Deseja excluir esta e todas as parcelas futuras do financiamento? (OK = Sim, Cancel = Não)');
-                    if (delFuture) {
-                        confirmMessage = 'Confirma exclusão desta e das parcelas futuras do financiamento?';
+                try {
+                    const delOnly = await confirmAsync('Esta é uma parcela de financiamento. Deseja excluir apenas esta parcela? (OK = Sim, Cancel = Não)', 'Excluir parcela de financiamento');
+                    if (delOnly) {
+                        confirmMessage = 'Confirma exclusão desta parcela?';
                         action = () => {
-                            deleteFutureFinancing(transaction.financingId, transaction.currentFinancing);
-                            return 'Parcelas de financiamento excluídas com sucesso!';
+                            const index = currentMonthData[type].findIndex(t => t.id === id);
+                            if (index > -1) currentMonthData[type].splice(index, 1);
+                            return 'Parcela excluída com sucesso!';
                         };
                     } else {
-                        return;
+                        const delFuture = await confirmAsync('Deseja excluir esta e todas as parcelas futuras do financiamento? (OK = Sim, Cancel = Não)', 'Excluir parcelas de financiamento futuras');
+                        if (delFuture) {
+                            confirmMessage = 'Confirma exclusão desta e das parcelas futuras do financiamento?';
+                            action = () => {
+                                deleteFutureFinancing(transaction.financingId, transaction.currentFinancing);
+                                return 'Parcelas de financiamento excluídas com sucesso!';
+                            };
+                        } else {
+                            return;
+                        }
                     }
-                }
+                } catch(e) { return; }
             } else if (transaction.recurringId) {
                 confirmMessage = 'Esta é uma transação recorrente. Deseja excluir esta e todas as futuras recorrências (a partir deste mês)?';
                 action = () => {
@@ -8902,7 +9424,9 @@ const firebaseConfig = {
                 };
             }
 
-            if (confirm(confirmMessage)) {
+            try {
+                const ok = await confirmAsync(confirmMessage, 'Confirmar exclusão');
+                if (!ok) return;
                 const toastMessage = action();
                 try {
                     await storage.saveData(state.appData);
@@ -8912,7 +9436,7 @@ const firebaseConfig = {
                     showToast('Falha ao salvar exclusão no Firebase.', 'bg-red-600');
                 }
                 render();
-            }
+            } catch(e) { return; }
         }
 
         // Ponto de entrada do formulário
@@ -8981,10 +9505,10 @@ const firebaseConfig = {
                             showToast('Pagamento via VR: categoria ajustada para Alimentação.', 'bg-yellow-600');
                         } else {
                             // Warn user but allow save
-                            if (!confirm('Você selecionou VR como forma de pagamento, mas a categoria não parece ser Alimentação. Deseja prosseguir?')) {
-                                // Cancel submit by returning early
-                                return;
-                            }
+                            try {
+                                const ok = await confirmAsync('Você selecionou VR como forma de pagamento, mas a categoria não parece ser Alimentação. Deseja prosseguir?', 'Confirmar VR');
+                                if (!ok) return;
+                            } catch(e) { return; }
                         }
                     }
                     // Force type to Essenciais when paying with VR
@@ -9087,7 +9611,9 @@ const firebaseConfig = {
                     return;
                 }
             } else if (type === 'savings') {
-                Object.assign(transactionData, { category: document.getElementById('category-saving').value });
+                // Use selected saving category; goal linking removed (not functional)
+                try { transactionData.category = document.getElementById('category-saving').value; } catch(e) { transactionData.category = '' }
+                delete transactionData.goalId;
             }
 
             const isInstallment = document.getElementById('is-installment').checked;
@@ -9265,7 +9791,10 @@ const firebaseConfig = {
                             const original = currentMonthData.incomes.find(t => t.id === id);
                             const oldMetaStr = original && original.salaryMeta ? JSON.stringify(original.salaryMeta) : null;
                             const origRecurringId = original && original.recurringId ? original.recurringId : null;
-                            const applyToFuture = origRecurringId ? confirm('Essa é uma entrada recorrente. Deseja aplicar as alterações às recorrências futuras? (OK = Sim)') : false;
+                            let applyToFuture = false;
+                            if (origRecurringId) {
+                                try { applyToFuture = await confirmAsync('Essa é uma entrada recorrente. Deseja aplicar as alterações às recorrências futuras? (OK = Sim)', 'Aplicar às futuras'); } catch(e) { applyToFuture = false; }
+                            }
 
                             if (origRecurringId && applyToFuture) {
                                 // Update this and future months for this recurringId
@@ -9480,7 +10009,7 @@ const firebaseConfig = {
                     const entry = monthData.vrLedger[idx];
                     let removeFuture = false;
                     if (entry && entry.recurringId) {
-                        removeFuture = confirm('Este VR é recorrente. Deseja excluir também as recorrências futuras? (OK = Sim)');
+                        try { removeFuture = await confirmAsync('Este VR é recorrente. Deseja excluir também as recorrências futuras? (OK = Sim)', 'Excluir recorrências VR'); } catch(e) { removeFuture = false; }
                     }
                     // remove this entry from current month
                     monthData.vrLedger.splice(idx, 1);
@@ -9519,7 +10048,7 @@ const firebaseConfig = {
                     const entry = monthData.vtLedger[idx];
                     let removeFuture = false;
                     if (entry && entry.recurringId) {
-                        removeFuture = confirm('Este VT é recorrente. Deseja excluir também as recorrências futuras? (OK = Sim)');
+                        try { removeFuture = await confirmAsync('Este VT é recorrente. Deseja excluir também as recorrências futuras? (OK = Sim)', 'Excluir recorrências VT'); } catch(e) { removeFuture = false; }
                     }
                     monthData.vtLedger.splice(idx, 1);
                     if (removeFuture && entry && entry.recurringId) {
@@ -9823,6 +10352,83 @@ const firebaseConfig = {
     </script>
     <!-- Toasts -->
     <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50 hidden" role="status" aria-live="polite"></div>
+    <!-- Confirm Modal (generic) -->
+    <dialog id="confirm-dialog" class="p-4 rounded-2xl shadow-2xl card w-full max-w-md">
+        <div class="mb-3">
+            <h3 id="confirm-dialog-title" class="text-lg font-semibold">Confirmar</h3>
+        </div>
+        <div id="confirm-dialog-body" class="text-sm text-gray-700 mb-4">Tem certeza?</div>
+        <div class="flex justify-end gap-2">
+            <button id="confirm-dialog-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
+            <button id="confirm-dialog-ok" class="px-3 py-1 rounded bg-red-600 text-white">Excluir</button>
+        </div>
+    </dialog>
+    <!-- Travel Planner Modal -->
+    <dialog id="tp-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-lg">
+        <h3 class="text-lg font-semibold mb-2">Planejar Viagem</h3>
+        <form id="tp-modal-form" class="space-y-3">
+            <input type="hidden" id="tp-modal-id" />
+            <div>
+                <label class="block text-sm">Destino</label>
+                <input id="tp-modal-destination" class="border p-2 rounded w-full" />
+                <div id="tp-modal-destination-error" class="text-xs text-red-600 mt-1 hidden"></div>
+            </div>
+            <div>
+                <label class="block text-sm">Data alvo</label>
+                <input id="tp-modal-date" type="date" class="border p-2 rounded w-full" />
+            </div>
+            <div>
+                <label class="block text-sm">Custo estimado (R$)</label>
+                <input id="tp-modal-cost" class="border p-2 rounded w-full" />
+                <div id="tp-modal-cost-error" class="text-xs text-red-600 mt-1 hidden"></div>
+            </div>
+            <div>
+                <label class="block text-sm">Já poupado (R$)</label>
+                <input id="tp-modal-saved" class="border p-2 rounded w-full" />
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" id="tp-modal-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
+                <button type="submit" id="tp-modal-save" class="px-3 py-1 rounded bg-indigo-600 text-white">Salvar</button>
+            </div>
+        </form>
+    </dialog>
+    <script>
+    (function(){
+        // Wire confirm dialog buttons if present
+        function initConfirmDialog() {
+            try {
+                const dlg = document.getElementById('confirm-dialog');
+                const ok = document.getElementById('confirm-dialog-ok');
+                const cancel = document.getElementById('confirm-dialog-cancel');
+                if (!dlg || !ok || !cancel) return;
+                ok.addEventListener('click', function(){ try { dlg.returnValue = 'ok'; dlg.close('ok'); } catch(e){} });
+                cancel.addEventListener('click', function(){ try { dlg.returnValue = 'cancel'; dlg.close('cancel'); } catch(e){} });
+            } catch(e) { console.error('initConfirmDialog', e); }
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initConfirmDialog); else initConfirmDialog();
+
+        window.showConfirm = function(message, title) {
+            return new Promise(function(resolve){
+                try {
+                    const dlg = document.getElementById('confirm-dialog');
+                    if (!dlg) { resolve(window.confirm(message)); return; }
+                    const body = document.getElementById('confirm-dialog-body');
+                    const titleEl = document.getElementById('confirm-dialog-title');
+                    body.textContent = message || 'Tem certeza?';
+                    if (title && titleEl) titleEl.textContent = title;
+                    dlg.showModal();
+                    function onClose() {
+                        try { resolve(dlg.returnValue === 'ok'); } catch(e) { resolve(false); }
+                        dlg.removeEventListener('close', onClose);
+                    }
+                    dlg.addEventListener('close', onClose);
+                } catch(e) { console.error('showConfirm', e); resolve(false); }
+            });
+        };
+
+        // audit log feature removed
+    })();
+    </script>
     <!-- Mobile Bottom Navigation -->
     <nav id="mobile-bottom-nav" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-full shadow-lg px-3 py-2 z-50 gap-3 hidden">
         <button data-view="dashboard" class="mobile-nav-btn p-2 rounded-full" title="Visão Geral"><span class="material-symbols-outlined">dashboard</span></button>

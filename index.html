@@ -2673,6 +2673,7 @@
                                 <strong>Preview</strong>
                                 <div>
                                     <button id="download-preview-btn" class="px-2 py-0.5 rounded bg-gray-100 text-sm">Baixar</button>
+                                    <button id="delete-backup-btn" class="px-2 py-0.5 ml-2 rounded bg-red-100 text-red-700 text-sm hover:bg-red-200" title="Excluir backup permanentemente">Excluir</button>
                                     <button id="restore-selected-btn" class="px-2 py-0.5 ml-2 rounded bg-red-600 text-white text-sm">Restaurar</button>
                                 </div>
                             </div>
@@ -5161,28 +5162,95 @@
         }
         toast.textContent = message;
         toast.className = `${color} text-white px-4 py-2 rounded shadow-lg`;
-        // Choose parent: if a dialog is open, append the toast inside it so it's above the backdrop/blur
+        
+        // Detectar se há modais/overlays abertos de qualquer tipo
         const openDialogs = Array.from(document.querySelectorAll('dialog[open]'));
-        const parent = openDialogs.length ? openDialogs[openDialogs.length - 1] : document.body;
+        
+        // Procurar por modais customizados (divs com fixed/absolute e não hidden)
+        const modalSelectors = [
+            '.modal:not(.hidden)',
+            '[id*="modal"]:not(.hidden)',
+            '[id*="-panel"]:not(.hidden)',
+            '[class*="fixed"]:not(.hidden)[class*="inset"]',
+            '.bg-opacity-50:not(.hidden)',
+            '.bg-black:not(.hidden)',
+            '#tp-save-group-modal:not(.hidden)',
+            '#backup-restore-modal[open]',
+            '#import-json-modal[open]',
+            '#mobile-action-sheet:not(.hidden)'
+        ];
+        
+        const potentialModals = Array.from(document.querySelectorAll(modalSelectors.join(', ')));
+        
+        // Filtrar apenas elementos realmente visíveis
+        const visibleModals = potentialModals.filter(el => {
+            const styles = window.getComputedStyle(el);
+            const isVisible = styles.display !== 'none' && 
+                            styles.visibility !== 'hidden' && 
+                            styles.opacity !== '0' &&
+                            (styles.position === 'fixed' || styles.position === 'absolute');
+            return isVisible;
+        });
+        
+        // Calcular z-index mais alto entre todos os modais detectados
+        let maxZIndex = 50;
+        let hasOpenModal = false;
+        
+        const allModals = [...openDialogs, ...visibleModals];
+        
+        if (allModals.length > 0) {
+            hasOpenModal = true;
+            
+            // Verificar z-index de todos os elementos modais e seus ancestrais
+            allModals.forEach(el => {
+                // Verificar z-index do elemento
+                let zIndex = parseInt(window.getComputedStyle(el).zIndex) || 0;
+                if (zIndex > maxZIndex) maxZIndex = zIndex;
+                
+                // Verificar também z-index de classes Tailwind
+                const classes = el.className || '';
+                if (classes.includes('z-50')) maxZIndex = Math.max(maxZIndex, 50);
+                if (classes.includes('z-60')) maxZIndex = Math.max(maxZIndex, 60);
+                if (classes.includes('z-[100]')) maxZIndex = Math.max(maxZIndex, 100);
+                if (classes.match(/z-\[(\d+)\]/)) {
+                    const match = classes.match(/z-\[(\d+)\]/);
+                    if (match && match[1]) {
+                        maxZIndex = Math.max(maxZIndex, parseInt(match[1]));
+                    }
+                }
+            });
+        }
+        
+        // Escolher parent: se há dialog aberto, usar o último dialog; senão usar body
+        const parent = openDialogs.length > 0 ? openDialogs[openDialogs.length - 1] : document.body;
         try {
             if (toast.parentNode !== parent) parent.appendChild(toast);
         } catch (e) { document.body.appendChild(toast); }
 
-        // Position relative to parent: if inside dialog, use absolute positioning; otherwise fixed to viewport
+        // Configurar posicionamento e z-index
         if (parent && parent.tagName && parent.tagName.toLowerCase() === 'dialog') {
+            // Toast dentro de dialog
             toast.style.position = 'absolute';
             toast.style.bottom = '1rem';
             toast.style.left = '50%';
             toast.style.transform = 'translateX(-50%)';
-            // Make sure it's above dialog content
-            toast.style.zIndex = '9999';
-        } else {
+            toast.style.zIndex = '9999'; // Sempre acima do conteúdo do dialog
+        } else if (hasOpenModal) {
+            // Toast no body mas há modais abertos - usar z-index maior que todos os modais
             toast.style.position = 'fixed';
             toast.style.bottom = '1rem';
             toast.style.left = '50%';
             toast.style.transform = 'translateX(-50%)';
-            try { toast.style.zIndex = '130001'; } catch (e) {}
+            toast.style.zIndex = String(maxZIndex + 100); // Adiciona 100 para garantir que fica acima
+        } else {
+            // Toast normal sem modais
+            toast.style.position = 'fixed';
+            toast.style.bottom = '1rem';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.zIndex = '130001';
         }
+        
         toast.style.display = 'block';
         toast.style.opacity = '1';
         toast.style.pointerEvents = 'auto';
@@ -6459,6 +6527,9 @@ const firebaseConfig = {
                 const closeBackupModalBtn = document.getElementById('close-backup-modal');
                 const restoreSelectedBtn = document.getElementById('restore-selected-btn');
                 const downloadPreviewBtn = document.getElementById('download-preview-btn');
+                const deleteBackupBtn = document.getElementById('delete-backup-btn');
+                
+                let currentBackupId = null; // Armazena o ID do backup atualmente visualizado
 
                 function formatTS(d) {
                     try {
@@ -6558,6 +6629,7 @@ const firebaseConfig = {
 
                 function showBackupPreview(val, id) {
                     if (!backupPreviewEl) return;
+                    currentBackupId = id; // Armazenar o ID do backup atual
                     if (!val) { backupPreviewEl.innerHTML = '<div class="text-sm text-gray-500">Sem dados de backup.</div>'; return; }
                     const meta = `<div class="text-sm text-gray-600 mb-2">Nome: <strong>${escapeHtml(val.name||'')}</strong> — Criado: ${new Date(val.createdAt||0).toLocaleString()}</div>`;
                     // render a small summary: years count and totals
@@ -6740,11 +6812,68 @@ const firebaseConfig = {
                     backupModal.classList.add('modal-expanded');
                     try { const list = await listBackups(); renderBackupsList(list); } catch(e) { renderBackupsList([]); }
                 }
+                
+                // Função para excluir backup
+                async function deleteBackup(backupId, backupName) {
+                    if (!backupId) {
+                        showToast('Nenhum backup selecionado para exclusão', 'bg-yellow-600');
+                        return;
+                    }
+                    
+                    try {
+                        // Confirmar exclusão
+                        const confirmed = confirm(`Tem certeza que deseja excluir permanentemente o backup "${backupName || 'sem nome'}"?\n\nEsta ação não pode ser desfeita.`);
+                        if (!confirmed) return;
+                        
+                        showLoading();
+                        
+                        // Excluir do Firebase
+                        await database.ref('/backups/' + backupId).remove();
+                        
+                        hideLoading();
+                        showToast('Backup excluído com sucesso!', 'bg-green-600');
+                        
+                        // Limpar preview
+                        if (backupPreviewEl) {
+                            backupPreviewEl.innerHTML = '<div class="text-sm text-gray-500">Selecione um backup para visualizar.</div>';
+                        }
+                        currentBackupId = null;
+                        
+                        // Recarregar lista de backups
+                        const list = await listBackups();
+                        renderBackupsList(list);
+                        
+                    } catch (err) {
+                        hideLoading();
+                        showToast('Falha ao excluir backup: ' + (err && err.message ? err.message : String(err)), 'bg-red-600');
+                        console.error('deleteBackup error:', err);
+                    }
+                }
 
                 if (createBackupBtn) createBackupBtn.addEventListener('click', async () => { try { await createBackup(); } catch(e){} });
                 if (restoreBackupBtn) restoreBackupBtn.addEventListener('click', () => openBackupModal());
                 if (refreshBackupsBtn) refreshBackupsBtn.addEventListener('click', async () => { try { const list = await listBackups(); renderBackupsList(list); } catch(e){} });
                 if (closeBackupModalBtn) closeBackupModalBtn.addEventListener('click', () => { try { backupModal.close(); } catch(e){ backupModal.removeAttribute('open'); } });
+                
+                // Event listener para o botão de exclusão
+                if (deleteBackupBtn) {
+                    deleteBackupBtn.addEventListener('click', async () => {
+                        if (!currentBackupId) {
+                            showToast('Nenhum backup selecionado', 'bg-yellow-600');
+                            return;
+                        }
+                        
+                        // Buscar nome do backup atual
+                        try {
+                            const snap = await database.ref('/backups/' + currentBackupId).get();
+                            const val = snap.val();
+                            const backupName = val && val.name ? val.name : 'sem nome';
+                            await deleteBackup(currentBackupId, backupName);
+                        } catch(e) {
+                            showToast('Falha ao excluir: ' + (e && e.message ? e.message : String(e)), 'bg-red-600');
+                        }
+                    });
+                }
 
             } catch(e) { console.error('attach backup handlers', e); }
 
@@ -13069,8 +13198,36 @@ const firebaseConfig = {
                     <div class="flex items-center justify-between mb-3">
                         <h4 class="text-sm font-semibold">Checklist de Viagem</h4>
                         <div class="flex gap-2">
+                            <button id="tp-checklist-groups" class="px-2 py-1 rounded bg-teal-600 text-white inline-flex items-center gap-2 text-sm" title="Gerenciar grupos salvos"><span class="material-symbols-outlined">folder_open</span>Grupos</button>
                             <button id="tp-checklist-suggestions" class="px-2 py-1 rounded bg-purple-600 text-white inline-flex items-center gap-2 text-sm"><span class="material-symbols-outlined">lightbulb</span>Sugestões</button>
                             <button id="tp-checklist-new" class="px-2 py-1 rounded bg-orange-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">checklist</span>Novo Item</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Painel de Grupos Salvos -->
+                    <div id="tp-checklist-groups-panel" class="hidden mb-3 p-4 border-2 border-teal-200 rounded-lg bg-teal-50 max-h-96 overflow-y-auto">
+                        <div class="flex items-center justify-between mb-3 sticky top-0 bg-teal-50 pb-2 z-10">
+                            <h5 class="font-bold text-teal-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined">folder_open</span>
+                                Grupos Salvos de Checklist
+                            </h5>
+                            <button id="tp-close-groups" class="text-teal-600 hover:text-teal-800">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Botão para salvar grupo atual -->
+                        <div class="mb-3 p-3 bg-white rounded-lg border border-teal-300">
+                            <button id="tp-save-current-group" class="w-full px-3 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">save</span>
+                                Salvar Checklist Atual como Grupo
+                            </button>
+                            <p class="text-xs text-gray-600 mt-2">Salve todos os itens atuais do checklist para reutilizar em outros planos de viagem</p>
+                        </div>
+                        
+                        <!-- Lista de grupos salvos -->
+                        <div id="tp-saved-groups-container">
+                            <p class="text-sm text-gray-500 text-center py-4">Nenhum grupo salvo ainda</p>
                         </div>
                     </div>
                     
@@ -13140,6 +13297,48 @@ const firebaseConfig = {
                         
                         <div class="mt-3 p-2 bg-purple-100 rounded text-xs text-purple-800">
                             <strong>💡 Dica:</strong> Os itens adicionados via sugestões já vêm com categoria, quantidade e peso estimado pré-definidos. Você pode editá-los depois! <strong>Itens em amarelo</strong> são suas sugestões personalizadas. Use o botão <strong>"Nova Sugestão"</strong> em cada categoria para adicionar itens próprios ao catálogo!
+                        </div>
+                    </div>
+                    
+                    <!-- Modal para Salvar Grupo de Checklist -->
+                    <div id="tp-save-group-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold text-teal-900 flex items-center gap-2">
+                                    <span class="material-symbols-outlined">save</span>
+                                    Salvar Grupo de Checklist
+                                </h3>
+                                <button onclick="closeSaveGroupModal()" class="text-gray-500 hover:text-gray-700">
+                                    <span class="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="text-sm font-semibold text-gray-700 mb-2 block">Nome do Grupo*</label>
+                                <input type="text" id="tp-group-name" class="w-full border rounded p-3 text-sm" placeholder="Ex: Viagem de Praia, Mochilão Europa, etc." />
+                                <p class="text-xs text-gray-500 mt-1">Dê um nome descritivo para encontrar facilmente depois</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="text-sm font-semibold text-gray-700 mb-2 block">Descrição (opcional)</label>
+                                <textarea id="tp-group-description" class="w-full border rounded p-3 text-sm" rows="2" placeholder="Adicione uma descrição ou notas sobre este grupo..."></textarea>
+                            </div>
+                            
+                            <div class="bg-teal-50 border border-teal-200 rounded p-3 mb-4">
+                                <p class="text-xs text-teal-800">
+                                    <strong>📋 Será salvo:</strong> <span id="tp-group-items-count">0 itens</span> do checklist atual
+                                </p>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button onclick="confirmSaveGroup()" class="flex-1 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 font-semibold flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined">save</span>
+                                    Salvar Grupo
+                                </button>
+                                <button onclick="closeSaveGroupModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                                    Cancelar
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -14529,6 +14728,263 @@ const firebaseConfig = {
             });
         }
         
+        // ========== SISTEMA DE GRUPOS SALVOS DE CHECKLIST ==========
+        
+        // Gerenciamento de grupos salvos
+        function getSavedGroups() {
+            if (!window.state?.appData?.settings) return [];
+            return window.state.appData.settings.checklistGroups || [];
+        }
+        
+        function saveSavedGroups(groups) {
+            if (!window.state?.appData?.settings) return;
+            window.state.appData.settings.checklistGroups = groups;
+            if (typeof storage !== 'undefined' && typeof storage.saveData === 'function') {
+                storage.saveData(window.state.appData).catch(e => console.error('saveSavedGroups', e));
+            }
+        }
+        
+        // Abrir modal para salvar grupo atual
+        function openSaveGroupModal() {
+            const planId = q('travel-plan-id')?.value;
+            if (!planId) {
+                showToast('Selecione um plano de viagem primeiro', 'bg-yellow-600');
+                return;
+            }
+            
+            const plan = window.state.appData.plans.find(p => p.id === planId);
+            if (!plan || !plan.checklist || plan.checklist.length === 0) {
+                showToast('Nenhum item no checklist para salvar', 'bg-yellow-600');
+                return;
+            }
+            
+            const modal = q('tp-save-group-modal');
+            if (!modal) return;
+            
+            // Atualizar contador de itens
+            const itemsCount = q('tp-group-items-count');
+            if (itemsCount) {
+                itemsCount.textContent = `${plan.checklist.length} ${plan.checklist.length === 1 ? 'item' : 'itens'}`;
+            }
+            
+            // Limpar campos
+            q('tp-group-name').value = '';
+            q('tp-group-description').value = '';
+            
+            modal.classList.remove('hidden');
+            q('tp-group-name').focus();
+        }
+        
+        function closeSaveGroupModal() {
+            const modal = q('tp-save-group-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+        
+        function confirmSaveGroup() {
+            const name = q('tp-group-name')?.value?.trim();
+            const description = q('tp-group-description')?.value?.trim() || '';
+            
+            if (!name) {
+                showToast('Digite um nome para o grupo', 'bg-yellow-600');
+                return;
+            }
+            
+            const planId = q('travel-plan-id')?.value;
+            const plan = window.state.appData.plans.find(p => p.id === planId);
+            
+            if (!plan || !plan.checklist || plan.checklist.length === 0) {
+                showToast('Nenhum item no checklist', 'bg-yellow-600');
+                return;
+            }
+            
+            // Criar cópia dos itens do checklist (sem IDs para evitar conflitos)
+            const items = plan.checklist.map(item => ({
+                item: item.item,
+                category: item.category,
+                quantity: item.quantity,
+                weight: item.weight,
+                ready: false,
+                packed: false
+            }));
+            
+            const groups = getSavedGroups();
+            const newGroup = {
+                id: Date.now().toString(),
+                name: name,
+                description: description,
+                items: items,
+                createdAt: new Date().toISOString(),
+                itemCount: items.length
+            };
+            
+            groups.push(newGroup);
+            saveSavedGroups(groups);
+            
+            closeSaveGroupModal();
+            renderSavedGroupsPanel();
+            showToast(`Grupo "${name}" salvo com sucesso!`, 'bg-green-600');
+        }
+        
+        // Carregar grupo no checklist atual
+        function loadGroup(groupId) {
+            const planId = q('travel-plan-id')?.value;
+            if (!planId) {
+                showToast('Selecione um plano de viagem primeiro', 'bg-yellow-600');
+                return;
+            }
+            
+            const groups = getSavedGroups();
+            const group = groups.find(g => g.id === groupId);
+            
+            if (!group) {
+                showToast('Grupo não encontrado', 'bg-red-600');
+                return;
+            }
+            
+            const plan = window.state.appData.plans.find(p => p.id === planId);
+            if (!plan) return;
+            
+            // Confirmar se quer sobrescrever ou adicionar
+            const hasItems = plan.checklist && plan.checklist.length > 0;
+            let action = 'add';
+            
+            if (hasItems) {
+                const choice = confirm(
+                    `O checklist atual já possui ${plan.checklist.length} ${plan.checklist.length === 1 ? 'item' : 'itens'}.\n\n` +
+                    `Clique OK para ADICIONAR os ${group.itemCount} itens do grupo "${group.name}".\n` +
+                    `Clique CANCELAR para SUBSTITUIR completamente o checklist atual.`
+                );
+                action = choice ? 'add' : 'replace';
+            }
+            
+            // Criar novos itens com IDs únicos
+            const newItems = group.items.map(item => ({
+                ...item,
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                ready: false,
+                packed: false
+            }));
+            
+            if (action === 'replace') {
+                plan.checklist = newItems;
+            } else {
+                plan.checklist = [...(plan.checklist || []), ...newItems];
+            }
+            
+            if (typeof storage !== 'undefined' && typeof storage.saveData === 'function') {
+                storage.saveData(window.state.appData).catch(e => console.error('loadGroup', e));
+            }
+            
+            loadChecklist();
+            showToast(`Grupo "${group.name}" carregado (${newItems.length} itens)!`, 'bg-green-600');
+        }
+        
+        // Deletar grupo salvo
+        function deleteGroup(groupId) {
+            const groups = getSavedGroups();
+            const group = groups.find(g => g.id === groupId);
+            
+            if (!group) return;
+            
+            if (!confirm(`Tem certeza que deseja excluir o grupo "${group.name}"?\n\nEsta ação não pode ser desfeita.`)) {
+                return;
+            }
+            
+            const updatedGroups = groups.filter(g => g.id !== groupId);
+            saveSavedGroups(updatedGroups);
+            renderSavedGroupsPanel();
+            showToast(`Grupo "${group.name}" excluído`, 'bg-red-600');
+        }
+        
+        // Renderizar painel de grupos salvos
+        function renderSavedGroupsPanel() {
+            const container = q('tp-saved-groups-container');
+            if (!container) return;
+            
+            const groups = getSavedGroups();
+            
+            if (groups.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Nenhum grupo salvo ainda</p>';
+                return;
+            }
+            
+            let html = '';
+            groups.forEach(group => {
+                const date = new Date(group.createdAt).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                
+                html += `
+                    <div class="bg-white rounded-lg border border-teal-200 p-3 mb-2 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex-1">
+                                <h6 class="font-bold text-teal-900 flex items-center gap-2">
+                                    <span class="material-symbols-outlined" style="font-size:18px">folder</span>
+                                    ${escapeHtml(group.name)}
+                                </h6>
+                                ${group.description ? `<p class="text-xs text-gray-600 mt-1">${escapeHtml(group.description)}</p>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 text-xs text-gray-600 mb-3">
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:14px">checklist</span>
+                                ${group.itemCount} ${group.itemCount === 1 ? 'item' : 'itens'}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:14px">calendar_today</span>
+                                ${date}
+                            </span>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button onclick="loadGroup('${group.id}')" class="flex-1 px-3 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 text-sm font-semibold flex items-center justify-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:16px">download</span>
+                                Carregar Grupo
+                            </button>
+                            <button onclick="deleteGroup('${group.id}')" class="px-3 py-2 bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200" title="Excluir grupo">
+                                <span class="material-symbols-outlined" style="font-size:16px">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Event listeners para o painel de grupos
+        const groupsBtn = q('tp-checklist-groups');
+        const groupsPanel = q('tp-checklist-groups-panel');
+        const closeGroupsBtn = q('tp-close-groups');
+        const saveCurrentGroupBtn = q('tp-save-current-group');
+        
+        if (groupsBtn) {
+            groupsBtn.addEventListener('click', () => {
+                if (groupsPanel) {
+                    groupsPanel.classList.toggle('hidden');
+                    if (!groupsPanel.classList.contains('hidden')) {
+                        renderSavedGroupsPanel();
+                    }
+                }
+            });
+        }
+        
+        if (closeGroupsBtn) {
+            closeGroupsBtn.addEventListener('click', () => {
+                if (groupsPanel) groupsPanel.classList.add('hidden');
+            });
+        }
+        
+        if (saveCurrentGroupBtn) {
+            saveCurrentGroupBtn.addEventListener('click', openSaveGroupModal);
+        }
+        
+        // ========== FIM DO SISTEMA DE GRUPOS SALVOS ==========
+
+        
         if (closeSuggestionsBtn) {
             closeSuggestionsBtn.addEventListener('click', () => {
                 if (suggestionsPanel) {
@@ -15378,8 +15834,6 @@ const firebaseConfig = {
             enhanceKeyboardNavigation();
             optimizeForMobile();
             enhanceTouchSupport();
-            
-            console.log('✨ Melhorias UX/UI carregadas com sucesso!');
         } catch (error) {
             console.warn('Erro ao inicializar melhorias UX:', error);
         }

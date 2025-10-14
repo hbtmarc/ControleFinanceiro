@@ -1464,7 +1464,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fluxo Financeiro</title>
 
     <!-- Suppress specific CDN warnings (development convenience) -->
@@ -1897,6 +1897,298 @@
             .responsive-table tr { padding: 0.6rem 0 !important; }
             .responsive-table td { padding: 0.6rem 0.6rem !important; }
         }
+    </style>
+    <style>
+    /* ===== OTIMIZAÇÕES MOBILE - iPhone 15 Pro Max (430x932px) ===== */
+    /* Melhorias abrangentes para experiência mobile excepcional */
+    @media (max-width: 639px) {
+        /* Prevenir zoom indesejado em inputs */
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="email"],
+        select,
+        textarea {
+            font-size: 16px !important; /* Evita zoom automático no iOS */
+        }
+        
+        /* Melhorar área de toque para todos os botões */
+        button,
+        .btn-primary,
+        .tab-button,
+        .kpi-card {
+            min-height: 44px; /* Tamanho mínimo recomendado pela Apple */
+            touch-action: manipulation; /* Melhora responsividade de toque */
+        }
+        
+        /* KPIs otimizados para mobile */
+        .kpi-card {
+            padding: 1rem !important;
+            margin-bottom: 0.75rem;
+        }
+        
+        .kpi-title {
+            font-size: 0.875rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .kpi-value {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .kpi-trend {
+            font-size: 0.75rem !important;
+        }
+        
+        /* Cards e containers com melhor espaçamento */
+        .card {
+            padding: 1rem !important;
+            margin-bottom: 1rem !important;
+            border-radius: 1rem !important;
+        }
+        
+        /* Títulos de seções mais compactos */
+        h2 {
+            font-size: 1.25rem !important;
+            margin-bottom: 0.75rem !important;
+        }
+        
+        h3 {
+            font-size: 1.125rem !important;
+        }
+        
+        /* Melhorar navegação por tabs */
+        #tabs .tab-button {
+            padding: 0.75rem 0.5rem !important;
+            font-size: 0.75rem !important;
+            min-height: 44px;
+        }
+        
+        /* Otimizar header do calendário */
+        #current-month-display {
+            font-size: 0.875rem !important;
+            padding: 0.5rem !important;
+        }
+        
+        .p-1\.5 {
+            padding: 0.5rem !important;
+        }
+        
+        /* Melhorar visualização de metas */
+        .goal-item {
+            padding: 1rem !important;
+            margin-bottom: 0.75rem !important;
+        }
+        
+        .goal-item .font-semibold {
+            font-size: 1rem !important;
+        }
+        
+        .progress-bar {
+            height: 10px !important;
+            margin-top: 0.5rem !important;
+        }
+        
+        /* Otimizar tabelas para mobile */
+        .modern-table {
+            font-size: 0.875rem !important;
+        }
+        
+        .modern-table th,
+        .modern-table td {
+            padding: 0.75rem 0.5rem !important;
+        }
+        
+        /* Melhorar modais em mobile */
+        dialog {
+            max-width: 95vw !important;
+            max-height: 90vh !important;
+            padding: 1.5rem !important;
+            margin: 1rem !important;
+        }
+        
+        .modal-group label {
+            font-size: 0.875rem !important;
+            margin-bottom: 0.375rem !important;
+        }
+        
+        .modal-group input,
+        .modal-group select,
+        .modal-group textarea {
+            padding: 0.75rem !important;
+            min-height: 44px !important;
+        }
+        
+        /* Botões de ação em modais */
+        .modal-action-btn {
+            padding: 0.875rem 1.5rem !important;
+            font-size: 1rem !important;
+            min-height: 48px !important;
+        }
+        
+        /* Melhorar visualização de gráficos */
+        canvas {
+            max-height: 250px !important;
+        }
+        
+        /* Espaçamento do container principal */
+        #app-content {
+            padding: 0 0.75rem !important;
+        }
+        
+        /* Otimizar grid de KPIs */
+        .grid.grid-cols-1 {
+            gap: 0.75rem !important;
+        }
+        
+        /* Melhorar botão de adicionar meta/viagem */
+        .btn-primary {
+            padding: 0.75rem 1rem !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .btn-primary .material-symbols-outlined {
+            font-size: 1.25rem !important;
+        }
+        
+        /* Planejadora de viagens mais compacta */
+        #tp-plans .card {
+            padding: 0.875rem !important;
+        }
+        
+        /* Melhorar seletores com ícones */
+        .select-with-icon select {
+            padding-left: 2.5rem !important;
+        }
+        
+        .select-icon {
+            left: 0.75rem !important;
+        }
+        
+        /* Otimizar barra de navegação inferior */
+        #mobile-bottom-nav {
+            padding: 0.5rem 0.75rem !important;
+            bottom: 1rem !important;
+            gap: 0.5rem !important;
+        }
+        
+        .mobile-nav-btn {
+            width: 52px !important;
+            height: 52px !important;
+        }
+        
+        /* Melhorar FAB de adicionar transação */
+        #mobile-add-transaction-fab {
+            width: 56px !important;
+            height: 56px !important;
+            bottom: 5rem !important;
+            right: 1rem !important;
+        }
+        
+        /* Prevenir scroll horizontal */
+        body {
+            overflow-x: hidden !important;
+        }
+        
+        html {
+            overflow-x: hidden !important;
+        }
+        
+        /* Melhorar touch targets para ícones de ação */
+        .quick-add-goal-btn,
+        .delete-goal-btn,
+        .edit-btn,
+        .delete-btn {
+            min-width: 44px !important;
+            min-height: 44px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        /* Otimizar visualização de investimentos */
+        #investments-view .card {
+            padding: 1rem !important;
+        }
+        
+        /* Melhorar filtros de despesas */
+        #expenses-filter-popover {
+            left: 0.5rem !important;
+            right: 0.5rem !important;
+            max-width: calc(100vw - 1rem) !important;
+        }
+        
+        /* Month picker otimizado */
+        #month-picker {
+            right: 0 !important;
+            left: auto !important;
+            width: 90vw !important;
+            max-width: 280px !important;
+        }
+        
+        /* Melhorar spacing entre elementos */
+        .space-y-4 > * + * {
+            margin-top: 0.75rem !important;
+        }
+        
+        .space-y-6 > * + * {
+            margin-top: 1rem !important;
+        }
+        
+        .space-y-8 > * + * {
+            margin-top: 1.25rem !important;
+        }
+    }
+    
+    /* Otimizações específicas para iPhone 15 Pro Max (430px width) */
+    @media (max-width: 430px) {
+        /* Ajustes finos para tela exata do iPhone 15 Pro Max */
+        .container,
+        main {
+            max-width: 100% !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+        
+        /* KPI values ligeiramente menores */
+        .kpi-value {
+            font-size: 1.375rem !important;
+        }
+        
+        /* Tabs ainda mais compactas */
+        #tabs .tab-button {
+            font-size: 0.6875rem !important;
+            padding: 0.625rem 0.375rem !important;
+        }
+        
+        /* Calendário header compacto */
+        .flex.items-center.gap-1 {
+            gap: 0.25rem !important;
+        }
+    }
+    
+    /* Melhorias para landscape em mobile */
+    @media (max-width: 932px) and (orientation: landscape) {
+        /* Ajustar altura de elementos em landscape */
+        dialog {
+            max-height: 85vh !important;
+        }
+        
+        .kpi-card {
+            padding: 0.75rem !important;
+        }
+        
+        #mobile-bottom-nav {
+            padding: 0.375rem 0.5rem !important;
+        }
+        
+        .mobile-nav-btn {
+            width: 44px !important;
+            height: 44px !important;
+        }
+    }
     </style>
     <style>
     /* Mobile-only UI polish: floating action button, larger touch targets, clearer bottom nav spacing */
@@ -8559,8 +8851,8 @@ const firebaseConfig = {
             const goals = (state.appData.settings.goals || []).slice().sort((a,b) => { const A=(a.name||'').toLowerCase(); const B=(b.name||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
             const allSavings = Object.values(state.appData.data).flatMap(y => Object.values(y)).flatMap(m => m.savings || []);
 
-            // Header
-            container.innerHTML = `<div class="flex justify-between items-center mb-2"><h4 class="font-semibold">Metas</h4></div>`;
+            // Removido o subtítulo "Metas" conforme solicitação
+            container.innerHTML = ``;
 
             if (goals.length === 0) container.innerHTML += '<p class="text-center text-gray-500">Nenhuma meta definida.</p>';
 
@@ -8585,6 +8877,9 @@ const firebaseConfig = {
                             <span class="font-semibold">${goal.name} ${isCompleted ? '🎉' : ''}</span>
                             <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600">${formatCurrency(totalSavedForGoal)} / ${formatCurrency(goal.amount)}</span>
+                                <button data-id="${goal.id}" class="quick-add-goal-btn p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Adicionar valor">
+                                    <span class="material-symbols-outlined text-lg">add_circle</span>
+                                </button>
                                 <button data-id="${goal.id}" class="delete-goal-btn p-1 text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-lg">delete</span></button>
                             </div>
                         </div>
@@ -8594,6 +8889,45 @@ const firebaseConfig = {
                     </div>`;
             });
             container.querySelectorAll('.delete-goal-btn').forEach(btn => btn.addEventListener('click', (e) => deleteGoal(e.currentTarget.dataset.id)));
+            
+            // Adicionar event listener para o botão de adição rápida
+            container.querySelectorAll('.quick-add-goal-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const goalId = e.currentTarget.dataset.id;
+                const goal = (state.appData.settings.goals || []).find(g => g.id === goalId);
+                if (!goal) return;
+                
+                // Mostrar prompt para adicionar valor
+                const amount = prompt(`Adicionar valor à meta "${goal.name}":\n\nDigite o valor (R$):`, '');
+                if (amount === null || amount.trim() === '') return;
+                
+                const parsedAmount = parseFloat(amount.replace(',', '.'));
+                if (isNaN(parsedAmount) || parsedAmount <= 0) {
+                    showToast('Valor inválido. Digite um número positivo.', 'bg-red-600');
+                    return;
+                }
+                
+                // Adicionar uma entrada de reserva (saving) com a categoria da meta
+                const monthData = getCurrentMonthData();
+                if (!monthData.savings) monthData.savings = [];
+                
+                const newSaving = {
+                    id: Date.now().toString(),
+                    description: `Reserva para ${goal.name}`,
+                    amount: parsedAmount,
+                    category: goal.name,
+                    goalId: goal.id,
+                    date: new Date().toISOString().split('T')[0],
+                    isPaid: true
+                };
+                
+                monthData.savings.push(newSaving);
+                saveData();
+                renderGoals();
+                updateKPIs();
+                renderSavingsTable();
+                showToast(`${formatCurrency(parsedAmount)} adicionado à meta "${goal.name}"!`, 'bg-green-600');
+            }));
 
             // audit log feature removed
         }
@@ -11955,8 +12289,9 @@ const firebaseConfig = {
                     }
                 } catch(e){}
 
-                // Swipe to change month (touch gestures)
-                (function(){
+                // Swipe to change month (touch gestures) - DESABILITADO conforme solicitação do usuário
+                // O usuário não quer que ao arrastar o site para direita e esquerda mude o calendário
+                /* (function(){
                     let startX = 0, startY = 0, startTime = 0;
                     const threshold = 60; // px to consider swipe
                     const restraint = 80; // max vertical movement
@@ -11974,7 +12309,7 @@ const firebaseConfig = {
                             }
                         } catch(e) {}
                     }, { passive: true });
-                })();
+                })(); */
 
                 // Improve modal backdrop tap-to-close responsiveness on mobile (single tap closes)
                 try {

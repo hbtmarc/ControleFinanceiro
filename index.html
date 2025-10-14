@@ -304,6 +304,12 @@
         text-align: right;
         padding-right: 8px !important;
     }
+    
+    /* Toast sempre acima de tudo - z-index máximo */
+    #toast {
+        z-index: 2147483647 !important;
+        position: fixed !important;
+    }
         </style>
         <style>
         /* Modal mobile layout fixes: ensure modal content stacks and buttons fit on small screens */
@@ -5163,93 +5169,18 @@
         toast.textContent = message;
         toast.className = `${color} text-white px-4 py-2 rounded shadow-lg`;
         
-        // Detectar se há modais/overlays abertos de qualquer tipo
-        const openDialogs = Array.from(document.querySelectorAll('dialog[open]'));
-        
-        // Procurar por modais customizados (divs com fixed/absolute e não hidden)
-        const modalSelectors = [
-            '.modal:not(.hidden)',
-            '[id*="modal"]:not(.hidden)',
-            '[id*="-panel"]:not(.hidden)',
-            '[class*="fixed"]:not(.hidden)[class*="inset"]',
-            '.bg-opacity-50:not(.hidden)',
-            '.bg-black:not(.hidden)',
-            '#tp-save-group-modal:not(.hidden)',
-            '#backup-restore-modal[open]',
-            '#import-json-modal[open]',
-            '#mobile-action-sheet:not(.hidden)'
-        ];
-        
-        const potentialModals = Array.from(document.querySelectorAll(modalSelectors.join(', ')));
-        
-        // Filtrar apenas elementos realmente visíveis
-        const visibleModals = potentialModals.filter(el => {
-            const styles = window.getComputedStyle(el);
-            const isVisible = styles.display !== 'none' && 
-                            styles.visibility !== 'hidden' && 
-                            styles.opacity !== '0' &&
-                            (styles.position === 'fixed' || styles.position === 'absolute');
-            return isVisible;
-        });
-        
-        // Calcular z-index mais alto entre todos os modais detectados
-        let maxZIndex = 50;
-        let hasOpenModal = false;
-        
-        const allModals = [...openDialogs, ...visibleModals];
-        
-        if (allModals.length > 0) {
-            hasOpenModal = true;
-            
-            // Verificar z-index de todos os elementos modais e seus ancestrais
-            allModals.forEach(el => {
-                // Verificar z-index do elemento
-                let zIndex = parseInt(window.getComputedStyle(el).zIndex) || 0;
-                if (zIndex > maxZIndex) maxZIndex = zIndex;
-                
-                // Verificar também z-index de classes Tailwind
-                const classes = el.className || '';
-                if (classes.includes('z-50')) maxZIndex = Math.max(maxZIndex, 50);
-                if (classes.includes('z-60')) maxZIndex = Math.max(maxZIndex, 60);
-                if (classes.includes('z-[100]')) maxZIndex = Math.max(maxZIndex, 100);
-                if (classes.match(/z-\[(\d+)\]/)) {
-                    const match = classes.match(/z-\[(\d+)\]/);
-                    if (match && match[1]) {
-                        maxZIndex = Math.max(maxZIndex, parseInt(match[1]));
-                    }
-                }
-            });
+        // SEMPRE manter o toast no body
+        if (toast.parentNode !== document.body) {
+            document.body.appendChild(toast);
         }
-        
-        // Escolher parent: se há dialog aberto, usar o último dialog; senão usar body
-        const parent = openDialogs.length > 0 ? openDialogs[openDialogs.length - 1] : document.body;
-        try {
-            if (toast.parentNode !== parent) parent.appendChild(toast);
-        } catch (e) { document.body.appendChild(toast); }
 
-        // Configurar posicionamento e z-index
-        if (parent && parent.tagName && parent.tagName.toLowerCase() === 'dialog') {
-            // Toast dentro de dialog
-            toast.style.position = 'absolute';
-            toast.style.bottom = '1rem';
-            toast.style.left = '50%';
-            toast.style.transform = 'translateX(-50%)';
-            toast.style.zIndex = '9999'; // Sempre acima do conteúdo do dialog
-        } else if (hasOpenModal) {
-            // Toast no body mas há modais abertos - usar z-index maior que todos os modais
-            toast.style.position = 'fixed';
-            toast.style.bottom = '1rem';
-            toast.style.left = '50%';
-            toast.style.transform = 'translateX(-50%)';
-            toast.style.zIndex = String(maxZIndex + 100); // Adiciona 100 para garantir que fica acima
-        } else {
-            // Toast normal sem modais
-            toast.style.position = 'fixed';
-            toast.style.bottom = '1rem';
-            toast.style.left = '50%';
-            toast.style.transform = 'translateX(-50%)';
-            toast.style.zIndex = '130001';
-        }
+        // Configurar posicionamento com z-index MÁXIMO para ficar acima de TUDO
+        // incluindo dialogs e seus backdrops
+        toast.style.position = 'fixed';
+        toast.style.bottom = '1rem';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.zIndex = '2147483647'; // Máximo z-index possível (32-bit integer max)
         
         toast.style.display = 'block';
         toast.style.opacity = '1';
@@ -12581,7 +12512,7 @@ const firebaseConfig = {
     });
     </script>
     <!-- Toasts -->
-    <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50 hidden" role="status" aria-live="polite"></div>
+    <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded shadow-lg hidden" style="z-index: 2147483647 !important;" role="status" aria-live="polite"></div>
     <!-- Confirm Modal (generic) -->
     <dialog id="confirm-dialog" class="p-4 rounded-2xl shadow-2xl card w-full max-w-md">
         <div class="mb-3">
@@ -12947,7 +12878,7 @@ const firebaseConfig = {
                 <div class="travel-tab-content active" id="tab-transportes">
                 <div class="p-3 rounded bg-white border mb-3">
                     <div class="flex items-center justify-between">
-                        <h4 class="text-sm font-semibold">Transportes (CRUD)</h4>
+                        <h4 class="text-sm font-semibold">Transportes</h4>
                         <button id="tp-transport-new" class="px-2 py-1 rounded bg-indigo-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">directions_car</span>Novo Transporte</button>
                     </div>
                     <div id="tp-transport-form" class="mt-3 hidden p-3 border rounded bg-gray-50">
@@ -13054,8 +12985,16 @@ const firebaseConfig = {
                                 <input type="date" id="tp-accommodation-checkin" class="w-full border rounded p-2 mt-1" />
                             </div>
                             <div>
+                                <label class="text-xs text-gray-500">Hora Check-in</label>
+                                <input type="time" id="tp-accommodation-checkin-time" class="w-full border rounded p-2 mt-1" placeholder="14:00" />
+                            </div>
+                            <div>
                                 <label class="text-xs text-gray-500">Check-out</label>
                                 <input type="date" id="tp-accommodation-checkout" class="w-full border rounded p-2 mt-1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Hora Check-out</label>
+                                <input type="time" id="tp-accommodation-checkout-time" class="w-full border rounded p-2 mt-1" placeholder="12:00" />
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500">Número de Diárias</label>
@@ -13872,10 +13811,10 @@ const firebaseConfig = {
 
         // ===== HOSPEDAGEM CRUD =====
         const accommodationNewBtn = q('tp-accommodation-new'); const accommodationForm = q('tp-accommodation-form');
-        const aId = q('tp-accommodation-id'); const aName = q('tp-accommodation-name'); const aType = q('tp-accommodation-type'); const aAddress = q('tp-accommodation-address'); const aCheckin = q('tp-accommodation-checkin'); const aCheckout = q('tp-accommodation-checkout'); const aNights = q('tp-accommodation-nights'); const aPrice = q('tp-accommodation-price'); const aTotal = q('tp-accommodation-total'); const aPaid = q('tp-accommodation-paid');
+        const aId = q('tp-accommodation-id'); const aName = q('tp-accommodation-name'); const aType = q('tp-accommodation-type'); const aAddress = q('tp-accommodation-address'); const aCheckin = q('tp-accommodation-checkin'); const aCheckinTime = q('tp-accommodation-checkin-time'); const aCheckout = q('tp-accommodation-checkout'); const aCheckoutTime = q('tp-accommodation-checkout-time'); const aNights = q('tp-accommodation-nights'); const aPrice = q('tp-accommodation-price'); const aTotal = q('tp-accommodation-total'); const aPaid = q('tp-accommodation-paid');
         const aSave = q('tp-accommodation-save'); const aCancel = q('tp-accommodation-cancel');
 
-        function showAccommodationForm(edit){ if (!accommodationForm) return; accommodationForm.classList.remove('hidden'); if (!edit){ if(aId) aId.value=''; if(aName) aName.value=''; if(aType) aType.value='hotel'; if(aAddress) aAddress.value=''; if(aCheckin) aCheckin.value=''; if(aCheckout) aCheckout.value=''; if(aNights) aNights.value=''; if(aPrice) aPrice.value=''; if(aTotal) aTotal.value='R$ 0,00'; if (aPaid) aPaid.checked = false; } else { if(aId) aId.value=edit.id||''; if(aName) aName.value=edit.name||''; if(aType) aType.value=edit.type||'hotel'; if(aAddress) aAddress.value=edit.address||''; if(aCheckin) aCheckin.value=edit.checkin||''; if(aCheckout) aCheckout.value=edit.checkout||''; if(aNights) aNights.value=edit.nights||''; if(aPrice) aPrice.value=edit.price||''; computeAccommodationTotal(); if (aPaid) aPaid.checked = !!edit.paid; } }
+        function showAccommodationForm(edit){ if (!accommodationForm) return; accommodationForm.classList.remove('hidden'); if (!edit){ if(aId) aId.value=''; if(aName) aName.value=''; if(aType) aType.value='hotel'; if(aAddress) aAddress.value=''; if(aCheckin) aCheckin.value=''; if(aCheckinTime) aCheckinTime.value=''; if(aCheckout) aCheckout.value=''; if(aCheckoutTime) aCheckoutTime.value=''; if(aNights) aNights.value=''; if(aPrice) aPrice.value=''; if(aTotal) aTotal.value='R$ 0,00'; if (aPaid) aPaid.checked = false; } else { if(aId) aId.value=edit.id||''; if(aName) aName.value=edit.name||''; if(aType) aType.value=edit.type||'hotel'; if(aAddress) aAddress.value=edit.address||''; if(aCheckin) aCheckin.value=edit.checkin||''; if(aCheckinTime) aCheckinTime.value=edit.checkinTime||''; if(aCheckout) aCheckout.value=edit.checkout||''; if(aCheckoutTime) aCheckoutTime.value=edit.checkoutTime||''; if(aNights) aNights.value=edit.nights||''; if(aPrice) aPrice.value=edit.price||''; computeAccommodationTotal(); if (aPaid) aPaid.checked = !!edit.paid; } }
         if (accommodationNewBtn) accommodationNewBtn.addEventListener('click', ()=>{ showAccommodationForm(null); });
         if (aCancel) aCancel.addEventListener('click', (e)=>{ e.preventDefault(); accommodationForm.classList.add('hidden'); });
 
@@ -13890,16 +13829,87 @@ const firebaseConfig = {
         async function saveAccommodation(){ try {
             const pid = q('tp-id')?.value; if (!pid) { showToast('Salve o plano antes de adicionar hospedagem', 'bg-yellow-600'); return; }
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
-            const obj = { id: aId?.value || ('acc-'+Math.random().toString(36).slice(2,9)), name: aName?.value || '', type: aType?.value || 'hotel', address: aAddress?.value || '', checkin: aCheckin?.value || '', checkout: aCheckout?.value || '', nights: parseInt(aNights?.value)||0, price: parseBRNumber(aPrice?.value || '0'), total: computeAccommodationTotal(), paid: (aPaid && !!aPaid.checked) };
+            const obj = { id: aId?.value || ('acc-'+Math.random().toString(36).slice(2,9)), name: aName?.value || '', type: aType?.value || 'hotel', address: aAddress?.value || '', checkin: aCheckin?.value || '', checkinTime: aCheckinTime?.value || '', checkout: aCheckout?.value || '', checkoutTime: aCheckoutTime?.value || '', nights: parseInt(aNights?.value)||0, price: parseBRNumber(aPrice?.value || '0'), total: computeAccommodationTotal(), paid: (aPaid && !!aPaid.checked) };
             plan.accommodations = plan.accommodations || [];
             const idx = plan.accommodations.findIndex(a=>a.id===obj.id);
             if (idx === -1) plan.accommodations.push(obj); else plan.accommodations[idx] = obj;
+            
+            // Sincronizar com roteiro
+            syncAccommodationToItinerary(plan, obj);
+            
             await saveTravelPlans(plans);
             showToast('Hospedagem salva', 'bg-green-600');
             if(accommodationForm) accommodationForm.classList.add('hidden');
             renderPlanDetails(plan.id);
         } catch(e){ console.error('saveAccommodation', e); showToast('Erro ao salvar hospedagem', 'bg-red-600'); } }
         if (aSave) aSave.addEventListener('click', (e)=>{ e.preventDefault(); saveAccommodation(); });
+        
+        // Função para sincronizar hospedagem com o roteiro
+        function syncAccommodationToItinerary(plan, accommodation) {
+            try {
+                if (!plan || !accommodation) return;
+                
+                plan.itinerary = plan.itinerary || [];
+                
+                // Criar/atualizar entrada de check-in no roteiro
+                if (accommodation.checkin) {
+                    const checkinId = `acc-checkin-${accommodation.id}`;
+                    const checkinTime = accommodation.checkinTime || '14:00'; // Hora padrão de check-in
+                    const checkinEntry = {
+                        id: checkinId,
+                        date: accommodation.checkin,
+                        time: checkinTime,
+                        activity: `Check-in: ${accommodation.name}`,
+                        location: accommodation.address || accommodation.name,
+                        notes: `Tipo: ${accommodation.type}. Hospedagem sincronizada automaticamente.`,
+                        type: 'accommodation-checkin',
+                        linkedId: accommodation.id,
+                        autoSync: true
+                    };
+                    
+                    const existingCheckinIdx = plan.itinerary.findIndex(i => i.id === checkinId);
+                    if (existingCheckinIdx === -1) {
+                        plan.itinerary.push(checkinEntry);
+                    } else {
+                        plan.itinerary[existingCheckinIdx] = checkinEntry;
+                    }
+                }
+                
+                // Criar/atualizar entrada de check-out no roteiro
+                if (accommodation.checkout) {
+                    const checkoutId = `acc-checkout-${accommodation.id}`;
+                    const checkoutTime = accommodation.checkoutTime || '12:00'; // Hora padrão de check-out
+                    const checkoutEntry = {
+                        id: checkoutId,
+                        date: accommodation.checkout,
+                        time: checkoutTime,
+                        activity: `Check-out: ${accommodation.name}`,
+                        location: accommodation.address || accommodation.name,
+                        notes: `Tipo: ${accommodation.type}. Hospedagem sincronizada automaticamente.`,
+                        type: 'accommodation-checkout',
+                        linkedId: accommodation.id,
+                        autoSync: true
+                    };
+                    
+                    const existingCheckoutIdx = plan.itinerary.findIndex(i => i.id === checkoutId);
+                    if (existingCheckoutIdx === -1) {
+                        plan.itinerary.push(checkoutEntry);
+                    } else {
+                        plan.itinerary[existingCheckoutIdx] = checkoutEntry;
+                    }
+                }
+                
+                // Ordenar roteiro por data e hora
+                plan.itinerary.sort((a, b) => {
+                    const dateA = new Date(a.date + ' ' + (a.time || '00:00'));
+                    const dateB = new Date(b.date + ' ' + (b.time || '00:00'));
+                    return dateA - dateB;
+                });
+                
+            } catch(e) {
+                console.error('syncAccommodationToItinerary', e);
+            }
+        }
 
         // ===== PASSEIOS CRUD =====
         const activityNewBtn = q('tp-activity-new'); const activityForm = q('tp-activity-form');
@@ -15111,7 +15121,10 @@ const firebaseConfig = {
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
                 const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
-                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${a.type} • ${a.nights} diárias • ${formatBR(a.total||0)}</div>`;
+                const checkinInfo = a.checkin ? `Check-in: ${new Date(a.checkin).toLocaleDateString('pt-BR')}${a.checkinTime ? ' às ' + a.checkinTime : ''}` : '';
+                const checkoutInfo = a.checkout ? `Check-out: ${new Date(a.checkout).toLocaleDateString('pt-BR')}${a.checkoutTime ? ' às ' + a.checkoutTime : ''}` : '';
+                const datesInfo = checkinInfo && checkoutInfo ? `${checkinInfo} • ${checkoutInfo}` : (checkinInfo || checkoutInfo);
+                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${a.type} • ${a.nights} diárias • ${formatBR(a.total||0)}</div>${datesInfo ? `<div class="text-xs text-blue-600 mt-1">📅 ${datesInfo}</div>` : ''}`;
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(a.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(a.paid?'paid':'payments')+'</span>'; toggle.title=(a.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ a.paid = !a.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showAccommodationForm(a); });
@@ -15141,21 +15154,21 @@ const firebaseConfig = {
             // Gerar itens automáticos do roteiro baseado em hospedagens, passeios e transportes
             const autoItems = [];
             
-            // Adicionar hospedagens
+            // Adicionar hospedagens (usar horários personalizados ou padrão) - ESTÉTICA VERMELHA
             (plan.accommodations||[]).forEach(acc=>{
-                if(acc.checkin) autoItems.push({ date: acc.checkin, time: '14:00', type: 'accommodation', subtype: 'checkin', icon: 'hotel', color: 'pink', title: `Check-in: ${acc.name}`, location: acc.address, auto: true });
-                if(acc.checkout) autoItems.push({ date: acc.checkout, time: '12:00', type: 'accommodation', subtype: 'checkout', icon: 'logout', color: 'pink', title: `Check-out: ${acc.name}`, location: acc.address, auto: true });
+                if(acc.checkin) autoItems.push({ date: acc.checkin, time: acc.checkinTime || '14:00', type: 'accommodation', subtype: 'checkin', icon: 'login', color: 'red', title: `Check-in: ${acc.name}`, location: acc.address, auto: true, linkedId: acc.id });
+                if(acc.checkout) autoItems.push({ date: acc.checkout, time: acc.checkoutTime || '12:00', type: 'accommodation', subtype: 'checkout', icon: 'logout', color: 'red', title: `Check-out: ${acc.name}`, location: acc.address, auto: true, linkedId: acc.id });
             });
             
             // Adicionar passeios
             (plan.activities||[]).forEach(act=>{
-                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: 'tour', color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}`, auto: true });
+                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: 'tour', color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}`, auto: true, linkedId: act.id });
             });
             
             // Adicionar transportes com datas (voos, aluguéis)
             (plan.transports||[]).forEach(tr=>{
-                if(tr.departureDate) autoItems.push({ date: tr.departureDate, time: tr.departureTime||'00:00', type: 'transport', icon: 'flight_takeoff', color: 'blue', title: `${tr.description||tr.type}`, location: 'Partida', auto: true });
-                if(tr.returnDate) autoItems.push({ date: tr.returnDate, time: tr.returnTime||'00:00', type: 'transport', icon: 'flight_land', color: 'blue', title: `${tr.description||tr.type}`, location: 'Retorno', auto: true });
+                if(tr.departureDate) autoItems.push({ date: tr.departureDate, time: tr.departureTime||'00:00', type: 'transport', subtype: 'departure', icon: 'flight_takeoff', color: 'blue', title: `${tr.description||tr.type}`, location: 'Partida', auto: true, linkedId: tr.id });
+                if(tr.returnDate) autoItems.push({ date: tr.returnDate, time: tr.returnTime||'00:00', type: 'transport', subtype: 'return', icon: 'flight_land', color: 'blue', title: `${tr.description||tr.type}`, location: 'Retorno', auto: true, linkedId: tr.id });
             });
             
             // Adicionar itens manuais
@@ -15180,14 +15193,37 @@ const firebaseConfig = {
                     info.innerHTML = `<div class="font-medium text-gray-900">${timeTag}${escapeHtml(i.title)}${autoTag}</div><div class="text-xs text-gray-600 mt-1">${escapeHtml(i.location||'')}</div>${i.notes?'<div class="text-xs text-gray-500 mt-1 italic">'+escapeHtml(i.notes)+'</div>':''}`;
                     left.appendChild(iconEl); left.appendChild(info);
                     
-                    // Botões apenas para itens manuais
+                    // Botões para itens manuais
                     if(!i.auto && i.id){
                         const right = document.createElement('div'); right.className='flex gap-1';
                         const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 hover:bg-yellow-100'; edit.innerHTML='<span class="material-symbols-outlined text-sm">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showItineraryForm(plan.itinerary.find(x=>x.id===i.id)); });
                         const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100'; del.innerHTML='<span class="material-symbols-outlined text-sm">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir item do roteiro?')) return; plan.itinerary = (plan.itinerary||[]).filter(x=>x.id!==i.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Item excluído','bg-green-600'); });
                         right.appendChild(edit); right.appendChild(del);
                         content.appendChild(left); content.appendChild(right);
-                    } else { content.appendChild(left); }
+                    } 
+                    // Botão de edição para itens automáticos com linkedId
+                    else if(i.auto && i.linkedId){
+                        const right = document.createElement('div'); right.className='flex gap-1';
+                        const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 hover:bg-yellow-100'; edit.innerHTML='<span class="material-symbols-outlined text-sm">edit</span>'; 
+                        edit.addEventListener('click', ()=>{ 
+                            q('tp-id').value = plan.id;
+                            // Identifica o tipo e abre o formulário apropriado
+                            if(i.type === 'accommodation' || i.subtype === 'checkin' || i.subtype === 'checkout'){
+                                const acc = (plan.accommodations||[]).find(x=>x.id===i.linkedId);
+                                if(acc) showAccommodationForm(acc);
+                            } else if(i.type === 'activity'){
+                                const act = (plan.activities||[]).find(x=>x.id===i.linkedId);
+                                if(act) showActivityForm(act);
+                            } else if(i.type === 'transport'){
+                                const tr = (plan.transports||[]).find(x=>x.id===i.linkedId);
+                                if(tr) showTransportForm(tr);
+                            }
+                        });
+                        right.appendChild(edit);
+                        content.appendChild(left); content.appendChild(right);
+                    } else { 
+                        content.appendChild(left); 
+                    }
                     
                     row.appendChild(content); itinList.appendChild(row);
                 });

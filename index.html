@@ -389,6 +389,74 @@
 
         /* ===== MELHORIAS UX/UI PARA CUSTOS TOTAIS - PLANEJADORA DE VIAGENS ===== */
         
+        /* Sistema de Abas da Planejadora */
+        .travel-planner-tabs-container {
+            background: #fff;
+            border-radius: 12px 12px 0 0;
+            border: 1px solid #e2e8f0;
+            border-bottom: none;
+            overflow: hidden;
+        }
+
+        .travel-planner-tabs {
+            display: flex;
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+            border-bottom: 2px solid #e2e8f0;
+            overflow-x: hidden; /* Removido auto para nunca mostrar scroll */
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            flex-wrap: nowrap; /* Garante que as abas fiquem em uma linha */
+        }
+
+        .travel-tab {
+            flex: 1 1 0%; /* Distribui igualmente o espaço */
+            min-width: 0; /* Permite que as abas encolham */
+            padding: 10px 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .travel-tab:hover {
+            background: rgba(59, 130, 246, 0.05);
+            color: #3b82f6;
+        }
+
+        .travel-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .travel-tab .material-symbols-outlined {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .travel-tab span:not(.material-symbols-outlined) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .travel-tab-content {
+            display: none;
+        }
+
+        .travel-tab-content.active {
+            display: block;
+        }
+
         /* Container principal da seção de custos totais */
         .travel-planner-costs {
             background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
@@ -654,6 +722,23 @@
             .travel-progress-container {
                 padding: 12px;
             }
+            
+            /* Abas responsivas em mobile */
+            .travel-tab {
+                min-width: 70px;
+                padding: 8px 4px;
+                font-size: 10px;
+                flex-direction: column;
+                gap: 2px;
+            }
+            
+            .travel-tab span:not(.material-symbols-outlined) {
+                font-size: 9px;
+            }
+            
+            .travel-tab .material-symbols-outlined {
+                font-size: 20px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -667,6 +752,29 @@
             
             .travel-kpi-item {
                 padding: 10px 6px;
+            }
+            
+            /* Modal do planejador de viagens em mobile */
+            #travel-planner-modal {
+                width: 95vw !important;
+                max-width: 95vw !important;
+                margin: 10px auto;
+                padding: 0;
+            }
+            
+            #travel-planner-modal > div:first-child {
+                padding: 12px;
+            }
+            
+            .travel-planner-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+                -ms-overflow-style: none;  /* IE and Edge */
+            }
+            
+            .travel-planner-tabs::-webkit-scrollbar {
+                display: none; /* Chrome, Safari, Opera */
             }
         }
 
@@ -12635,7 +12743,7 @@ const firebaseConfig = {
     </script>
     <!-- Swipe-to-reveal behavior removed: rows are standard table rows with inline action buttons -->
     <!-- Travel Planner Modal + logic -->
-    <dialog id="travel-planner-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-4xl" aria-modal="true" role="dialog">
+    <dialog id="travel-planner-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-7xl" aria-modal="true" role="dialog" style="max-height: 95vh; overflow-y: auto;">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-lg font-semibold flex items-center gap-3"><span class="material-symbols-outlined">flight</span> Planejadora de Viagens</h3>
             <div>
@@ -12680,6 +12788,34 @@ const firebaseConfig = {
                 </div>
             </div>
             <div class="lg:col-span-2">
+                <!-- Sistema de Abas para Planejador -->
+                <div class="travel-planner-tabs-container">
+                    <div class="travel-planner-tabs">
+                        <button class="travel-tab active" data-tab="transportes">
+                            <span class="material-symbols-outlined">directions_car</span>
+                            <span>Transportes</span>
+                        </button>
+                        <button class="travel-tab" data-tab="hospedagem">
+                            <span class="material-symbols-outlined">hotel</span>
+                            <span>Hospedagem</span>
+                        </button>
+                        <button class="travel-tab" data-tab="passeios">
+                            <span class="material-symbols-outlined">tour</span>
+                            <span>Passeios</span>
+                        </button>
+                        <button class="travel-tab" data-tab="roteiro">
+                            <span class="material-symbols-outlined">event_note</span>
+                            <span>Roteiro</span>
+                        </button>
+                        <button class="travel-tab" data-tab="checklist">
+                            <span class="material-symbols-outlined">checklist</span>
+                            <span>Checklist</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Aba de Transportes -->
+                <div class="travel-tab-content active" id="tab-transportes">
                 <div class="p-3 rounded bg-white border mb-3">
                     <div class="flex items-center justify-between">
                         <h4 class="text-sm font-semibold">Transportes (CRUD)</h4>
@@ -12693,9 +12829,11 @@ const firebaseConfig = {
                                 <div class="relative select-with-icon">
                                     <span class="material-symbols-outlined select-icon text-gray-400">directions_car</span>
                                     <select id="tp-transport-type" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10">
-                                        <option value="car" data-icon="directions_car">Carro alugado / próprio</option>
-                                        <option value="bus" data-icon="directions_bus">Ônibus</option>
-                                        <option value="transfer" data-icon="transfer_within_a_station">Translado / Passeio</option>
+                                        <option value="voo" data-icon="flight">Voos</option>
+                                        <option value="carro" data-icon="directions_car">Carro/Moto</option>
+                                        <option value="aluguel" data-icon="car_rental">Aluguel de Carro</option>
+                                        <option value="uber" data-icon="local_taxi">Uber/Taxi</option>
+                                        <option value="publico" data-icon="directions_bus">Transportes Públicos</option>
                                     </select>
                                 </div>
                             </div>
@@ -12753,6 +12891,230 @@ const firebaseConfig = {
 
                     <div id="tp-transport-list" class="mt-4 space-y-2"></div>
                 </div>
+                </div>
+                <!-- FIM Aba de Transportes -->
+
+                <!-- Aba de Hospedagem -->
+                <div class="travel-tab-content" id="tab-hospedagem">
+                <div class="p-3 rounded bg-white border mb-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-semibold">Hospedagem</h4>
+                        <button id="tp-accommodation-new" class="px-2 py-1 rounded bg-pink-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">hotel</span>Nova Hospedagem</button>
+                    </div>
+                    <div id="tp-accommodation-form" class="mt-3 hidden p-3 border rounded bg-gray-50">
+                        <input type="hidden" id="tp-accommodation-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-xs text-gray-500">Nome do Estabelecimento</label>
+                                <input id="tp-accommodation-name" class="w-full border rounded p-2 mt-1" placeholder="Ex: Hotel Vista Mar" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Tipo</label>
+                                <select id="tp-accommodation-type" class="w-full border rounded p-2 mt-1">
+                                    <option value="hotel">Hotel/Hostel</option>
+                                    <option value="airbnb">Airbnb</option>
+                                    <option value="reserva">Reserva</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-xs text-gray-500">Endereço / Localização</label>
+                                <input id="tp-accommodation-address" class="w-full border rounded p-2 mt-1" placeholder="Ex: Av. Beira Mar, 123" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Check-in</label>
+                                <input type="date" id="tp-accommodation-checkin" class="w-full border rounded p-2 mt-1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Check-out</label>
+                                <input type="date" id="tp-accommodation-checkout" class="w-full border rounded p-2 mt-1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Número de Diárias</label>
+                                <input type="number" id="tp-accommodation-nights" class="w-full border rounded p-2 mt-1" placeholder="Ex: 5" min="1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Preço por Diária (R$)</label>
+                                <input id="tp-accommodation-pricepernight" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Total da Hospedagem (R$)</label>
+                                <input id="tp-accommodation-total" class="w-full border rounded p-2 mt-1 bg-gray-100" placeholder="R$ 0,00" readonly />
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="inline-flex items-center gap-2 mt-2">
+                                    <input type="checkbox" id="tp-accommodation-paid" />
+                                    <span class="text-sm text-gray-600">Pago</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-3">
+                            <button id="tp-accommodation-save" class="px-3 py-1 rounded bg-green-600 text-white">Salvar Hospedagem</button>
+                            <button id="tp-accommodation-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
+                        </div>
+                        <div id="tp-accommodation-calculations" class="mt-3 text-sm text-gray-700"></div>
+                    </div>
+                    <div id="tp-accommodation-list" class="mt-4 space-y-2"></div>
+                </div>
+                </div>
+                <!-- FIM Aba de Hospedagem -->
+
+                <!-- Aba de Passeios -->
+                <div class="travel-tab-content" id="tab-passeios">
+                <div class="p-3 rounded bg-white border mb-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-semibold">Passeios e Atividades</h4>
+                        <button id="tp-activity-new" class="px-2 py-1 rounded bg-teal-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">tour</span>Novo Passeio</button>
+                    </div>
+                    <div id="tp-activity-form" class="mt-3 hidden p-3 border rounded bg-gray-50">
+                        <input type="hidden" id="tp-activity-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-xs text-gray-500">Nome do Passeio</label>
+                                <input id="tp-activity-name" class="w-full border rounded p-2 mt-1" placeholder="Ex: City Tour" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Tipo</label>
+                                <select id="tp-activity-type" class="w-full border rounded p-2 mt-1">
+                                    <option value="passeio">Passeios/Excursões</option>
+                                    <option value="ingresso">Ingressos</option>
+                                    <option value="evento">Eventos</option>
+                                    <option value="compras">Compras</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Data</label>
+                                <input type="date" id="tp-activity-date" class="w-full border rounded p-2 mt-1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Horário</label>
+                                <input type="time" id="tp-activity-time" class="w-full border rounded p-2 mt-1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Duração (horas)</label>
+                                <input type="number" id="tp-activity-duration" class="w-full border rounded p-2 mt-1" placeholder="Ex: 3" step="0.5" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Preço Total (R$)</label>
+                                <input id="tp-activity-price" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-xs text-gray-500">Observações</label>
+                                <textarea id="tp-activity-notes" class="w-full border rounded p-2 mt-1" rows="2" placeholder="Notas adicionais..."></textarea>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="inline-flex items-center gap-2 mt-2">
+                                    <input type="checkbox" id="tp-activity-paid" />
+                                    <span class="text-sm text-gray-600">Pago</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-3">
+                            <button id="tp-activity-save" class="px-3 py-1 rounded bg-green-600 text-white">Salvar Passeio</button>
+                            <button id="tp-activity-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
+                        </div>
+                    </div>
+                    <div id="tp-activity-list" class="mt-4 space-y-2"></div>
+                </div>
+                </div>
+                <!-- FIM Aba de Passeios -->
+
+                <!-- Aba de Roteiro -->
+                <div class="travel-tab-content" id="tab-roteiro">
+                <div class="p-3 rounded bg-white border mb-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-semibold">Roteiro Dia a Dia</h4>
+                        <button id="tp-itinerary-new" class="px-2 py-1 rounded bg-purple-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">event_note</span>Nova Atividade</button>
+                    </div>
+                    <div id="tp-itinerary-form" class="mt-3 hidden p-3 border rounded bg-gray-50">
+                        <input type="hidden" id="tp-itinerary-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-xs text-gray-500">Dia da Viagem</label>
+                                <input type="number" id="tp-itinerary-day" class="w-full border rounded p-2 mt-1" placeholder="Ex: 1" min="1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Data</label>
+                                <input type="date" id="tp-itinerary-date" class="w-full border rounded p-2 mt-1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Horário</label>
+                                <input type="time" id="tp-itinerary-time" class="w-full border rounded p-2 mt-1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Local / Ponto</label>
+                                <input id="tp-itinerary-location" class="w-full border rounded p-2 mt-1" placeholder="Ex: Centro Histórico" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-xs text-gray-500">Atividade / Descrição</label>
+                                <input id="tp-itinerary-activity" class="w-full border rounded p-2 mt-1" placeholder="Ex: Visita ao Museu" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-xs text-gray-500">Notas / Observações</label>
+                                <textarea id="tp-itinerary-notes" class="w-full border rounded p-2 mt-1" rows="2" placeholder="Informações adicionais..."></textarea>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-3">
+                            <button id="tp-itinerary-save" class="px-3 py-1 rounded bg-green-600 text-white">Salvar no Roteiro</button>
+                            <button id="tp-itinerary-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
+                        </div>
+                    </div>
+                    <div id="tp-itinerary-list" class="mt-4 space-y-2"></div>
+                </div>
+                </div>
+                <!-- FIM Aba de Roteiro -->
+
+                <!-- Aba de Checklist -->
+                <div class="travel-tab-content" id="tab-checklist">
+                <div class="p-3 rounded bg-white border mb-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-semibold">Checklist de Viagem</h4>
+                        <button id="tp-checklist-new" class="px-2 py-1 rounded bg-orange-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">checklist</span>Novo Item</button>
+                    </div>
+                    <div id="tp-checklist-form" class="mt-3 hidden p-3 border rounded bg-gray-50">
+                        <input type="hidden" id="tp-checklist-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-xs text-gray-500">Item</label>
+                                <input id="tp-checklist-item" class="w-full border rounded p-2 mt-1" placeholder="Ex: Protetor solar" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Categoria</label>
+                                <select id="tp-checklist-category" class="w-full border rounded p-2 mt-1">
+                                    <option value="documentos">Documentos</option>
+                                    <option value="roupas">Roupas</option>
+                                    <option value="higiene">Higiene Pessoal</option>
+                                    <option value="eletronicos">Eletrônicos</option>
+                                    <option value="medicamentos">Medicamentos</option>
+                                    <option value="acessorios">Acessórios</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Quantidade</label>
+                                <input type="number" id="tp-checklist-quantity" class="w-full border rounded p-2 mt-1" placeholder="1" min="1" value="1" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Peso Estimado (kg)</label>
+                                <input type="number" id="tp-checklist-weight" class="w-full border rounded p-2 mt-1" placeholder="0" step="0.1" />
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="inline-flex items-center gap-2 mt-2">
+                                    <input type="checkbox" id="tp-checklist-packed" />
+                                    <span class="text-sm text-gray-600">Já empacotado</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-3">
+                            <button id="tp-checklist-save" class="px-3 py-1 rounded bg-green-600 text-white">Salvar Item</button>
+                            <button id="tp-checklist-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
+                        </div>
+                    </div>
+                    <div id="tp-checklist-list" class="mt-4 space-y-2"></div>
+                </div>
+                </div>
+                <!-- FIM Aba de Checklist -->
+
+                <!-- Custos Totais (visível em todas as abas) -->
                 <div class="travel-planner-costs">
                     <h4 class="travel-costs-title">Custos Totais</h4>
                     <div class="mt-3">
@@ -12819,6 +13181,36 @@ const firebaseConfig = {
     // Storage helpers: keep travelPlans inside state.appData.settings.travelPlans (consistent with the rest of the app)
     function loadTravelPlans(){ try { const s = (window.state && window.state.appData && window.state.appData.settings) ? window.state.appData.settings : null; return (s && Array.isArray(s.travelPlans)) ? s.travelPlans : []; } catch(e){ return []; } }
     async function saveTravelPlans(plans){ try { window.state = window.state || {}; window.state.appData = window.state.appData || {}; window.state.appData.settings = window.state.appData.settings || {}; window.state.appData.settings.travelPlans = plans; if (storage && typeof storage.saveData === 'function') await storage.saveData(window.state.appData); } catch(e){ console.error('saveTravelPlans', e); } }
+
+        // ===== SISTEMA DE ABAS =====
+        function initTravelTabs() {
+            const tabs = document.querySelectorAll('.travel-tab');
+            const tabContents = document.querySelectorAll('.travel-tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetTab = this.dataset.tab;
+                    
+                    // Remove active de todas as abas
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Adiciona active na aba clicada
+                    this.classList.add('active');
+                    const targetContent = document.getElementById(`tab-${targetTab}`);
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                    }
+                });
+            });
+        }
+        
+        // Inicializar abas quando modal abrir
+        try {
+            initTravelTabs();
+        } catch(e) {
+            console.error('Erro ao inicializar abas:', e);
+        }
 
         // Modal elements
     // Wire both the desktop header button and the in-view "Adicionar Viagem" button
@@ -12961,6 +13353,101 @@ const firebaseConfig = {
         } catch(e){ console.error('saveTransport', e); showToast('Erro ao salvar transporte', 'bg-red-600'); } }
         if (tSave) tSave.addEventListener('click', (e)=>{ e.preventDefault(); saveTransport(); });
 
+        // ===== HOSPEDAGEM CRUD =====
+        const accommodationNewBtn = q('tp-accommodation-new'); const accommodationForm = q('tp-accommodation-form');
+        const aId = q('tp-accommodation-id'); const aName = q('tp-accommodation-name'); const aType = q('tp-accommodation-type'); const aAddress = q('tp-accommodation-address'); const aCheckin = q('tp-accommodation-checkin'); const aCheckout = q('tp-accommodation-checkout'); const aNights = q('tp-accommodation-nights'); const aPrice = q('tp-accommodation-price'); const aTotal = q('tp-accommodation-total'); const aPaid = q('tp-accommodation-paid');
+        const aSave = q('tp-accommodation-save'); const aCancel = q('tp-accommodation-cancel');
+
+        function showAccommodationForm(edit){ if (!accommodationForm) return; accommodationForm.classList.remove('hidden'); if (!edit){ aId.value=''; aName.value=''; aType.value='hotel'; aAddress.value=''; aCheckin.value=''; aCheckout.value=''; aNights.value=''; aPrice.value=''; aTotal.textContent='R$ 0,00'; if (aPaid) aPaid.checked = false; } else { aId.value=edit.id||''; aName.value=edit.name||''; aType.value=edit.type||'hotel'; aAddress.value=edit.address||''; aCheckin.value=edit.checkin||''; aCheckout.value=edit.checkout||''; aNights.value=edit.nights||''; aPrice.value=edit.price||''; computeAccommodationTotal(); if (aPaid) aPaid.checked = !!edit.paid; } }
+        if (accommodationNewBtn) accommodationNewBtn.addEventListener('click', ()=>{ showAccommodationForm(null); });
+        if (aCancel) aCancel.addEventListener('click', (e)=>{ e.preventDefault(); accommodationForm.classList.add('hidden'); });
+
+        function computeAccommodationTotal(){ try { const nights = parseInt(aNights.value) || 0; const price = parseBRNumber(aPrice.value); const total = nights * price; if (aTotal) aTotal.textContent = formatBR(total); return total; } catch(e){ return 0; } }
+        ['input','change'].forEach(evt => { [aNights,aPrice].forEach(el=>{ if (el) el.addEventListener(evt, computeAccommodationTotal); }); });
+
+        async function saveAccommodation(){ try {
+            const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar hospedagem', 'bg-yellow-600'); return; }
+            const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
+            const obj = { id: aId.value || ('acc-'+Math.random().toString(36).slice(2,9)), name: aName.value, type: aType.value, address: aAddress.value, checkin: aCheckin.value, checkout: aCheckout.value, nights: parseInt(aNights.value)||0, price: parseBRNumber(aPrice.value), total: computeAccommodationTotal(), paid: (aPaid && !!aPaid.checked) };
+            plan.accommodations = plan.accommodations || [];
+            const idx = plan.accommodations.findIndex(a=>a.id===obj.id);
+            if (idx === -1) plan.accommodations.push(obj); else plan.accommodations[idx] = obj;
+            await saveTravelPlans(plans);
+            showToast('Hospedagem salva', 'bg-green-600');
+            accommodationForm.classList.add('hidden');
+            renderPlanDetails(plan.id);
+        } catch(e){ console.error('saveAccommodation', e); showToast('Erro ao salvar hospedagem', 'bg-red-600'); } }
+        if (aSave) aSave.addEventListener('click', (e)=>{ e.preventDefault(); saveAccommodation(); });
+
+        // ===== PASSEIOS CRUD =====
+        const activityNewBtn = q('tp-activity-new'); const activityForm = q('tp-activity-form');
+        const acId = q('tp-activity-id'); const acName = q('tp-activity-name'); const acType = q('tp-activity-type'); const acDate = q('tp-activity-date'); const acTime = q('tp-activity-time'); const acDuration = q('tp-activity-duration'); const acPrice = q('tp-activity-price'); const acPaid = q('tp-activity-paid');
+        const acSave = q('tp-activity-save'); const acCancel = q('tp-activity-cancel');
+
+        function showActivityForm(edit){ if (!activityForm) return; activityForm.classList.remove('hidden'); if (!edit){ acId.value=''; acName.value=''; acType.value='passeio'; acDate.value=''; acTime.value=''; acDuration.value=''; acPrice.value=''; if (acPaid) acPaid.checked = false; } else { acId.value=edit.id||''; acName.value=edit.name||''; acType.value=edit.type||'passeio'; acDate.value=edit.date||''; acTime.value=edit.time||''; acDuration.value=edit.duration||''; acPrice.value=edit.price||''; if (acPaid) acPaid.checked = !!edit.paid; } }
+        if (activityNewBtn) activityNewBtn.addEventListener('click', ()=>{ showActivityForm(null); });
+        if (acCancel) acCancel.addEventListener('click', (e)=>{ e.preventDefault(); activityForm.classList.add('hidden'); });
+
+        async function saveActivity(){ try {
+            const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar passeios', 'bg-yellow-600'); return; }
+            const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
+            const obj = { id: acId.value || ('act-'+Math.random().toString(36).slice(2,9)), name: acName.value, type: acType.value, date: acDate.value, time: acTime.value, duration: acDuration.value, price: parseBRNumber(acPrice.value), paid: (acPaid && !!acPaid.checked) };
+            plan.activities = plan.activities || [];
+            const idx = plan.activities.findIndex(a=>a.id===obj.id);
+            if (idx === -1) plan.activities.push(obj); else plan.activities[idx] = obj;
+            await saveTravelPlans(plans);
+            showToast('Passeio salvo', 'bg-green-600');
+            activityForm.classList.add('hidden');
+            renderPlanDetails(plan.id);
+        } catch(e){ console.error('saveActivity', e); showToast('Erro ao salvar passeio', 'bg-red-600'); } }
+        if (acSave) acSave.addEventListener('click', (e)=>{ e.preventDefault(); saveActivity(); });
+
+        // ===== ROTEIRO CRUD =====
+        const itineraryNewBtn = q('tp-itinerary-new'); const itineraryForm = q('tp-itinerary-form');
+        const iId = q('tp-itinerary-id'); const iDay = q('tp-itinerary-day'); const iDate = q('tp-itinerary-date'); const iTime = q('tp-itinerary-time'); const iActivity = q('tp-itinerary-activity'); const iLocation = q('tp-itinerary-location'); const iNotes = q('tp-itinerary-notes');
+        const iSave = q('tp-itinerary-save'); const iCancel = q('tp-itinerary-cancel');
+
+        function showItineraryForm(edit){ if (!itineraryForm) return; itineraryForm.classList.remove('hidden'); if (!edit){ iId.value=''; iDay.value=''; iDate.value=''; iTime.value=''; iActivity.value=''; iLocation.value=''; iNotes.value=''; } else { iId.value=edit.id||''; iDay.value=edit.day||''; iDate.value=edit.date||''; iTime.value=edit.time||''; iActivity.value=edit.activity||''; iLocation.value=edit.location||''; iNotes.value=edit.notes||''; } }
+        if (itineraryNewBtn) itineraryNewBtn.addEventListener('click', ()=>{ showItineraryForm(null); });
+        if (iCancel) iCancel.addEventListener('click', (e)=>{ e.preventDefault(); itineraryForm.classList.add('hidden'); });
+
+        async function saveItinerary(){ try {
+            const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar roteiro', 'bg-yellow-600'); return; }
+            const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
+            const obj = { id: iId.value || ('itin-'+Math.random().toString(36).slice(2,9)), day: parseInt(iDay.value)||1, date: iDate.value, time: iTime.value, activity: iActivity.value, location: iLocation.value, notes: iNotes.value };
+            plan.itinerary = plan.itinerary || [];
+            const idx = plan.itinerary.findIndex(i=>i.id===obj.id);
+            if (idx === -1) plan.itinerary.push(obj); else plan.itinerary[idx] = obj;
+            await saveTravelPlans(plans);
+            showToast('Roteiro salvo', 'bg-green-600');
+            itineraryForm.classList.add('hidden');
+            renderPlanDetails(plan.id);
+        } catch(e){ console.error('saveItinerary', e); showToast('Erro ao salvar roteiro', 'bg-red-600'); } }
+        if (iSave) iSave.addEventListener('click', (e)=>{ e.preventDefault(); saveItinerary(); });
+
+        // ===== CHECKLIST CRUD =====
+        const checklistNewBtn = q('tp-checklist-new'); const checklistForm = q('tp-checklist-form');
+        const cId = q('tp-checklist-id'); const cItem = q('tp-checklist-item'); const cCategory = q('tp-checklist-category'); const cQuantity = q('tp-checklist-quantity'); const cWeight = q('tp-checklist-weight');
+        const cSave = q('tp-checklist-save'); const cCancel = q('tp-checklist-cancel');
+
+        function showChecklistForm(edit){ if (!checklistForm) return; checklistForm.classList.remove('hidden'); if (!edit){ cId.value=''; cItem.value=''; cCategory.value='roupas'; cQuantity.value='1'; cWeight.value=''; } else { cId.value=edit.id||''; cItem.value=edit.item||''; cCategory.value=edit.category||'roupas'; cQuantity.value=edit.quantity||'1'; cWeight.value=edit.weight||''; } }
+        if (checklistNewBtn) checklistNewBtn.addEventListener('click', ()=>{ showChecklistForm(null); });
+        if (cCancel) cCancel.addEventListener('click', (e)=>{ e.preventDefault(); checklistForm.classList.add('hidden'); });
+
+        async function saveChecklist(){ try {
+            const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar checklist', 'bg-yellow-600'); return; }
+            const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
+            const obj = { id: cId.value || ('chk-'+Math.random().toString(36).slice(2,9)), item: cItem.value, category: cCategory.value, quantity: parseInt(cQuantity.value)||1, weight: parseBRNumber(cWeight.value), packed: false };
+            plan.checklist = plan.checklist || [];
+            const idx = plan.checklist.findIndex(c=>c.id===obj.id);
+            if (idx === -1) plan.checklist.push(obj); else plan.checklist[idx] = obj;
+            await saveTravelPlans(plans);
+            showToast('Item adicionado', 'bg-green-600');
+            checklistForm.classList.add('hidden');
+            renderPlanDetails(plan.id);
+        } catch(e){ console.error('saveChecklist', e); showToast('Erro ao salvar item', 'bg-red-600'); } }
+        if (cSave) cSave.addEventListener('click', (e)=>{ e.preventDefault(); saveChecklist(); });
+
         // Render functions
         function renderPlansList(){ try {
             const container = document.getElementById('tp-plans'); if (!container) return; container.innerHTML=''; const plans = loadTravelPlans(); if (!plans || !plans.length) { container.innerHTML='<div class="text-sm text-gray-500">Nenhum plano criado.</div>'; return; }
@@ -13004,11 +13491,75 @@ const firebaseConfig = {
                 row.appendChild(left); row.appendChild(right); list.appendChild(row);
             });
 
+            // accommodations list
+            const accList = document.getElementById('tp-accommodation-list'); if (accList) { accList.innerHTML='';
+            (plan.accommodations||[]).forEach(a=>{
+                const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
+                const left = document.createElement('div');
+                const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Pago</span>` : '';
+                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${a.type} • ${a.nights} diárias • ${formatBR(a.total||0)}</div>`;
+                const right = document.createElement('div');
+                const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showAccommodationForm(a); });
+                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir hospedagem?')) return; plan.accommodations = (plan.accommodations||[]).filter(x=>x.id!==a.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Hospedagem excluída','bg-green-600'); });
+                right.appendChild(edit); right.appendChild(del);
+                row.appendChild(left); row.appendChild(right); accList.appendChild(row);
+            }); }
+
+            // activities list
+            const actList = document.getElementById('tp-activity-list'); if (actList) { actList.innerHTML='';
+            (plan.activities||[]).forEach(a=>{
+                const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
+                const left = document.createElement('div');
+                const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Pago</span>` : '';
+                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${a.type} • ${a.date||'Sem data'} ${a.time||''} • ${formatBR(a.price||0)}</div>`;
+                const right = document.createElement('div');
+                const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showActivityForm(a); });
+                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir passeio?')) return; plan.activities = (plan.activities||[]).filter(x=>x.id!==a.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Passeio excluído','bg-green-600'); });
+                right.appendChild(edit); right.appendChild(del);
+                row.appendChild(left); row.appendChild(right); actList.appendChild(row);
+            }); }
+
+            // itinerary list
+            const itinList = document.getElementById('tp-itinerary-list'); if (itinList) { itinList.innerHTML='';
+            const sortedItin = (plan.itinerary||[]).sort((a,b)=>(a.day||0)-(b.day||0));
+            sortedItin.forEach(i=>{
+                const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
+                const left = document.createElement('div');
+                left.innerHTML = `<div class="font-medium">Dia ${i.day||'?'}: ${escapeHtml(i.activity)}</div><div class="text-xs text-gray-500">${i.location||''} • ${i.time||''}</div>`;
+                const right = document.createElement('div');
+                const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showItineraryForm(i); });
+                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir item do roteiro?')) return; plan.itinerary = (plan.itinerary||[]).filter(x=>x.id!==i.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Item excluído','bg-green-600'); });
+                right.appendChild(edit); right.appendChild(del);
+                row.appendChild(left); row.appendChild(right); itinList.appendChild(row);
+            }); }
+
+            // checklist list
+            const chkList = document.getElementById('tp-checklist-list'); if (chkList) { chkList.innerHTML='';
+            (plan.checklist||[]).forEach(c=>{
+                const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
+                const left = document.createElement('div');
+                const packedBadge = (c && c.packed) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pronto</span>` : '';
+                left.innerHTML = `<div class="font-medium">${escapeHtml(c.item)} ${packedBadge}</div><div class="text-xs text-gray-500">${c.category} • Qtd: ${c.quantity||1} • ${c.weight||0} kg</div>`;
+                const right = document.createElement('div');
+                const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(c.packed?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(c.packed?'check_circle':'radio_button_unchecked')+'</span>'; toggle.addEventListener('click', async ()=>{ c.packed = !c.packed; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
+                const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showChecklistForm(c); });
+                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir item?')) return; plan.checklist = (plan.checklist||[]).filter(x=>x.id!==c.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Item excluído','bg-green-600'); });
+                right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
+                row.appendChild(left); row.appendChild(right); chkList.appendChild(row);
+            }); }
+
             // update totals (sections)
             let totFuel = 0, totRental = 0, totTransfers = 0, totTolls = 0;
             (plan.transports||[]).forEach(t=>{ totFuel += Number(t.fuelCost || 0); totRental += Number(t.rental || 0) + Number(t.maint || 0); totTransfers += Number(t.transfers || 0); totTolls += Number(t.tolls || 0); });
+            
+            // Add accommodation and activities costs
+            let totAccommodation = 0;
+            (plan.accommodations||[]).forEach(a=>{ totAccommodation += Number(a.total || 0); });
+            let totActivities = 0;
+            (plan.activities||[]).forEach(a=>{ totActivities += Number(a.price || 0); });
+            
             // Custos: sum of all sections
-            const costs = totFuel + totRental + totTransfers + totTolls;
+            const costs = totFuel + totRental + totTransfers + totTolls + totAccommodation + totActivities;
             // Orçado (planejado para gastar)
             const estimated = Number(plan.estimated || 0);
             
@@ -13070,8 +13621,11 @@ const firebaseConfig = {
                 console.error('Erro ao calcular poupanças vinculadas à meta:', e);
             }
             
-            // Pago: sum of sections already paid -- transport objects may include a 'paid' boolean
-            const paid = (plan.transports || []).reduce((s,t) => s + ((t && t.paid) ? Number(t.subtotal || 0) : 0), 0);
+            // Pago: sum of sections already paid -- transport/accommodation/activity objects may include a 'paid' boolean
+            let paid = 0;
+            paid += (plan.transports || []).reduce((s,t) => s + ((t && t.paid) ? Number(t.subtotal || 0) : 0), 0);
+            paid += (plan.accommodations || []).reduce((s,a) => s + ((a && a.paid) ? Number(a.total || 0) : 0), 0);
+            paid += (plan.activities || []).reduce((s,a) => s + ((a && a.paid) ? Number(a.price || 0) : 0), 0);
 
             // ===== CÁLCULO DO RESTANTE COM LÓGICA MELHORADA =====
             // Se o valor Realizado for maior que o Orçado, usa Realizado como base
@@ -13094,7 +13648,9 @@ const firebaseConfig = {
                         { id: 'tp-total-fuel', label: 'Combustível', icon: 'local_gas_station', value: totFuel },
                         { id: 'tp-total-rental', label: 'Aluguel / Manutenção', icon: 'home_repair_service', value: totRental },
                         { id: 'tp-total-transfers', label: 'Translados / Passeios', icon: 'tour', value: totTransfers },
-                        { id: 'tp-total-tolls', label: 'Pedágios / Taxas', icon: 'pay', value: totTolls }
+                        { id: 'tp-total-tolls', label: 'Pedágios / Taxas', icon: 'pay', value: totTolls },
+                        { id: 'tp-total-accommodation', label: 'Hospedagem', icon: 'hotel', value: totAccommodation },
+                        { id: 'tp-total-activities', label: 'Passeios', icon: 'explore', value: totActivities }
                     ];
                     const nonZero = blocks.filter(b => Number(b.value) && Number(b.value) !== 0);
                     if (nonZero.length === 0) {
@@ -13189,7 +13745,7 @@ const firebaseConfig = {
         // Attach currency handlers for planner money fields and basic validation
         function attachPlannerCurrencyAndValidation() {
             try {
-                const moneyIds = ['tp-transport-fuelprice','tp-transport-tolls','tp-transport-rental','tp-transport-maint','tp-transport-transfers','tp-modal-estimated','tp-modal-saved'];
+                const moneyIds = ['tp-transport-fuelprice','tp-transport-tolls','tp-transport-rental','tp-transport-maint','tp-transport-transfers','tp-modal-estimated','tp-modal-saved','tp-accommodation-price','tp-activity-price','tp-checklist-weight'];
                 moneyIds.forEach(id => {
                     const el = document.getElementById(id);
                     if (!el) return;

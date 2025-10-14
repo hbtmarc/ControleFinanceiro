@@ -1902,6 +1902,234 @@
     /* ===== OTIMIZAÇÕES MOBILE - iPhone 15 Pro Max (430x932px) ===== */
     /* Melhorias abrangentes para experiência mobile excepcional */
     @media (max-width: 639px) {
+        /* ===== CENTRALIZAÇÃO DO CONTEÚDO ===== */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100vw;
+            overflow-x: hidden !important;
+        }
+        
+        html {
+            overflow-x: hidden !important;
+            width: 100vw;
+        }
+        
+        #app,
+        main,
+        #app-content {
+            width: 100%;
+            max-width: 100vw;
+            margin: 0 auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            box-sizing: border-box;
+        }
+        
+        /* Centralizar header */
+        header {
+            width: 100%;
+            max-width: 100vw;
+            margin: 0 auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        /* ===== MELHORIAS NO HEADER E INÍCIO ===== */
+        header .flex.items-center.justify-between {
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        header h1 {
+            font-size: 1.5rem !important;
+            margin: 0;
+            text-align: center;
+        }
+        
+        /* Controles de calendário centralizados */
+        .card.flex.items-center.gap-1 {
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+            padding: 0.5rem !important;
+        }
+        
+        #current-month-display {
+            font-size: 0.875rem !important;
+            padding: 0.5rem !important;
+            text-align: center;
+            min-width: 120px;
+        }
+        
+        /* ===== TABELAS - CORRIGIR SOBREPOSIÇÃO ===== */
+        .modern-table,
+        .responsive-table {
+            width: 100%;
+            font-size: 0.75rem !important;
+            table-layout: fixed;
+        }
+        
+        .modern-table th,
+        .modern-table td,
+        .responsive-table th,
+        .responsive-table td {
+            padding: 0.5rem 0.25rem !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        
+        /* Larguras específicas para colunas */
+        .modern-table td:first-child,
+        .responsive-table td:first-child {
+            max-width: 120px;
+        }
+        
+        .modern-table td:nth-child(2),
+        .responsive-table td:nth-child(2) {
+            max-width: 80px;
+            text-align: right;
+        }
+        
+        .modern-table td:last-child,
+        .responsive-table td:last-child {
+            max-width: 70px;
+            text-align: center;
+        }
+        
+        /* Descrições truncadas */
+        .modern-table .desc-text,
+        .responsive-table .desc-text {
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+        }
+        
+        /* Valores com melhor espaçamento */
+        .amount-text {
+            font-size: 0.75rem !important;
+            white-space: nowrap;
+        }
+        
+        /* ===== MODAIS MOBILE - REFORMULAÇÃO COMPLETA ===== */
+        dialog {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            max-width: 92vw !important;
+            max-height: 85vh !important;
+            width: 92vw !important;
+            margin: 0 !important;
+            padding: 1rem !important;
+            border-radius: 1rem !important;
+            overflow-y: auto !important;
+            box-sizing: border-box;
+        }
+        
+        /* Header do modal */
+        dialog .modal-title-row,
+        dialog .flex.items-center.justify-between {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            gap: 0.5rem;
+        }
+        
+        dialog h3,
+        dialog .modal-title {
+            font-size: 1.125rem !important;
+            margin: 0;
+            flex: 1;
+            text-align: left;
+        }
+        
+        /* Formulários em modais */
+        dialog .modal-group,
+        dialog .modern-form-group {
+            margin-bottom: 0.875rem;
+            width: 100%;
+        }
+        
+        dialog label,
+        dialog .modal-label,
+        dialog .modern-form-label {
+            font-size: 0.875rem !important;
+            margin-bottom: 0.375rem !important;
+            display: block;
+            font-weight: 500;
+        }
+        
+        dialog input,
+        dialog select,
+        dialog textarea {
+            width: 100% !important;
+            padding: 0.75rem !important;
+            font-size: 1rem !important;
+            min-height: 44px !important;
+            box-sizing: border-box !important;
+            border-radius: 0.5rem !important;
+        }
+        
+        /* Grids em modais */
+        dialog .grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.75rem !important;
+        }
+        
+        /* Botões de ação do modal */
+        dialog .modal-action-btn,
+        dialog button[type="submit"],
+        dialog .btn-primary {
+            width: 100% !important;
+            padding: 0.875rem !important;
+            font-size: 1rem !important;
+            min-height: 48px !important;
+            margin-top: 0.5rem;
+            border-radius: 0.75rem !important;
+        }
+        
+        /* Footer do modal */
+        dialog .flex.justify-end,
+        dialog .modal-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        dialog .flex.justify-end button,
+        dialog .modal-footer button {
+            width: 100% !important;
+        }
+        
+        /* Modal de transação específico */
+        #transaction-modal {
+            max-height: 90vh !important;
+        }
+        
+        #transaction-modal .transaction-type-selector {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        #transaction-modal .transaction-type-selector button {
+            flex: 1;
+            min-height: 48px;
+        }
+        
         /* Prevenir zoom indesejado em inputs */
         input[type="text"],
         input[type="number"],
@@ -1925,6 +2153,8 @@
         .kpi-card {
             padding: 1rem !important;
             margin-bottom: 0.75rem;
+            text-align: center;
+            width: 100%;
         }
         
         .kpi-title {
@@ -1933,13 +2163,15 @@
         }
         
         .kpi-value {
-            font-size: 1.5rem !important;
+            font-size: 1.75rem !important;
             font-weight: 700 !important;
             margin-bottom: 0.25rem !important;
+            word-break: break-word;
         }
         
         .kpi-trend {
             font-size: 0.75rem !important;
+            justify-content: center;
         }
         
         /* Cards e containers com melhor espaçamento */
@@ -1947,23 +2179,36 @@
             padding: 1rem !important;
             margin-bottom: 1rem !important;
             border-radius: 1rem !important;
+            width: 100%;
+            box-sizing: border-box;
         }
         
-        /* Títulos de seções mais compactos */
+        /* Títulos de seções mais compactos e centralizados */
         h2 {
             font-size: 1.25rem !important;
             margin-bottom: 0.75rem !important;
+            text-align: center;
         }
         
         h3 {
             font-size: 1.125rem !important;
+            text-align: center;
         }
         
         /* Melhorar navegação por tabs */
+        #tabs {
+            width: 100%;
+            max-width: 100%;
+            justify-content: center;
+            padding: 0.5rem !important;
+        }
+        
         #tabs .tab-button {
             padding: 0.75rem 0.5rem !important;
-            font-size: 0.75rem !important;
+            font-size: 0.7rem !important;
             min-height: 44px;
+            flex: 1;
+            text-align: center;
         }
         
         /* Otimizar header do calendário */
@@ -1980,10 +2225,25 @@
         .goal-item {
             padding: 1rem !important;
             margin-bottom: 0.75rem !important;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .goal-item .font-semibold {
-            font-size: 1rem !important;
+            font-size: 0.95rem !important;
+            max-width: 60%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .goal-item .flex.items-center.gap-2 {
+            flex-wrap: nowrap;
+            gap: 0.25rem !important;
+        }
+        
+        .goal-item .text-sm {
+            font-size: 0.75rem !important;
         }
         
         .progress-bar {
@@ -1994,38 +2254,45 @@
         /* Otimizar tabelas para mobile */
         .modern-table {
             font-size: 0.875rem !important;
+            width: 100%;
+            display: table;
+        }
+        
+        .modern-table thead {
+            display: table-header-group;
+        }
+        
+        .modern-table tbody {
+            display: table-row-group;
+        }
+        
+        .modern-table tr {
+            display: table-row;
         }
         
         .modern-table th,
         .modern-table td {
+            display: table-cell;
             padding: 0.75rem 0.5rem !important;
+            vertical-align: middle;
         }
         
-        /* Melhorar modais em mobile */
-        dialog {
-            max-width: 95vw !important;
-            max-height: 90vh !important;
-            padding: 1.5rem !important;
-            margin: 1rem !important;
+        .modern-table th:first-child,
+        .modern-table td:first-child {
+            padding-left: 0.25rem !important;
         }
         
-        .modal-group label {
-            font-size: 0.875rem !important;
-            margin-bottom: 0.375rem !important;
+        .modern-table th:last-child,
+        .modern-table td:last-child {
+            padding-right: 0.25rem !important;
+            text-align: right;
         }
         
-        .modal-group input,
-        .modal-group select,
-        .modal-group textarea {
-            padding: 0.75rem !important;
-            min-height: 44px !important;
-        }
-        
-        /* Botões de ação em modais */
-        .modal-action-btn {
-            padding: 0.875rem 1.5rem !important;
-            font-size: 1rem !important;
-            min-height: 48px !important;
+        /* Wrapper de tabelas com scroll controlado */
+        .overflow-x-auto {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
         }
         
         /* Melhorar visualização de gráficos */
@@ -2085,15 +2352,6 @@
             height: 56px !important;
             bottom: 5rem !important;
             right: 1rem !important;
-        }
-        
-        /* Prevenir scroll horizontal */
-        body {
-            overflow-x: hidden !important;
-        }
-        
-        html {
-            overflow-x: hidden !important;
         }
         
         /* Melhorar touch targets para ícones de ação */
@@ -8890,43 +9148,87 @@ const firebaseConfig = {
             });
             container.querySelectorAll('.delete-goal-btn').forEach(btn => btn.addEventListener('click', (e) => deleteGoal(e.currentTarget.dataset.id)));
             
-            // Adicionar event listener para o botão de adição rápida
+            // Adicionar event listener para o botão de adição rápida - abre modal de transação
             container.querySelectorAll('.quick-add-goal-btn').forEach(btn => btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const goalId = e.currentTarget.dataset.id;
                 const goal = (state.appData.settings.goals || []).find(g => g.id === goalId);
                 if (!goal) return;
                 
-                // Mostrar prompt para adicionar valor
-                const amount = prompt(`Adicionar valor à meta "${goal.name}":\n\nDigite o valor (R$):`, '');
-                if (amount === null || amount.trim() === '') return;
-                
-                const parsedAmount = parseFloat(amount.replace(',', '.'));
-                if (isNaN(parsedAmount) || parsedAmount <= 0) {
-                    showToast('Valor inválido. Digite um número positivo.', 'bg-red-600');
-                    return;
+                // Abrir modal de transação em modo Reserva com categoria pré-selecionada
+                try {
+                    const modal = document.getElementById('transaction-modal');
+                    if (!modal) return;
+                    
+                    // Resetar o formulário
+                    if (typeof resetTransactionForm === 'function') resetTransactionForm();
+                    
+                    // Abrir o modal primeiro
+                    if (typeof modal.showModal === 'function') {
+                        modal.showModal();
+                    } else {
+                        modal.setAttribute('open', '');
+                    }
+                    
+                    // Aguardar o modal abrir e então configurar
+                    setTimeout(() => {
+                        // Selecionar tipo "Reserva"
+                        const savingsTypeBtn = document.querySelector('[data-type="savings"]');
+                        if (savingsTypeBtn) {
+                            savingsTypeBtn.click();
+                            
+                            // Aguardar o updateModalTypeUI popular os selects
+                            setTimeout(() => {
+                                const categorySelect = document.getElementById('category-saving');
+                                if (categorySelect) {
+                                    // Procurar pela opção que corresponde à meta
+                                    let found = false;
+                                    for (let i = 0; i < categorySelect.options.length; i++) {
+                                        const optionValue = categorySelect.options[i].value;
+                                        const optionText = categorySelect.options[i].text;
+                                        
+                                        // Comparação mais robusta
+                                        if (optionValue === goal.name || 
+                                            optionText === goal.name ||
+                                            optionText.includes(goal.name) ||
+                                            optionValue.includes(goal.name)) {
+                                            categorySelect.selectedIndex = i;
+                                            categorySelect.value = optionValue;
+                                            // Disparar evento change para atualizar ícones se houver
+                                            categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (!found) {
+                                        console.warn('Meta não encontrada no select:', goal.name);
+                                        console.log('Opções disponíveis:', Array.from(categorySelect.options).map(o => o.value));
+                                    }
+                                } else {
+                                    console.error('Select category-saving não encontrado!');
+                                }
+                                
+                                // Preencher descrição automaticamente
+                                const descInput = document.getElementById('description');
+                                if (descInput && !descInput.value) {
+                                    descInput.value = `Reserva para ${goal.name}`;
+                                }
+                                
+                                // Focar no campo de valor
+                                const amountInput = document.getElementById('amount');
+                                if (amountInput) {
+                                    amountInput.focus();
+                                    amountInput.select();
+                                }
+                            }, 200); // Delay maior para garantir população do select
+                        }
+                    }, 50); // Pequeno delay inicial para modal abrir
+                    
+                } catch(error) {
+                    console.error('Erro ao abrir modal de transação:', error);
+                    showToast('Erro ao abrir formulário de reserva', 'bg-red-600');
                 }
-                
-                // Adicionar uma entrada de reserva (saving) com a categoria da meta
-                const monthData = getCurrentMonthData();
-                if (!monthData.savings) monthData.savings = [];
-                
-                const newSaving = {
-                    id: Date.now().toString(),
-                    description: `Reserva para ${goal.name}`,
-                    amount: parsedAmount,
-                    category: goal.name,
-                    goalId: goal.id,
-                    date: new Date().toISOString().split('T')[0],
-                    isPaid: true
-                };
-                
-                monthData.savings.push(newSaving);
-                saveData();
-                renderGoals();
-                updateKPIs();
-                renderSavingsTable();
-                showToast(`${formatCurrency(parsedAmount)} adicionado à meta "${goal.name}"!`, 'bg-green-600');
             }));
 
             // audit log feature removed
@@ -12539,7 +12841,19 @@ const firebaseConfig = {
     });
     // also wire the in-view "Adicionar Viagem" button (visible in the travel-planner view)
     // Clear any previously filled values before opening so the user starts with a blank form
-    if (addPlanBtn) addPlanBtn.addEventListener('click', (e)=>{ e.preventDefault(); try { clearPlanForm(); } catch(_){} openModal(); });
+    if (addPlanBtn) addPlanBtn.addEventListener('click', (e)=>{ 
+        e.preventDefault(); 
+        try { 
+            clearPlanForm(); 
+            // Limpar também as informações de resumo e transportes
+            if (tpSummaryCost) tpSummaryCost.textContent = formatBR(0);
+            const transportsListEl = document.getElementById('tp-transports-list');
+            if (transportsListEl) transportsListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum transporte cadastrado.</p>';
+            // Garantir que o formulário de transporte está oculto
+            if (transportForm) transportForm.classList.add('hidden');
+        } catch(_){} 
+        openModal(); 
+    });
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
         // Main plan form
@@ -12547,7 +12861,23 @@ const firebaseConfig = {
         const tpDestination = q('tp-modal-destination'); const tpDate = q('tp-modal-date'); const tpEstimated = q('tp-modal-estimated'); const tpSaved = q('tp-modal-saved');
         const tpSummaryDestination = q('tp-summary-destination'); const tpSummaryDate = q('tp-summary-date'); const tpSummaryCost = q('tp-summary-cost'); const tpSummaryTransports = q('tp-summary-transports');
 
-        function clearPlanForm(){ if (!tpDestination) return; q('tp-id').value=''; tpDestination.value=''; tpDate.value=''; tpEstimated.value=''; tpSaved.value=''; tpSummaryDestination.textContent='—'; tpSummaryDate.textContent='—'; }
+        function clearPlanForm(){ 
+            if (!tpDestination) return; 
+            q('tp-id').value=''; 
+            tpDestination.value=''; 
+            tpDate.value=''; 
+            tpEstimated.value=''; 
+            tpSaved.value=''; 
+            tpSummaryDestination.textContent='—'; 
+            tpSummaryDate.textContent='—'; 
+            // Limpar custo total exibido
+            if (tpSummaryCost) tpSummaryCost.textContent = formatBR(0);
+            // Limpar número de transportes
+            if (tpSummaryTransports) tpSummaryTransports.textContent = '0';
+            // Limpar lista de transportes
+            const transportsListEl = document.getElementById('tp-transports-list');
+            if (transportsListEl) transportsListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum transporte cadastrado.</p>';
+        }
         tpNew && tpNew.addEventListener('click', (e)=>{ e.preventDefault(); clearPlanForm(); });
         tpSave && tpSave.addEventListener('click', async (e)=>{
             e.preventDefault();
@@ -12681,8 +13011,7 @@ const firebaseConfig = {
             const costs = totFuel + totRental + totTransfers + totTolls;
             // Orçado (planejado para gastar)
             const estimated = Number(plan.estimated || 0);
-            // Restante = Orçado - Custos
-            const remaining = Math.max(0, estimated - costs);
+            
             // Realizado: amount saved / registered as reserve (meta) + poupanças vinculadas
             let realized = Number(plan.saved || 0);
             
@@ -12743,6 +13072,18 @@ const firebaseConfig = {
             
             // Pago: sum of sections already paid -- transport objects may include a 'paid' boolean
             const paid = (plan.transports || []).reduce((s,t) => s + ((t && t.paid) ? Number(t.subtotal || 0) : 0), 0);
+
+            // ===== CÁLCULO DO RESTANTE COM LÓGICA MELHORADA =====
+            // Se o valor Realizado for maior que o Orçado, usa Realizado como base
+            // Caso contrário, usa Orçado como base (comportamento padrão)
+            let remaining = 0;
+            if (realized > estimated) {
+                // Meta superada! Usa o valor Realizado como base para calcular o restante
+                remaining = Math.max(0, realized - costs);
+            } else {
+                // Meta ainda não superada, usa o Orçado como base (padrão)
+                remaining = Math.max(0, estimated - costs);
+            }
 
             // Build smart cost blocks (only non-zero subtotals)
             try {

@@ -1,4 +1,78 @@
         <style>
+        /* ===== BARRAS DE ROLAGEM PERSONALIZADAS ===== */
+        /* Estilização global para todas as barras de rolagem */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        /* Webkit browsers (Chrome, Safari, Edge) */
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        *::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
+            border-radius: 10px;
+            border: 2px solid #f1f5f9;
+            transition: all 0.3s ease;
+        }
+        
+        *::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+            border-color: #e2e8f0;
+        }
+        
+        *::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+        }
+        
+        /* Barras de rolagem para modais e dialogs */
+        dialog::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        dialog::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+        
+        dialog::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 10px;
+            border: 2px solid #f8fafc;
+        }
+        
+        dialog::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        
+        /* Barras de rolagem para tabelas */
+        .overflow-x-auto::-webkit-scrollbar,
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .overflow-x-auto::-webkit-scrollbar-thumb,
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            border-radius: 6px;
+        }
+        
+        .overflow-x-auto::-webkit-scrollbar-thumb:hover,
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #059669 0%, #047857 100%);
+        }
+        /* ===== FIM DAS BARRAS DE ROLAGEM ===== */
+        
         /* Animação de foco nos inputs */
         .modal-group input:focus, .modal-group select:focus {
             box-shadow: 0 0 0 2px #2563eb44;
@@ -170,7 +244,11 @@
             font-weight: 600;
         }
     /* Keep actions cell compact and keep icons on one line; width adjusted so both icons fit */
-    #income-table td:last-child, #income-table th:last-child { width: 96px; text-align: right; }
+    #income-table td:last-child, #income-table th:last-child { 
+        width: 80px; 
+        text-align: right;
+        padding-right: 8px !important;
+    }
     /* Ensure actions cell content is not truncated with ellipsis */
     #income-table td.actions-cell, #income-table th.actions-cell { 
         overflow: visible; 
@@ -179,7 +257,8 @@
         display: flex !important;
         justify-content: flex-end !important;
         align-items: center !important;
-        gap: 4px !important;
+        gap: 2px !important;
+        padding-right: 8px !important;
     }
     #income-table td.actions-cell .edit-btn, #income-table td.actions-cell .delete-btn, #income-table td.actions-cell button { 
         display: inline-flex !important; 
@@ -188,6 +267,7 @@
         padding: 0.25rem !important;
         width: 32px !important;
         height: 32px !important;
+        margin: 0 !important;
     }
     
     /* Estilos consistentes para todas as outras tabelas - Despesas e Poupanças */
@@ -197,10 +277,11 @@
         display: flex !important;
         justify-content: flex-end !important;
         align-items: center !important;
-        gap: 4px !important;
+        gap: 2px !important;
         overflow: visible !important;
         text-overflow: clip !important;
         white-space: nowrap !important;
+        padding-right: 8px !important;
     }
     
     .modern-table td.actions-cell .edit-btn, .modern-table td.actions-cell .delete-btn, .modern-table td.actions-cell button,
@@ -214,6 +295,14 @@
         height: 32px !important;
         border-radius: 4px !important;
         transition: all 0.2s ease !important;
+        margin: 0 !important;
+    }
+    
+    /* Ajuste específico para a coluna de ações na tabela de despesas */
+    #expenses-table td:last-child, #expenses-table th:last-child {
+        width: 80px;
+        text-align: right;
+        padding-right: 8px !important;
     }
         </style>
         <style>
@@ -4641,6 +4730,67 @@
         window.openTransactionModal = openModal;
         window.closeTransactionModal = closeModal;
     })();
+    
+    // ===== FUNCIONALIDADE DE DUPLO CLIQUE PARA FECHAR MODAIS =====
+    (function(){
+        // Função para adicionar comportamento de duplo clique em um modal
+        function addDoubleClickToClose(dialog) {
+            if (!dialog || dialog._doubleClickAdded) return;
+            dialog._doubleClickAdded = true;
+            
+            dialog.addEventListener('dblclick', function(e) {
+                // Verifica se o clique foi no backdrop (fora do conteúdo do modal)
+                const rect = dialog.getBoundingClientRect();
+                const isInDialog = (
+                    e.clientX >= rect.left &&
+                    e.clientX <= rect.right &&
+                    e.clientY >= rect.top &&
+                    e.clientY <= rect.bottom
+                );
+                
+                // Se o clique foi no backdrop (dialog::backdrop)
+                if (e.target === dialog) {
+                    try {
+                        dialog.close();
+                    } catch(err) {
+                        dialog.removeAttribute('open');
+                        dialog.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // Adiciona duplo clique a todos os modais existentes
+        function initDoubleClickForAllModals() {
+            const modals = document.querySelectorAll('dialog');
+            modals.forEach(modal => addDoubleClickToClose(modal));
+        }
+        
+        // Inicializa quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDoubleClickForAllModals);
+        } else {
+            initDoubleClickForAllModals();
+        }
+        
+        // Observa novos modais adicionados dinamicamente
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeName === 'DIALOG') {
+                        addDoubleClickToClose(node);
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        // Expõe globalmente para uso manual se necessário
+        window.addDoubleClickToCloseModal = addDoubleClickToClose;
+    })();
+    // ===== FIM DA FUNCIONALIDADE DE DUPLO CLIQUE =====
+    
     // ETAPA 2: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI
     // Substitua o conteúdo abaixo pelas credenciais do seu projeto Firebase.
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -12173,7 +12323,7 @@ const firebaseConfig = {
             });
         } catch(e){ console.error('renderPlansList', e); } }
 
-        function renderPlanDetails(planId){ try {
+        async function renderPlanDetails(planId){ try {
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===planId); if (!plan) return; tpSummaryDestination.textContent = plan.destination||'—'; tpSummaryDate.textContent = plan.date||'—'; tpSummaryTransports.textContent = (plan.transports||[]).length || 0;
             // transports list
             const list = document.getElementById('tp-transport-list'); list.innerHTML='';
@@ -12198,8 +12348,64 @@ const firebaseConfig = {
             const estimated = Number(plan.estimated || 0);
             // Restante = Orçado - Custos
             const remaining = Math.max(0, estimated - costs);
-            // Realizado: amount saved / registered as reserve (meta)
-            const realized = Number(plan.saved || 0);
+            // Realizado: amount saved / registered as reserve (meta) + poupanças vinculadas
+            let realized = Number(plan.saved || 0);
+            
+            // Adiciona valores das poupanças vinculadas à meta (goalId) deste plano
+            try {
+                // Primeiro tenta buscar pela goalId se existir
+                if (plan.goalId && typeof sumSavingsForGoal === 'function') {
+                    const savingsForGoal = sumSavingsForGoal(plan.goalId);
+                    realized = Math.round((Number(savingsForGoal) + Number.EPSILON) * 100) / 100;
+                } else {
+                    // Fallback: Tenta encontrar a meta pelo nome (destination do plano)
+                    const goals = (window.state && window.state.appData && window.state.appData.settings && window.state.appData.settings.goals) || [];
+                    const matchingGoal = goals.find(g => {
+                        const goalName = (g.name || '').toLowerCase().trim();
+                        const planDest = (plan.destination || '').toLowerCase().trim();
+                        return goalName === planDest || goalName.includes(planDest) || planDest.includes(goalName);
+                    });
+                    
+                    if (matchingGoal && matchingGoal.id) {
+                        // Vincula o plano à meta automaticamente
+                        plan.goalId = matchingGoal.id;
+                        
+                        if (typeof sumSavingsForGoal === 'function') {
+                            const savingsForGoal = sumSavingsForGoal(matchingGoal.id);
+                            realized = Math.round((Number(savingsForGoal) + Number.EPSILON) * 100) / 100;
+                        } else {
+                            // Cálculo manual das poupanças
+                            let totalSavings = 0;
+                            if (window.state && window.state.appData && window.state.appData.data) {
+                                Object.values(window.state.appData.data).forEach(yearData => {
+                                    Object.values(yearData).forEach(monthData => {
+                                        if (monthData.savings && Array.isArray(monthData.savings)) {
+                                            monthData.savings.forEach(saving => {
+                                                if (saving.goalId === matchingGoal.id) {
+                                                    totalSavings += Number(saving.amount || 0);
+                                                }
+                                            });
+                                        }
+                                    });
+                                });
+                                realized = Math.round((Number(totalSavings) + Number.EPSILON) * 100) / 100;
+                            }
+                        }
+                        
+                        // Salva a vinculação automaticamente
+                        try {
+                            if (typeof saveTravelPlans === 'function') {
+                                await saveTravelPlans(plans);
+                            }
+                        } catch(e) {
+                            console.error('Erro ao salvar vinculação automática da meta:', e);
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error('Erro ao calcular poupanças vinculadas à meta:', e);
+            }
+            
             // Pago: sum of sections already paid -- transport objects may include a 'paid' boolean
             const paid = (plan.transports || []).reduce((s,t) => s + ((t && t.paid) ? Number(t.subtotal || 0) : 0), 0);
 

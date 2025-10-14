@@ -12934,7 +12934,7 @@ const firebaseConfig = {
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500">Preço por Diária (R$)</label>
-                                <input id="tp-accommodation-pricepernight" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
+                                <input id="tp-accommodation-price" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500">Total da Hospedagem (R$)</label>
@@ -13066,10 +13066,83 @@ const firebaseConfig = {
                 <!-- Aba de Checklist -->
                 <div class="travel-tab-content" id="tab-checklist">
                 <div class="p-3 rounded bg-white border mb-3">
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between mb-3">
                         <h4 class="text-sm font-semibold">Checklist de Viagem</h4>
-                        <button id="tp-checklist-new" class="px-2 py-1 rounded bg-orange-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">checklist</span>Novo Item</button>
+                        <div class="flex gap-2">
+                            <button id="tp-checklist-suggestions" class="px-2 py-1 rounded bg-purple-600 text-white inline-flex items-center gap-2 text-sm"><span class="material-symbols-outlined">lightbulb</span>Sugestões</button>
+                            <button id="tp-checklist-new" class="px-2 py-1 rounded bg-orange-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">checklist</span>Novo Item</button>
+                        </div>
                     </div>
+                    
+                    <!-- Painel de Sugestões (Catálogo Expandido com 250+ itens) -->
+                    <div id="tp-checklist-suggestions-panel" class="hidden mb-3 p-4 border-2 border-purple-200 rounded-lg bg-purple-50 max-h-96 overflow-y-auto">
+                        <div class="flex items-center justify-between mb-3 sticky top-0 bg-purple-50 pb-2 z-10">
+                            <h5 class="font-bold text-purple-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined">auto_awesome</span>
+                                Catálogo de Sugestões (250+ itens)
+                            </h5>
+                            <button id="tp-close-suggestions" class="text-purple-600 hover:text-purple-800">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-purple-700 mb-3">Clique nos itens para adicionar rapidamente ao seu checklist com peso e quantidade pré-definidos:</p>
+                        
+                        <!-- Formulário para Adicionar Sugestão Personalizada -->
+                        <div id="tp-custom-suggestion-form" class="hidden mb-3 p-3 border-2 border-yellow-400 rounded-lg bg-yellow-50">
+                            <div class="flex items-center justify-between mb-2">
+                                <h6 class="font-bold text-yellow-900 flex items-center gap-1 text-sm">
+                                    <span class="material-symbols-outlined" style="font-size:16px">add_circle</span>
+                                    Nova Sugestão Personalizada
+                                </h6>
+                                <button onclick="hideCustomSuggestionForm()" class="text-yellow-700 hover:text-yellow-900">
+                                    <span class="material-symbols-outlined" style="font-size:18px">close</span>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="col-span-2">
+                                    <label class="text-xs text-gray-700 font-semibold">Nome do Item*</label>
+                                    <input type="text" id="tp-custom-suggestion-item" class="w-full border rounded p-2 mt-1 text-sm" placeholder="Ex: Repelente extra forte" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-700 font-semibold">Categoria</label>
+                                    <select id="tp-custom-suggestion-category" class="w-full border rounded p-2 mt-1 text-sm">
+                                        <option value="Documentos">Documentos</option>
+                                        <option value="Roupas">Roupas</option>
+                                        <option value="Higiene">Higiene</option>
+                                        <option value="Eletrônicos">Eletrônicos</option>
+                                        <option value="Medicamentos">Medicamentos</option>
+                                        <option value="Acessórios">Acessórios</option>
+                                        <option value="Diversos">Diversos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-700 font-semibold">Quantidade</label>
+                                    <input type="number" id="tp-custom-suggestion-quantity" class="w-full border rounded p-2 mt-1 text-sm" value="1" min="1" />
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="text-xs text-gray-700 font-semibold">Peso Estimado (kg)</label>
+                                    <input type="number" id="tp-custom-suggestion-weight" class="w-full border rounded p-2 mt-1 text-sm" value="0.1" step="0.01" min="0" />
+                                </div>
+                            </div>
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="saveCustomSuggestion()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-semibold flex items-center gap-1">
+                                    <span class="material-symbols-outlined" style="font-size:16px">save</span>
+                                    Adicionar ao Catálogo
+                                </button>
+                                <button onclick="hideCustomSuggestionForm()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Container dinâmico que será preenchido via JavaScript -->
+                        <div id="tp-checklist-suggestions-container"></div>
+                        
+                        <div class="mt-3 p-2 bg-purple-100 rounded text-xs text-purple-800">
+                            <strong>💡 Dica:</strong> Os itens adicionados via sugestões já vêm com categoria, quantidade e peso estimado pré-definidos. Você pode editá-los depois! <strong>Itens em amarelo</strong> são suas sugestões personalizadas. Use o botão <strong>"Nova Sugestão"</strong> em cada categoria para adicionar itens próprios ao catálogo!
+                        </div>
+                    </div>
+                    
                     <div id="tp-checklist-form" class="mt-3 hidden p-3 border rounded bg-gray-50">
                         <input type="hidden" id="tp-checklist-id">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -13113,6 +13186,119 @@ const firebaseConfig = {
                 </div>
                 </div>
                 <!-- FIM Aba de Checklist -->
+
+                <!-- DASHBOARDS VISUAIS -->
+                <div class="mt-4 mb-4 space-y-4">
+                    <!-- Dashboard do Checklist -->
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-lg font-bold text-purple-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined">checklist</span>
+                                Checklist da Viagem
+                            </h4>
+                            <div id="tp-checklist-progress-badge" class="px-3 py-1 bg-white rounded-full text-sm font-semibold text-purple-700 border border-purple-300">
+                                0/0
+                            </div>
+                        </div>
+                        
+                        <!-- Barra de Progresso Principal -->
+                        <div class="mb-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-purple-800">Progresso Geral</span>
+                                <span class="text-xs font-bold text-purple-700" id="tp-checklist-percentage">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                                <div id="tp-checklist-progress-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-4 rounded-full transition-all duration-500 flex items-center justify-end" style="width: 0%">
+                                    <span class="text-white text-xs font-bold mr-2" id="tp-checklist-progress-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Grid de Métricas Detalhadas -->
+                        <div id="tp-checklist-summary" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                            <div class="bg-white rounded-lg p-3 border border-purple-100">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs text-gray-600">Total Itens</span>
+                                    <span class="material-symbols-outlined text-purple-600" style="font-size:16px">inventory_2</span>
+                                </div>
+                                <div class="text-2xl font-bold text-purple-700" id="tp-checklist-total">0</div>
+                                <div class="text-xs text-gray-500 mt-1">itens cadastrados</div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-3 border border-green-100">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs text-gray-600">Prontos</span>
+                                    <span class="material-symbols-outlined text-green-600" style="font-size:16px">check_circle</span>
+                                </div>
+                                <div class="text-2xl font-bold text-green-700" id="tp-checklist-packed">0</div>
+                                <div class="text-xs text-gray-500 mt-1" id="tp-checklist-packed-weight">0 kg empacotado</div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-3 border border-orange-100">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs text-gray-600">Pendentes</span>
+                                    <span class="material-symbols-outlined text-orange-600" style="font-size:16px">pending</span>
+                                </div>
+                                <div class="text-2xl font-bold text-orange-700" id="tp-checklist-pending">0</div>
+                                <div class="text-xs text-gray-500 mt-1" id="tp-checklist-pending-weight">0 kg faltando</div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-3 border border-blue-100">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs text-gray-600">Peso Total</span>
+                                    <span class="material-symbols-outlined text-blue-600" style="font-size:16px">scale</span>
+                                </div>
+                                <div class="text-2xl font-bold text-blue-700" id="tp-checklist-weight">0 kg</div>
+                                <div class="text-xs text-gray-500 mt-1" id="tp-checklist-weight-avg">média por item</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resumo por Categorias -->
+                        <div class="bg-white rounded-lg p-3 border border-purple-100">
+                            <h6 class="text-xs font-bold text-gray-700 mb-2 flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:14px">category</span>
+                                Resumo por Categorias
+                            </h6>
+                            <div id="tp-checklist-categories" class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <!-- Preenchido dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard do Roteiro -->
+                    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-lg font-bold text-blue-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined">event_note</span>
+                                Roteiro da Viagem
+                            </h4>
+                            <div id="tp-itinerary-badge" class="px-3 py-1 bg-white rounded-full text-sm font-semibold text-blue-700 border border-blue-300">
+                                0 eventos
+                            </div>
+                        </div>
+                        <div id="tp-itinerary-timeline" class="space-y-1">
+                            <!-- Timeline será preenchida dinamicamente -->
+                        </div>
+                        <div id="tp-itinerary-summary" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                            <div class="bg-white rounded-lg p-2 border border-pink-100 text-center">
+                                <div class="text-xs text-gray-600 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">hotel</span>Hospedagens</div>
+                                <div class="text-lg font-bold text-pink-700" id="tp-itinerary-accommodations">0</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-2 border border-purple-100 text-center">
+                                <div class="text-xs text-gray-600 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">tour</span>Passeios</div>
+                                <div class="text-lg font-bold text-purple-700" id="tp-itinerary-activities">0</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-2 border border-blue-100 text-center">
+                                <div class="text-xs text-gray-600 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">flight</span>Transportes</div>
+                                <div class="text-lg font-bold text-blue-700" id="tp-itinerary-transports">0</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-2 border border-green-100 text-center">
+                                <div class="text-xs text-gray-600 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">event</span>Manuais</div>
+                                <div class="text-lg font-bold text-green-700" id="tp-itinerary-manual">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Custos Totais (visível em todas as abas) -->
                 <div class="travel-planner-costs">
@@ -13219,7 +13405,23 @@ const firebaseConfig = {
         const modal = document.getElementById('travel-planner-modal');
         const closeBtn = document.getElementById('tp-close');
 
-        function openModal(){ try { if (!modal) return; if (typeof modal.showModal === 'function') modal.showModal(); else modal.setAttribute('open',''); renderPlansList(); } catch(e){ console.error('openModal', e); } }
+        function openModal(){ 
+            try { 
+                if (!modal) return; 
+                if (typeof modal.showModal === 'function') modal.showModal(); 
+                else modal.setAttribute('open',''); 
+                
+                // Se não há plano selecionado (tp-id vazio), limpar tudo
+                const planId = q('tp-id')?.value;
+                if (!planId) {
+                    clearPlanForm();
+                }
+                
+                renderPlansList(); 
+            } catch(e){ 
+                console.error('openModal', e); 
+            } 
+        }
         function closeModal(){ try { if (!modal) return; if (typeof modal.close === 'function') modal.close(); else modal.removeAttribute('open'); } catch(e){ console.error('closeModal', e); } }
     if (openBtn) openBtn.addEventListener('click', (e)=>{
         e.preventDefault();
@@ -13236,13 +13438,7 @@ const firebaseConfig = {
     if (addPlanBtn) addPlanBtn.addEventListener('click', (e)=>{ 
         e.preventDefault(); 
         try { 
-            clearPlanForm(); 
-            // Limpar também as informações de resumo e transportes
-            if (tpSummaryCost) tpSummaryCost.textContent = formatBR(0);
-            const transportsListEl = document.getElementById('tp-transports-list');
-            if (transportsListEl) transportsListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum transporte cadastrado.</p>';
-            // Garantir que o formulário de transporte está oculto
-            if (transportForm) transportForm.classList.add('hidden');
+            clearPlanForm(); // Isso já limpa tudo agora, incluindo todas as listas
         } catch(_){} 
         openModal(); 
     });
@@ -13252,6 +13448,128 @@ const firebaseConfig = {
         const tpSave = q('tp-modal-save'); const tpNew = q('tp-modal-new');
         const tpDestination = q('tp-modal-destination'); const tpDate = q('tp-modal-date'); const tpEstimated = q('tp-modal-estimated'); const tpSaved = q('tp-modal-saved');
         const tpSummaryDestination = q('tp-summary-destination'); const tpSummaryDate = q('tp-summary-date'); const tpSummaryCost = q('tp-summary-cost'); const tpSummaryTransports = q('tp-summary-transports');
+
+        function clearAllPlanLists() {
+            // Ocultar todos os formulários
+            const transportForm = q('tp-transport-form');
+            if (transportForm) transportForm.classList.add('hidden');
+            
+            const accommodationForm = q('tp-accommodation-form');
+            if (accommodationForm) accommodationForm.classList.add('hidden');
+            
+            const activityForm = q('tp-activity-form');
+            if (activityForm) activityForm.classList.add('hidden');
+            
+            const itineraryForm = q('tp-itinerary-form');
+            if (itineraryForm) itineraryForm.classList.add('hidden');
+            
+            const checklistForm = q('tp-checklist-form');
+            if (checklistForm) checklistForm.classList.add('hidden');
+            
+            const suggestionsPanel = q('tp-checklist-suggestions-panel');
+            if (suggestionsPanel) suggestionsPanel.classList.add('hidden');
+            
+            const customSuggestionForm = q('tp-custom-suggestion-form');
+            if (customSuggestionForm) customSuggestionForm.classList.add('hidden');
+            
+            // Limpar lista de transportes
+            const transportsListEl = q('tp-transport-list');
+            if (transportsListEl) transportsListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum transporte cadastrado.</p>';
+            
+            // Limpar lista de hospedagens
+            const accommodationsListEl = q('tp-accommodation-list');
+            if (accommodationsListEl) accommodationsListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhuma hospedagem cadastrada.</p>';
+            
+            // Limpar lista de passeios
+            const activitiesListEl = q('tp-activity-list');
+            if (activitiesListEl) activitiesListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum passeio cadastrado.</p>';
+            
+            // Limpar lista de roteiro
+            const itineraryListEl = q('tp-itinerary-list');
+            if (itineraryListEl) itineraryListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum item de roteiro cadastrado.</p>';
+            
+            // Limpar lista de checklist
+            const checklistListEl = q('tp-checklist-list');
+            if (checklistListEl) checklistListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum item no checklist.</p>';
+            
+            // Limpar dashboards
+            const checklistProgressBar = q('tp-checklist-progress-bar');
+            if (checklistProgressBar) checklistProgressBar.style.width = '0%';
+            
+            const checklistProgressBadge = q('tp-checklist-progress-badge');
+            if (checklistProgressBadge) checklistProgressBadge.textContent = '0/0';
+            
+            const checklistPercentage = q('tp-checklist-percentage');
+            if (checklistPercentage) checklistPercentage.textContent = '0%';
+            
+            const checklistTotal = q('tp-checklist-total');
+            if (checklistTotal) checklistTotal.textContent = '0';
+            
+            const checklistPacked = q('tp-checklist-packed');
+            if (checklistPacked) checklistPacked.textContent = '0';
+            
+            const checklistPackedWeight = q('tp-checklist-packed-weight');
+            if (checklistPackedWeight) checklistPackedWeight.textContent = '0 kg empacotado';
+            
+            const checklistPending = q('tp-checklist-pending');
+            if (checklistPending) checklistPending.textContent = '0';
+            
+            const checklistPendingWeight = q('tp-checklist-pending-weight');
+            if (checklistPendingWeight) checklistPendingWeight.textContent = '0 kg faltando';
+            
+            const checklistWeight = q('tp-checklist-weight');
+            if (checklistWeight) checklistWeight.textContent = '0 kg';
+            
+            const checklistWeightAvg = q('tp-checklist-weight-avg');
+            if (checklistWeightAvg) checklistWeightAvg.textContent = 'média por item';
+            
+            const checklistCategories = q('tp-checklist-categories');
+            if (checklistCategories) checklistCategories.innerHTML = '';
+            
+            // Limpar dashboard do roteiro
+            const itineraryBadge = q('tp-itinerary-badge');
+            if (itineraryBadge) itineraryBadge.textContent = '0 eventos';
+            
+            const itineraryTimeline = q('tp-itinerary-timeline');
+            if (itineraryTimeline) itineraryTimeline.innerHTML = '<p class="text-sm text-gray-500">Nenhum evento no roteiro.</p>';
+            
+            const itineraryAccommodations = q('tp-itinerary-accommodations');
+            if (itineraryAccommodations) itineraryAccommodations.textContent = '0';
+            
+            const itineraryActivities = q('tp-itinerary-activities');
+            if (itineraryActivities) itineraryActivities.textContent = '0';
+            
+            const itineraryTransports = q('tp-itinerary-transports');
+            if (itineraryTransports) itineraryTransports.textContent = '0';
+            
+            const itineraryManual = q('tp-itinerary-manual');
+            if (itineraryManual) itineraryManual.textContent = '0';
+            
+            // Limpar KPIs de custos
+            const kpiEstimated = q('tp-kpi-estimated');
+            if (kpiEstimated) kpiEstimated.textContent = formatBR(0);
+            
+            const kpiRealized = q('tp-kpi-realized');
+            if (kpiRealized) kpiRealized.textContent = formatBR(0);
+            
+            const kpiPaid = q('tp-kpi-paid');
+            if (kpiPaid) kpiPaid.textContent = formatBR(0);
+            
+            const kpiCosts = q('tp-kpi-costs');
+            if (kpiCosts) kpiCosts.textContent = formatBR(0);
+            
+            const kpiRemaining = q('tp-kpi-remaining');
+            if (kpiRemaining) kpiRemaining.textContent = formatBR(0);
+            
+            const kpiProgress = q('tp-kpi-progress');
+            if (kpiProgress) kpiProgress.style.width = '0%';
+            
+            const progressPercentage = q('tp-progress-percentage');
+            if (progressPercentage) progressPercentage.textContent = '0%';
+            
+            const costBlocks = q('tp-cost-blocks');
+            if (costBlocks) costBlocks.innerHTML = '';
+        }
 
         function clearPlanForm(){ 
             if (!tpDestination) return; 
@@ -13266,9 +13584,9 @@ const firebaseConfig = {
             if (tpSummaryCost) tpSummaryCost.textContent = formatBR(0);
             // Limpar número de transportes
             if (tpSummaryTransports) tpSummaryTransports.textContent = '0';
-            // Limpar lista de transportes
-            const transportsListEl = document.getElementById('tp-transports-list');
-            if (transportsListEl) transportsListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum transporte cadastrado.</p>';
+            
+            // Limpar TODAS as listas e dashboards
+            clearAllPlanLists();
         }
         tpNew && tpNew.addEventListener('click', (e)=>{ e.preventDefault(); clearPlanForm(); });
         tpSave && tpSave.addEventListener('click', async (e)=>{
@@ -13358,23 +13676,28 @@ const firebaseConfig = {
         const aId = q('tp-accommodation-id'); const aName = q('tp-accommodation-name'); const aType = q('tp-accommodation-type'); const aAddress = q('tp-accommodation-address'); const aCheckin = q('tp-accommodation-checkin'); const aCheckout = q('tp-accommodation-checkout'); const aNights = q('tp-accommodation-nights'); const aPrice = q('tp-accommodation-price'); const aTotal = q('tp-accommodation-total'); const aPaid = q('tp-accommodation-paid');
         const aSave = q('tp-accommodation-save'); const aCancel = q('tp-accommodation-cancel');
 
-        function showAccommodationForm(edit){ if (!accommodationForm) return; accommodationForm.classList.remove('hidden'); if (!edit){ aId.value=''; aName.value=''; aType.value='hotel'; aAddress.value=''; aCheckin.value=''; aCheckout.value=''; aNights.value=''; aPrice.value=''; aTotal.textContent='R$ 0,00'; if (aPaid) aPaid.checked = false; } else { aId.value=edit.id||''; aName.value=edit.name||''; aType.value=edit.type||'hotel'; aAddress.value=edit.address||''; aCheckin.value=edit.checkin||''; aCheckout.value=edit.checkout||''; aNights.value=edit.nights||''; aPrice.value=edit.price||''; computeAccommodationTotal(); if (aPaid) aPaid.checked = !!edit.paid; } }
+        function showAccommodationForm(edit){ if (!accommodationForm) return; accommodationForm.classList.remove('hidden'); if (!edit){ if(aId) aId.value=''; if(aName) aName.value=''; if(aType) aType.value='hotel'; if(aAddress) aAddress.value=''; if(aCheckin) aCheckin.value=''; if(aCheckout) aCheckout.value=''; if(aNights) aNights.value=''; if(aPrice) aPrice.value=''; if(aTotal) aTotal.value='R$ 0,00'; if (aPaid) aPaid.checked = false; } else { if(aId) aId.value=edit.id||''; if(aName) aName.value=edit.name||''; if(aType) aType.value=edit.type||'hotel'; if(aAddress) aAddress.value=edit.address||''; if(aCheckin) aCheckin.value=edit.checkin||''; if(aCheckout) aCheckout.value=edit.checkout||''; if(aNights) aNights.value=edit.nights||''; if(aPrice) aPrice.value=edit.price||''; computeAccommodationTotal(); if (aPaid) aPaid.checked = !!edit.paid; } }
         if (accommodationNewBtn) accommodationNewBtn.addEventListener('click', ()=>{ showAccommodationForm(null); });
         if (aCancel) aCancel.addEventListener('click', (e)=>{ e.preventDefault(); accommodationForm.classList.add('hidden'); });
 
-        function computeAccommodationTotal(){ try { const nights = parseInt(aNights.value) || 0; const price = parseBRNumber(aPrice.value); const total = nights * price; if (aTotal) aTotal.textContent = formatBR(total); return total; } catch(e){ return 0; } }
+        // Calcula número de diárias automaticamente baseado nas datas
+        function computeAccommodationNights(){ try { if(!aCheckin || !aCheckout || !aNights) return; const cin = new Date(aCheckin.value); const cout = new Date(aCheckout.value); if(cin && cout && cout > cin){ const diffTime = Math.abs(cout - cin); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); if(aNights) aNights.value = diffDays; computeAccommodationTotal(); } } catch(e){ console.error('computeAccommodationNights', e); } }
+        if(aCheckin) aCheckin.addEventListener('change', computeAccommodationNights);
+        if(aCheckout) aCheckout.addEventListener('change', computeAccommodationNights);
+
+        function computeAccommodationTotal(){ try { const nights = parseInt(aNights?.value) || 0; const price = parseBRNumber(aPrice?.value || '0'); const total = nights * price; if (aTotal) aTotal.value = formatBR(total); return total; } catch(e){ return 0; } }
         ['input','change'].forEach(evt => { [aNights,aPrice].forEach(el=>{ if (el) el.addEventListener(evt, computeAccommodationTotal); }); });
 
         async function saveAccommodation(){ try {
-            const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar hospedagem', 'bg-yellow-600'); return; }
+            const pid = q('tp-id')?.value; if (!pid) { showToast('Salve o plano antes de adicionar hospedagem', 'bg-yellow-600'); return; }
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
-            const obj = { id: aId.value || ('acc-'+Math.random().toString(36).slice(2,9)), name: aName.value, type: aType.value, address: aAddress.value, checkin: aCheckin.value, checkout: aCheckout.value, nights: parseInt(aNights.value)||0, price: parseBRNumber(aPrice.value), total: computeAccommodationTotal(), paid: (aPaid && !!aPaid.checked) };
+            const obj = { id: aId?.value || ('acc-'+Math.random().toString(36).slice(2,9)), name: aName?.value || '', type: aType?.value || 'hotel', address: aAddress?.value || '', checkin: aCheckin?.value || '', checkout: aCheckout?.value || '', nights: parseInt(aNights?.value)||0, price: parseBRNumber(aPrice?.value || '0'), total: computeAccommodationTotal(), paid: (aPaid && !!aPaid.checked) };
             plan.accommodations = plan.accommodations || [];
             const idx = plan.accommodations.findIndex(a=>a.id===obj.id);
             if (idx === -1) plan.accommodations.push(obj); else plan.accommodations[idx] = obj;
             await saveTravelPlans(plans);
             showToast('Hospedagem salva', 'bg-green-600');
-            accommodationForm.classList.add('hidden');
+            if(accommodationForm) accommodationForm.classList.add('hidden');
             renderPlanDetails(plan.id);
         } catch(e){ console.error('saveAccommodation', e); showToast('Erro ao salvar hospedagem', 'bg-red-600'); } }
         if (aSave) aSave.addEventListener('click', (e)=>{ e.preventDefault(); saveAccommodation(); });
@@ -13427,26 +13750,856 @@ const firebaseConfig = {
 
         // ===== CHECKLIST CRUD =====
         const checklistNewBtn = q('tp-checklist-new'); const checklistForm = q('tp-checklist-form');
-        const cId = q('tp-checklist-id'); const cItem = q('tp-checklist-item'); const cCategory = q('tp-checklist-category'); const cQuantity = q('tp-checklist-quantity'); const cWeight = q('tp-checklist-weight');
+        const cId = q('tp-checklist-id'); const cItem = q('tp-checklist-item'); const cCategory = q('tp-checklist-category'); const cQuantity = q('tp-checklist-quantity'); const cWeight = q('tp-checklist-weight'); const cPacked = q('tp-checklist-packed');
         const cSave = q('tp-checklist-save'); const cCancel = q('tp-checklist-cancel');
 
-        function showChecklistForm(edit){ if (!checklistForm) return; checklistForm.classList.remove('hidden'); if (!edit){ cId.value=''; cItem.value=''; cCategory.value='roupas'; cQuantity.value='1'; cWeight.value=''; } else { cId.value=edit.id||''; cItem.value=edit.item||''; cCategory.value=edit.category||'roupas'; cQuantity.value=edit.quantity||'1'; cWeight.value=edit.weight||''; } }
+        function showChecklistForm(edit){ if (!checklistForm) return; checklistForm.classList.remove('hidden'); if (!edit){ cId.value=''; cItem.value=''; cCategory.value='roupas'; cQuantity.value='1'; cWeight.value=''; if(cPacked) cPacked.checked = false; } else { cId.value=edit.id||''; cItem.value=edit.item||''; cCategory.value=edit.category||'roupas'; cQuantity.value=edit.quantity||'1'; cWeight.value=edit.weight||''; if(cPacked) cPacked.checked = !!edit.packed; } }
         if (checklistNewBtn) checklistNewBtn.addEventListener('click', ()=>{ showChecklistForm(null); });
         if (cCancel) cCancel.addEventListener('click', (e)=>{ e.preventDefault(); checklistForm.classList.add('hidden'); });
 
         async function saveChecklist(){ try {
             const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar checklist', 'bg-yellow-600'); return; }
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
-            const obj = { id: cId.value || ('chk-'+Math.random().toString(36).slice(2,9)), item: cItem.value, category: cCategory.value, quantity: parseInt(cQuantity.value)||1, weight: parseBRNumber(cWeight.value), packed: false };
+            const obj = { id: cId.value || ('chk-'+Math.random().toString(36).slice(2,9)), item: cItem.value, category: cCategory.value, quantity: parseInt(cQuantity.value)||1, weight: parseBRNumber(cWeight.value), packed: (cPacked && !!cPacked.checked) };
             plan.checklist = plan.checklist || [];
             const idx = plan.checklist.findIndex(c=>c.id===obj.id);
             if (idx === -1) plan.checklist.push(obj); else plan.checklist[idx] = obj;
             await saveTravelPlans(plans);
-            showToast('Item adicionado', 'bg-green-600');
+            showToast('Item salvo', 'bg-green-600');
             checklistForm.classList.add('hidden');
             renderPlanDetails(plan.id);
         } catch(e){ console.error('saveChecklist', e); showToast('Erro ao salvar item', 'bg-red-600'); } }
         if (cSave) cSave.addEventListener('click', (e)=>{ e.preventDefault(); saveChecklist(); });
+
+        // ===== SISTEMA DE SUGESTÕES DO CHECKLIST (CATÁLOGO EXPANDIDO) =====
+        
+        // Catálogo padrão expandido de sugestões (144 itens)
+        const DEFAULT_CHECKLIST_CATALOG = [
+            // Documentos (18 itens)
+            {item: 'Passaporte', category: 'Documentos', weight: 0.1, quantity: 1},
+            {item: 'Visto', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Carteira de Identidade (RG)', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'CPF', category: 'Documentos', weight: 0.01, quantity: 1},
+            {item: 'CNH (Carteira de Motorista)', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Cartão de Crédito', category: 'Documentos', weight: 0.01, quantity: 2},
+            {item: 'Cartão de Débito', category: 'Documentos', weight: 0.01, quantity: 1},
+            {item: 'Dinheiro em Espécie (Real)', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Moeda Estrangeira', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Seguro Viagem (Apólice)', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Vouchers de Hotel', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Passagens Aéreas (Impressas)', category: 'Documentos', weight: 0.1, quantity: 1},
+            {item: 'Carteira de Vacinação', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Certificado Vacinação COVID-19', category: 'Documentos', weight: 0.02, quantity: 1},
+            {item: 'Cartão do Plano de Saúde', category: 'Documentos', weight: 0.01, quantity: 1},
+            {item: 'Carteirinha de Estudante', category: 'Documentos', weight: 0.01, quantity: 1},
+            {item: 'PID (Permissão Internacional p/ Dirigir)', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Cópias de Documentos (Digital/Impressa)', category: 'Documentos', weight: 0.1, quantity: 1},
+            
+            // Roupas (35 itens)
+            {item: 'Camisetas Básicas', category: 'Roupas', weight: 0.2, quantity: 5},
+            {item: 'Camisetas Manga Longa', category: 'Roupas', weight: 0.25, quantity: 2},
+            {item: 'Polo/Camisa Social', category: 'Roupas', weight: 0.3, quantity: 2},
+            {item: 'Regata', category: 'Roupas', weight: 0.15, quantity: 3},
+            {item: 'Calças Jeans', category: 'Roupas', weight: 0.5, quantity: 2},
+            {item: 'Calças de Tecido', category: 'Roupas', weight: 0.4, quantity: 2},
+            {item: 'Legging/Calça Esportiva', category: 'Roupas', weight: 0.3, quantity: 2},
+            {item: 'Shorts/Bermudas', category: 'Roupas', weight: 0.25, quantity: 3},
+            {item: 'Vestidos Casuais', category: 'Roupas', weight: 0.3, quantity: 2},
+            {item: 'Vestido de Festa', category: 'Roupas', weight: 0.4, quantity: 1},
+            {item: 'Saia', category: 'Roupas', weight: 0.25, quantity: 2},
+            {item: 'Casaco/Blazer', category: 'Roupas', weight: 0.8, quantity: 1},
+            {item: 'Jaqueta Impermeável', category: 'Roupas', weight: 0.6, quantity: 1},
+            {item: 'Moletom/Blusa de Frio', category: 'Roupas', weight: 0.5, quantity: 2},
+            {item: 'Suéter/Cardigã', category: 'Roupas', weight: 0.4, quantity: 1},
+            {item: 'Jaqueta Corta-Vento', category: 'Roupas', weight: 0.35, quantity: 1},
+            {item: 'Roupa de Banho/Biquíni', category: 'Roupas', weight: 0.15, quantity: 2},
+            {item: 'Sunga/Maiô', category: 'Roupas', weight: 0.12, quantity: 1},
+            {item: 'Saída de Praia/Canga', category: 'Roupas', weight: 0.2, quantity: 1},
+            {item: 'Pijama', category: 'Roupas', weight: 0.3, quantity: 2},
+            {item: 'Roupão', category: 'Roupas', weight: 0.6, quantity: 1},
+            {item: 'Meias Curtas', category: 'Roupas', weight: 0.05, quantity: 5},
+            {item: 'Meias Longas', category: 'Roupas', weight: 0.08, quantity: 3},
+            {item: 'Roupas Íntimas (Calcinha/Cueca)', category: 'Roupas', weight: 0.05, quantity: 7},
+            {item: 'Sutiãs', category: 'Roupas', weight: 0.1, quantity: 3},
+            {item: 'Roupa de Ginástica', category: 'Roupas', weight: 0.25, quantity: 2},
+            {item: 'Tênis Casual', category: 'Roupas', weight: 0.5, quantity: 1},
+            {item: 'Tênis Esportivo', category: 'Roupas', weight: 0.55, quantity: 1},
+            {item: 'Sapato Social', category: 'Roupas', weight: 0.6, quantity: 1},
+            {item: 'Sandálias', category: 'Roupas', weight: 0.3, quantity: 1},
+            {item: 'Rasteirinha', category: 'Roupas', weight: 0.2, quantity: 1},
+            {item: 'Chinelo/Havaianas', category: 'Roupas', weight: 0.2, quantity: 1},
+            {item: 'Bota/Coturno', category: 'Roupas', weight: 0.8, quantity: 1},
+            {item: 'Cinto', category: 'Roupas', weight: 0.15, quantity: 1},
+            {item: 'Pijama/Roupa para Dormir', category: 'Roupas', weight: 0.25, quantity: 2},
+            
+            // Higiene e Beleza (28 itens)
+            {item: 'Escova de Dentes', category: 'Higiene', weight: 0.03, quantity: 1},
+            {item: 'Pasta de Dente', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Fio Dental', category: 'Higiene', weight: 0.02, quantity: 1},
+            {item: 'Enxaguante Bucal', category: 'Higiene', weight: 0.25, quantity: 1},
+            {item: 'Shampoo', category: 'Higiene', weight: 0.3, quantity: 1},
+            {item: 'Condicionador', category: 'Higiene', weight: 0.3, quantity: 1},
+            {item: 'Máscara Capilar', category: 'Higiene', weight: 0.25, quantity: 1},
+            {item: 'Leave-in', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Sabonete Líquido', category: 'Higiene', weight: 0.2, quantity: 1},
+            {item: 'Sabonete em Barra', category: 'Higiene', weight: 0.1, quantity: 2},
+            {item: 'Desodorante', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Perfume/Colônia', category: 'Higiene', weight: 0.2, quantity: 1},
+            {item: 'Protetor Solar (Corpo)', category: 'Higiene', weight: 0.25, quantity: 1},
+            {item: 'Protetor Solar (Rosto)', category: 'Higiene', weight: 0.1, quantity: 1},
+            {item: 'Hidratante Corporal', category: 'Higiene', weight: 0.25, quantity: 1},
+            {item: 'Hidratante Facial', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Repelente de Insetos', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Toalha de Banho', category: 'Higiene', weight: 0.6, quantity: 1},
+            {item: 'Toalha de Rosto', category: 'Higiene', weight: 0.3, quantity: 1},
+            {item: 'Toalha de Praia', category: 'Higiene', weight: 0.5, quantity: 1},
+            {item: 'Pente/Escova de Cabelo', category: 'Higiene', weight: 0.1, quantity: 1},
+            {item: 'Secador de Cabelo', category: 'Higiene', weight: 0.6, quantity: 1},
+            {item: 'Chapinha/Babyliss', category: 'Higiene', weight: 0.4, quantity: 1},
+            {item: 'Lâmina/Aparelho de Barbear', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Espuma/Gel de Barbear', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Absorventes', category: 'Higiene', weight: 0.2, quantity: 1},
+            {item: 'Cotonete', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Necessaire/Estojo', category: 'Higiene', weight: 0.2, quantity: 1},
+            
+            // Eletrônicos (15 itens)
+            {item: 'Smartphone', category: 'Eletrônicos', weight: 0.2, quantity: 1},
+            {item: 'Carregador de Celular', category: 'Eletrônicos', weight: 0.1, quantity: 1},
+            {item: 'Cabo USB Extra', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'Notebook/Tablet', category: 'Eletrônicos', weight: 2.0, quantity: 1},
+            {item: 'Carregador de Notebook', category: 'Eletrônicos', weight: 0.4, quantity: 1},
+            {item: 'Mouse', category: 'Eletrônicos', weight: 0.1, quantity: 1},
+            {item: 'Câmera Fotográfica', category: 'Eletrônicos', weight: 0.5, quantity: 1},
+            {item: 'GoPro/Action Cam', category: 'Eletrônicos', weight: 0.2, quantity: 1},
+            {item: 'Fones de Ouvido', category: 'Eletrônicos', weight: 0.1, quantity: 1},
+            {item: 'Fone Bluetooth/Airpods', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'Adaptador Universal de Tomada', category: 'Eletrônicos', weight: 0.15, quantity: 1},
+            {item: 'Power Bank (Bateria Portátil)', category: 'Eletrônicos', weight: 0.3, quantity: 1},
+            {item: 'Smartwatch', category: 'Eletrônicos', weight: 0.08, quantity: 1},
+            {item: 'Kindle/E-reader', category: 'Eletrônicos', weight: 0.2, quantity: 1},
+            {item: 'Cartão de Memória Extra', category: 'Eletrônicos', weight: 0.01, quantity: 1},
+            {item: 'Hub USB', category: 'Eletrônicos', weight: 0.08, quantity: 1},
+            {item: 'Adaptador HDMI', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'Cabo USB-C', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'Cabo Lightning (iPhone)', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'Cabo Micro-USB', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'Adaptador USB-C para USB-A', category: 'Eletrônicos', weight: 0.02, quantity: 1},
+            {item: 'Cabo Auxiliar (P2/AUX)', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'Adaptador Bluetooth', category: 'Eletrônicos', weight: 0.03, quantity: 1},
+            {item: 'Leitor de Cartão SD/microSD', category: 'Eletrônicos', weight: 0.03, quantity: 1},
+            {item: 'Pen Drive', category: 'Eletrônicos', weight: 0.01, quantity: 1},
+            {item: 'HD Externo Portátil', category: 'Eletrônicos', weight: 0.15, quantity: 1},
+            {item: 'SSD Externo', category: 'Eletrônicos', weight: 0.08, quantity: 1},
+            {item: 'Case Protetor (Notebook)', category: 'Eletrônicos', weight: 0.3, quantity: 1},
+            {item: 'Case Protetor (Tablet)', category: 'Eletrônicos', weight: 0.15, quantity: 1},
+            {item: 'Película Protetora Extra', category: 'Eletrônicos', weight: 0.01, quantity: 1},
+            {item: 'Estabilizador de Imagem (Gimbal)', category: 'Eletrônicos', weight: 0.5, quantity: 1},
+            {item: 'Microfone de Lapela', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'Webcam Portátil', category: 'Eletrônicos', weight: 0.1, quantity: 1},
+            {item: 'Ring Light Portátil', category: 'Eletrônicos', weight: 0.3, quantity: 1},
+            {item: 'Controle Remoto Bluetooth', category: 'Eletrônicos', weight: 0.05, quantity: 1},
+            {item: 'GPS Portátil', category: 'Eletrônicos', weight: 0.12, quantity: 1},
+            {item: 'Rádio Portátil', category: 'Eletrônicos', weight: 0.2, quantity: 1},
+            {item: 'Lanterna LED Potente', category: 'Eletrônicos', weight: 0.15, quantity: 1},
+            {item: 'Lanterna de Cabeça (Headlamp)', category: 'Eletrônicos', weight: 0.1, quantity: 1},
+            
+            // Medicamentos e Saúde (18 itens)
+            {item: 'Analgésico (Dipirona/Paracetamol)', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Anti-inflamatório', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Antialérgico', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Antitérmico', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Antigripal', category: 'Medicamentos', weight: 0.08, quantity: 1},
+            {item: 'Remédio para Enjoo', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Antidiarreico', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Antiácido', category: 'Medicamentos', weight: 0.1, quantity: 1},
+            {item: 'Remédios de Uso Contínuo', category: 'Medicamentos', weight: 0.1, quantity: 1},
+            {item: 'Receitas Médicas', category: 'Medicamentos', weight: 0.02, quantity: 1},
+            {item: 'Vitaminas/Suplementos', category: 'Medicamentos', weight: 0.15, quantity: 1},
+            {item: 'Band-Aid/Curativos', category: 'Medicamentos', weight: 0.02, quantity: 1},
+            {item: 'Termômetro Digital', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Álcool em Gel', category: 'Medicamentos', weight: 0.1, quantity: 1},
+            {item: 'Máscara Descartável (PFF2/N95)', category: 'Medicamentos', weight: 0.05, quantity: 5},
+            {item: 'Pomada para Queimadura', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Colírio', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Kit Primeiros Socorros', category: 'Medicamentos', weight: 0.3, quantity: 1},
+            
+            // MEDICAMENTOS EXTRAS (mais 30 itens para completar 50 total)
+            {item: 'Soro Fisiológico 0,9%', category: 'Medicamentos', weight: 0.15, quantity: 2},
+            {item: 'Gaze Estéril', category: 'Medicamentos', weight: 0.02, quantity: 5},
+            {item: 'Esparadrapo', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Atadura Elástica', category: 'Medicamentos', weight: 0.08, quantity: 2},
+            {item: 'Micropore', category: 'Medicamentos', weight: 0.03, quantity: 1},
+            {item: 'Tesoura sem Ponta (Primeiros Socorros)', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Pinça', category: 'Medicamentos', weight: 0.03, quantity: 1},
+            {item: 'Luvas Descartáveis', category: 'Medicamentos', weight: 0.05, quantity: 5},
+            {item: 'Água Oxigenada 10 volumes', category: 'Medicamentos', weight: 0.1, quantity: 1},
+            {item: 'Álcool 70%', category: 'Medicamentos', weight: 0.1, quantity: 1},
+            {item: 'Mertiolate/Iodo', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Pomada Antibiótica', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Pomada Anti-inflamatória', category: 'Medicamentos', weight: 0.08, quantity: 1},
+            {item: 'Spray Anestésico', category: 'Medicamentos', weight: 0.1, quantity: 1},
+            {item: 'Sache de Gelo Instantâneo', category: 'Medicamentos', weight: 0.1, quantity: 2},
+            {item: 'Protetor Labial Medicinal', category: 'Medicamentos', weight: 0.02, quantity: 1},
+            {item: 'Pastilha para Garganta', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Xarope para Tosse', category: 'Medicamentos', weight: 0.15, quantity: 1},
+            {item: 'Descongestionante Nasal', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Soro Nasal', category: 'Medicamentos', weight: 0.1, quantity: 1},
+            {item: 'Probiótico', category: 'Medicamentos', weight: 0.08, quantity: 1},
+            {item: 'Enzimas Digestivas', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Laxante', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Supositório/Laxativo Infantil', category: 'Medicamentos', weight: 0.03, quantity: 1},
+            {item: 'Simeticona (Gases)', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Sal de Fruta/Eno', category: 'Medicamentos', weight: 0.08, quantity: 1},
+            {item: 'Sais de Reidratação Oral', category: 'Medicamentos', weight: 0.05, quantity: 3},
+            {item: 'Carvão Ativado', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Repelente em Spray', category: 'Medicamentos', weight: 0.12, quantity: 1},
+            {item: 'Repelente em Loção', category: 'Medicamentos', weight: 0.15, quantity: 1},
+            
+            // Acessórios (20 itens)
+            {item: 'Óculos de Sol', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Óculos de Grau (Sobressalente)', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Estojo de Óculos', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'Boné', category: 'Acessórios', weight: 0.12, quantity: 1},
+            {item: 'Chapéu de Praia', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Bolsa de Mão', category: 'Acessórios', weight: 0.4, quantity: 1},
+            {item: 'Mochila/Backpack', category: 'Acessórios', weight: 0.6, quantity: 1},
+            {item: 'Necessaire de Viagem', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Mala de Mão', category: 'Acessórios', weight: 2.5, quantity: 1},
+            {item: 'Mala Despachada', category: 'Acessórios', weight: 3.5, quantity: 1},
+            {item: 'Organizador de Mala', category: 'Acessórios', weight: 0.15, quantity: 3},
+            {item: 'Saco para Roupa Suja', category: 'Acessórios', weight: 0.05, quantity: 2},
+            {item: 'Guarda-Chuva Compacto', category: 'Acessórios', weight: 0.3, quantity: 1},
+            {item: 'Capa de Chuva', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Cadeado para Mala', category: 'Acessórios', weight: 0.15, quantity: 2},
+            {item: 'Etiqueta de Bagagem', category: 'Acessórios', weight: 0.02, quantity: 2},
+            {item: 'Garrafa de Água Reutilizável', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Squeeze/Cantil', category: 'Acessórios', weight: 0.15, quantity: 1},
+            {item: 'Travesseiro de Pescoço', category: 'Acessórios', weight: 0.25, quantity: 1},
+            {item: 'Máscara de Dormir', category: 'Acessórios', weight: 0.02, quantity: 1},
+            
+            // Documentos EXTRAS (mais 12 itens)
+            {item: 'Carta de Motorista Internacional', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Comprovante de Residência', category: 'Documentos', weight: 0.02, quantity: 1},
+            {item: 'Fotos 3x4', category: 'Documentos', weight: 0.01, quantity: 4},
+            {item: 'Certidão de Nascimento/Casamento', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Cartão de Embarque (Digital)', category: 'Documentos', weight: 0.01, quantity: 1},
+            {item: 'Confirmação de Reservas', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Contrato de Aluguel de Carro', category: 'Documentos', weight: 0.02, quantity: 1},
+            {item: 'Cartão de Fidelidade (Companhias)', category: 'Documentos', weight: 0.01, quantity: 1},
+            {item: 'Número de Emergência Anotado', category: 'Documentos', weight: 0.01, quantity: 1},
+            {item: 'Procuração (se necessário)', category: 'Documentos', weight: 0.02, quantity: 1},
+            {item: 'Carta Convite (Visto)', category: 'Documentos', weight: 0.05, quantity: 1},
+            {item: 'Comprovante de Vacina Febre Amarela', category: 'Documentos', weight: 0.02, quantity: 1},
+            
+            // Roupas EXTRAS (mais 25 itens)
+            {item: 'Cueca Boxer', category: 'Roupas', weight: 0.06, quantity: 5},
+            {item: 'Calcinha Confortável', category: 'Roupas', weight: 0.05, quantity: 5},
+            {item: 'Meia-calça', category: 'Roupas', weight: 0.08, quantity: 2},
+            {item: 'Top Esportivo', category: 'Roupas', weight: 0.12, quantity: 2},
+            {item: 'Shorts para Dormir', category: 'Roupas', weight: 0.15, quantity: 2},
+            {item: 'Camisa de Botão', category: 'Roupas', weight: 0.28, quantity: 2},
+            {item: 'Blusa de Lã', category: 'Roupas', weight: 0.45, quantity: 1},
+            {item: 'Colete', category: 'Roupas', weight: 0.35, quantity: 1},
+            {item: 'Calça de Moletom', category: 'Roupas', weight: 0.4, quantity: 1},
+            {item: 'Jardineira/Macacão', category: 'Roupas', weight: 0.5, quantity: 1},
+            {item: 'Kimono/Roupão de Praia', category: 'Roupas', weight: 0.3, quantity: 1},
+            {item: 'Luvas (Frio)', category: 'Roupas', weight: 0.08, quantity: 1},
+            {item: 'Cachecol', category: 'Roupas', weight: 0.15, quantity: 1},
+            {item: 'Gorro/Touca', category: 'Roupas', weight: 0.08, quantity: 1},
+            {item: 'Sapato Impermeável', category: 'Roupas', weight: 0.7, quantity: 1},
+            {item: 'Sapatênis', category: 'Roupas', weight: 0.55, quantity: 1},
+            {item: 'Alpargatas', category: 'Roupas', weight: 0.25, quantity: 1},
+            {item: 'Botas de Trilha', category: 'Roupas', weight: 1.0, quantity: 1},
+            {item: 'Chinelo de Quarto', category: 'Roupas', weight: 0.15, quantity: 1},
+            {item: 'Meias de Compressão (Voo)', category: 'Roupas', weight: 0.1, quantity: 1},
+            {item: 'Lenço/Bandana', category: 'Roupas', weight: 0.05, quantity: 2},
+            {item: 'Gravata/Laço', category: 'Roupas', weight: 0.08, quantity: 1},
+            {item: 'Suspensório', category: 'Roupas', weight: 0.1, quantity: 1},
+            {item: 'Conjunto de Lingerie', category: 'Roupas', weight: 0.12, quantity: 2},
+            {item: 'Roupa Térmica (Frio Extremo)', category: 'Roupas', weight: 0.35, quantity: 2},
+            
+            // ROUPAS EXTRAS ADICIONAIS (mais 40 itens para completar 100 total)
+            {item: 'Camisa Polo Feminina', category: 'Roupas', weight: 0.22, quantity: 2},
+            {item: 'Camisa Regata Esportiva', category: 'Roupas', weight: 0.14, quantity: 3},
+            {item: 'Body/Maiô com Bojo', category: 'Roupas', weight: 0.18, quantity: 1},
+            {item: 'Top Cropped', category: 'Roupas', weight: 0.1, quantity: 2},
+            {item: 'Calça Cargo', category: 'Roupas', weight: 0.55, quantity: 1},
+            {item: 'Calça Capri', category: 'Roupas', weight: 0.35, quantity: 1},
+            {item: 'Bermuda Tactel', category: 'Roupas', weight: 0.2, quantity: 2},
+            {item: 'Short Saia', category: 'Roupas', weight: 0.18, quantity: 1},
+            {item: 'Saia Midi', category: 'Roupas', weight: 0.28, quantity: 1},
+            {item: 'Saia Longa', category: 'Roupas', weight: 0.32, quantity: 1},
+            {item: 'Macaquinho', category: 'Roupas', weight: 0.35, quantity: 1},
+            {item: 'Macacão Longo', category: 'Roupas', weight: 0.48, quantity: 1},
+            {item: 'Vestido Longo', category: 'Roupas', weight: 0.45, quantity: 1},
+            {item: 'Vestido Midi', category: 'Roupas', weight: 0.35, quantity: 1},
+            {item: 'Kimono Curto', category: 'Roupas', weight: 0.25, quantity: 1},
+            {item: 'Cardigan Longo', category: 'Roupas', weight: 0.5, quantity: 1},
+            {item: 'Poncho', category: 'Roupas', weight: 0.4, quantity: 1},
+            {item: 'Capa de Chuva com Capuz', category: 'Roupas', weight: 0.35, quantity: 1},
+            {item: 'Jaqueta Jeans', category: 'Roupas', weight: 0.7, quantity: 1},
+            {item: 'Jaqueta de Couro', category: 'Roupas', weight: 0.9, quantity: 1},
+            {item: 'Parka', category: 'Roupas', weight: 1.1, quantity: 1},
+            {item: 'Trench Coat', category: 'Roupas', weight: 0.85, quantity: 1},
+            {item: 'Sobretudo', category: 'Roupas', weight: 1.2, quantity: 1},
+            {item: 'Xale/Echarpe', category: 'Roupas', weight: 0.2, quantity: 1},
+            {item: 'Pashmina', category: 'Roupas', weight: 0.15, quantity: 1},
+            {item: 'Turbante', category: 'Roupas', weight: 0.05, quantity: 1},
+            {item: 'Tiara/Headband', category: 'Roupas', weight: 0.03, quantity: 2},
+            {item: 'Viseira', category: 'Roupas', weight: 0.08, quantity: 1},
+            {item: 'Gola Alta Destacável', category: 'Roupas', weight: 0.08, quantity: 1},
+            {item: 'Polainas/Caneleira', category: 'Roupas', weight: 0.1, quantity: 1},
+            {item: 'Joelheira', category: 'Roupas', weight: 0.12, quantity: 2},
+            {item: 'Cotoveleira', category: 'Roupas', weight: 0.1, quantity: 2},
+            {item: 'Munhequeira', category: 'Roupas', weight: 0.05, quantity: 2},
+            {item: 'Faixa de Cabeça (Esporte)', category: 'Roupas', weight: 0.03, quantity: 1},
+            {item: 'Camiseta UV (Proteção Solar)', category: 'Roupas', weight: 0.2, quantity: 2},
+            {item: 'Wetsuit/Roupa de Neoprene', category: 'Roupas', weight: 1.5, quantity: 1},
+            {item: 'Roupa de Ciclismo', category: 'Roupas', weight: 0.3, quantity: 1},
+            {item: 'Roupa de Corrida', category: 'Roupas', weight: 0.25, quantity: 1},
+            {item: 'Roupa de Yoga', category: 'Roupas', weight: 0.28, quantity: 1},
+            {item: 'Short de Compressão', category: 'Roupas', weight: 0.15, quantity: 1},
+            {item: 'Calça de Compressão', category: 'Roupas', weight: 0.25, quantity: 1},
+            {item: 'Top de Compressão', category: 'Roupas', weight: 0.12, quantity: 1},
+            {item: 'Camisa de Compressão', category: 'Roupas', weight: 0.18, quantity: 1},
+            {item: 'Meias de Trekking', category: 'Roupas', weight: 0.12, quantity: 3},
+            {item: 'Meias Térmicas', category: 'Roupas', weight: 0.15, quantity: 2},
+            {item: 'Polaina de Neve', category: 'Roupas', weight: 0.2, quantity: 1},
+            
+            // Higiene EXTRAS (mais 17 itens)
+            {item: 'Aparelho de Barbear Elétrico', category: 'Higiene', weight: 0.3, quantity: 1},
+            {item: 'Pinça', category: 'Higiene', weight: 0.02, quantity: 1},
+            {item: 'Cortador de Unha', category: 'Higiene', weight: 0.03, quantity: 1},
+            {item: 'Lixa de Unha', category: 'Higiene', weight: 0.01, quantity: 1},
+            {item: 'Removedor de Maquiagem', category: 'Higiene', weight: 0.12, quantity: 1},
+            {item: 'Maquiagem (Base/Batom/Rímel)', category: 'Higiene', weight: 0.2, quantity: 1},
+            {item: 'Perfume de Bolsa (Travel Size)', category: 'Higiene', weight: 0.08, quantity: 1},
+            {item: 'Desodorante Antitranspirante', category: 'Higiene', weight: 0.12, quantity: 1},
+            {item: 'Talco', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Loção Pós-Sol', category: 'Higiene', weight: 0.2, quantity: 1},
+            {item: 'Óleo Corporal', category: 'Higiene', weight: 0.18, quantity: 1},
+            {item: 'Esmalte de Unha', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Removedor de Esmalte', category: 'Higiene', weight: 0.08, quantity: 1},
+            {item: 'Modelador de Cachos', category: 'Higiene', weight: 0.35, quantity: 1},
+            {item: 'Gel/Pomada para Cabelo', category: 'Higiene', weight: 0.12, quantity: 1},
+            {item: 'Shampoo Seco', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Lenço Demaquilante', category: 'Higiene', weight: 0.08, quantity: 1},
+            
+            // HIGIENE EXTRAS ADICIONAIS (mais 35 itens para completar 80 total)
+            {item: 'Enxaguante Bucal Travel Size', category: 'Higiene', weight: 0.1, quantity: 1},
+            {item: 'Fio Dental Portátil', category: 'Higiene', weight: 0.01, quantity: 1},
+            {item: 'Bochecho Antisséptico', category: 'Higiene', weight: 0.12, quantity: 1},
+            {item: 'Limpador de Língua', category: 'Higiene', weight: 0.02, quantity: 1},
+            {item: 'Fita Dental', category: 'Higiene', weight: 0.02, quantity: 1},
+            {item: 'Creme Dental Clareador', category: 'Higiene', weight: 0.1, quantity: 1},
+            {item: 'Pente Fino (Piolho)', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Escova de Cabelo Dobrável', category: 'Higiene', weight: 0.12, quantity: 1},
+            {item: 'Reparador de Pontas', category: 'Higiene', weight: 0.08, quantity: 1},
+            {item: 'Sérum Capilar', category: 'Higiene', weight: 0.1, quantity: 1},
+            {item: 'Máscara de Tratamento Capilar', category: 'Higiene', weight: 0.2, quantity: 1},
+            {item: 'Ampola de Tratamento', category: 'Higiene', weight: 0.05, quantity: 3},
+            {item: 'Tônico Capilar', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Spray Fixador de Cabelo', category: 'Higiene', weight: 0.2, quantity: 1},
+            {item: 'Mousse para Cabelo', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Cera/Pomada Modeladora', category: 'Higiene', weight: 0.08, quantity: 1},
+            {item: 'Touca de Banho', category: 'Higiene', weight: 0.03, quantity: 1},
+            {item: 'Prendedor de Cabelo', category: 'Higiene', weight: 0.02, quantity: 5},
+            {item: 'Rede para Cabelo', category: 'Higiene', weight: 0.02, quantity: 2},
+            {item: 'Toalha de Microfibra (Cabelo)', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Difusor de Secador', category: 'Higiene', weight: 0.1, quantity: 1},
+            {item: 'Máquina de Cortar Cabelo', category: 'Higiene', weight: 0.4, quantity: 1},
+            {item: 'Tesoura de Cabelo', category: 'Higiene', weight: 0.08, quantity: 1},
+            {item: 'Navalha de Barbear', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Pós-Barba/Aftershave', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Óleo de Barba', category: 'Higiene', weight: 0.08, quantity: 1},
+            {item: 'Bálsamo para Barba', category: 'Higiene', weight: 0.1, quantity: 1},
+            {item: 'Pente para Barba', category: 'Higiene', weight: 0.03, quantity: 1},
+            {item: 'Escova para Barba', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Kit Manicure', category: 'Higiene', weight: 0.15, quantity: 1},
+            {item: 'Alicate de Cutícula', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Palito de Unha', category: 'Higiene', weight: 0.01, quantity: 10},
+            {item: 'Base para Unhas', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Top Coat (Finalizador Unha)', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Algodão/Disco de Algodão', category: 'Higiene', weight: 0.05, quantity: 1},
+            {item: 'Hastes Flexíveis (Cotonete)', category: 'Higiene', weight: 0.05, quantity: 1},
+            
+            // Eletrônicos EXTRAS (mais 10 itens)
+            {item: 'Tablet', category: 'Eletrônicos', weight: 0.5, quantity: 1},
+            {item: 'E-reader (Kindle)', category: 'Eletrônicos', weight: 0.19, quantity: 1},
+            {item: 'Cabo HDMI', category: 'Eletrônicos', weight: 0.08, quantity: 1},
+            {item: 'Hub USB', category: 'Eletrônicos', weight: 0.06, quantity: 1},
+            {item: 'Pen Drive', category: 'Eletrônicos', weight: 0.01, quantity: 1},
+            {item: 'HD Externo', category: 'Eletrônicos', weight: 0.15, quantity: 1},
+            {item: 'Caixa de Som Bluetooth', category: 'Eletrônicos', weight: 0.3, quantity: 1},
+            {item: 'Tripé para Câmera/Celular', category: 'Eletrônicos', weight: 0.4, quantity: 1},
+            {item: 'Drone', category: 'Eletrônicos', weight: 0.8, quantity: 1},
+            {item: 'Console de Videogame Portátil', category: 'Eletrônicos', weight: 0.35, quantity: 1},
+            
+            // Medicamentos EXTRAS (mais 12 itens)
+            {item: 'Antiespasmódico', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Laxante', category: 'Medicamentos', weight: 0.08, quantity: 1},
+            {item: 'Descongestionante Nasal', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Pastilhas para Garganta', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Antiácido Efervescente', category: 'Medicamentos', weight: 0.12, quantity: 1},
+            {item: 'Pomada Anti-inflamatória', category: 'Medicamentos', weight: 0.08, quantity: 1},
+            {item: 'Gaze e Esparadrapo', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Atadura Elástica', category: 'Medicamentos', weight: 0.08, quantity: 1},
+            {item: 'Soro Fisiológico', category: 'Medicamentos', weight: 0.1, quantity: 1},
+            {item: 'Protetor Labial', category: 'Medicamentos', weight: 0.02, quantity: 1},
+            {item: 'Comprimido para Mal de Altitude', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            {item: 'Pomada para Picada de Inseto', category: 'Medicamentos', weight: 0.05, quantity: 1},
+            
+            // Acessórios EXTRAS (mais 20 itens)
+            {item: 'Relógio de Pulso', category: 'Acessórios', weight: 0.08, quantity: 1},
+            {item: 'Pulseiras/Colares', category: 'Acessórios', weight: 0.05, quantity: 3},
+            {item: 'Brincos', category: 'Acessórios', weight: 0.02, quantity: 3},
+            {item: 'Carteira', category: 'Acessórios', weight: 0.15, quantity: 1},
+            {item: 'Porta-Documentos', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Pochete', category: 'Acessórios', weight: 0.15, quantity: 1},
+            {item: 'Porta-Passaporte', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'Cinto Porta-Dinheiro', category: 'Acessórios', weight: 0.08, quantity: 1},
+            {item: 'Saco Estanque (Praia)', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Organizador de Cabos', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'Lenço de Papel', category: 'Acessórios', weight: 0.05, quantity: 3},
+            {item: 'Lanche/Barra de Cereal', category: 'Acessórios', weight: 0.15, quantity: 5},
+            {item: 'Chiclete/Bala', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'Protetor Auricular (Silicone)', category: 'Acessórios', weight: 0.01, quantity: 2},
+            {item: 'Tapa-Olho para Dormir', category: 'Acessórios', weight: 0.02, quantity: 1},
+            {item: 'Spray de Ambiente', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Varal Portátil', category: 'Acessórios', weight: 0.08, quantity: 1},
+            {item: 'Pregadores de Roupa', category: 'Acessórios', weight: 0.05, quantity: 6},
+            {item: 'Saco de Compressão (Roupas)', category: 'Acessórios', weight: 0.05, quantity: 2},
+            {item: 'Isqueiro/Fósforos', category: 'Acessórios', weight: 0.03, quantity: 1},
+            
+            // ACESSÓRIOS EXTRAS ADICIONAIS (mais 60 itens para completar 100 total)
+            {item: 'Mochila Daypack (Passeio)', category: 'Acessórios', weight: 0.4, quantity: 1},
+            {item: 'Bolsa Tiracolo', category: 'Acessórios', weight: 0.3, quantity: 1},
+            {item: 'Bolsa de Cintura (Fanny Pack)', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Mala de Bordo Rígida', category: 'Acessórios', weight: 3.0, quantity: 1},
+            {item: 'Mochila de Trekking', category: 'Acessórios', weight: 1.5, quantity: 1},
+            {item: 'Sacola de Praia', category: 'Acessórios', weight: 0.25, quantity: 1},
+            {item: 'Nécessaire Grande', category: 'Acessórios', weight: 0.3, quantity: 1},
+            {item: 'Nécessaire Pequena', category: 'Acessórios', weight: 0.15, quantity: 1},
+            {item: 'Estojo para Joias', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Porta-Relógio', category: 'Acessórios', weight: 0.08, quantity: 1},
+            {item: 'Cinto de Couro', category: 'Acessórios', weight: 0.25, quantity: 1},
+            {item: 'Cinto de Tecido', category: 'Acessórios', weight: 0.15, quantity: 1},
+            {item: 'Suspensório Ajustável', category: 'Acessórios', weight: 0.12, quantity: 1},
+            {item: 'Gravata Clássica', category: 'Acessórios', weight: 0.1, quantity: 2},
+            {item: 'Gravata Borboleta', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'Lenço de Bolso (Pocket Square)', category: 'Acessórios', weight: 0.02, quantity: 2},
+            {item: 'Abotoaduras', category: 'Acessórios', weight: 0.03, quantity: 1},
+            {item: 'Clip de Gravata', category: 'Acessórios', weight: 0.02, quantity: 1},
+            {item: 'Anel', category: 'Acessórios', weight: 0.01, quantity: 3},
+            {item: 'Piercing Extra', category: 'Acessórios', weight: 0.01, quantity: 2},
+            {item: 'Corrente/Cordão', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'Tornozeleira', category: 'Acessórios', weight: 0.02, quantity: 1},
+            {item: 'Prendedor de Cabelo Decorativo', category: 'Acessórios', weight: 0.05, quantity: 3},
+            {item: 'Tiara com Strass', category: 'Acessórios', weight: 0.08, quantity: 1},
+            {item: 'Scrunchie (Elástico Volumoso)', category: 'Acessórios', weight: 0.02, quantity: 5},
+            {item: 'Óculos de Natação', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Touca de Natação', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'Óculos de Mergulho', category: 'Acessórios', weight: 0.3, quantity: 1},
+            {item: 'Óculos de Ski/Snowboard', category: 'Acessórios', weight: 0.25, quantity: 1},
+            {item: 'Óculos de Proteção (Esporte)', category: 'Acessórios', weight: 0.12, quantity: 1},
+            {item: 'Óculos de Leitura (+1.0 a +3.0)', category: 'Acessórios', weight: 0.08, quantity: 1},
+            {item: 'Cordinha para Óculos', category: 'Acessórios', weight: 0.02, quantity: 1},
+            {item: 'Kit Limpeza de Óculos', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'Pano de Microfibra (Óculos)', category: 'Acessórios', weight: 0.01, quantity: 2},
+            {item: 'Chapéu Panamá', category: 'Acessórios', weight: 0.18, quantity: 1},
+            {item: 'Chapéu Bucket', category: 'Acessórios', weight: 0.15, quantity: 1},
+            {item: 'Chapéu Fedora', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Boina', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Gorro de Lã', category: 'Acessórios', weight: 0.12, quantity: 1},
+            {item: 'Cachecol', category: 'Acessórios', weight: 0.25, quantity: 1},
+            {item: 'Luvas de Lã', category: 'Acessórios', weight: 0.15, quantity: 1},
+            {item: 'Luvas de Couro', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Luvas Térmicas (Ski)', category: 'Acessórios', weight: 0.3, quantity: 1},
+            {item: 'Luvas Touch Screen', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Aquecedor de Mãos Descartável', category: 'Acessórios', weight: 0.05, quantity: 4},
+            {item: 'Protetor de Pescoço (Neck Gaiter)', category: 'Acessórios', weight: 0.08, quantity: 1},
+            {item: 'Balaclava', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Joelheira/Cotoveleira', category: 'Acessórios', weight: 0.15, quantity: 2},
+            {item: 'Munhequeira', category: 'Acessórios', weight: 0.05, quantity: 2},
+            {item: 'Cinta Lombar', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Faixa Elástica (Exercício)', category: 'Acessórios', weight: 0.1, quantity: 1},
+            {item: 'Tapete de Yoga Dobrável', category: 'Acessórios', weight: 0.5, quantity: 1},
+            {item: 'Toalha de Yoga/Esporte', category: 'Acessórios', weight: 0.2, quantity: 1},
+            {item: 'Squeeze com Infusor', category: 'Acessórios', weight: 0.25, quantity: 1},
+            {item: 'Caneca Térmica', category: 'Acessórios', weight: 0.3, quantity: 1},
+            {item: 'Thermos/Garrafa Térmica Pequena', category: 'Acessórios', weight: 0.4, quantity: 1},
+            {item: 'Porta-Comprimidos Semanal', category: 'Acessórios', weight: 0.08, quantity: 1},
+            {item: 'Porta-Cartão de Visita', category: 'Acessórios', weight: 0.05, quantity: 1},
+            {item: 'RFID Blocker (Cartões)', category: 'Acessórios', weight: 0.02, quantity: 3},
+            
+            // Diversos (mais 20 itens = 30 total)
+            {item: 'Guia/Mapa da Cidade', category: 'Diversos', weight: 0.2, quantity: 1},
+            {item: 'Caderno/Diário de Viagem', category: 'Diversos', weight: 0.3, quantity: 1},
+            {item: 'Caneta/Lápis', category: 'Diversos', weight: 0.02, quantity: 2},
+            {item: 'Livro/Revista', category: 'Diversos', weight: 0.4, quantity: 2},
+            {item: 'Baralho/Jogos de Tabuleiro', category: 'Diversos', weight: 0.2, quantity: 1},
+            {item: 'Snacks/Petiscos para Viagem', category: 'Diversos', weight: 0.3, quantity: 1},
+            {item: 'Saco/Sacola Reutilizável', category: 'Diversos', weight: 0.05, quantity: 2},
+            {item: 'Lanterna', category: 'Diversos', weight: 0.1, quantity: 1},
+            {item: 'Multitool/Canivete Suíço', category: 'Diversos', weight: 0.15, quantity: 1},
+            {item: 'Almofada Inflável', category: 'Diversos', weight: 0.2, quantity: 1},
+            {item: 'Corda/Barbante', category: 'Diversos', weight: 0.1, quantity: 1},
+            {item: 'Fita Adesiva', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Tesoura Pequena', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Adesivo Decorativo/Patches', category: 'Diversos', weight: 0.02, quantity: 5},
+            {item: 'Marcador de Página', category: 'Diversos', weight: 0.01, quantity: 2},
+            {item: 'Post-it/Bloco de Notas', category: 'Diversos', weight: 0.03, quantity: 1},
+            {item: 'Binóculo', category: 'Diversos', weight: 0.5, quantity: 1},
+            {item: 'Bússola', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Apito de Emergência', category: 'Diversos', weight: 0.02, quantity: 1},
+            {item: 'Sacos Ziplock (Diversos Tamanhos)', category: 'Diversos', weight: 0.05, quantity: 5},
+            {item: 'Ímã de Geladeira (Souvenir)', category: 'Diversos', weight: 0.05, quantity: 3},
+            {item: 'Cartão Postal', category: 'Diversos', weight: 0.02, quantity: 10},
+            {item: 'Presente/Lembrancinha', category: 'Diversos', weight: 0.3, quantity: 3},
+            {item: 'Papel Alumínio', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Saco de Lixo', category: 'Diversos', weight: 0.03, quantity: 5},
+            {item: 'Grampo de Cabelo/Presilha', category: 'Diversos', weight: 0.02, quantity: 5},
+            {item: 'Elástico de Cabelo', category: 'Diversos', weight: 0.01, quantity: 10},
+            {item: 'Papel Filme/Plástico', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Filme para Câmera Instantânea', category: 'Diversos', weight: 0.1, quantity: 2},
+            {item: 'Bateria AAA Extra', category: 'Diversos', weight: 0.05, quantity: 4},
+            {item: 'Bateria AA Extra', category: 'Diversos', weight: 0.05, quantity: 4},
+            {item: 'Pilha Botão (Relógio)', category: 'Diversos', weight: 0.01, quantity: 2},
+            {item: 'Adaptador de Áudio 3.5mm', category: 'Diversos', weight: 0.01, quantity: 1},
+            {item: 'Etiqueta Adesiva', category: 'Diversos', weight: 0.02, quantity: 1},
+            {item: 'Marcador Permanente', category: 'Diversos', weight: 0.02, quantity: 2},
+            {item: 'Clips/Prendedor de Papel', category: 'Diversos', weight: 0.01, quantity: 10},
+            {item: 'Grampeador Mini', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Cola Bastão', category: 'Diversos', weight: 0.03, quantity: 1},
+            {item: 'Régua Pequena', category: 'Diversos', weight: 0.02, quantity: 1},
+            {item: 'Calculadora', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Agenda/Planner', category: 'Diversos', weight: 0.25, quantity: 1},
+            {item: 'Calendário de Bolso', category: 'Diversos', weight: 0.02, quantity: 1},
+            {item: 'Apontador de Lápis', category: 'Diversos', weight: 0.02, quantity: 1},
+            {item: 'Borracha', category: 'Diversos', weight: 0.01, quantity: 2},
+            {item: 'Lápis de Cor/Canetinha', category: 'Diversos', weight: 0.1, quantity: 1},
+            {item: 'Quebra-Cabeça Portátil', category: 'Diversos', weight: 0.15, quantity: 1},
+            {item: 'Cubo Mágico', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Ioiô', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Pipa Compacta', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Bola Inflável (Praia)', category: 'Diversos', weight: 0.1, quantity: 1},
+            {item: 'Frisbee', category: 'Diversos', weight: 0.15, quantity: 1},
+            {item: 'Raquete de Frescobol', category: 'Diversos', weight: 0.3, quantity: 2},
+            {item: 'Boia de Braço', category: 'Diversos', weight: 0.08, quantity: 2},
+            {item: 'Boia Inflável', category: 'Diversos', weight: 0.15, quantity: 1},
+            {item: 'Snorkel e Máscara', category: 'Diversos', weight: 0.4, quantity: 1},
+            {item: 'Nadadeiras', category: 'Diversos', weight: 0.5, quantity: 1},
+            {item: 'Touca de Natação', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Óculos de Natação', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Protetor de Ouvido (Natação)', category: 'Diversos', weight: 0.02, quantity: 1},
+            {item: 'Clipe de Nariz (Natação)', category: 'Diversos', weight: 0.01, quantity: 1},
+            {item: 'Prancha de Natação', category: 'Diversos', weight: 0.3, quantity: 1},
+            {item: 'Colete Salva-Vidas', category: 'Diversos', weight: 0.6, quantity: 1},
+            {item: 'Cooler Térmico Pequeno', category: 'Diversos', weight: 0.5, quantity: 1},
+            {item: 'Bolsa Térmica', category: 'Diversos', weight: 0.2, quantity: 1},
+            {item: 'Gelo Reutilizável', category: 'Diversos', weight: 0.15, quantity: 3},
+            {item: 'Caneca Térmica', category: 'Diversos', weight: 0.25, quantity: 1},
+            {item: 'Garrafa Térmica', category: 'Diversos', weight: 0.4, quantity: 1},
+            {item: 'Chopeira Portátil', category: 'Diversos', weight: 1.2, quantity: 1},
+            {item: 'Abridor de Garrafa', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Saca-Rolhas', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Canudo Reutilizável', category: 'Diversos', weight: 0.02, quantity: 2},
+            {item: 'Talheres de Plástico', category: 'Diversos', weight: 0.05, quantity: 10},
+            {item: 'Talheres Reutilizáveis (Kit)', category: 'Diversos', weight: 0.15, quantity: 1},
+            {item: 'Prato de Plástico', category: 'Diversos', weight: 0.05, quantity: 5},
+            {item: 'Copo de Plástico', category: 'Diversos', weight: 0.03, quantity: 10},
+            {item: 'Guardanapo de Papel', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Papel Toalha', category: 'Diversos', weight: 0.15, quantity: 1},
+            {item: 'Detergente Biodegradável', category: 'Diversos', weight: 0.2, quantity: 1},
+            {item: 'Esponja de Lavar Louça', category: 'Diversos', weight: 0.03, quantity: 2},
+            {item: 'Pano de Prato', category: 'Diversos', weight: 0.1, quantity: 2},
+            {item: 'Luva de Lavar Louça', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Escorredor de Louça Dobrável', category: 'Diversos', weight: 0.3, quantity: 1},
+            {item: 'Tábua de Corte Portátil', category: 'Diversos', weight: 0.2, quantity: 1},
+            {item: 'Faca de Cozinha', category: 'Diversos', weight: 0.15, quantity: 1},
+            {item: 'Descascador de Legumes', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Abridor de Lata', category: 'Diversos', weight: 0.05, quantity: 1},
+            {item: 'Ralador Portátil', category: 'Diversos', weight: 0.1, quantity: 1},
+            {item: 'Espremedor de Limão', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Peneira Pequena', category: 'Diversos', weight: 0.08, quantity: 1},
+            {item: 'Pote Hermético (Pequeno)', category: 'Diversos', weight: 0.1, quantity: 3},
+            {item: 'Pote Hermético (Médio)', category: 'Diversos', weight: 0.15, quantity: 2},
+            {item: 'Pote Hermético (Grande)', category: 'Diversos', weight: 0.2, quantity: 1},
+            {item: 'Marmita Térmica', category: 'Diversos', weight: 0.4, quantity: 1},
+            {item: 'Tupperware Variados', category: 'Diversos', weight: 0.3, quantity: 3},
+            {item: 'Saco para Gelo', category: 'Diversos', weight: 0.05, quantity: 5},
+            {item: 'Forma de Gelo Dobrável', category: 'Diversos', weight: 0.1, quantity: 1},
+        ];
+        
+        // Gerenciamento de catálogo personalizado
+        function getCustomCatalog() {
+            if (!window.state?.appData?.settings) return [];
+            return window.state.appData.settings.customChecklistCatalog || [];
+        }
+        
+        function saveCustomCatalog(catalog) {
+            if (!window.state?.appData?.settings) return;
+            window.state.appData.settings.customChecklistCatalog = catalog;
+            if (typeof storage !== 'undefined' && typeof storage.saveData === 'function') {
+                storage.saveData(window.state.appData).catch(e => console.error('saveCustomCatalog', e));
+            }
+        }
+        
+        function getDeletedSuggestions() {
+            if (!window.state?.appData?.settings) return [];
+            return window.state.appData.settings.deletedSuggestions || [];
+        }
+        
+        function saveDeletedSuggestions(deleted) {
+            if (!window.state?.appData?.settings) return;
+            window.state.appData.settings.deletedSuggestions = deleted;
+            if (typeof storage !== 'undefined' && typeof storage.saveData === 'function') {
+                storage.saveData(window.state.appData).catch(e => console.error('saveDeletedSuggestions', e));
+            }
+        }
+        
+        function deleteSuggestionPermanently(itemName, category) {
+            const deleted = getDeletedSuggestions();
+            const key = `${category}::${itemName}`;
+            if (!deleted.includes(key)) {
+                deleted.push(key);
+                saveDeletedSuggestions(deleted);
+            }
+            renderChecklistSuggestionsPanel();
+            showToast('Sugestão removida permanentemente', 'bg-red-600');
+        }
+        
+        function isSuggestionDeleted(itemName, category) {
+            const deleted = getDeletedSuggestions();
+            const key = `${category}::${itemName}`;
+            return deleted.includes(key);
+        }
+        
+        function addCustomSuggestion(item, category, weight, quantity) {
+            const catalog = getCustomCatalog();
+            catalog.push({item, category, weight, quantity, custom: true});
+            saveCustomCatalog(catalog);
+            renderChecklistSuggestionsPanel();
+        }
+        
+        function removeCustomSuggestion(index) {
+            const catalog = getCustomCatalog();
+            catalog.splice(index, 1);
+            saveCustomCatalog(catalog);
+            renderChecklistSuggestionsPanel();
+        }
+        
+        function renderChecklistSuggestionsPanel() {
+            const container = q('tp-checklist-suggestions-container');
+            if (!container) return;
+            
+            // Filtrar itens deletados
+            const allSuggestions = [...DEFAULT_CHECKLIST_CATALOG, ...getCustomCatalog()]
+                .filter(s => !isSuggestionDeleted(s.item, s.category));
+            
+            const categories = [...new Set(allSuggestions.map(s => s.category))];
+            
+            let html = '';
+            let totalItems = 0;
+            
+            categories.forEach(cat => {
+                const items = allSuggestions.filter(s => s.category === cat);
+                totalItems += items.length;
+                
+                html += `<div class="mb-4 bg-white rounded-lg p-3 border border-purple-200">
+                    <h6 class="text-xs font-bold text-purple-800 mb-2 flex items-center justify-between">
+                        <span class="flex items-center gap-1">
+                            <span class="material-symbols-outlined" style="font-size:14px">category</span>${cat} (${items.length})
+                        </span>
+                        <button class="add-custom-suggestion-btn text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1" data-category="${cat}">
+                            <span class="material-symbols-outlined" style="font-size:12px">add</span>
+                            Nova Sugestão
+                        </button>
+                    </h6>
+                    <div class="grid grid-cols-1 gap-1">`;
+                items.forEach(s => {
+                    const isCustom = s.custom ? ' bg-yellow-100 border-yellow-400' : ' bg-white border-purple-200';
+                    html += `<div class="flex items-center gap-1">
+                        <button class="checklist-suggestion flex-1 text-xs px-2 py-1.5 rounded border${isCustom} hover:bg-purple-100 text-left flex items-center gap-1" 
+                            data-item="${escapeHtml(s.item)}" data-category="${escapeHtml(s.category)}" data-weight="${s.weight}" data-quantity="${s.quantity}">
+                            <span class="material-symbols-outlined" style="font-size:14px">add_circle</span>
+                            <span class="truncate flex-1">${escapeHtml(s.item)} <span class="text-gray-500">(${s.quantity}x, ${s.weight}kg)</span></span>
+                        </button>
+                        <button class="delete-suggestion-btn px-2 py-1.5 rounded bg-red-50 hover:bg-red-100 text-red-700 border border-red-200" 
+                            data-item="${escapeHtml(s.item)}" data-category="${escapeHtml(s.category)}" title="Excluir permanentemente">
+                            <span class="material-symbols-outlined" style="font-size:16px">delete</span>
+                        </button>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+            
+            // Atualizar título do painel com contagem
+            const panelTitle = document.querySelector('#tp-checklist-suggestions-panel h5');
+            if (panelTitle) {
+                panelTitle.innerHTML = `<span class="material-symbols-outlined">auto_awesome</span> Catálogo de Sugestões (${totalItems} itens)`;
+            }
+            
+            // Adicionar event listeners para os botões de adicionar sugestão personalizada
+            document.querySelectorAll('.add-custom-suggestion-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const category = btn.dataset.category;
+                    showCustomSuggestionForm(category);
+                });
+            });
+            
+            // Adicionar event listeners para os botões de exclusão
+            document.querySelectorAll('.delete-suggestion-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const item = btn.dataset.item;
+                    const category = btn.dataset.category;
+                    
+                    if (confirm(`Tem certeza que deseja excluir permanentemente "${item}" do catálogo?\n\nEsta ação não pode ser desfeita.`)) {
+                        deleteSuggestionPermanently(item, category);
+                    }
+                });
+            });
+        }
+        
+        // Modal/Form para adicionar sugestão personalizada
+        function showCustomSuggestionForm(category) {
+            const form = q('tp-custom-suggestion-form');
+            const categoryInput = q('tp-custom-suggestion-category');
+            
+            if (!form || !categoryInput) return;
+            
+            // Resetar form
+            q('tp-custom-suggestion-item').value = '';
+            categoryInput.value = category || 'Documentos';
+            q('tp-custom-suggestion-weight').value = '0.1';
+            q('tp-custom-suggestion-quantity').value = '1';
+            
+            // Mostrar form
+            form.classList.remove('hidden');
+            q('tp-custom-suggestion-item').focus();
+        }
+        
+        function hideCustomSuggestionForm() {
+            const form = q('tp-custom-suggestion-form');
+            if (form) form.classList.add('hidden');
+        }
+        
+        function saveCustomSuggestion() {
+            const item = q('tp-custom-suggestion-item')?.value?.trim();
+            const category = q('tp-custom-suggestion-category')?.value;
+            const weight = parseFloat(q('tp-custom-suggestion-weight')?.value) || 0.1;
+            const quantity = parseInt(q('tp-custom-suggestion-quantity')?.value) || 1;
+            
+            if (!item) {
+                showToast('Digite o nome do item', 'bg-yellow-600');
+                return;
+            }
+            
+            // Verificar duplicata
+            const allSuggestions = [...DEFAULT_CHECKLIST_CATALOG, ...getCustomCatalog()];
+            const exists = allSuggestions.find(s => s.item.toLowerCase() === item.toLowerCase() && s.category === category);
+            
+            if (exists) {
+                showToast('Item já existe no catálogo', 'bg-yellow-600');
+                return;
+            }
+            
+            addCustomSuggestion(item, category, weight, quantity);
+            hideCustomSuggestionForm();
+            showToast('Sugestão personalizada adicionada!', 'bg-green-600');
+        }
+        
+        const suggestionsBtn = q('tp-checklist-suggestions');
+        const suggestionsPanel = q('tp-checklist-suggestions-panel');
+        const closeSuggestionsBtn = q('tp-close-suggestions');
+        
+        if (suggestionsBtn) {
+            suggestionsBtn.addEventListener('click', () => {
+                if (suggestionsPanel) {
+                    suggestionsPanel.classList.toggle('hidden');
+                    // Renderizar sugestões quando abrir o painel
+                    if (!suggestionsPanel.classList.contains('hidden')) {
+                        renderChecklistSuggestionsPanel();
+                    }
+                }
+            });
+        }
+        
+        if (closeSuggestionsBtn) {
+            closeSuggestionsBtn.addEventListener('click', () => {
+                if (suggestionsPanel) {
+                    suggestionsPanel.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Event delegation para todos os botões de sugestão
+        document.addEventListener('click', async function(e) {
+            if (e.target.classList.contains('checklist-suggestion') || e.target.closest('.checklist-suggestion')) {
+                const btn = e.target.classList.contains('checklist-suggestion') ? e.target : e.target.closest('.checklist-suggestion');
+                
+                const item = btn.dataset.item;
+                const category = btn.dataset.category;
+                const weight = parseFloat(btn.dataset.weight) || 0;
+                const quantity = parseInt(btn.dataset.quantity) || 1;
+                
+                // Adicionar item diretamente ao checklist
+                try {
+                    const pid = q('tp-id')?.value;
+                    if (!pid) {
+                        showToast('Salve o plano antes de adicionar itens', 'bg-yellow-600');
+                        return;
+                    }
+                    
+                    const plans = loadTravelPlans();
+                    const plan = plans.find(p => p.id === pid);
+                    if (!plan) return;
+                    
+                    // Verificar se item já existe
+                    const exists = (plan.checklist || []).find(c => c.item === item);
+                    if (exists) {
+                        showToast(`"${item}" já está no checklist`, 'bg-yellow-600');
+                        return;
+                    }
+                    
+                    const obj = {
+                        id: 'chk-' + Math.random().toString(36).slice(2, 9),
+                        item: item,
+                        category: category,
+                        quantity: quantity,
+                        weight: weight,
+                        packed: false
+                    };
+                    
+                    plan.checklist = plan.checklist || [];
+                    plan.checklist.push(obj);
+                    
+                    await saveTravelPlans(plans);
+                    
+                    // Feedback visual no botão
+                    btn.innerHTML = '✓ Adicionado';
+                    btn.classList.add('bg-green-100', 'text-green-800', 'font-semibold');
+                    btn.disabled = true;
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = btn.dataset.item;
+                        btn.classList.remove('bg-green-100', 'text-green-800', 'font-semibold');
+                        btn.disabled = false;
+                    }, 2000);
+                    
+                    renderPlanDetails(plan.id);
+                    showToast(`"${item}" adicionado ao checklist`, 'bg-green-600');
+                    
+                } catch(e) {
+                    console.error('Erro ao adicionar sugestão:', e);
+                    showToast('Erro ao adicionar item', 'bg-red-600');
+                }
+            }
+        });
 
         // Render functions
         function renderPlansList(){ try {
@@ -13477,61 +14630,113 @@ const firebaseConfig = {
 
         async function renderPlanDetails(planId){ try {
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===planId); if (!plan) return; tpSummaryDestination.textContent = plan.destination||'—'; tpSummaryDate.textContent = plan.date||'—'; tpSummaryTransports.textContent = (plan.transports||[]).length || 0;
-            // transports list
+            
+            // Garantir que o painel de sugestões esteja inicializado
+            try { renderChecklistSuggestionsPanel(); } catch(e){ console.error('renderChecklistSuggestionsPanel', e); }
+            
+            // transports list - COM TOGGLE DE PAGO
             const list = document.getElementById('tp-transport-list'); list.innerHTML='';
             (plan.transports||[]).forEach(t=>{
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
-                const paidBadge = (t && t.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Pago</span>` : '';
+                const paidBadge = (t && t.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
                 left.innerHTML = `<div class="font-medium">${escapeHtml(t.description||t.type)} ${paidBadge}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>`;
                 const right = document.createElement('div');
+                const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(t.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(t.paid?'paid':'payments')+'</span>'; toggle.title=(t.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ t.paid = !t.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showTransportForm(t); });
                 const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir transporte?')) return; plan.transports = (plan.transports||[]).filter(x=>x.id!==t.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Transporte excluído','bg-green-600'); });
-                right.appendChild(edit); right.appendChild(del);
+                right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
                 row.appendChild(left); row.appendChild(right); list.appendChild(row);
             });
 
-            // accommodations list
+            // accommodations list - COM TOGGLE DE PAGO
             const accList = document.getElementById('tp-accommodation-list'); if (accList) { accList.innerHTML='';
             (plan.accommodations||[]).forEach(a=>{
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
-                const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Pago</span>` : '';
+                const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
                 left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${a.type} • ${a.nights} diárias • ${formatBR(a.total||0)}</div>`;
                 const right = document.createElement('div');
+                const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(a.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(a.paid?'paid':'payments')+'</span>'; toggle.title=(a.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ a.paid = !a.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showAccommodationForm(a); });
                 const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir hospedagem?')) return; plan.accommodations = (plan.accommodations||[]).filter(x=>x.id!==a.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Hospedagem excluída','bg-green-600'); });
-                right.appendChild(edit); right.appendChild(del);
+                right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
                 row.appendChild(left); row.appendChild(right); accList.appendChild(row);
             }); }
 
-            // activities list
+            // activities list - COM TOGGLE DE PAGO
             const actList = document.getElementById('tp-activity-list'); if (actList) { actList.innerHTML='';
             (plan.activities||[]).forEach(a=>{
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
-                const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Pago</span>` : '';
+                const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
                 left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${a.type} • ${a.date||'Sem data'} ${a.time||''} • ${formatBR(a.price||0)}</div>`;
                 const right = document.createElement('div');
+                const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(a.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(a.paid?'paid':'payments')+'</span>'; toggle.title=(a.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ a.paid = !a.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showActivityForm(a); });
                 const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir passeio?')) return; plan.activities = (plan.activities||[]).filter(x=>x.id!==a.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Passeio excluído','bg-green-600'); });
-                right.appendChild(edit); right.appendChild(del);
+                right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
                 row.appendChild(left); row.appendChild(right); actList.appendChild(row);
             }); }
 
-            // itinerary list
+            // itinerary list - COM INTEGRAÇÃO AUTOMÁTICA
             const itinList = document.getElementById('tp-itinerary-list'); if (itinList) { itinList.innerHTML='';
-            const sortedItin = (plan.itinerary||[]).sort((a,b)=>(a.day||0)-(b.day||0));
-            sortedItin.forEach(i=>{
-                const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
-                const left = document.createElement('div');
-                left.innerHTML = `<div class="font-medium">Dia ${i.day||'?'}: ${escapeHtml(i.activity)}</div><div class="text-xs text-gray-500">${i.location||''} • ${i.time||''}</div>`;
-                const right = document.createElement('div');
-                const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showItineraryForm(i); });
-                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir item do roteiro?')) return; plan.itinerary = (plan.itinerary||[]).filter(x=>x.id!==i.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Item excluído','bg-green-600'); });
-                right.appendChild(edit); right.appendChild(del);
-                row.appendChild(left); row.appendChild(right); itinList.appendChild(row);
-            }); }
+            
+            // Gerar itens automáticos do roteiro baseado em hospedagens, passeios e transportes
+            const autoItems = [];
+            
+            // Adicionar hospedagens
+            (plan.accommodations||[]).forEach(acc=>{
+                if(acc.checkin) autoItems.push({ date: acc.checkin, time: '14:00', type: 'accommodation', subtype: 'checkin', icon: 'hotel', color: 'pink', title: `Check-in: ${acc.name}`, location: acc.address, auto: true });
+                if(acc.checkout) autoItems.push({ date: acc.checkout, time: '12:00', type: 'accommodation', subtype: 'checkout', icon: 'logout', color: 'pink', title: `Check-out: ${acc.name}`, location: acc.address, auto: true });
+            });
+            
+            // Adicionar passeios
+            (plan.activities||[]).forEach(act=>{
+                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: 'tour', color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}`, auto: true });
+            });
+            
+            // Adicionar transportes com datas (voos, aluguéis)
+            (plan.transports||[]).forEach(tr=>{
+                if(tr.departureDate) autoItems.push({ date: tr.departureDate, time: tr.departureTime||'00:00', type: 'transport', icon: 'flight_takeoff', color: 'blue', title: `${tr.description||tr.type}`, location: 'Partida', auto: true });
+                if(tr.returnDate) autoItems.push({ date: tr.returnDate, time: tr.returnTime||'00:00', type: 'transport', icon: 'flight_land', color: 'blue', title: `${tr.description||tr.type}`, location: 'Retorno', auto: true });
+            });
+            
+            // Adicionar itens manuais
+            (plan.itinerary||[]).forEach(i=>{ autoItems.push({ date: i.date, time: i.time, day: i.day, type: 'manual', icon: 'event', color: 'green', title: i.activity, location: i.location, notes: i.notes, id: i.id, auto: false }); });
+            
+            // Ordenar por data e hora
+            const sortedItin = autoItems.filter(x=>x.date).sort((a,b)=>{ const dateA = new Date(a.date + ' ' + (a.time||'00:00')); const dateB = new Date(b.date + ' ' + (b.time||'00:00')); return dateA - dateB; });
+            
+            if(sortedItin.length === 0){ itinList.innerHTML = '<div class="text-sm text-gray-500 p-4">Nenhum item no roteiro. Adicione hospedagens, passeios ou itens manuais.</div>'; } else {
+                let currentDate = null;
+                sortedItin.forEach(i=>{
+                    // Separador de data
+                    if(currentDate !== i.date){ currentDate = i.date; const dateHeader = document.createElement('div'); dateHeader.className='text-xs font-bold text-gray-600 mt-3 mb-1 px-2'; const d = new Date(i.date + 'T00:00:00'); dateHeader.textContent = d.toLocaleDateString('pt-BR', {weekday:'long', year:'numeric', month:'long', day:'numeric'}); itinList.appendChild(dateHeader); }
+                    
+                    const row = document.createElement('div'); row.className=`p-3 border-l-4 border-${i.color}-500 bg-${i.color}-50 rounded mb-2 ${i.auto?'opacity-90':''}`;
+                    const content = document.createElement('div'); content.className='flex items-start justify-between';
+                    const left = document.createElement('div'); left.className='flex items-start gap-2 flex-1';
+                    const iconEl = document.createElement('span'); iconEl.className=`material-symbols-outlined text-${i.color}-600 text-xl`; iconEl.textContent=i.icon;
+                    const info = document.createElement('div'); info.className='flex-1';
+                    const timeTag = i.time ? `<span class="inline-block bg-gray-700 text-white text-xs px-2 py-0.5 rounded mr-2">${i.time}</span>` : '';
+                    const autoTag = i.auto ? `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded ml-2">Auto</span>` : '';
+                    info.innerHTML = `<div class="font-medium text-gray-900">${timeTag}${escapeHtml(i.title)}${autoTag}</div><div class="text-xs text-gray-600 mt-1">${escapeHtml(i.location||'')}</div>${i.notes?'<div class="text-xs text-gray-500 mt-1 italic">'+escapeHtml(i.notes)+'</div>':''}`;
+                    left.appendChild(iconEl); left.appendChild(info);
+                    
+                    // Botões apenas para itens manuais
+                    if(!i.auto && i.id){
+                        const right = document.createElement('div'); right.className='flex gap-1';
+                        const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 hover:bg-yellow-100'; edit.innerHTML='<span class="material-symbols-outlined text-sm">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showItineraryForm(plan.itinerary.find(x=>x.id===i.id)); });
+                        const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100'; del.innerHTML='<span class="material-symbols-outlined text-sm">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir item do roteiro?')) return; plan.itinerary = (plan.itinerary||[]).filter(x=>x.id!==i.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Item excluído','bg-green-600'); });
+                        right.appendChild(edit); right.appendChild(del);
+                        content.appendChild(left); content.appendChild(right);
+                    } else { content.appendChild(left); }
+                    
+                    row.appendChild(content); itinList.appendChild(row);
+                });
+            }
+            }
 
             // checklist list
             const chkList = document.getElementById('tp-checklist-list'); if (chkList) { chkList.innerHTML='';
@@ -13740,6 +14945,154 @@ const firebaseConfig = {
             } catch(e) { console.error('planner progress update', e); }
             // Pre-format displayed plan fields for editing convenience
             try { tpEstimated.value = formatBR(estimated); tpSaved.value = formatBR(Number(plan.saved||0)); } catch(e){}
+            
+            // ===== ATUALIZAR DASHBOARDS VISUAIS =====
+            try {
+                // Dashboard do Checklist - VERSÃO DETALHADA
+                const checklistItems = plan.checklist || [];
+                const totalItems = checklistItems.length;
+                const packedItems = checklistItems.filter(c => c.packed).length;
+                const pendingItems = totalItems - packedItems;
+                
+                // Cálculo de pesos detalhado
+                const totalWeight = checklistItems.reduce((sum, c) => sum + ((parseFloat(c.weight) || 0) * (parseInt(c.quantity) || 1)), 0);
+                const packedWeight = checklistItems.filter(c => c.packed).reduce((sum, c) => sum + ((parseFloat(c.weight) || 0) * (parseInt(c.quantity) || 1)), 0);
+                const pendingWeight = totalWeight - packedWeight;
+                const avgWeight = totalItems > 0 ? totalWeight / totalItems : 0;
+                
+                const progressPct = totalItems > 0 ? Math.round((packedItems / totalItems) * 100) : 0;
+                
+                // Atualizar elementos principais
+                const checklistBadge = document.getElementById('tp-checklist-progress-badge');
+                const checklistBar = document.getElementById('tp-checklist-progress-bar');
+                const checklistPercentage = document.getElementById('tp-checklist-percentage');
+                const checklistProgressText = document.getElementById('tp-checklist-progress-text');
+                const checklistTotal = document.getElementById('tp-checklist-total');
+                const checklistPacked = document.getElementById('tp-checklist-packed');
+                const checklistPending = document.getElementById('tp-checklist-pending');
+                const checklistWeight = document.getElementById('tp-checklist-weight');
+                const checklistPackedWeight = document.getElementById('tp-checklist-packed-weight');
+                const checklistPendingWeight = document.getElementById('tp-checklist-pending-weight');
+                const checklistWeightAvg = document.getElementById('tp-checklist-weight-avg');
+                
+                if(checklistBadge) checklistBadge.textContent = `${packedItems}/${totalItems}`;
+                if(checklistBar) checklistBar.style.width = progressPct + '%';
+                if(checklistPercentage) checklistPercentage.textContent = progressPct + '%';
+                if(checklistProgressText && progressPct > 15) checklistProgressText.textContent = progressPct + '%';
+                if(checklistTotal) checklistTotal.textContent = totalItems;
+                if(checklistPacked) checklistPacked.textContent = packedItems;
+                if(checklistPending) checklistPending.textContent = pendingItems;
+                if(checklistWeight) checklistWeight.textContent = totalWeight.toFixed(1) + ' kg';
+                if(checklistPackedWeight) checklistPackedWeight.textContent = packedWeight.toFixed(1) + ' kg empacotado';
+                if(checklistPendingWeight) checklistPendingWeight.textContent = pendingWeight.toFixed(1) + ' kg faltando';
+                if(checklistWeightAvg) checklistWeightAvg.textContent = avgWeight.toFixed(2) + ' kg/item';
+                
+                // Resumo por categorias
+                const categoriesEl = document.getElementById('tp-checklist-categories');
+                if(categoriesEl) {
+                    const categoryStats = {};
+                    const categoryNames = {
+                        documentos: { name: 'Documentos', icon: 'description', color: 'blue' },
+                        roupas: { name: 'Roupas', icon: 'checkroom', color: 'pink' },
+                        higiene: { name: 'Higiene', icon: 'soap', color: 'green' },
+                        eletronicos: { name: 'Eletrônicos', icon: 'devices', color: 'purple' },
+                        medicamentos: { name: 'Medicamentos', icon: 'medication', color: 'red' },
+                        acessorios: { name: 'Acessórios', icon: 'shopping_bag', color: 'orange' },
+                        outros: { name: 'Outros', icon: 'more_horiz', color: 'gray' }
+                    };
+                    
+                    checklistItems.forEach(item => {
+                        const cat = item.category || 'outros';
+                        if(!categoryStats[cat]) categoryStats[cat] = { total: 0, packed: 0, weight: 0 };
+                        categoryStats[cat].total++;
+                        if(item.packed) categoryStats[cat].packed++;
+                        categoryStats[cat].weight += (parseFloat(item.weight) || 0) * (parseInt(item.quantity) || 1);
+                    });
+                    
+                    categoriesEl.innerHTML = '';
+                    Object.keys(categoryStats).forEach(catKey => {
+                        const cat = categoryStats[catKey];
+                        const info = categoryNames[catKey] || categoryNames.outros;
+                        const catPct = cat.total > 0 ? Math.round((cat.packed / cat.total) * 100) : 0;
+                        
+                        const catEl = document.createElement('div');
+                        catEl.className = 'text-xs p-2 bg-gray-50 rounded border border-gray-200';
+                        catEl.innerHTML = `
+                            <div class="flex items-center gap-1 mb-1">
+                                <span class="material-symbols-outlined text-${info.color}-600" style="font-size:14px">${info.icon}</span>
+                                <span class="font-semibold text-gray-700">${info.name}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-gray-600">${cat.packed}/${cat.total}</span>
+                                <span class="font-bold text-${info.color}-600">${catPct}%</span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">${cat.weight.toFixed(1)} kg</div>
+                        `;
+                        categoriesEl.appendChild(catEl);
+                    });
+                    
+                    if(Object.keys(categoryStats).length === 0) {
+                        categoriesEl.innerHTML = '<div class="text-xs text-gray-500 col-span-full text-center py-2">Nenhum item no checklist</div>';
+                    }
+                }
+                
+                // Dashboard do Roteiro
+                const accommodations = plan.accommodations || [];
+                const activities = plan.activities || [];
+                const transports = plan.transports || [];
+                const manualItinerary = plan.itinerary || [];
+                
+                const totalEvents = (accommodations.length * 2) + activities.length + manualItinerary.length;
+                
+                const itineraryBadge = document.getElementById('tp-itinerary-badge');
+                const itineraryAccommodations = document.getElementById('tp-itinerary-accommodations');
+                const itineraryActivities = document.getElementById('tp-itinerary-activities');
+                const itineraryTransports = document.getElementById('tp-itinerary-transports');
+                const itineraryManual = document.getElementById('tp-itinerary-manual');
+                
+                if(itineraryBadge) itineraryBadge.textContent = `${totalEvents} eventos`;
+                if(itineraryAccommodations) itineraryAccommodations.textContent = accommodations.length;
+                if(itineraryActivities) itineraryActivities.textContent = activities.length;
+                if(itineraryTransports) itineraryTransports.textContent = transports.length;
+                if(itineraryManual) itineraryManual.textContent = manualItinerary.length;
+                
+                // Timeline compacta do roteiro (próximos 3 eventos)
+                const timelineEl = document.getElementById('tp-itinerary-timeline');
+                if(timelineEl) {
+                    timelineEl.innerHTML = '';
+                    const allEvents = [];
+                    
+                    accommodations.forEach(acc => {
+                        if(acc.checkin) allEvents.push({ date: acc.checkin, time: '14:00', title: `Check-in: ${acc.name}`, icon: 'hotel', color: 'pink' });
+                    });
+                    activities.forEach(act => {
+                        if(act.date) allEvents.push({ date: act.date, time: act.time || '09:00', title: act.name, icon: 'tour', color: 'purple' });
+                    });
+                    manualItinerary.forEach(it => {
+                        if(it.date) allEvents.push({ date: it.date, time: it.time || '00:00', title: it.activity, icon: 'event', color: 'green' });
+                    });
+                    
+                    allEvents.sort((a, b) => {
+                        const dateA = new Date(a.date + ' ' + a.time);
+                        const dateB = new Date(b.date + ' ' + b.time);
+                        return dateA - dateB;
+                    });
+                    
+                    const nextEvents = allEvents.slice(0, 3);
+                    if(nextEvents.length === 0) {
+                        timelineEl.innerHTML = '<div class="text-xs text-gray-500 text-center py-2">Nenhum evento agendado</div>';
+                    } else {
+                        nextEvents.forEach(evt => {
+                            const item = document.createElement('div');
+                            item.className = `flex items-center gap-2 p-2 bg-white rounded border border-${evt.color}-200 text-xs`;
+                            const d = new Date(evt.date + 'T00:00:00');
+                            const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                            item.innerHTML = `<span class="material-symbols-outlined text-${evt.color}-600" style="font-size:16px">${evt.icon}</span><span class="font-semibold text-gray-700">${dateStr}</span><span class="text-gray-600">${evt.time}</span><span class="flex-1 truncate text-gray-800">${escapeHtml(evt.title)}</span>`;
+                            timelineEl.appendChild(item);
+                        });
+                    }
+                }
+            } catch(e) { console.error('update dashboards', e); }
         } catch(e){ console.error('renderPlanDetails', e); } }
 
         // Attach currency handlers for planner money fields and basic validation

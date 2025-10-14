@@ -1629,30 +1629,33 @@
                 overflow-x: hidden !important;
             }
             
-            /* Modais centralizados */
+            /* Modais centralizados e responsivos */
             dialog {
+                position: fixed !important;
                 width: 90vw !important;
                 max-width: 90vw !important;
                 max-height: 85vh !important;
-                margin: auto !important;
                 padding: 1rem !important;
                 border-radius: 0.75rem !important;
                 overflow-y: auto !important;
                 left: 50% !important;
                 top: 50% !important;
                 transform: translate(-50%, -50%) !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
             }
             
-            /* Cards centralizados e sem sobreposição */
+            /* Cards perfeitamente centralizados */
             .card,
             .modern-card {
                 width: calc(100% - 1.5rem) !important;
                 max-width: calc(100% - 1.5rem) !important;
                 padding: 1rem !important;
-                margin: 0 0.75rem 1rem 0.75rem !important;
+                margin: 0 auto 1rem auto !important;
                 overflow: hidden !important;
                 word-wrap: break-word !important;
                 overflow-wrap: break-word !important;
+                box-sizing: border-box !important;
             }
             
             /* Headers de cards sem sobreposição */
@@ -1698,14 +1701,15 @@
                 max-width: 100% !important;
             }
             
-            /* KPI Cards centralizados */
+            /* KPI Cards perfeitamente centralizados */
             [class*="kpi"],
             .kpi-card {
                 width: calc(100% - 1.5rem) !important;
                 max-width: calc(100% - 1.5rem) !important;
-                margin: 0 0.75rem 0.75rem 0.75rem !important;
+                margin: 0 auto 0.75rem auto !important;
                 padding: 1rem !important;
                 text-align: center !important;
+                box-sizing: border-box !important;
             }
             
             /* Títulos legíveis e centralizados */
@@ -1755,27 +1759,75 @@
                 flex-shrink: 0 !important;
             }
             
-            /* Tabelas scrolláveis centralizadas */
+            /* Tabelas scrolláveis e legíveis */
             .overflow-x-auto {
-                width: calc(100% + 1.5rem) !important;
-                margin-left: -0.75rem !important;
-                margin-right: -0.75rem !important;
-                padding: 0 0.75rem !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch !important;
             }
             
             table {
-                min-width: 600px !important;
+                min-width: 100% !important;
+                table-layout: auto !important;
                 font-size: 0.875rem !important;
                 margin: 0 auto !important;
             }
             
-            table th,
-            table td {
-                padding: 0.5rem !important;
+            table colgroup {
+                display: none !important;
+            }
+            
+            table th {
+                padding: 0.75rem 0.5rem !important;
                 font-size: 0.875rem !important;
-                white-space: nowrap !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                vertical-align: middle !important;
+                text-align: center !important;
+            }
+            
+            table td {
+                padding: 0.75rem 0.5rem !important;
+                font-size: 0.875rem !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                vertical-align: top !important;
+                text-align: left !important;
+            }
+            
+            table th:first-child,
+            table td:first-child {
+                min-width: 30px !important;
+                width: 30px !important;
+                text-align: center !important;
+            }
+            
+            table th:nth-child(2),
+            table td:nth-child(2) {
+                min-width: 150px !important;
+            }
+            
+            table th:last-child,
+            table td:last-child {
+                min-width: 80px !important;
+                width: 80px !important;
+                text-align: center !important;
+            }
+            
+            #income-table th:nth-child(1),
+            #income-table td:nth-child(1) {
+                min-width: 200px !important;
+            }
+            
+            #income-table th:nth-child(2),
+            #income-table td:nth-child(2) {
+                min-width: 120px !important;
+                text-align: right !important;
+                font-weight: 600 !important;
             }
             
             /* Bottom navigation */
@@ -1865,14 +1917,14 @@
                 width: calc(100% - 1rem) !important;
                 max-width: calc(100% - 1rem) !important;
                 padding: 0.75rem !important;
-                margin: 0 0.5rem 0.75rem 0.5rem !important;
+                margin: 0 auto 0.75rem auto !important;
             }
             
             [class*="kpi"],
             .kpi-card {
                 width: calc(100% - 1rem) !important;
                 max-width: calc(100% - 1rem) !important;
-                margin: 0 0.5rem 0.75rem 0.5rem !important;
+                margin: 0 auto 0.75rem auto !important;
                 padding: 0.75rem !important;
             }
             
@@ -1886,22 +1938,16 @@
             h2 { font-size: 1.1rem !important; }
             h3 { font-size: 1rem !important; }
             
-            table {
-                min-width: 500px !important;
-                font-size: 0.8125rem !important;
-            }
-            
             table th,
             table td {
-                padding: 0.375rem !important;
+                padding: 0.5rem 0.375rem !important;
                 font-size: 0.8125rem !important;
             }
             
             .overflow-x-auto {
-                width: calc(100% + 1rem) !important;
-                margin-left: -0.5rem !important;
-                margin-right: -0.5rem !important;
-                padding: 0 0.5rem !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
         }
         
@@ -1927,31 +1973,7 @@
     <meta name="theme-color" content="#3b82f6">
     <title>Fluxo Financeiro</title>
 
-    <!-- Suppress specific CDN warnings (development convenience) -->
     <script>
-        (function(){
-            const _warn = console.warn.bind(console);
-            console.warn = function(...args){
-                try {
-                    const msg = args && args[0] ? String(args[0]) : '';
-                    if (msg.indexOf('cdn.tailwindcss.com should not be used in production') !== -1) return; // ignore Tailwind production warning
-                } catch(e){}
-                _warn(...args);
-            };
-            const _error = console.error.bind(console);
-            console.error = function(...args){
-                try {
-                    const msg = args && args[0] ? String(args[0]) : '';
-                    if (msg.indexOf('Could not read source map for https://cdn.jsdelivr.net/npm/chart.js') !== -1) return; // ignore chart.js sourcemap 404 noise
-                } catch(e){}
-                _error(...args);
-            };
-        })();
-    </script>
-    <script>
-        // Early safe definition of populateSelect so other scripts can call it before full init.
-        // This will be replaced by the more feature-complete definition later, but prevents
-        // ReferenceError when other blocks call populateSelect during DOMContentLoaded.
         window.populateSelect = function(selectId, items, iconSpanSelector){
             try{
                 const sel = document.getElementById(selectId);
@@ -8723,8 +8745,6 @@ const firebaseConfig = {
                         await updateTravelPlanSavedFromSavings(goal.id);
                     }
                 }
-                
-                console.log('Sincronização de planos de viagem concluída.');
             } catch (e) {
                 console.error('Erro na sincronização de planos de viagem:', e);
             }
@@ -9812,7 +9832,6 @@ const firebaseConfig = {
                                     
                                     if (!found) {
                                         console.warn('Meta não encontrada no select:', goal.name);
-                                        console.log('Opções disponíveis:', Array.from(categorySelect.options).map(o => o.value));
                                     }
                                 } else {
                                     console.error('Select category-saving não encontrado!');

@@ -1575,6 +1575,13 @@
                     { value: 'Moto', label: 'Moto', icon: 'two_wheeler' }
                 ]
                 ,
+                    // Transport type mappings used by the Travel Planner
+                    transportTypes: [
+                        { value: 'car', label: 'Carro', icon: 'directions_car' },
+                        { value: 'bus', label: 'Ônibus', icon: 'directions_bus' },
+                        { value: 'transfer', label: 'Translado / Passeio', icon: 'transfer_within_a_station' }
+                    ]
+                    ,
                 // Fuel type mappings for VT modal
                 fuelTypes: [
                     { value: 'Gasolina', label: 'Gasolina', icon: 'local_gas_station' },
@@ -1717,6 +1724,8 @@
             // Populate fuel type select for VT and filter
             populateSelect('vt-fuel-type', (window.ICON_MAPPINGS.fuelTypes || []).map(f=>({ value: f.value, label: f.label, icon: f.icon })), '.select-icon');
             populateSelect('vt-filter-fuel', [{ value: '', label: 'Todos', icon: '' }].concat((window.ICON_MAPPINGS.fuelTypes || []).map(f=>({ value: f.value, label: f.label, icon: f.icon }))), '.select-icon');
+            // Populate travel planner transport types
+            try { populateSelect('tp-transport-type', (window.ICON_MAPPINGS.transportTypes || []).map(t=>({ value: t.value, label: t.label, icon: t.icon })), '.select-icon'); } catch(e) { }
 
             // Ensure default selections and refresh any visual icon-select overlays created by enhanceSelectWithIcons
             try {
@@ -1842,7 +1851,7 @@
             // (vehicle selects populated earlier where populateSelect is defined)
 
             // Enhance the main modal selects and filters where we want prefixed icons
-            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category','vt-fuel-vehicle','vt-filter-vehicle','vt-fuel-type','vt-filter-fuel'].forEach(id => {
+            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category','vt-fuel-vehicle','vt-filter-vehicle','vt-fuel-type','vt-filter-fuel','tp-transport-type'].forEach(id => {
                 try { enhanceSelectWithIcons(id); } catch(e) { console.error('enhanceSelectWithIcons', id, e); }
             });
         });
@@ -5924,238 +5933,16 @@ const firebaseConfig = {
             renderPortfolioCompositionChart();
         }
 
-        // Simple Travel Planner view renderer
+        // Legacy travel planner renderer replaced by new planner UI. Delegate rendering to the new planner functions when available.
         function renderTravelPlannerView() {
             try {
+                if (window.tp && typeof window.tp.renderPlansList === 'function') {
+                    return window.tp.renderPlansList();
+                }
+                // fallback: populate simple placeholder
                 const container = document.getElementById('tp-plans');
-                container.innerHTML = '';
-                const plans = (state.appData && state.appData.settings && Array.isArray(state.appData.settings.travelPlans)) ? state.appData.settings.travelPlans : [];
-                if (plans.length === 0) {
-                    container.innerHTML = '<div class="text-sm text-gray-600">Nenhuma viagem planejada. Clique em "Adicionar Viagem" para começar.</div>';
-                } else {
-                    plans.forEach((p, idx) => {
-                        const div = document.createElement('div');
-                        div.className = 'p-3 bg-white rounded border flex items-center justify-between';
-                        const left = document.createElement('div');
-                        const cost = Number(p.cost) || 0;
-                        const saved = Number(p.saved) || 0;
-                        // calculate months remaining
-                        const today = new Date();
-                        let monthsRemaining = 0;
-                        if (p.date) {
-                            try {
-                                const target = new Date(p.date + 'T00:00:00');
-                                monthsRemaining = Math.max(0, (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth()));
-                            } catch (e) { monthsRemaining = 0; }
-                        }
-                        const remaining = Math.max(0, cost - saved);
-                        const monthlyNeeded = monthsRemaining > 0 ? Math.max(0, remaining / monthsRemaining) : remaining;
-                        const percent = cost > 0 ? Math.min(100, Math.round((saved / cost) * 100)) : (saved > 0 ? 100 : 0);
-                        left.innerHTML = `
-                            <div class="font-semibold">${escapeHtml(p.destination || '')}</div>
-                            <div class="text-xs text-gray-500">Meta: ${p.date || '—'} • Custo: ${formatCurrency(cost)}</div>
-                            <div class="text-xs text-gray-500">Já poupado: ${formatCurrency(saved)} • ${percent}%</div>
-                            <div class="mt-2 w-full bg-gray-200 rounded h-2 overflow-hidden relative">
-                                <div class="bg-green-500 h-2" style="width:${percent}%"></div>
-                            </div>
-                            <div class="text-xs text-gray-500 mt-1">Necessário/mês: ${formatCurrency(monthlyNeeded)}</div>
-                        `;
-                        const right = document.createElement('div');
-                        right.innerHTML = `
-                            <button data-idx="${idx}" class="tp-edit text-blue-600 px-2 py-1 rounded">Editar</button>
-                            <button data-idx="${idx}" class="tp-delete text-red-600 px-2 py-1 rounded ml-2">Excluir</button>
-                        `;
-                        div.appendChild(left); div.appendChild(right);
-                        container.appendChild(div);
-                    });
-
-                    // attach edit handlers -> open modal and populate
-                        container.querySelectorAll('.tp-edit').forEach(btn => btn.addEventListener('click', function(){
-                            const i = Number(this.dataset.idx);
-                            if (!Number.isFinite(i)) return;
-                            const p = plans[i];
-                            if (!p) return;
-                            const dlg = document.getElementById('tp-modal');
-                            document.getElementById('tp-modal-id').value = p.id || '';
-                            document.getElementById('tp-modal-destination').value = p.destination || '';
-                            document.getElementById('tp-modal-date').value = p.date || '';
-                            document.getElementById('tp-modal-cost').value = p.cost != null ? formatCurrency(Number(p.cost) || 0) : '';
-                            document.getElementById('tp-modal-saved').value = p.saved != null ? formatCurrency(Number(p.saved) || 0) : '';
-                            try { attachCurrencyHandlers(); } catch(e){}
-                            try { if (dlg && typeof dlg.showModal === 'function') dlg.showModal(); } catch(e){ alert('Abrindo editor...'); }
-                        }));
-
-                        // attach delete handlers
-                        container.querySelectorAll('.tp-delete').forEach(btn => btn.addEventListener('click', async function(){
-                            const i = Number(this.dataset.idx);
-                            if (!Number.isFinite(i)) return;
-                            try { const ok = await (window.showConfirm ? window.showConfirm('Excluir essa viagem?', 'Confirmar exclusão') : Promise.resolve(window.confirm('Excluir essa viagem?'))); if (!ok) return; } catch(e){ return; }
-                            // operate on persistent settings travelPlans
-                            state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
-                            const removed = state.appData.settings.travelPlans.splice(i, 1)[0];
-                            // if this plan had a linked goal, remove it as well
-                            try {
-                                if (removed && removed.goalId) {
-                                    state.appData.settings.goals = state.appData.settings.goals || [];
-                                    const gidx = state.appData.settings.goals.findIndex(g => g.id === removed.goalId);
-                                    if (gidx >= 0) state.appData.settings.goals.splice(gidx, 1);
-                                }
-                            } catch(e) { /* ignore */ }
-                            try { if (storage && storage.saveData) await storage.saveData(state.appData); if (typeof showToast === 'function') showToast('Viagem excluída.','bg-gray-600'); } catch(e) { /* ignore persistence errors */ }
-                            renderTravelPlannerView();
-                        }));
-                    }
-
-                    // Wire modal add/save/cancel
-                    const addBtn = document.getElementById('tp-add-plan-btn');
-                    const modal = document.getElementById('tp-modal');
-                    const modalForm = document.getElementById('tp-modal-form');
-                    const modalCancel = document.getElementById('tp-modal-cancel');
-                    const modalDest = document.getElementById('tp-modal-destination');
-                    const modalDate = document.getElementById('tp-modal-date');
-                    const modalCost = document.getElementById('tp-modal-cost');
-                    const modalSaved = document.getElementById('tp-modal-saved');
-                    const modalId = document.getElementById('tp-modal-id');
-                    if (addBtn) addBtn.onclick = () => {
-                        modalId.value = '';
-                        modalDest.value = '';
-                        modalDate.value = '';
-                        modalCost.value = '';
-                        modalSaved.value = '';
-                        try { attachCurrencyHandlers(); } catch(e){}
-                        try { if (modal && typeof modal.showModal === 'function') modal.showModal(); } catch(e) { /* fallback */ }
-                    };
-                    // ensure cancel handler attached only once
-                    if (modalCancel && !modalCancel.dataset.tpCancelAttached) {
-                        modalCancel.addEventListener('click', () => { try { if (modal && typeof modal.close === 'function') modal.close(); } catch(e){} });
-                        modalCancel.dataset.tpCancelAttached = '1';
-                    }
-                    // attach submit handler only once to prevent duplicate submissions when render is called multiple times
-                    if (modalForm && !modalForm.dataset.tpHandlerAttached) {
-                        modalForm.addEventListener('submit', async function(ev){
-                            try {
-                                ev.preventDefault(); showFieldError('tp-modal-destination'); showFieldError('tp-modal-cost');
-                                const destination = modalDest.value.trim();
-                                const date = modalDate.value;
-                                // robust parsing for currency-like inputs (accepts 'R$ 1.234,56', '1.234,56', '1234.56', etc.)
-                                function safeParseMoney(v) {
-                                    try {
-                                        // prefer global helper if available
-                                        if (typeof parseLocaleNumber === 'function') {
-                                            const pv = parseLocaleNumber(v);
-                                            if (!isNaN(pv)) return pv;
-                                        }
-                                        if (v === undefined || v === null) return 0;
-                                        let s = String(v).trim();
-                                        if (s === '') return 0;
-                                        // normalize nbsp
-                                        s = s.replace(/\u00A0/g, ' ');
-                                        // remove currency symbols and letters
-                                        s = s.replace(/[^0-9,\.\-]/g, '');
-                                        // protect stray minus signs
-                                        s = s.replace(/(?!^)-/g, '');
-                                        if (s === '' || s === '-') return 0;
-                                        if (s.indexOf('.') !== -1 && s.indexOf(',') !== -1) {
-                                            s = s.replace(/\./g,'').replace(/,/g,'.');
-                                        } else if (s.indexOf(',') !== -1) {
-                                            s = s.replace(/,/g,'.');
-                                        }
-                                        const parts = s.split('.');
-                                        if (parts.length > 2) s = parts.shift() + '.' + parts.join('');
-                                        const num = parseFloat(s);
-                                        return isNaN(num) ? 0 : num;
-                                    } catch (e) { return 0; }
-                                }
-                                const c = safeParseMoney(modalCost.value);
-                                const s = safeParseMoney(modalSaved.value);
-                                let hasError = false;
-                                if (!destination) { showFieldError('tp-modal-destination','Informe o destino.'); hasError = true; }
-                                if (!(c > 0)) { showFieldError('tp-modal-cost','Informe um custo válido maior que 0.'); hasError = true; }
-                                if (hasError) return;
-                                state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
-                                const existingId = modalId.value && String(modalId.value).trim();
-                                if (existingId) {
-                                    const idx = state.appData.settings.travelPlans.findIndex(x => x.id === existingId);
-                                    if (idx >= 0) {
-                                        // update existing plan
-                                        const existingPlan = state.appData.settings.travelPlans[idx];
-                                        const updatedPlan = Object.assign({}, existingPlan, { destination, date, cost: c, saved: s });
-                                        state.appData.settings.travelPlans[idx] = updatedPlan;
-                                        // update linked goal if exists
-                                        try {
-                                            if (existingPlan && existingPlan.goalId) {
-                                                state.appData.settings.goals = state.appData.settings.goals || [];
-                                                const gidx = state.appData.settings.goals.findIndex(g => g.id === existingPlan.goalId);
-                                                if (gidx >= 0) {
-                                                    state.appData.settings.goals[gidx].name = `Viagem - ${destination}`;
-                                                    state.appData.settings.goals[gidx].amount = c;
-                                                    // ensure category list reflects the goal name
-                                                    state.appData.settings.investmentCategories = state.appData.settings.investmentCategories || [];
-                                                    if (!state.appData.settings.investmentCategories.includes(state.appData.settings.goals[gidx].name)) {
-                                                        state.appData.settings.investmentCategories.push(state.appData.settings.goals[gidx].name);
-                                                    }
-                                                    // Note: do not auto-create/update separate savings entries here.
-                                                    // Goal progress will derive from the travel plan's `saved` field plus any explicit savings the user adds.
-                                                }
-                                            }
-                                        } catch(e) { /* ignore */ }
-                                        if (typeof showToast === 'function') showToast('Viagem atualizada.','bg-green-600');
-                                        // Sync savings ledger to match travelPlan.saved for this plan's goal
-                                        try {
-                                            if (existingPlan && existingPlan.goalId) {
-                                                const target = Number(s) || 0;
-                                                const currentSum = sumSavingsForGoal(existingPlan.goalId);
-                                                if (Math.abs(currentSum - target) > 0.005) {
-                                                    const res = await applySavedToSavings(existingPlan.goalId, target);
-                                                    try { await storage.saveData(state.appData); } catch(e){}
-                                                }
-                                            }
-                                        } catch(e) { /* ignore sync */ }
-                                    } else {
-                                        // create new plan and linked goal
-                                        const planId = generateUUID();
-                                        const goalName = `Viagem - ${destination}`;
-                                        const goalId = generateUUID();
-                                        // ensure goals array exists
-                                        state.appData.settings.goals = state.appData.settings.goals || [];
-                                        state.appData.settings.goals.push({ id: goalId, name: goalName, amount: c });
-                                        state.appData.settings.travelPlans.push({ id: planId, destination, date, cost: c, saved: s, goalId: goalId });
-                                        // Sync savings ledger to match travelPlan.saved for this new plan's goal
-                                        try {
-                                            const target = Number(s) || 0;
-                                            if (Math.abs(sumSavingsForGoal(goalId) - target) > 0.005) {
-                                                const res = await applySavedToSavings(goalId, target);
-                                                try { await storage.saveData(state.appData); } catch(e){}
-                                            }
-                                        } catch(e) { /* ignore sync */ }
-                                        if (typeof showToast === 'function') showToast('Viagem adicionada. Meta de investimento criada.','bg-green-600');
-                                    }
-                                } else {
-                                        // create new plan and linked goal (no existingId path)
-                                    const planId = generateUUID();
-                                    const goalName = `Viagem - ${destination}`;
-                                    const goalId = generateUUID();
-                                    state.appData.settings.goals = state.appData.settings.goals || [];
-                                    state.appData.settings.goals.push({ id: goalId, name: goalName, amount: c });
-                                    state.appData.settings.travelPlans.push({ id: planId, destination, date, cost: c, saved: s, goalId: goalId });
-                                        // Ensure there's a 'Meta' category or add a specific goal category so users can add savings easily
-                                        try {
-                                            state.appData.settings.investmentCategories = state.appData.settings.investmentCategories || [];
-                                            // make sure the goal name is available as a selectable category
-                                            if (!state.appData.settings.investmentCategories.includes(goalName)) {
-                                                state.appData.settings.investmentCategories.push(goalName);
-                                            }
-                                        } catch (e) { /* ignore category creation errors */ }
-                                    if (typeof showToast === 'function') showToast('Viagem adicionada. Meta de investimento criada.','bg-green-600');
-                                }
-                                try { if (modal && typeof modal.close === 'function') modal.close(); } catch(e){}
-                                try { if (storage && storage.saveData) await storage.saveData(state.appData); } catch(e) { /* ignore */ }
-                                renderTravelPlannerView();
-                            } catch(e) { console.error('tp-modal save', e); }
-                        }, false);
-                        modalForm.dataset.tpHandlerAttached = '1';
-                    }
-            } catch (e) { console.error('renderTravelPlannerView', e); }
+                if (container) container.innerHTML = '<div class="text-sm text-gray-600">Planejadora inicializando...</div>';
+            } catch (e) { console.error('renderTravelPlannerView (delegated)', e); }
         }
 
         // small helper: escape text for innerHTML usage
@@ -6339,9 +6126,9 @@ const firebaseConfig = {
                     if (!el || el._currencyAttached) return;
                     el._currencyAttached = true;
                     el.addEventListener('focus', function() {
-                        // unformat to plain number for easier editing
+                        // unformat to plain number for easier editing; keep empty if value is zero to avoid showing '0'
                         const n = parseLocaleNumber(this.value);
-                        this.value = (Number.isFinite(n) && !isNaN(n)) ? (n % 1 === 0 ? String(n) : String(n)) : '';
+                        if (Number.isFinite(n) && !isNaN(n) && n !== 0) this.value = (n % 1 === 0 ? String(n) : String(n)); else this.value = '';
                     });
                     // realtime input handler: keep only digits, comma and dot; format thousands as user types
                     el.addEventListener('input', function(e) {
@@ -10363,35 +10150,7 @@ const firebaseConfig = {
             <button id="confirm-dialog-ok" class="px-3 py-1 rounded bg-red-600 text-white">Excluir</button>
         </div>
     </dialog>
-    <!-- Travel Planner Modal -->
-    <dialog id="tp-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-lg">
-        <h3 class="text-lg font-semibold mb-2">Planejar Viagem</h3>
-        <form id="tp-modal-form" class="space-y-3">
-            <input type="hidden" id="tp-modal-id" />
-            <div>
-                <label class="block text-sm">Destino</label>
-                <input id="tp-modal-destination" class="border p-2 rounded w-full" />
-                <div id="tp-modal-destination-error" class="text-xs text-red-600 mt-1 hidden"></div>
-            </div>
-            <div>
-                <label class="block text-sm">Data alvo</label>
-                <input id="tp-modal-date" type="date" class="border p-2 rounded w-full" />
-            </div>
-            <div>
-                <label class="block text-sm">Custo estimado (R$)</label>
-                <input id="tp-modal-cost" class="border p-2 rounded w-full" />
-                <div id="tp-modal-cost-error" class="text-xs text-red-600 mt-1 hidden"></div>
-            </div>
-            <div>
-                <label class="block text-sm">Já poupado (R$)</label>
-                <input id="tp-modal-saved" class="border p-2 rounded w-full" />
-            </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" id="tp-modal-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
-                <button type="submit" id="tp-modal-save" class="px-3 py-1 rounded bg-indigo-600 text-white">Salvar</button>
-            </div>
-        </form>
-    </dialog>
+    <!-- Legacy inline tp-modal removed to avoid duplicate IDs and conflicts with the new travel-planner modal above. -->
     <script>
     (function(){
         // Wire confirm dialog buttons if present
@@ -10668,5 +10427,495 @@ const firebaseConfig = {
     })();
     </script>
     <!-- Swipe-to-reveal behavior removed: rows are standard table rows with inline action buttons -->
+    <!-- Travel Planner Modal + logic -->
+    <dialog id="travel-planner-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-4xl" aria-modal="true" role="dialog">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-semibold flex items-center gap-3"><span class="material-symbols-outlined">flight</span> Planejadora de Viagens</h3>
+            <div>
+                <button id="tp-close" class="px-2 py-1 rounded bg-gray-100">Fechar</button>
+            </div>
+        </div>
+        <input type="hidden" id="tp-id" />
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-1 space-y-3">
+                <div class="p-3 rounded bg-white border">
+                    <label class="text-xs text-gray-500">Destino</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">place</span>
+                        <input id="tp-modal-destination" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10" placeholder="Destino — Ex: Gramado, RS" />
+                    </div>
+                    <label class="text-xs text-gray-500 mt-2">Data alvo</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">event</span>
+                        <input id="tp-modal-date" type="date" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10" />
+                    </div>
+                    <label class="text-xs text-gray-500 mt-2">Orçamento total estimado (R$)</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">attach_money</span>
+                        <input id="tp-modal-estimated" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10" placeholder="R$ 0,00" />
+                    </div>
+                    <label class="text-xs text-gray-500 mt-2">Já poupado (R$)</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">savings</span>
+                        <input id="tp-modal-saved" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10" placeholder="R$ 0,00" />
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button id="tp-modal-save" class="modal-action-btn save-type-incomes btn-primary px-3 py-2 rounded inline-flex items-center gap-2"><span class="material-symbols-outlined">save</span> Salvar Plano</button>
+                        <button id="tp-modal-new" class="px-3 py-1 rounded bg-gray-100">Novo</button>
+                    </div>
+                </div>
+                <div class="p-3 rounded bg-white border">
+                    <h4 class="text-sm font-semibold">Resumo do Plano</h4>
+                    <div class="mt-2 text-sm text-gray-600">Destino: <span id="tp-summary-destination">—</span></div>
+                    <div class="text-sm text-gray-600">Data: <span id="tp-summary-date">—</span></div>
+                    <div class="text-sm text-gray-600">Total transportes: <span id="tp-summary-transports">0</span></div>
+                    <div class="text-sm text-gray-600 mt-2">Custo estimado: <strong id="tp-summary-cost">R$ 0,00</strong></div>
+                </div>
+            </div>
+            <div class="lg:col-span-2">
+                <div class="p-3 rounded bg-white border mb-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-semibold">Transportes (CRUD)</h4>
+                        <button id="tp-transport-new" class="px-2 py-1 rounded bg-indigo-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">directions_car</span>Novo Transporte</button>
+                    </div>
+                    <div id="tp-transport-form" class="mt-3 hidden p-3 border rounded bg-gray-50">
+                        <input type="hidden" id="tp-transport-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-xs text-gray-500">Tipo</label>
+                                <div class="relative select-with-icon">
+                                    <span class="material-symbols-outlined select-icon text-gray-400">directions_car</span>
+                                    <select id="tp-transport-type" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10">
+                                        <option value="car" data-icon="directions_car">Carro alugado / próprio</option>
+                                        <option value="bus" data-icon="directions_bus">Ônibus</option>
+                                        <option value="transfer" data-icon="transfer_within_a_station">Translado / Passeio</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Descrição</label>
+                                <input id="tp-transport-desc" class="w-full border rounded p-2 mt-1" placeholder="Ex: Aluguel de carro 3 dias" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Distância (km)</label>
+                                <input id="tp-transport-distance" class="w-full border rounded p-2 mt-1" placeholder="km total" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Consumo (km/L) — eficiência</label>
+                                <input id="tp-transport-efficiency" class="w-full border rounded p-2 mt-1" placeholder="Ex: 12,5" />
+                                <p id="tp-transport-efficiency-error" class="text-xs text-red-600 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Preço combustível (R$/L)</label>
+                                <input id="tp-transport-fuelprice" class="w-full border rounded p-2 mt-1" placeholder="Ex: 5,49" />
+                                <p id="tp-transport-fuelprice-error" class="text-xs text-red-600 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Pedágios / Taxas (R$)</label>
+                                <input id="tp-transport-tolls" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
+                                <p id="tp-transport-tolls-error" class="text-xs text-red-600 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Aluguel / Locação (R$)</label>
+                                <input id="tp-transport-rental" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
+                                <p id="tp-transport-rental-error" class="text-xs text-red-600 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Manutenção / Seguro (R$)</label>
+                                <input id="tp-transport-maint" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
+                                <p id="tp-transport-maint-error" class="text-xs text-red-600 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Translados / Passeios (R$)</label>
+                                <input id="tp-transport-transfers" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
+                                <p id="tp-transport-transfers-error" class="text-xs text-red-600 hidden"></p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="inline-flex items-center gap-2 mt-2">
+                                    <input type="checkbox" id="tp-transport-paid" />
+                                    <span class="text-sm text-gray-600">Pago</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-3">
+                            <button id="tp-transport-save" class="px-3 py-1 rounded bg-green-600 text-white">Salvar Transporte</button>
+                            <button id="tp-transport-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
+                        </div>
+                        <div id="tp-transport-calculations" class="mt-3 text-sm text-gray-700"></div>
+                    </div>
+
+                    <div id="tp-transport-list" class="mt-4 space-y-2"></div>
+                </div>
+                <div class="p-3 rounded bg-white border">
+                    <h4 class="text-sm font-semibold">Custos Totais</h4>
+                    <div class="mt-3">
+                        <!-- Top KPIs (responsive) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600 mb-3">
+                            <div class="">
+                                <div class="text-xs text-gray-500">Orçado</div>
+                                <div class="font-semibold text-gray-900" id="tp-kpi-estimated">R$ 0,00</div>
+                                <div class="text-xs text-gray-400">Planejado para gastar.</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500">Realizado</div>
+                                <div class="font-semibold text-gray-900" id="tp-kpi-realized">R$ 0,00</div>
+                                <div class="text-xs text-gray-400">Cadastrado como transação de reserva (meta)</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-gray-500">Pago</div>
+                                <div class="font-semibold text-gray-900" id="tp-kpi-paid">R$ 0,00</div>
+                                <div class="text-xs text-gray-400">Seções já pagas.</div>
+                            </div>
+                        </div>
+
+                        <!-- Progress bar -->
+                        <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden mb-4">
+                            <div id="tp-kpi-progress" class="h-full bg-green-500" style="width:0%; transition: width 400ms ease; border-radius:9999px;"></div>
+                        </div>
+
+                        <!-- Smart blocks for non-zero subtotals (responsive cards) -->
+                        <div id="tp-cost-blocks" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm text-gray-700 mb-3"></div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600 items-center">
+                            <div>
+                                <div class="text-xs text-gray-500">Custos</div>
+                                <div class="font-semibold text-gray-900" id="tp-kpi-costs">R$ 0,00</div>
+                                <div class="text-xs text-gray-400">Soma de todas as seções do plano</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-gray-500">Restante</div>
+                                <div class="font-semibold text-lg text-gray-900" id="tp-kpi-remaining">R$ 0,00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+    <script>
+    (function(){
+        // Helpers
+        function q(id){ return document.getElementById(id); }
+        function parseBRNumber(v){ try { if (v===undefined||v===null) return 0; if (typeof v === 'number') return v; let s = String(v).trim(); if (!s) return 0; s = s.replace(/\./g,'').replace(/,/g,'.').replace(/[^0-9.\-]/g,''); const n = parseFloat(s); return isNaN(n)?0:n; } catch(e){return 0;} }
+        function formatBR(v){ try { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); } catch(e){ return String(v); } }
+        // Local escape helper for planner (avoid relying on global definitions that may be inside other scopes)
+        function escapeHtml(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+    // Storage helpers: keep travelPlans inside state.appData.settings.travelPlans (consistent with the rest of the app)
+    function loadTravelPlans(){ try { const s = (window.state && window.state.appData && window.state.appData.settings) ? window.state.appData.settings : null; return (s && Array.isArray(s.travelPlans)) ? s.travelPlans : []; } catch(e){ return []; } }
+    async function saveTravelPlans(plans){ try { window.state = window.state || {}; window.state.appData = window.state.appData || {}; window.state.appData.settings = window.state.appData.settings || {}; window.state.appData.settings.travelPlans = plans; if (storage && typeof storage.saveData === 'function') await storage.saveData(window.state.appData); } catch(e){ console.error('saveTravelPlans', e); } }
+
+        // Modal elements
+    // Wire both the desktop header button and the in-view "Adicionar Viagem" button
+    const openBtn = document.getElementById('desktop-travelplanner-btn');
+    const addPlanBtn = document.getElementById('tp-add-plan-btn');
+        const modal = document.getElementById('travel-planner-modal');
+        const closeBtn = document.getElementById('tp-close');
+
+        function openModal(){ try { if (!modal) return; if (typeof modal.showModal === 'function') modal.showModal(); else modal.setAttribute('open',''); renderPlansList(); } catch(e){ console.error('openModal', e); } }
+        function closeModal(){ try { if (!modal) return; if (typeof modal.close === 'function') modal.close(); else modal.removeAttribute('open'); } catch(e){ console.error('closeModal', e); } }
+    if (openBtn) openBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        try {
+            if (typeof changeView === 'function') return changeView('travel-planner');
+            // fallback: activate the tab button or render directly
+            const tb = document.querySelector('.tab-button[data-view="travel-planner"]');
+            if (tb) { tb.click(); return; }
+            if (typeof window.tp === 'object' && typeof window.tp.renderPlansList === 'function') { window.tp.renderPlansList(); }
+        } catch (err) { console.error('openBtn click fallback', err); }
+    });
+    // also wire the in-view "Adicionar Viagem" button (visible in the travel-planner view)
+    // Clear any previously filled values before opening so the user starts with a blank form
+    if (addPlanBtn) addPlanBtn.addEventListener('click', (e)=>{ e.preventDefault(); try { clearPlanForm(); } catch(_){} openModal(); });
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+        // Main plan form
+        const tpSave = q('tp-modal-save'); const tpNew = q('tp-modal-new');
+        const tpDestination = q('tp-modal-destination'); const tpDate = q('tp-modal-date'); const tpEstimated = q('tp-modal-estimated'); const tpSaved = q('tp-modal-saved');
+        const tpSummaryDestination = q('tp-summary-destination'); const tpSummaryDate = q('tp-summary-date'); const tpSummaryCost = q('tp-summary-cost'); const tpSummaryTransports = q('tp-summary-transports');
+
+        function clearPlanForm(){ if (!tpDestination) return; q('tp-id').value=''; tpDestination.value=''; tpDate.value=''; tpEstimated.value=''; tpSaved.value=''; tpSummaryDestination.textContent='—'; tpSummaryDate.textContent='—'; }
+        tpNew && tpNew.addEventListener('click', (e)=>{ e.preventDefault(); clearPlanForm(); });
+        tpSave && tpSave.addEventListener('click', async (e)=>{
+            e.preventDefault();
+            const dest = tpDestination.value.trim(); if (!dest) { showToast('Informe o destino', 'bg-yellow-600'); return; }
+            const date = tpDate.value || null; const est = parseBRNumber(tpEstimated.value); const saved = parseBRNumber(tpSaved.value);
+            const plans = loadTravelPlans(); let id = q('tp-id').value || '';
+            if (id) {
+                const existing = plans.find(p=>p.id===id);
+                if (existing) {
+                    existing.destination = dest; existing.date = date; existing.estimated = est; existing.saved = saved; existing.transports = existing.transports || [];
+                } else {
+                    // if id present but not found, create new
+                    plans.unshift({ id, destination: dest, date, estimated: est, saved, transports: [] });
+                }
+            } else {
+                id = 'tp-'+Math.random().toString(36).slice(2,9);
+                plans.unshift({ id, destination: dest, date, estimated: est, saved, transports: [] });
+                q('tp-id').value = id;
+            }
+            // Persist plans
+            await saveTravelPlans(plans);
+            // Ensure there's a matching goal in settings.goals so investments reflect this plan's saved amount
+            try {
+                window.state = window.state || {}; window.state.appData = window.state.appData || {}; window.state.appData.settings = window.state.appData.settings || {};
+                const goals = window.state.appData.settings.goals = window.state.appData.settings.goals || [];
+                // find by destination+date as heuristic
+                let goal = goals.find(g => (g.linkedTravelPlanId && g.linkedTravelPlanId === id) || (g.name === dest && g.targetDate === date));
+                if (!goal) {
+                    goal = { id: 'goal-'+Math.random().toString(36).slice(2,8), name: dest, amount: est || 0, linkedTravelPlanId: id };
+                    goals.push(goal);
+                    try { await storage.saveData(window.state.appData); } catch(e) { console.error('persist goal after tp save', e); }
+                } else {
+                    // update goal amount if changed
+                    if (goal.amount !== est) { goal.amount = est || 0; try { await storage.saveData(window.state.appData); } catch(e){} }
+                }
+                try { if (typeof renderInvestmentsView === 'function') renderInvestmentsView(); } catch(e) {}
+            } catch(e) { console.error('ensure goal for travel plan', e); }
+            showToast('Plano salvo', 'bg-green-600');
+            renderPlansList();
+            // open plan details view for the saved plan so user can add transports
+            renderPlanDetails(id);
+        });
+
+        // Transports CRUD
+    const transportNewBtn = q('tp-transport-new'); const transportForm = q('tp-transport-form');
+    const tId = q('tp-transport-id'); const tType = q('tp-transport-type'); const tDesc = q('tp-transport-desc'); const tDist = q('tp-transport-distance'); const tEff = q('tp-transport-efficiency'); const tFuelP = q('tp-transport-fuelprice'); const tTolls = q('tp-transport-tolls'); const tRental = q('tp-transport-rental'); const tMaint = q('tp-transport-maint'); const tTransfers = q('tp-transport-transfers'); const tPaid = q('tp-transport-paid');
+    const tSave = q('tp-transport-save'); const tCancel = q('tp-transport-cancel'); const tCalcBox = q('tp-transport-calculations');
+
+        function currentPlan(){ const plans = loadTravelPlans(); const pid = q('tp-id').value; if (!pid) return null; return plans.find(p=>p.id===pid) || null; }
+
+        function showTransportForm(edit){ if (!transportForm) return; transportForm.classList.remove('hidden'); if (!edit){ tId.value=''; tType.value='car'; tDesc.value=''; tDist.value=''; tEff.value=''; tFuelP.value=''; tTolls.value=''; tRental.value=''; tMaint.value=''; tTransfers.value=''; tCalcBox.innerHTML=''; } else { tId.value=edit.id||''; tType.value=edit.type||'car'; tDesc.value=edit.description||''; tDist.value=edit.distance||''; tEff.value=edit.efficiency||''; tFuelP.value=edit.fuelPrice||''; tTolls.value=edit.tolls||''; tRental.value=edit.rental||''; tMaint.value=edit.maint||''; tTransfers.value=edit.transfers||''; computeTransportCalc(); } }
+    function showTransportForm(edit){ if (!transportForm) return; transportForm.classList.remove('hidden'); if (!edit){ tId.value=''; tType.value='car'; tDesc.value=''; tDist.value=''; tEff.value=''; tFuelP.value=''; tTolls.value=''; tRental.value=''; tMaint.value=''; tTransfers.value=''; if (tPaid) tPaid.checked = false; tCalcBox.innerHTML=''; } else { tId.value=edit.id||''; tType.value=edit.type||'car'; tDesc.value=edit.description||''; tDist.value=edit.distance||''; tEff.value=edit.efficiency||''; tFuelP.value=edit.fuelPrice||''; tTolls.value=edit.tolls||''; tRental.value=edit.rental||''; tMaint.value=edit.maint||''; tTransfers.value=edit.transfers||''; if (tPaid) tPaid.checked = !!edit.paid; computeTransportCalc(); } }
+        if (transportNewBtn) transportNewBtn.addEventListener('click', ()=>{ showTransportForm(null); });
+        if (tCancel) tCancel.addEventListener('click', (e)=>{ e.preventDefault(); transportForm.classList.add('hidden'); });
+
+        function computeTransportCalc(){ try {
+            const dist = parseBRNumber(tDist.value); const eff = parseBRNumber(tEff.value); const fuelP = parseBRNumber(tFuelP.value); const tolls = parseBRNumber(tTolls.value); const rental = parseBRNumber(tRental.value); const maint = parseBRNumber(tMaint.value); const transfers = parseBRNumber(tTransfers.value);
+            let fuelLiters = 0; let fuelCost = 0;
+            if (eff > 0) { fuelLiters = dist / eff; fuelCost = fuelLiters * fuelP; }
+            const subTotal = fuelCost + tolls + rental + maint + transfers;
+            const html = `<div class="text-sm text-gray-700">Consumo estimado: <strong class="text-gray-900">${fuelLiters.toFixed(2)} L</strong> — Custo combustível: <strong class="text-gray-900">${formatBR(fuelCost)}</strong></div><div class="mt-1 text-sm">Subtotal transporte: <strong class="text-gray-900">${formatBR(subTotal)}</strong></div>`;
+            tCalcBox.innerHTML = html;
+            return { fuelLiters, fuelCost, subtotal: subTotal };
+        } catch(e){ console.error('computeTransportCalc', e); return { fuelLiters:0, fuelCost:0, subtotal:0 }; } }
+
+        // recompute live on input
+        ['input','change'].forEach(evt => { [tDist,tEff,tFuelP,tTolls,tRental,tMaint,tTransfers].forEach(el=>{ if (el) el.addEventListener(evt, computeTransportCalc); }); });
+
+        async function saveTransport(){ try {
+            const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar transportes', 'bg-yellow-600'); return; }
+            const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
+            const obj = { id: tId.value || ('tr-'+Math.random().toString(36).slice(2,9)), type: tType.value, description: tDesc.value, distance: parseBRNumber(tDist.value), efficiency: parseBRNumber(tEff.value), fuelPrice: parseBRNumber(tFuelP.value), tolls: parseBRNumber(tTolls.value), rental: parseBRNumber(tRental.value), maint: parseBRNumber(tMaint.value), transfers: parseBRNumber(tTransfers.value), paid: (tPaid && !!tPaid.checked) };
+            const calc = computeTransportCalc(); obj.fuelLiters = calc.fuelLiters; obj.fuelCost = calc.fuelCost; obj.subtotal = calc.subtotal;
+            plan.transports = plan.transports || [];
+            const idx = plan.transports.findIndex(t=>t.id===obj.id);
+            if (idx === -1) plan.transports.push(obj); else plan.transports[idx] = obj;
+            await saveTravelPlans(plans);
+            showToast('Transporte salvo', 'bg-green-600');
+            transportForm.classList.add('hidden');
+            renderPlanDetails(plan.id);
+        } catch(e){ console.error('saveTransport', e); showToast('Erro ao salvar transporte', 'bg-red-600'); } }
+        if (tSave) tSave.addEventListener('click', (e)=>{ e.preventDefault(); saveTransport(); });
+
+        // Render functions
+        function renderPlansList(){ try {
+            const container = document.getElementById('tp-plans'); if (!container) return; container.innerHTML=''; const plans = loadTravelPlans(); if (!plans || !plans.length) { container.innerHTML='<div class="text-sm text-gray-500">Nenhum plano criado.</div>'; return; }
+            plans.forEach(p=>{
+                const el = document.createElement('div'); el.className='p-3 border rounded bg-white flex items-center justify-between';
+                const left = document.createElement('div'); left.innerHTML = `<div class="font-semibold">${p.destination}</div><div class="text-xs text-gray-500">${p.date||'Sem data'} — ${formatBR(p.estimated||0)}</div>`;
+                const right = document.createElement('div');
+                const open = document.createElement('button'); open.className='px-2 py-1 rounded bg-blue-50 text-blue-700 mr-2'; open.textContent='Abrir'; open.addEventListener('click', ()=>{ q('tp-id').value=p.id; tpDestination.value=p.destination||''; tpDate.value=p.date||''; tpEstimated.value=p.estimated||''; tpSaved.value=p.saved||''; renderPlanDetails(p.id); openModal(); });
+                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.textContent='Excluir'; del.addEventListener('click', async ()=>{ 
+                    if (!confirm('Excluir plano?')) return; 
+                    const plans2 = loadTravelPlans().filter(x=>x.id!==p.id);
+                    await saveTravelPlans(plans2);
+                    // remove linked goal if present
+                    try {
+                        window.state = window.state || {}; window.state.appData = window.state.appData || {}; window.state.appData.settings = window.state.appData.settings || {};
+                        const goals = window.state.appData.settings.goals = window.state.appData.settings.goals || [];
+                        const gIdx = goals.findIndex(g => g.linkedTravelPlanId === p.id);
+                        if (gIdx !== -1) { goals.splice(gIdx,1); try { await storage.saveData(window.state.appData); } catch(e){} }
+                        try { if (typeof renderInvestmentsView === 'function') renderInvestmentsView(); } catch(e){}
+                    } catch(e) { console.error('remove linked goal', e); }
+                    renderPlansList(); showToast('Plano excluído','bg-green-600'); 
+                });
+                right.appendChild(open); right.appendChild(del);
+                el.appendChild(left); el.appendChild(right); container.appendChild(el);
+            });
+        } catch(e){ console.error('renderPlansList', e); } }
+
+        function renderPlanDetails(planId){ try {
+            const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===planId); if (!plan) return; tpSummaryDestination.textContent = plan.destination||'—'; tpSummaryDate.textContent = plan.date||'—'; tpSummaryTransports.textContent = (plan.transports||[]).length || 0;
+            // transports list
+            const list = document.getElementById('tp-transport-list'); list.innerHTML='';
+            (plan.transports||[]).forEach(t=>{
+                const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
+                const left = document.createElement('div');
+                const paidBadge = (t && t.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Pago</span>` : '';
+                left.innerHTML = `<div class="font-medium">${escapeHtml(t.description||t.type)} ${paidBadge}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>`;
+                const right = document.createElement('div');
+                const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showTransportForm(t); });
+                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir transporte?')) return; plan.transports = (plan.transports||[]).filter(x=>x.id!==t.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Transporte excluído','bg-green-600'); });
+                right.appendChild(edit); right.appendChild(del);
+                row.appendChild(left); row.appendChild(right); list.appendChild(row);
+            });
+
+            // update totals (sections)
+            let totFuel = 0, totRental = 0, totTransfers = 0, totTolls = 0;
+            (plan.transports||[]).forEach(t=>{ totFuel += Number(t.fuelCost || 0); totRental += Number(t.rental || 0) + Number(t.maint || 0); totTransfers += Number(t.transfers || 0); totTolls += Number(t.tolls || 0); });
+            // Custos: sum of all sections
+            const costs = totFuel + totRental + totTransfers + totTolls;
+            // Orçado (planejado para gastar)
+            const estimated = Number(plan.estimated || 0);
+            // Restante = Orçado - Custos
+            const remaining = Math.max(0, estimated - costs);
+            // Realizado: amount saved / registered as reserve (meta)
+            const realized = Number(plan.saved || 0);
+            // Pago: sum of sections already paid -- transport objects may include a 'paid' boolean
+            const paid = (plan.transports || []).reduce((s,t) => s + ((t && t.paid) ? Number(t.subtotal || 0) : 0), 0);
+
+            // Build smart cost blocks (only non-zero subtotals)
+            try {
+                const costBlocksEl = document.getElementById('tp-cost-blocks');
+                if (costBlocksEl) {
+                    costBlocksEl.innerHTML = '';
+                    const blocks = [
+                        { id: 'tp-total-fuel', label: 'Combustível', icon: 'local_gas_station', value: totFuel },
+                        { id: 'tp-total-rental', label: 'Aluguel / Manutenção', icon: 'home_repair_service', value: totRental },
+                        { id: 'tp-total-transfers', label: 'Translados / Passeios', icon: 'tour', value: totTransfers },
+                        { id: 'tp-total-tolls', label: 'Pedágios / Taxas', icon: 'pay', value: totTolls }
+                    ];
+                    const nonZero = blocks.filter(b => Number(b.value) && Number(b.value) !== 0);
+                    if (nonZero.length === 0) {
+                        costBlocksEl.innerHTML = '<div class="text-sm text-gray-500">Nenhum custo registrado.</div>';
+                    } else {
+                        nonZero.forEach(b => {
+                            const item = document.createElement('div'); item.className = 'p-2 rounded bg-gray-50 border flex items-center justify-between';
+                            const left = document.createElement('div'); left.className = 'flex items-center gap-2';
+                            const iconSpan = document.createElement('span'); iconSpan.className = 'material-symbols-outlined text-gray-600'; iconSpan.style.fontSize = '18px'; iconSpan.textContent = b.icon;
+                            const txt = document.createElement('div'); txt.innerHTML = `<div class="text-xs text-gray-500">${b.label}</div>`;
+                            left.appendChild(iconSpan); left.appendChild(txt);
+                            const right = document.createElement('div'); right.innerHTML = `<div id="${b.id}" class="font-medium text-gray-900">${formatBR(b.value)}</div>`;
+                            item.appendChild(left); item.appendChild(right); costBlocksEl.appendChild(item);
+                        });
+                    }
+                }
+            } catch (e) { console.error('build cost blocks', e); }
+
+            // Animate/update subtotals and total
+            try {
+                if (typeof animateKPINumber === 'function') {
+                    // animate only targets that exist (created above)
+                    ['tp-total-fuel','tp-total-rental','tp-total-transfers','tp-total-tolls','tp-kpi-costs','tp-total-trip','tp-kpi-estimated','tp-kpi-realized','tp-kpi-paid','tp-kpi-remaining'].forEach(id => {
+                        const valMap = {
+                            'tp-total-fuel': totFuel,
+                            'tp-total-rental': totRental,
+                            'tp-total-transfers': totTransfers,
+                            'tp-total-tolls': totTolls,
+                            'tp-kpi-costs': costs,
+                            'tp-total-trip': costs,
+                            'tp-kpi-estimated': estimated,
+                            'tp-kpi-realized': realized,
+                            'tp-kpi-paid': paid,
+                            'tp-kpi-remaining': remaining
+                        };
+                        if (document.getElementById(id)) animateKPINumber(id, valMap[id]);
+                    });
+                } else {
+                    if (document.getElementById('tp-total-fuel')) document.getElementById('tp-total-fuel').textContent = formatBR(totFuel);
+                    if (document.getElementById('tp-total-rental')) document.getElementById('tp-total-rental').textContent = formatBR(totRental);
+                    if (document.getElementById('tp-total-transfers')) document.getElementById('tp-total-transfers').textContent = formatBR(totTransfers);
+                    if (document.getElementById('tp-total-tolls')) document.getElementById('tp-total-tolls').textContent = formatBR(totTolls);
+                    if (q('tp-total-trip')) q('tp-total-trip').textContent = formatBR(costs);
+                    if (tpSummaryCost) tpSummaryCost.textContent = formatBR(estimated);
+                    const estEl = document.getElementById('tp-kpi-estimated'); const realEl = document.getElementById('tp-kpi-realized'); const paidEl = document.getElementById('tp-kpi-paid'); const costsEl = document.getElementById('tp-kpi-costs'); const remEl = document.getElementById('tp-kpi-remaining');
+                    if (estEl) estEl.textContent = formatBR(estimated);
+                    if (realEl) realEl.textContent = formatBR(realized);
+                    if (paidEl) paidEl.textContent = formatBR(paid);
+                    if (costsEl) costsEl.textContent = formatBR(costs);
+                    if (remEl) remEl.textContent = formatBR(remaining);
+                }
+            } catch(e) { console.error('animate planner numbers', e); }
+
+            // Progress bar: width + color thresholds (green <75%, yellow 75-100%, red >100%)
+            try {
+                const progEl = document.getElementById('tp-kpi-progress');
+                if (progEl) {
+                    const pctRaw = estimated > 0 ? (costs / estimated) * 100 : 0;
+                    const pct = estimated > 0 ? Math.min(100, Math.round(pctRaw)) : 0;
+                    progEl.style.width = pct + '%';
+                    // set aria / title for accessibility
+                    progEl.setAttribute('role', 'progressbar');
+                    progEl.setAttribute('aria-valuemin', '0');
+                    progEl.setAttribute('aria-valuemax', '100');
+                    progEl.setAttribute('aria-valuenow', String(Math.round(pctRaw)));
+                    progEl.title = `${Math.round(pctRaw)}% realizado (${formatBR(costs)} de ${formatBR(estimated)})`;
+                    // color classes
+                    progEl.classList.remove('bg-green-500','bg-yellow-400','bg-red-500');
+                    if (pctRaw > 100) progEl.classList.add('bg-red-500');
+                    else if (pctRaw >= 75) progEl.classList.add('bg-yellow-400');
+                    else progEl.classList.add('bg-green-500');
+                }
+            } catch(e) { console.error('planner progress update', e); }
+            // Pre-format displayed plan fields for editing convenience
+            try { tpEstimated.value = formatBR(estimated); tpSaved.value = formatBR(Number(plan.saved||0)); } catch(e){}
+        } catch(e){ console.error('renderPlanDetails', e); } }
+
+        // Attach currency handlers for planner money fields and basic validation
+        function attachPlannerCurrencyAndValidation() {
+            try {
+                const moneyIds = ['tp-transport-fuelprice','tp-transport-tolls','tp-transport-rental','tp-transport-maint','tp-transport-transfers','tp-modal-estimated','tp-modal-saved'];
+                moneyIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    if (el._plannerCurrencyAttached) return; el._plannerCurrencyAttached = true;
+                    el.addEventListener('focus', function(){ const n = parseBRNumber(this.value); if (Number.isFinite(n) && !isNaN(n) && n !== 0) this.value = (n%1===0?String(n):String(n)); else this.value = ''; });
+                    el.addEventListener('input', function(){ this.value = this.value.replace(/[^0-9,\.\-\s\u00A0]/g,''); });
+                    el.addEventListener('blur', function(){ const n = parseBRNumber(this.value); if (Number.isFinite(n) && !isNaN(n)) this.value = formatBR(n); else this.value = ''; });
+                });
+            } catch(e) { console.error('attachPlannerCurrencyAndValidation', e); }
+        }
+
+        // Simple inline validation for transport form fields
+        function validateTransportForm() {
+            let ok = true;
+            try {
+                // clear all errors
+                ['tp-transport-distance','tp-transport-efficiency','tp-transport-fuelprice','tp-transport-tolls','tp-transport-rental','tp-transport-maint','tp-transport-transfers'].forEach(id=> showFieldError(id, ''));
+                const dist = parseBRNumber(tDist.value); const eff = parseBRNumber(tEff.value); const fuelP = parseBRNumber(tFuelP.value);
+                if (!dist || dist <= 0) { showFieldError('tp-transport-distance','Informe distância válida'); ok = false; }
+                if (!eff || eff <= 0) { showFieldError('tp-transport-efficiency','Informe eficiência (km/L) válida'); ok = false; }
+                if (!fuelP || fuelP <= 0) { showFieldError('tp-transport-fuelprice','Informe preço combustível válido'); ok = false; }
+            } catch(e){ console.error('validateTransportForm', e); ok = false; }
+            return ok;
+        }
+
+        // Focus trap for travel planner modal
+        function trapFocusForPlanner(e) {
+            try {
+                if (!modal || !modal.open) return; const focusable = modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'); if (!focusable.length) return; const first = focusable[0]; const last = focusable[focusable.length-1]; if (e.key === 'Tab') { if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } } else if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+            } catch(e){}
+        }
+
+        // Seed helper for demo plan
+        window.seedTravelPlanner = async function(){ try {
+            const plans = loadTravelPlans(); const id = 'seed-'+Math.random().toString(36).slice(2,8); const plan = { id, destination: 'Gramado, RS', date: new Date().toISOString().slice(0,10), estimated: 2000, saved: 250, transports: [{ id: id+'-t1', type:'car', description:'Aluguel 3 dias', distance:300, efficiency:12.5, fuelPrice:5.79, tolls:60, rental:350, maint:0, transfers:0, fuelLiters:24, fuelCost:24*5.79, subtotal:24*5.79+60+350 }] };
+            plans.unshift(plan); await saveTravelPlans(plans); showToast('Plano de exemplo criado', 'bg-green-600'); renderPlansList(); renderPlanDetails(plan.id);
+        } catch(e){ console.error('seedTravelPlanner', e); showToast('Falha ao criar plano de exemplo','bg-red-600'); }};
+
+        // Wire planner helpers after DOM ready
+        document.addEventListener('DOMContentLoaded', function(){ attachPlannerCurrencyAndValidation(); try { document.addEventListener('keydown', trapFocusForPlanner); } catch(e){} });
+
+        // When modal opens, ensure plans are listed
+        document.addEventListener('DOMContentLoaded', function(){ renderPlansList();
+            // expose API for legacy callers
+            window.tp = window.tp || {};
+            window.tp.renderPlansList = renderPlansList;
+            window.tp.renderPlanDetails = renderPlanDetails;
+            window.tp.saveTravelPlans = saveTravelPlans;
+        });
+    })();
+    </script>
 </body>
 </html>

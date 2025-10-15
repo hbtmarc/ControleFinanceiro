@@ -1712,6 +1712,58 @@
                 box-sizing: border-box !important;
             }
             
+            /* KPI VR/VT cards específicos */
+            #kpi-vr-card,
+            #kpi-vt-card {
+                width: calc(100% - 1.5rem) !important;
+                max-width: calc(100% - 1.5rem) !important;
+                margin: 0 auto 0.75rem auto !important;
+                padding: 0.75rem !important;
+                box-sizing: border-box !important;
+            }
+            
+            #kpi-vr-card .flex,
+            #kpi-vt-card .flex {
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 0.5rem !important;
+            }
+            
+            #kpi-vr-card h4,
+            #kpi-vt-card h4 {
+                font-size: 0.75rem !important;
+                text-align: left !important;
+                margin: 0 !important;
+            }
+            
+            #kpi-vr-values,
+            #kpi-vt-values {
+                font-size: 0.875rem !important;
+                text-align: right !important;
+                white-space: nowrap !important;
+            }
+            
+            #kpi-vr-card .mt-2,
+            #kpi-vt-card .mt-2 {
+                margin-top: 0.5rem !important;
+                width: 100% !important;
+            }
+            
+            #kpi-vr-progress,
+            #kpi-vt-progress {
+                min-width: 0 !important;
+                max-width: 100% !important;
+            }
+            
+            #kpi-vr-bar-text,
+            #kpi-vt-bar-text {
+                font-size: 0.625rem !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+            
             /* Títulos legíveis e centralizados */
             h1 { 
                 font-size: 1.5rem !important;
@@ -1830,6 +1882,92 @@
                 font-weight: 600 !important;
             }
             
+            /* Credit Cards Container */
+            #credit-cards-container {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+                padding: 0 !important;
+            }
+            
+            #credit-cards-container > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 auto !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* Credit Card individual cards */
+            [data-card-root] {
+                width: calc(100% - 1.5rem) !important;
+                max-width: calc(100% - 1.5rem) !important;
+                margin: 0 auto 1rem auto !important;
+                padding: 1rem !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* Credit card header */
+            [data-card-root] h3 {
+                font-size: 1.125rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            
+            /* Credit card values */
+            [data-card-root] .text-2xl,
+            [data-card-root] .text-3xl {
+                font-size: 1.5rem !important;
+            }
+            
+            [data-card-root] .text-sm {
+                font-size: 0.875rem !important;
+            }
+            
+            /* Credit card buttons */
+            [data-card-root] button {
+                width: 100% !important;
+                margin-top: 0.5rem !important;
+                padding: 0.75rem !important;
+            }
+            
+            /* Percentual de despesas card */
+            #kpi-expense-percentuals {
+                max-height: 400px !important;
+                overflow-y: auto !important;
+            }
+            
+            #kpi-expense-percentuals > div {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.5rem 0 !important;
+                gap: 0.75rem !important;
+                flex-wrap: nowrap !important;
+            }
+            
+            #kpi-expense-percentuals .text-sm {
+                flex: 1 !important;
+                min-width: 0 !important;
+                font-size: 0.8125rem !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+            
+            #kpi-expense-percentuals .text-xs {
+                flex-shrink: 0 !important;
+                font-size: 0.75rem !important;
+                text-align: right !important;
+                min-width: 60px !important;
+            }
+            
+            #kpi-expense-percentuals .font-semibold {
+                flex-shrink: 0 !important;
+                font-size: 0.875rem !important;
+                text-align: right !important;
+                min-width: 80px !important;
+                white-space: nowrap !important;
+            }
+            
             /* Bottom navigation */
             #mobile-bottom-nav {
                 position: fixed !important;
@@ -1922,6 +2060,20 @@
             
             [class*="kpi"],
             .kpi-card {
+                width: calc(100% - 1rem) !important;
+                max-width: calc(100% - 1rem) !important;
+                margin: 0 auto 0.75rem auto !important;
+                padding: 0.75rem !important;
+            }
+            
+            #kpi-vr-card,
+            #kpi-vt-card {
+                width: calc(100% - 1rem) !important;
+                max-width: calc(100% - 1rem) !important;
+                padding: 0.5rem !important;
+            }
+            
+            [data-card-root] {
                 width: calc(100% - 1rem) !important;
                 max-width: calc(100% - 1rem) !important;
                 margin: 0 auto 0.75rem auto !important;

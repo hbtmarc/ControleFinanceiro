@@ -13837,7 +13837,7 @@ const firebaseConfig = {
                                 <div class="relative select-with-icon">
                                     <span class="material-symbols-outlined select-icon text-gray-400">tour</span>
                                     <select id="tp-activity-type" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10">
-                                        <option value="passeio" data-icon="tour" selected>Passeio/Excursão</option>
+                                        <option value="passeio" data-icon="tour" selected>Passeio</option>
                                         <option value="ingresso" data-icon="confirmation_number">Ingresso (Museu, Atração)</option>
                                         <option value="evento" data-icon="event">Evento/Show</option>
                                         <option value="compras" data-icon="shopping_bag">Compras</option>
@@ -13845,7 +13845,7 @@ const firebaseConfig = {
                                         <option value="experiencia" data-icon="stars">Experiência</option>
                                         <option value="esporte" data-icon="sports_soccer">Atividade Esportiva</option>
                                         <option value="cultura" data-icon="museum">Atividade Cultural</option>
-                                        <option value="tour" data-icon="map">Tour Guiado</option>
+                                        <option value="tour" data-icon="map">Tour</option>
                                         <option value="outro" data-icon="local_activity">Outro</option>
                                     </select>
                                 </div>
@@ -14678,6 +14678,14 @@ const firebaseConfig = {
                 
                 plan.itinerary = plan.itinerary || [];
                 
+                // Mapeamento de rótulos para tipos de hospedagem
+                const accommodationTypeLabels = {
+                    'hotel': 'Hotel/Hostel',
+                    'airbnb': 'Airbnb',
+                    'reserva': 'Reserva'
+                };
+                const accLabel = accommodationTypeLabels[accommodation.type] || accommodation.type;
+                
                 // Criar/atualizar entrada de check-in no roteiro
                 if (accommodation.checkin) {
                     const checkinId = `acc-checkin-${accommodation.id}`;
@@ -14688,7 +14696,7 @@ const firebaseConfig = {
                         time: checkinTime,
                         activity: `Check-in: ${accommodation.name}`,
                         location: accommodation.address || accommodation.name,
-                        notes: `Tipo: ${accommodation.type}. Hospedagem sincronizada automaticamente.`,
+                        notes: `Tipo: ${accLabel}`,
                         type: 'accommodation-checkin',
                         linkedId: accommodation.id,
                         autoSync: true
@@ -14712,7 +14720,7 @@ const firebaseConfig = {
                         time: checkoutTime,
                         activity: `Check-out: ${accommodation.name}`,
                         location: accommodation.address || accommodation.name,
-                        notes: `Tipo: ${accommodation.type}. Hospedagem sincronizada automaticamente.`,
+                        notes: `Tipo: ${accLabel}`,
                         type: 'accommodation-checkout',
                         linkedId: accommodation.id,
                         autoSync: true
@@ -16164,15 +16172,41 @@ const firebaseConfig = {
                 'outro': 'local_activity'
             };
             
+            // Mapeamento de rótulos em title case
+            const activityLabels = {
+                'passeio': 'Passeio',
+                'ingresso': 'Ingresso',
+                'evento': 'Evento',
+                'compras': 'Compras',
+                'restaurante': 'Restaurante',
+                'experiencia': 'Experiência',
+                'esporte': 'Esporte',
+                'cultura': 'Cultura',
+                'tour': 'Tour',
+                'outro': 'Outro'
+            };
+            
             // Processar itens do roteiro
             (plan.activities||[]).forEach(act=>{
                 const actIcon = activityIcons[act.type] || 'tour';
-                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: actIcon, color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}` });
+                const actLabel = activityLabels[act.type] || act.type;
+                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: actIcon, color: 'purple', title: act.name, location: `${actLabel}${act.duration?' • '+act.duration:''}` });
             });
             
+            // Mapeamento de rótulos para tipos de transporte
+            const transportTypeLabels = {
+                'carro': 'Carro/Moto',
+                'voo': 'Voo',
+                'aluguel': 'Aluguel de Carro',
+                'uber': 'Uber/Taxi',
+                'publico': 'Transporte Público'
+            };
+            
             (plan.transports||[]).forEach(tr=>{
-                if(tr.departureDate) autoItems.push({ date: tr.departureDate, time: tr.departureTime||'00:00', type: 'transport', icon: 'flight_takeoff', color: 'blue', title: `${tr.description||tr.type}`, location: 'Partida' });
-                if(tr.returnDate) autoItems.push({ date: tr.returnDate, time: tr.returnTime||'00:00', type: 'transport', icon: 'flight_land', color: 'blue', title: `${tr.description||tr.type}`, location: 'Retorno' });
+                const transportLabel = transportTypeLabels[tr.type] || tr.type;
+                const displayText = tr.description || transportLabel;
+                if(tr.departureDate) autoItems.push({ date: tr.departureDate, time: tr.departureTime||'00:00', type: 'transport', icon: 'flight_takeoff', color: 'blue', title: displayText, location: 'Partida' });
+                if(tr.returnDate) autoItems.push({ date: tr.returnDate, time: tr.returnTime||'00:00', type: 'transport', icon: 'flight_land', color: 'blue', title: displayText, location: 'Retorno' });
             });
             
             (plan.itinerary||[]).forEach(i=>{ 
@@ -16215,6 +16249,7 @@ const firebaseConfig = {
             // Transportes
             const transportsContainer = document.getElementById('tp-dash-transports');
             document.getElementById('tp-dash-transport-count').textContent = (plan.transports||[]).length;
+            
             if(!plan.transports || plan.transports.length === 0){
                 transportsContainer.innerHTML = '<div class="text-xs text-gray-500 text-center py-4">Nenhum transporte</div>';
             } else {
@@ -16223,8 +16258,10 @@ const firebaseConfig = {
                     const item = document.createElement('div');
                     item.className = 'p-3 rounded-lg border border-gray-200 bg-white hover:shadow-md transition-shadow';
                     const paidBadge = t.paid ? '<span class="text-xs px-2 py-0.5 rounded ml-1" style="background-color: #D1FAE5; color: #065F46;">✓ Pago</span>' : '';
+                    const transportLabel = transportTypeLabels[t.type] || t.type;
+                    const displayText = t.description || transportLabel;
                     item.innerHTML = `
-                        <div class="font-medium text-sm text-gray-800">${escapeHtml(t.description||t.type)}${paidBadge}</div>
+                        <div class="font-medium text-sm text-gray-800">${escapeHtml(displayText)}${paidBadge}</div>
                         <div class="text-xs text-gray-600 mt-1">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>
                     `;
                     transportsContainer.appendChild(item);
@@ -16261,9 +16298,10 @@ const firebaseConfig = {
                     const item = document.createElement('div');
                     item.className = 'p-3 rounded-lg border border-gray-200 bg-white hover:shadow-md transition-shadow';
                     const paidBadge = a.paid ? '<span class="text-xs px-2 py-0.5 rounded ml-1" style="background-color: #D1FAE5; color: #065F46;">✓ Pago</span>' : '';
+                    const actLabel = activityLabels[a.type] || a.type;
                     item.innerHTML = `
                         <div class="font-medium text-sm">${escapeHtml(a.name)}${paidBadge}</div>
-                        <div class="text-xs text-gray-600">${a.type} • ${formatBR(a.price||0)}</div>
+                        <div class="text-xs text-gray-600">${actLabel} • ${formatBR(a.price||0)}</div>
                     `;
                     activitiesContainer.appendChild(item);
                 });
@@ -16315,12 +16353,24 @@ const firebaseConfig = {
             
             // transports list - COM TOGGLE DE PAGO
             const list = document.getElementById('tp-transport-list'); list.innerHTML='';
+            
+            // Mapeamento de rótulos para tipos de transporte
+            const transportTypeLabels = {
+                'carro': 'Carro/Moto',
+                'voo': 'Voo',
+                'aluguel': 'Aluguel de Carro',
+                'uber': 'Uber/Taxi',
+                'publico': 'Transporte Público'
+            };
+            
             (plan.transports||[]).forEach(t=>{
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
                 const paidBadge = (t && t.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
                 const durationInfo = (t && t.duration && t.type === 'carro') ? `<div class="text-xs text-blue-600 mt-1">⏱️ Tempo de viagem: ${t.duration}h (ida)</div>` : '';
-                left.innerHTML = `<div class="font-medium">${escapeHtml(t.description||t.type)} ${paidBadge}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>${durationInfo}`;
+                const transportLabel = transportTypeLabels[t.type] || t.type;
+                const displayText = t.description || transportLabel;
+                left.innerHTML = `<div class="font-medium">${escapeHtml(displayText)} ${paidBadge}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>${durationInfo}`;
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(t.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(t.paid?'paid':'payments')+'</span>'; toggle.title=(t.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ t.paid = !t.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showTransportForm(t); });
@@ -16331,6 +16381,14 @@ const firebaseConfig = {
 
             // accommodations list - COM TOGGLE DE PAGO
             const accList = document.getElementById('tp-accommodation-list'); if (accList) { accList.innerHTML='';
+            
+            // Mapeamento de rótulos para tipos de hospedagem
+            const accommodationTypeLabels = {
+                'hotel': 'Hotel/Hostel',
+                'airbnb': 'Airbnb',
+                'reserva': 'Reserva'
+            };
+            
             (plan.accommodations||[]).forEach(a=>{
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
@@ -16338,7 +16396,8 @@ const firebaseConfig = {
                 const checkinInfo = a.checkin ? `Check-in: ${new Date(a.checkin).toLocaleDateString('pt-BR')}${a.checkinTime ? ' às ' + a.checkinTime : ''}` : '';
                 const checkoutInfo = a.checkout ? `Check-out: ${new Date(a.checkout).toLocaleDateString('pt-BR')}${a.checkoutTime ? ' às ' + a.checkoutTime : ''}` : '';
                 const datesInfo = checkinInfo && checkoutInfo ? `${checkinInfo} • ${checkoutInfo}` : (checkinInfo || checkoutInfo);
-                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${a.type} • ${a.nights} diárias • ${formatBR(a.total||0)}</div>${datesInfo ? `<div class="text-xs text-blue-600 mt-1">📅 ${datesInfo}</div>` : ''}`;
+                const accLabel = accommodationTypeLabels[a.type] || a.type;
+                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${accLabel} • ${a.nights} diárias • ${formatBR(a.total||0)}</div>${datesInfo ? `<div class="text-xs text-blue-600 mt-1">📅 ${datesInfo}</div>` : ''}`;
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(a.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(a.paid?'paid':'payments')+'</span>'; toggle.title=(a.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ a.paid = !a.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showAccommodationForm(a); });
@@ -16375,7 +16434,13 @@ const firebaseConfig = {
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
                 const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
-                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${a.type} • ${a.date||'Sem data'} ${a.time||''} • ${formatBR(a.price||0)}</div>`;
+                const activityTypeLabels = {
+                    'passeio': 'Passeio', 'ingresso': 'Ingresso', 'evento': 'Evento',
+                    'compras': 'Compras', 'restaurante': 'Restaurante', 'experiencia': 'Experiência',
+                    'esporte': 'Esporte', 'cultura': 'Cultura', 'tour': 'Tour', 'outro': 'Outro'
+                };
+                const actLabel = activityTypeLabels[a.type] || a.type;
+                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${actLabel} • ${a.date||'Sem data'} ${a.time||''} • ${formatBR(a.price||0)}</div>`;
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(a.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(a.paid?'paid':'payments')+'</span>'; toggle.title=(a.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ a.paid = !a.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showActivityForm(a); });
@@ -16401,6 +16466,20 @@ const firebaseConfig = {
                 'outro': 'local_activity'
             };
             
+            // Mapeamento de rótulos em title case
+            const activityLabels = {
+                'passeio': 'Passeio',
+                'ingresso': 'Ingresso',
+                'evento': 'Evento',
+                'compras': 'Compras',
+                'restaurante': 'Restaurante',
+                'experiencia': 'Experiência',
+                'esporte': 'Esporte',
+                'cultura': 'Cultura',
+                'tour': 'Tour',
+                'outro': 'Outro'
+            };
+            
             // Gerar itens automáticos do roteiro baseado em atividades e transportes
             const autoItems = [];
             
@@ -16410,13 +16489,25 @@ const firebaseConfig = {
             // Adicionar atividades
             (plan.activities||[]).forEach(act=>{
                 const actIcon = activityIcons[act.type] || 'tour';
-                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: actIcon, color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}`, auto: true, linkedId: act.id });
+                const actLabel = activityLabels[act.type] || act.type;
+                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: actIcon, color: 'purple', title: act.name, location: `${actLabel}${act.duration?' • '+act.duration:''}`, auto: true, linkedId: act.id });
             });
             
             // Adicionar transportes com datas (voos, aluguéis)
+            // Mapeamento de rótulos para tipos de transporte
+            const transportTypeLabels = {
+                'carro': 'Carro/Moto',
+                'voo': 'Voo',
+                'aluguel': 'Aluguel de Carro',
+                'uber': 'Uber/Taxi',
+                'publico': 'Transporte Público'
+            };
+            
             (plan.transports||[]).forEach(tr=>{
-                if(tr.departureDate) autoItems.push({ date: tr.departureDate, time: tr.departureTime||'00:00', type: 'transport', subtype: 'departure', icon: 'flight_takeoff', color: 'blue', title: `${tr.description||tr.type}`, location: 'Partida', auto: true, linkedId: tr.id });
-                if(tr.returnDate) autoItems.push({ date: tr.returnDate, time: tr.returnTime||'00:00', type: 'transport', subtype: 'return', icon: 'flight_land', color: 'blue', title: `${tr.description||tr.type}`, location: 'Retorno', auto: true, linkedId: tr.id });
+                const transportLabel = transportTypeLabels[tr.type] || tr.type;
+                const displayText = tr.description || transportLabel;
+                if(tr.departureDate) autoItems.push({ date: tr.departureDate, time: tr.departureTime||'00:00', type: 'transport', subtype: 'departure', icon: 'flight_takeoff', color: 'blue', title: displayText, location: 'Partida', auto: true, linkedId: tr.id });
+                if(tr.returnDate) autoItems.push({ date: tr.returnDate, time: tr.returnTime||'00:00', type: 'transport', subtype: 'return', icon: 'flight_land', color: 'blue', title: displayText, location: 'Retorno', auto: true, linkedId: tr.id });
             });
             
             // Adicionar itens do roteiro (incluindo hospedagens sincronizadas e itens manuais)

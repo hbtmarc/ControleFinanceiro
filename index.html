@@ -3934,7 +3934,7 @@
                         </div>
                     </div>
 
-                    <!-- Seções (Transportes, Hospedagem, Passeios) -->
+                    <!-- Seções (Transportes, Hospedagem, Atividades) -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Transportes -->
                         <div class="modern-card p-6">
@@ -3968,14 +3968,14 @@
                             </div>
                         </div>
 
-                        <!-- Passeios -->
+                        <!-- Atividades -->
                         <div class="modern-card p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="flex items-center gap-3">
                                     <div class="p-2 bg-purple-100 rounded-lg">
                                         <span class="material-symbols-outlined text-purple-600">tour</span>
                                     </div>
-                                    <h3 class="text-lg font-semibold text-gray-800">Passeios</h3>
+                                    <h3 class="text-lg font-semibold text-gray-800">Atividades</h3>
                                 </div>
                                 <span id="tp-dash-activity-count" class="modern-badge modern-badge-warning">0</span>
                             </div>
@@ -4649,7 +4649,7 @@
             // (vehicle selects populated earlier where populateSelect is defined)
 
             // Enhance the main modal selects and filters where we want prefixed icons
-            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category','vt-fuel-vehicle','vt-filter-vehicle','vt-fuel-type','vt-filter-fuel','tp-transport-type'].forEach(id => {
+            ['payment-method','category-expense','category-saving','filter-payment-method','filter-category','vt-fuel-vehicle','vt-filter-vehicle','vt-fuel-type','vt-filter-fuel','tp-transport-type','tp-activity-type'].forEach(id => {
                 try { enhanceSelectWithIcons(id); } catch(e) { console.error('enhanceSelectWithIcons', id, e); }
             });
         });
@@ -13649,7 +13649,7 @@ const firebaseConfig = {
                         </button>
                         <button class="travel-tab" data-tab="passeios">
                             <span class="material-symbols-outlined">tour</span>
-                            <span>Passeios</span>
+                            <span>Atividades</span>
                         </button>
                         <button class="travel-tab" data-tab="roteiro">
                             <span class="material-symbols-outlined">event_note</span>
@@ -13723,7 +13723,7 @@ const firebaseConfig = {
                                 <p id="tp-transport-maint-error" class="text-xs text-red-600 hidden"></p>
                             </div>
                             <div>
-                                <label class="text-xs text-gray-500">Translados / Passeios (R$)</label>
+                                <label class="text-xs text-gray-500">Atividades (R$)</label>
                                 <input id="tp-transport-transfers" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
                                 <p id="tp-transport-transfers-error" class="text-xs text-red-600 hidden"></p>
                             </div>
@@ -13818,28 +13818,37 @@ const firebaseConfig = {
                 </div>
                 <!-- FIM Aba de Hospedagem -->
 
-                <!-- Aba de Passeios -->
+                <!-- Aba de Atividades -->
                 <div class="travel-tab-content" id="tab-passeios">
                 <div class="p-3 rounded bg-white border mb-3">
                     <div class="flex items-center justify-between">
-                        <h4 class="text-sm font-semibold">Passeios e Atividades</h4>
-                        <button id="tp-activity-new" class="px-2 py-1 rounded bg-teal-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">tour</span>Novo Passeio</button>
+                        <h4 class="text-sm font-semibold">Atividades e Eventos</h4>
+                        <button id="tp-activity-new" class="px-2 py-1 rounded bg-teal-600 text-white inline-flex items-center gap-2"><span class="material-symbols-outlined">tour</span>Nova Atividade</button>
                     </div>
                     <div id="tp-activity-form" class="mt-3 hidden p-3 border rounded bg-gray-50">
                         <input type="hidden" id="tp-activity-id">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div>
-                                <label class="text-xs text-gray-500">Nome do Passeio</label>
-                                <input id="tp-activity-name" class="w-full border rounded p-2 mt-1" placeholder="Ex: City Tour" />
+                                <label class="text-xs text-gray-500">Nome da Atividade</label>
+                                <input id="tp-activity-name" class="w-full border rounded p-2 mt-1" placeholder="Ex: City Tour, Show, Ingresso" />
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500">Tipo</label>
-                                <select id="tp-activity-type" class="w-full border rounded p-2 mt-1">
-                                    <option value="passeio">Passeios/Excursões</option>
-                                    <option value="ingresso">Ingressos</option>
-                                    <option value="evento">Eventos</option>
-                                    <option value="compras">Compras</option>
-                                </select>
+                                <div class="relative select-with-icon">
+                                    <span class="material-symbols-outlined select-icon text-gray-400">tour</span>
+                                    <select id="tp-activity-type" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10">
+                                        <option value="passeio" data-icon="tour" selected>Passeio/Excursão</option>
+                                        <option value="ingresso" data-icon="confirmation_number">Ingresso (Museu, Atração)</option>
+                                        <option value="evento" data-icon="event">Evento/Show</option>
+                                        <option value="compras" data-icon="shopping_bag">Compras</option>
+                                        <option value="restaurante" data-icon="restaurant">Restaurante</option>
+                                        <option value="experiencia" data-icon="stars">Experiência</option>
+                                        <option value="esporte" data-icon="sports_soccer">Atividade Esportiva</option>
+                                        <option value="cultura" data-icon="museum">Atividade Cultural</option>
+                                        <option value="tour" data-icon="map">Tour Guiado</option>
+                                        <option value="outro" data-icon="local_activity">Outro</option>
+                                    </select>
+                                </div>
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500">Data</label>
@@ -13869,14 +13878,14 @@ const firebaseConfig = {
                             </div>
                         </div>
                         <div class="flex items-center gap-2 mt-3">
-                            <button id="tp-activity-save" class="px-3 py-1 rounded bg-green-600 text-white">Salvar Passeio</button>
+                            <button id="tp-activity-save" class="px-3 py-1 rounded bg-green-600 text-white">Salvar Atividade</button>
                             <button id="tp-activity-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
                         </div>
                     </div>
                     <div id="tp-activity-list" class="mt-4 space-y-2"></div>
                 </div>
                 </div>
-                <!-- FIM Aba de Passeios -->
+                <!-- FIM Aba de Atividades -->
 
                 <!-- Aba de Roteiro -->
                 <div class="travel-tab-content" id="tab-roteiro">
@@ -14206,17 +14215,19 @@ const firebaseConfig = {
                                 0 eventos
                             </div>
                         </div>
-                        <div id="tp-itinerary-timeline" class="space-y-1">
+                        <div id="tp-itinerary-timeline" class="space-y-1 mb-3">
                             <!-- Timeline será preenchida dinamicamente -->
                         </div>
-                        <div id="tp-itinerary-summary" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                        
+                        <!-- Resumo por Tipo -->
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            <div class="bg-white rounded-lg p-2 border border-orange-100 text-center">
+                                <div class="text-xs text-gray-600 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">tour</span>Atividades</div>
+                                <div class="text-lg font-bold text-orange-700" id="tp-itinerary-activities">0</div>
+                            </div>
                             <div class="bg-white rounded-lg p-2 border border-pink-100 text-center">
                                 <div class="text-xs text-gray-600 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">hotel</span>Hospedagens</div>
                                 <div class="text-lg font-bold text-pink-700" id="tp-itinerary-accommodations">0</div>
-                            </div>
-                            <div class="bg-white rounded-lg p-2 border border-purple-100 text-center">
-                                <div class="text-xs text-gray-600 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">tour</span>Passeios</div>
-                                <div class="text-lg font-bold text-purple-700" id="tp-itinerary-activities">0</div>
                             </div>
                             <div class="bg-white rounded-lg p-2 border border-blue-100 text-center">
                                 <div class="text-xs text-gray-600 flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">flight</span>Transportes</div>
@@ -14404,7 +14415,7 @@ const firebaseConfig = {
             
             // Limpar lista de transportes
             const transportsListEl = q('tp-transport-list');
-            if (transportsListEl) transportsListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum transporte cadastrado.</p>';
+            // Limpar lista de atividadesportsListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum transporte cadastrado.</p>';
             
             // Limpar lista de hospedagens
             const accommodationsListEl = q('tp-accommodation-list');
@@ -14412,7 +14423,7 @@ const firebaseConfig = {
             
             // Limpar lista de passeios
             const activitiesListEl = q('tp-activity-list');
-            if (activitiesListEl) activitiesListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum passeio cadastrado.</p>';
+            if (activitiesListEl) activitiesListEl.innerHTML = '<p class="text-sm text-gray-500">Nenhuma atividade cadastrada.</p>';
             
             // Limpar lista de roteiro
             const itineraryListEl = q('tp-itinerary-list');
@@ -14819,7 +14830,7 @@ const firebaseConfig = {
             }
         }
 
-        // ===== PASSEIOS CRUD =====
+        // ===== ATIVIDADES CRUD =====
         const activityNewBtn = q('tp-activity-new'); const activityForm = q('tp-activity-form');
         const acId = q('tp-activity-id'); const acName = q('tp-activity-name'); const acType = q('tp-activity-type'); const acDate = q('tp-activity-date'); const acTime = q('tp-activity-time'); const acDuration = q('tp-activity-duration'); const acPrice = q('tp-activity-price'); const acPaid = q('tp-activity-paid');
         const acSave = q('tp-activity-save'); const acCancel = q('tp-activity-cancel');
@@ -14829,7 +14840,7 @@ const firebaseConfig = {
         if (acCancel) acCancel.addEventListener('click', (e)=>{ e.preventDefault(); activityForm.classList.add('hidden'); });
 
         async function saveActivity(){ try {
-            const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar passeios', 'bg-yellow-600'); return; }
+            const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar atividades', 'bg-yellow-600'); return; }
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
             const obj = { id: acId.value || ('act-'+Math.random().toString(36).slice(2,9)), name: acName.value, type: acType.value, date: acDate.value, time: acTime.value, duration: acDuration.value, price: parseBRNumber(acPrice.value), paid: (acPaid && !!acPaid.checked) };
             plan.activities = plan.activities || [];
@@ -16122,7 +16133,7 @@ const firebaseConfig = {
                 <div class="p-3 rounded-lg border border-purple-200" style="background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%);">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="material-symbols-outlined text-sm" style="color: #9333EA;">attractions</span>
-                        <span class="text-xs font-semibold text-gray-600">PASSEIOS</span>
+                        <span class="text-xs font-semibold text-gray-600">ATIVIDADES</span>
                     </div>
                     <div class="text-lg font-bold" style="color: #9333EA;">${formatBR(totalActivities)}</div>
                 </div>
@@ -16139,9 +16150,24 @@ const firebaseConfig = {
             const itineraryContainer = document.getElementById('tp-dash-itinerary');
             const autoItems = [];
             
+            // Mapeamento de ícones por tipo de atividade
+            const activityIcons = {
+                'passeio': 'tour',
+                'ingresso': 'confirmation_number',
+                'evento': 'event',
+                'compras': 'shopping_bag',
+                'restaurante': 'restaurant',
+                'experiencia': 'stars',
+                'esporte': 'sports_soccer',
+                'cultura': 'museum',
+                'tour': 'map',
+                'outro': 'local_activity'
+            };
+            
             // Processar itens do roteiro
             (plan.activities||[]).forEach(act=>{
-                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: 'tour', color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}` });
+                const actIcon = activityIcons[act.type] || 'tour';
+                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: actIcon, color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}` });
             });
             
             (plan.transports||[]).forEach(tr=>{
@@ -16224,11 +16250,11 @@ const firebaseConfig = {
                 });
             }
             
-            // Passeios
+            // Atividades
             const activitiesContainer = document.getElementById('tp-dash-activities');
             document.getElementById('tp-dash-activity-count').textContent = (plan.activities||[]).length;
             if(!plan.activities || plan.activities.length === 0){
-                activitiesContainer.innerHTML = '<div class="text-xs text-gray-500 text-center py-4">Nenhum passeio</div>';
+                activitiesContainer.innerHTML = '<div class="text-xs text-gray-500 text-center py-4">Nenhuma atividade</div>';
             } else {
                 activitiesContainer.innerHTML = '';
                 plan.activities.forEach(a=>{
@@ -16361,15 +16387,30 @@ const firebaseConfig = {
             // itinerary list - COM INTEGRAÇÃO AUTOMÁTICA
             const itinList = document.getElementById('tp-itinerary-list'); if (itinList) { itinList.innerHTML='';
             
-            // Gerar itens automáticos do roteiro baseado em passeios e transportes
+            // Mapeamento de ícones por tipo de atividade
+            const activityIcons = {
+                'passeio': 'tour',
+                'ingresso': 'confirmation_number',
+                'evento': 'event',
+                'compras': 'shopping_bag',
+                'restaurante': 'restaurant',
+                'experiencia': 'stars',
+                'esporte': 'sports_soccer',
+                'cultura': 'museum',
+                'tour': 'map',
+                'outro': 'local_activity'
+            };
+            
+            // Gerar itens automáticos do roteiro baseado em atividades e transportes
             const autoItems = [];
             
             // NÃO adicionar hospedagens aqui - elas já são sincronizadas via syncAccommodationToItinerary
             // que salva diretamente em plan.itinerary com autoSync: true
             
-            // Adicionar passeios
+            // Adicionar atividades
             (plan.activities||[]).forEach(act=>{
-                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: 'tour', color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}`, auto: true, linkedId: act.id });
+                const actIcon = activityIcons[act.type] || 'tour';
+                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: actIcon, color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}`, auto: true, linkedId: act.id });
             });
             
             // Adicionar transportes com datas (voos, aluguéis)
@@ -16400,7 +16441,7 @@ const firebaseConfig = {
             // Ordenar por data e hora
             const sortedItin = autoItems.filter(x=>x.date).sort((a,b)=>{ const dateA = new Date(a.date + ' ' + (a.time||'00:00')); const dateB = new Date(b.date + ' ' + (b.time||'00:00')); return dateA - dateB; });
             
-            if(sortedItin.length === 0){ itinList.innerHTML = '<div class="text-sm text-gray-500 p-4">Nenhum item no roteiro. Adicione hospedagens, passeios ou itens manuais.</div>'; } else {
+            if(sortedItin.length === 0){ itinList.innerHTML = '<div class="text-sm text-gray-500 p-4">Nenhum item no roteiro. Adicione hospedagens, atividades ou itens manuais.</div>'; } else {
                 let currentDate = null;
                 sortedItin.forEach(i=>{
                     // Separador de data
@@ -16567,10 +16608,10 @@ const firebaseConfig = {
                     const blocks = [
                         { id: 'tp-total-fuel', label: 'Combustível', icon: 'local_gas_station', value: totFuel },
                         { id: 'tp-total-rental', label: 'Aluguel / Manutenção', icon: 'home_repair_service', value: totRental },
-                        { id: 'tp-total-transfers', label: 'Translados / Passeios', icon: 'tour', value: totTransfers },
+                        { id: 'tp-total-transfers', label: 'Atividades', icon: 'tour', value: totTransfers },
                         { id: 'tp-total-tolls', label: 'Pedágios / Taxas', icon: 'pay', value: totTolls },
                         { id: 'tp-total-accommodation', label: 'Hospedagem', icon: 'hotel', value: totAccommodation },
-                        { id: 'tp-total-activities', label: 'Passeios', icon: 'explore', value: totActivities }
+                        { id: 'tp-total-activities', label: 'Atividades', icon: 'explore', value: totActivities }
                     ];
                     const nonZero = blocks.filter(b => Number(b.value) && Number(b.value) !== 0);
                     if (nonZero.length === 0) {

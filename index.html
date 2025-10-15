@@ -3827,6 +3827,180 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Dashboard do Plano Selecionado -->
+                <div id="tp-selected-dashboard" class="hidden">
+                    <!-- Cabeçalho do Dashboard -->
+                    <div class="card p-6 rounded-xl mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                                    <span class="material-symbols-outlined text-white" style="font-size: 40px; font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;">luggage</span>
+                                </div>
+                                <div>
+                                    <h2 id="tp-dash-title" class="text-2xl font-bold text-gray-800">Destino</h2>
+                                    <p id="tp-dash-subtitle" class="text-sm text-gray-500">Data da viagem</p>
+                                </div>
+                            </div>
+                            <button id="tp-dash-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors" title="Fechar dashboard">
+                                <span class="material-symbols-outlined text-gray-600">close</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cards de Resumo Financeiro -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="kpi-card kpi-income">
+                            <div class="kpi-title">Orçado</div>
+                            <div id="tp-dash-budget" class="kpi-value">R$ 0,00</div>
+                            <div class="kpi-trend">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">savings</span>
+                                <span>Planejado</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card kpi-savings">
+                            <div class="kpi-title">Realizado</div>
+                            <div id="tp-dash-realized" class="kpi-value">R$ 0,00</div>
+                            <div class="kpi-trend">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">account_balance_wallet</span>
+                                <span>Reservado (meta)</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card" style="border-left: 4px solid #8B5CF6;">
+                            <div class="kpi-title">Pago</div>
+                            <div id="tp-dash-paid" class="kpi-value" style="color: #8B5CF6;">R$ 0,00</div>
+                            <div class="kpi-trend" style="color: #8B5CF6;">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">paid</span>
+                                <span>Já pago</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card" style="border-left: 4px solid #F59E0B;">
+                            <div class="kpi-title">Restante</div>
+                            <div id="tp-dash-remaining" class="kpi-value" style="color: #F59E0B;">R$ 0,00</div>
+                            <div class="kpi-trend" style="color: #F59E0B;">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">trending_up</span>
+                                <span>A poupar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progresso da Viagem -->
+                    <div class="modern-card p-6 mb-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="p-2 bg-indigo-100 rounded-lg">
+                                <span class="material-symbols-outlined text-indigo-600">moving</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-800">Progresso do Plano</h3>
+                                    <span id="tp-dash-progress-pct" class="text-lg font-bold text-indigo-600">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                            <div id="tp-dash-progress-bar" class="h-full rounded-full transition-all duration-500" style="width: 0%; background-color: #818CF8;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown de Custos -->
+                    <div class="modern-card p-6 mb-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <span class="material-symbols-outlined text-orange-600">account_balance</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Custos Totais</h3>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="tp-dash-costs">
+                            <!-- Gerado dinamicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Roteiro da Viagem (Resumido) -->
+                    <div class="modern-card p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-sky-100 rounded-lg">
+                                    <span class="material-symbols-outlined text-sky-600">event</span>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800">Roteiro da Viagem</h3>
+                            </div>
+                            <span id="tp-dash-events-count" class="modern-badge modern-badge-info">0 eventos</span>
+                        </div>
+                        <div id="tp-dash-itinerary" class="space-y-2 max-h-96 overflow-y-auto">
+                            <!-- Gerado dinamicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Seções (Transportes, Hospedagem, Passeios) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Transportes -->
+                        <div class="modern-card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-sky-100 rounded-lg">
+                                        <span class="material-symbols-outlined text-sky-600">directions_car</span>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Transportes</h3>
+                                </div>
+                                <span id="tp-dash-transport-count" class="modern-badge modern-badge-info">0</span>
+                            </div>
+                            <div id="tp-dash-transports" class="space-y-2">
+                                <!-- Gerado dinamicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Hospedagens -->
+                        <div class="modern-card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-rose-100 rounded-lg">
+                                        <span class="material-symbols-outlined text-rose-600">hotel</span>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Hospedagens</h3>
+                                </div>
+                                <span id="tp-dash-accommodation-count" class="modern-badge modern-badge-error">0</span>
+                            </div>
+                            <div id="tp-dash-accommodations" class="space-y-2">
+                                <!-- Gerado dinamicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Passeios -->
+                        <div class="modern-card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-purple-100 rounded-lg">
+                                        <span class="material-symbols-outlined text-purple-600">tour</span>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Passeios</h3>
+                                </div>
+                                <span id="tp-dash-activity-count" class="modern-badge modern-badge-warning">0</span>
+                            </div>
+                            <div id="tp-dash-activities" class="space-y-2">
+                                <!-- Gerado dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Checklist -->
+                    <div class="modern-card p-6 mt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-success-100 rounded-lg">
+                                    <span class="material-symbols-outlined text-success-600">checklist</span>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800">Checklist da Viagem</h3>
+                            </div>
+                            <span id="tp-dash-checklist-progress" class="modern-badge modern-badge-success">0%</span>
+                        </div>
+                        <div id="tp-dash-checklist" class="space-y-2">
+                            <!-- Gerado dinamicamente -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -4199,9 +4373,11 @@
                 ,
                     // Transport type mappings used by the Travel Planner
                     transportTypes: [
-                        { value: 'car', label: 'Carro', icon: 'directions_car' },
-                        { value: 'bus', label: 'Ônibus', icon: 'directions_bus' },
-                        { value: 'transfer', label: 'Translado / Passeio', icon: 'transfer_within_a_station' }
+                        { value: 'voo', label: 'Voos', icon: 'flight' },
+                        { value: 'carro', label: 'Carro/Moto', icon: 'directions_car' },
+                        { value: 'aluguel', label: 'Aluguel de Carro', icon: 'car_rental' },
+                        { value: 'uber', label: 'Uber/Taxi', icon: 'local_taxi' },
+                        { value: 'publico', label: 'Transportes Públicos', icon: 'directions_bus' }
                     ]
                     ,
                 // Fuel type mappings for VT modal
@@ -13501,8 +13677,8 @@ const firebaseConfig = {
                                 <div class="relative select-with-icon">
                                     <span class="material-symbols-outlined select-icon text-gray-400">directions_car</span>
                                     <select id="tp-transport-type" class="w-full border-2 rounded-lg px-3 py-2 mt-1 pl-10">
+                                        <option value="carro" data-icon="directions_car" selected>Carro/Moto</option>
                                         <option value="voo" data-icon="flight">Voos</option>
-                                        <option value="carro" data-icon="directions_car">Carro/Moto</option>
                                         <option value="aluguel" data-icon="car_rental">Aluguel de Carro</option>
                                         <option value="uber" data-icon="local_taxi">Uber/Taxi</option>
                                         <option value="publico" data-icon="directions_bus">Transportes Públicos</option>
@@ -13516,6 +13692,10 @@ const firebaseConfig = {
                             <div>
                                 <label class="text-xs text-gray-500">Distância (km)</label>
                                 <input id="tp-transport-distance" class="w-full border rounded p-2 mt-1" placeholder="km total" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Tempo médio de viagem (horas)</label>
+                                <input id="tp-transport-duration" type="number" step="0.5" class="w-full border rounded p-2 mt-1" placeholder="Ex: 10.5" />
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500">Consumo (km/L) — eficiência</label>
@@ -14383,13 +14563,13 @@ const firebaseConfig = {
 
         // Transports CRUD
     const transportNewBtn = q('tp-transport-new'); const transportForm = q('tp-transport-form');
-    const tId = q('tp-transport-id'); const tType = q('tp-transport-type'); const tDesc = q('tp-transport-desc'); const tDist = q('tp-transport-distance'); const tEff = q('tp-transport-efficiency'); const tFuelP = q('tp-transport-fuelprice'); const tTolls = q('tp-transport-tolls'); const tRental = q('tp-transport-rental'); const tMaint = q('tp-transport-maint'); const tTransfers = q('tp-transport-transfers'); const tPaid = q('tp-transport-paid');
+    const tId = q('tp-transport-id'); const tType = q('tp-transport-type'); const tDesc = q('tp-transport-desc'); const tDist = q('tp-transport-distance'); const tDuration = q('tp-transport-duration'); const tEff = q('tp-transport-efficiency'); const tFuelP = q('tp-transport-fuelprice'); const tTolls = q('tp-transport-tolls'); const tRental = q('tp-transport-rental'); const tMaint = q('tp-transport-maint'); const tTransfers = q('tp-transport-transfers'); const tPaid = q('tp-transport-paid');
     const tSave = q('tp-transport-save'); const tCancel = q('tp-transport-cancel'); const tCalcBox = q('tp-transport-calculations');
 
         function currentPlan(){ const plans = loadTravelPlans(); const pid = q('tp-id').value; if (!pid) return null; return plans.find(p=>p.id===pid) || null; }
 
         function showTransportForm(edit){ if (!transportForm) return; transportForm.classList.remove('hidden'); if (!edit){ tId.value=''; tType.value='car'; tDesc.value=''; tDist.value=''; tEff.value=''; tFuelP.value=''; tTolls.value=''; tRental.value=''; tMaint.value=''; tTransfers.value=''; tCalcBox.innerHTML=''; } else { tId.value=edit.id||''; tType.value=edit.type||'car'; tDesc.value=edit.description||''; tDist.value=edit.distance||''; tEff.value=edit.efficiency||''; tFuelP.value=edit.fuelPrice||''; tTolls.value=edit.tolls||''; tRental.value=edit.rental||''; tMaint.value=edit.maint||''; tTransfers.value=edit.transfers||''; computeTransportCalc(); } }
-    function showTransportForm(edit){ if (!transportForm) return; transportForm.classList.remove('hidden'); if (!edit){ tId.value=''; tType.value='car'; tDesc.value=''; tDist.value=''; tEff.value=''; tFuelP.value=''; tTolls.value=''; tRental.value=''; tMaint.value=''; tTransfers.value=''; if (tPaid) tPaid.checked = false; tCalcBox.innerHTML=''; } else { tId.value=edit.id||''; tType.value=edit.type||'car'; tDesc.value=edit.description||''; tDist.value=edit.distance||''; tEff.value=edit.efficiency||''; tFuelP.value=edit.fuelPrice||''; tTolls.value=edit.tolls||''; tRental.value=edit.rental||''; tMaint.value=edit.maint||''; tTransfers.value=edit.transfers||''; if (tPaid) tPaid.checked = !!edit.paid; computeTransportCalc(); } }
+    function showTransportForm(edit){ if (!transportForm) return; transportForm.classList.remove('hidden'); if (!edit){ tId.value=''; tType.value='car'; tDesc.value=''; tDist.value=''; tDuration.value=''; tEff.value=''; tFuelP.value=''; tTolls.value=''; tRental.value=''; tMaint.value=''; tTransfers.value=''; if (tPaid) tPaid.checked = false; tCalcBox.innerHTML=''; } else { tId.value=edit.id||''; tType.value=edit.type||'car'; tDesc.value=edit.description||''; tDist.value=edit.distance||''; tDuration.value=edit.duration||''; tEff.value=edit.efficiency||''; tFuelP.value=edit.fuelPrice||''; tTolls.value=edit.tolls||''; tRental.value=edit.rental||''; tMaint.value=edit.maint||''; tTransfers.value=edit.transfers||''; if (tPaid) tPaid.checked = !!edit.paid; computeTransportCalc(); } }
         if (transportNewBtn) transportNewBtn.addEventListener('click', ()=>{ showTransportForm(null); });
         if (tCancel) tCancel.addEventListener('click', (e)=>{ e.preventDefault(); transportForm.classList.add('hidden'); });
 
@@ -14409,13 +14589,27 @@ const firebaseConfig = {
         async function saveTransport(){ try {
             const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar transportes', 'bg-yellow-600'); return; }
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
-            const obj = { id: tId.value || ('tr-'+Math.random().toString(36).slice(2,9)), type: tType.value, description: tDesc.value, distance: parseBRNumber(tDist.value), efficiency: parseBRNumber(tEff.value), fuelPrice: parseBRNumber(tFuelP.value), tolls: parseBRNumber(tTolls.value), rental: parseBRNumber(tRental.value), maint: parseBRNumber(tMaint.value), transfers: parseBRNumber(tTransfers.value), paid: (tPaid && !!tPaid.checked) };
+            const obj = { id: tId.value || ('tr-'+Math.random().toString(36).slice(2,9)), type: tType.value, description: tDesc.value, distance: parseBRNumber(tDist.value), duration: parseFloat(tDuration.value) || 0, efficiency: parseBRNumber(tEff.value), fuelPrice: parseBRNumber(tFuelP.value), tolls: parseBRNumber(tTolls.value), rental: parseBRNumber(tRental.value), maint: parseBRNumber(tMaint.value), transfers: parseBRNumber(tTransfers.value), paid: (tPaid && !!tPaid.checked) };
             const calc = computeTransportCalc(); obj.fuelLiters = calc.fuelLiters; obj.fuelCost = calc.fuelCost; obj.subtotal = calc.subtotal;
             plan.transports = plan.transports || [];
             const idx = plan.transports.findIndex(t=>t.id===obj.id);
             if (idx === -1) plan.transports.push(obj); else plan.transports[idx] = obj;
+            
+            // Sincronizar viagem IDA/VOLTA com roteiro (apenas para tipo Carro)
+            if(obj.type === 'carro' && obj.duration > 0){
+                if(plan.accommodations && plan.accommodations.length > 0){
+                    syncTravelToItinerary(plan, obj);
+                }
+            }
+            
             await saveTravelPlans(plans);
-            showToast('Transporte salvo', 'bg-green-600');
+            
+            // Mensagem personalizada
+            if(obj.type === 'carro' && obj.duration > 0 && (!plan.accommodations || plan.accommodations.length === 0)){
+                showToast('Transporte salvo! Cadastre a hospedagem para ver IDA/VOLTA no roteiro.', 'bg-blue-600');
+            } else {
+                showToast('Transporte salvo', 'bg-green-600');
+            }
             transportForm.classList.add('hidden');
             renderPlanDetails(plan.id);
         } catch(e){ console.error('saveTransport', e); showToast('Erro ao salvar transporte', 'bg-red-600'); } }
@@ -14448,6 +14642,16 @@ const firebaseConfig = {
             
             // Sincronizar com roteiro
             syncAccommodationToItinerary(plan, obj);
+            
+            // RE-SINCRONIZAR todos os transportes tipo 'carro' com duração
+            // (caso o transporte tenha sido cadastrado antes da hospedagem)
+            if (plan.transports && plan.transports.length > 0) {
+                plan.transports.forEach(transport => {
+                    if (transport.type === 'carro' && transport.duration > 0) {
+                        syncTravelToItinerary(plan, transport);
+                    }
+                });
+            }
             
             await saveTravelPlans(plans);
             showToast('Hospedagem salva', 'bg-green-600');
@@ -14520,6 +14724,98 @@ const firebaseConfig = {
                 
             } catch(e) {
                 console.error('syncAccommodationToItinerary', e);
+            }
+        }
+
+        // Função para sincronizar viagem IDA/VOLTA com o roteiro (apenas Carro)
+        function syncTravelToItinerary(plan, transport) {
+            try {
+                if (!plan || !transport || transport.type !== 'carro' || !transport.duration) {
+                    return;
+                }
+                
+                plan.itinerary = plan.itinerary || [];
+                
+                // Encontrar primeira hospedagem (check-in mais cedo)
+                const firstAccommodation = (plan.accommodations || [])
+                    .filter(a => a.checkin)
+                    .sort((a, b) => new Date(a.checkin) - new Date(b.checkin))[0];
+                
+                // Encontrar última hospedagem (check-out mais tarde)
+                const lastAccommodation = (plan.accommodations || [])
+                    .filter(a => a.checkout)
+                    .sort((a, b) => new Date(b.checkout) - new Date(a.checkout))[0];
+                
+                if (!firstAccommodation || !lastAccommodation) {
+                    return;
+                }
+                
+                // Calcular horário de partida IDA (subtrair duração da viagem do check-in)
+                const checkinDateTime = new Date(firstAccommodation.checkin + ' ' + (firstAccommodation.checkinTime || '14:00'));
+                const departureDateTime = new Date(checkinDateTime.getTime() - (transport.duration * 60 * 60 * 1000));
+                const departureDate = departureDateTime.toISOString().split('T')[0];
+                const departureTime = departureDateTime.toTimeString().slice(0, 5);
+                
+                // Calcular horário de chegada VOLTA (adicionar duração da viagem ao check-out)
+                const checkoutDateTime = new Date(lastAccommodation.checkout + ' ' + (lastAccommodation.checkoutTime || '12:00'));
+                const arrivalDateTime = new Date(checkoutDateTime.getTime() + (transport.duration * 60 * 60 * 1000));
+                const arrivalDate = arrivalDateTime.toISOString().split('T')[0];
+                const arrivalTime = arrivalDateTime.toTimeString().slice(0, 5);
+                
+                // Calcular distância de IDA e VOLTA (metade da distância total cada)
+                const halfDistance = Math.round((transport.distance || 0) / 2);
+                
+                // Criar/atualizar entrada de IDA no roteiro
+                const departureId = `transport-departure-${transport.id}`;
+                const departureEntry = {
+                    id: departureId,
+                    date: departureDate,
+                    time: departureTime,
+                    activity: `🚗 IDA - ${transport.description || 'Viagem de carro'}`,
+                    location: `Duração estimada: ${transport.duration}h • ${halfDistance}km`,
+                    notes: `Partida para ${firstAccommodation.name}. Chegada prevista: ${firstAccommodation.checkinTime || '14:00'}`,
+                    type: 'transport-departure',
+                    linkedId: transport.id,
+                    autoSync: true
+                };
+                
+                const existingDepartureIdx = plan.itinerary.findIndex(i => i.id === departureId);
+                if (existingDepartureIdx === -1) {
+                    plan.itinerary.push(departureEntry);
+                } else {
+                    plan.itinerary[existingDepartureIdx] = departureEntry;
+                }
+                
+                // Criar/atualizar entrada de VOLTA no roteiro
+                const returnId = `transport-return-${transport.id}`;
+                const returnEntry = {
+                    id: returnId,
+                    date: arrivalDate,
+                    time: arrivalTime,
+                    activity: `🚗 VOLTA - ${transport.description || 'Viagem de carro'}`,
+                    location: `Duração estimada: ${transport.duration}h • ${halfDistance}km`,
+                    notes: `Retorno de ${lastAccommodation.name}. Saída: ${lastAccommodation.checkoutTime || '12:00'}`,
+                    type: 'transport-return',
+                    linkedId: transport.id,
+                    autoSync: true
+                };
+                
+                const existingReturnIdx = plan.itinerary.findIndex(i => i.id === returnId);
+                if (existingReturnIdx === -1) {
+                    plan.itinerary.push(returnEntry);
+                } else {
+                    plan.itinerary[existingReturnIdx] = returnEntry;
+                }
+                
+                // Ordenar roteiro por data e hora
+                plan.itinerary.sort((a, b) => {
+                    const dateA = new Date(a.date + ' ' + (a.time || '00:00'));
+                    const dateB = new Date(b.date + ' ' + (b.time || '00:00'));
+                    return dateA - dateB;
+                });
+                
+            } catch(e) {
+                console.error('syncTravelToItinerary', e);
             }
         }
 
@@ -15683,11 +15979,36 @@ const firebaseConfig = {
         function renderPlansList(){ try {
             const container = document.getElementById('tp-plans'); if (!container) return; container.innerHTML=''; const plans = loadTravelPlans(); if (!plans || !plans.length) { container.innerHTML='<div class="text-sm text-gray-500">Nenhum plano criado.</div>'; return; }
             plans.forEach(p=>{
-                const el = document.createElement('div'); el.className='p-3 border rounded bg-white flex items-center justify-between';
+                const el = document.createElement('div'); el.className='p-3 border rounded bg-white flex items-center justify-between hover:bg-blue-50 transition-colors cursor-pointer';
                 const left = document.createElement('div'); left.innerHTML = `<div class="font-semibold">${p.destination}</div><div class="text-xs text-gray-500">${p.date||'Sem data'} — ${formatBR(p.estimated||0)}</div>`;
-                const right = document.createElement('div');
-                const open = document.createElement('button'); open.className='px-2 py-1 rounded bg-blue-50 text-blue-700 mr-2'; open.textContent='Abrir'; open.addEventListener('click', ()=>{ q('tp-id').value=p.id; tpDestination.value=p.destination||''; tpDate.value=p.date||''; tpEstimated.value=p.estimated||''; tpSaved.value=p.saved||''; renderPlanDetails(p.id); openModal(); });
-                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.textContent='Excluir'; del.addEventListener('click', async ()=>{ 
+                const right = document.createElement('div'); right.className='flex gap-2';
+                
+                // Botão Ver Dashboard
+                const view = document.createElement('button'); 
+                view.className='px-3 py-1.5 rounded bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors flex items-center gap-1'; 
+                view.innerHTML='<span class="material-symbols-outlined text-sm">visibility</span><span>Ver</span>'; 
+                view.addEventListener('click', (e)=>{ 
+                    e.stopPropagation(); 
+                    renderPlanDashboard(p.id); 
+                });
+                
+                // Botão Editar (abre modal)
+                const edit = document.createElement('button'); 
+                edit.className='px-2 py-1.5 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors'; 
+                edit.innerHTML='<span class="material-symbols-outlined text-sm">edit</span>'; 
+                edit.title='Editar plano';
+                edit.addEventListener('click', (e)=>{ 
+                    e.stopPropagation();
+                    q('tp-id').value=p.id; tpDestination.value=p.destination||''; tpDate.value=p.date||''; tpEstimated.value=p.estimated||''; tpSaved.value=p.saved||''; renderPlanDetails(p.id); openModal(); 
+                });
+                
+                // Botão Excluir
+                const del = document.createElement('button'); 
+                del.className='px-2 py-1.5 rounded bg-red-50 text-red-700 hover:bg-red-100 transition-colors'; 
+                del.innerHTML='<span class="material-symbols-outlined text-sm">delete</span>';
+                del.title='Excluir plano';
+                del.addEventListener('click', async (e)=>{ 
+                    e.stopPropagation();
                     if (!confirm('Excluir plano?')) return; 
                     const plans2 = loadTravelPlans().filter(x=>x.id!==p.id);
                     await saveTravelPlans(plans2);
@@ -15699,12 +16020,266 @@ const firebaseConfig = {
                         if (gIdx !== -1) { goals.splice(gIdx,1); try { await storage.saveData(window.state.appData); } catch(e){} }
                         try { if (typeof renderInvestmentsView === 'function') renderInvestmentsView(); } catch(e){}
                     } catch(e) { console.error('remove linked goal', e); }
-                    renderPlansList(); showToast('Plano excluído','bg-green-600'); 
+                    
+                    // Fechar dashboard se este plano estiver aberto
+                    const dashContainer = document.getElementById('tp-selected-dashboard');
+                    if(dashContainer && !dashContainer.classList.contains('hidden')){
+                        dashContainer.classList.add('hidden');
+                    }
+                    
+                    // Limpar persistência se for o plano excluído
+                    const lastSelectedPlanId = localStorage.getItem('lastSelectedTravelPlan');
+                    if(lastSelectedPlanId === p.id){
+                        localStorage.removeItem('lastSelectedTravelPlan');
+                    }
+                    
+                    renderPlansList(); 
+                    showToast('Plano excluído','bg-green-600'); 
                 });
-                right.appendChild(open); right.appendChild(del);
+                
+                // Click no card também abre o dashboard
+                el.addEventListener('click', ()=>{ renderPlanDashboard(p.id); });
+                
+                right.appendChild(view); right.appendChild(edit); right.appendChild(del);
                 el.appendChild(left); el.appendChild(right); container.appendChild(el);
             });
+            
+            // Carregar automaticamente o último plano selecionado
+            const lastSelectedPlanId = localStorage.getItem('lastSelectedTravelPlan');
+            if(lastSelectedPlanId && plans.find(p => p.id === lastSelectedPlanId)){
+                // Carregar sem scroll automático
+                setTimeout(() => renderPlanDashboard(lastSelectedPlanId, false), 300);
+            }
         } catch(e){ console.error('renderPlansList', e); } }
+
+        // Função para renderizar dashboard do plano na tela principal
+        function renderPlanDashboard(planId, autoScroll = true){ try {
+            const plans = loadTravelPlans(); 
+            const plan = plans.find(p=>p.id===planId); 
+            if (!plan) return;
+            
+            const dashContainer = document.getElementById('tp-selected-dashboard');
+            if(!dashContainer) return;
+            
+            // Salvar último plano selecionado
+            localStorage.setItem('lastSelectedTravelPlan', planId);
+            
+            // Mostrar dashboard
+            dashContainer.classList.remove('hidden');
+            
+            // Scroll suave até o dashboard (apenas se não for carregamento automático)
+            if(autoScroll){
+                setTimeout(()=>{ dashContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+            }
+            
+            // Cabeçalho
+            document.getElementById('tp-dash-title').textContent = plan.destination || 'Destino';
+            document.getElementById('tp-dash-subtitle').textContent = plan.date ? new Date(plan.date + 'T00:00:00').toLocaleDateString('pt-BR', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) : 'Data não definida';
+            
+            // Calcular totais
+            const totalTransports = (plan.transports||[]).reduce((sum, t)=>sum+(t.subtotal||0), 0);
+            const totalAccommodations = (plan.accommodations||[]).reduce((sum, a)=>sum+(a.total||0), 0);
+            const totalActivities = (plan.activities||[]).reduce((sum, a)=>sum+(a.price||0), 0);
+            const totalCosts = totalTransports + totalAccommodations + totalActivities;
+            
+            const paidTransports = (plan.transports||[]).filter(t=>t.paid).reduce((sum, t)=>sum+(t.subtotal||0), 0);
+            const paidAccommodations = (plan.accommodations||[]).filter(a=>a.paid).reduce((sum, a)=>sum+(a.total||0), 0);
+            const paidActivities = (plan.activities||[]).filter(a=>a.paid).reduce((sum, a)=>sum+(a.price||0), 0);
+            const totalPaid = paidTransports + paidAccommodations + paidActivities;
+            
+            const budgeted = plan.estimated || 0;
+            const realized = plan.saved || 0;
+            const remaining = budgeted - realized;
+            
+            // Cards financeiros
+            document.getElementById('tp-dash-budget').textContent = formatBR(budgeted);
+            document.getElementById('tp-dash-realized').textContent = formatBR(realized);
+            document.getElementById('tp-dash-paid').textContent = formatBR(totalPaid);
+            document.getElementById('tp-dash-remaining').textContent = formatBR(remaining);
+            
+            // Progresso
+            const progress = budgeted > 0 ? Math.min(Math.round((realized / budgeted) * 100), 100) : 0;
+            document.getElementById('tp-dash-progress-pct').textContent = `${progress}%`;
+            document.getElementById('tp-dash-progress-bar').style.width = `${progress}%`;
+            
+            // Breakdown de custos
+            const costsContainer = document.getElementById('tp-dash-costs');
+            costsContainer.innerHTML = `
+                <div class="p-3 rounded-lg border border-sky-200" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="material-symbols-outlined text-sm" style="color: #0284C7;">directions_car</span>
+                        <span class="text-xs font-semibold text-gray-600">TRANSPORTES</span>
+                    </div>
+                    <div class="text-lg font-bold" style="color: #0284C7;">${formatBR(totalTransports)}</div>
+                </div>
+                <div class="p-3 rounded-lg border border-rose-200" style="background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="material-symbols-outlined text-sm" style="color: #E11D48;">hotel</span>
+                        <span class="text-xs font-semibold text-gray-600">HOSPEDAGEM</span>
+                    </div>
+                    <div class="text-lg font-bold" style="color: #E11D48;">${formatBR(totalAccommodations)}</div>
+                </div>
+                <div class="p-3 rounded-lg border border-purple-200" style="background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%);">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="material-symbols-outlined text-sm" style="color: #9333EA;">attractions</span>
+                        <span class="text-xs font-semibold text-gray-600">PASSEIOS</span>
+                    </div>
+                    <div class="text-lg font-bold" style="color: #9333EA;">${formatBR(totalActivities)}</div>
+                </div>
+                <div class="p-3 rounded-lg border border-green-200" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="material-symbols-outlined text-sm" style="color: #059669;">account_balance_wallet</span>
+                        <span class="text-xs font-semibold text-gray-600">TOTAL</span>
+                    </div>
+                    <div class="text-lg font-bold" style="color: #059669;">${formatBR(totalCosts)}</div>
+                </div>
+            `;
+            
+            // Roteiro
+            const itineraryContainer = document.getElementById('tp-dash-itinerary');
+            const autoItems = [];
+            
+            // Processar itens do roteiro
+            (plan.activities||[]).forEach(act=>{
+                if(act.date) autoItems.push({ date: act.date, time: act.time||'09:00', type: 'activity', icon: 'tour', color: 'purple', title: act.name, location: `${act.type}${act.duration?' • '+act.duration:''}` });
+            });
+            
+            (plan.transports||[]).forEach(tr=>{
+                if(tr.departureDate) autoItems.push({ date: tr.departureDate, time: tr.departureTime||'00:00', type: 'transport', icon: 'flight_takeoff', color: 'blue', title: `${tr.description||tr.type}`, location: 'Partida' });
+                if(tr.returnDate) autoItems.push({ date: tr.returnDate, time: tr.returnTime||'00:00', type: 'transport', icon: 'flight_land', color: 'blue', title: `${tr.description||tr.type}`, location: 'Retorno' });
+            });
+            
+            (plan.itinerary||[]).forEach(i=>{ 
+                if(i.type === 'accommodation-checkin'){
+                    autoItems.push({ date: i.date, time: i.time, type: 'accommodation', icon: 'login', color: 'red', title: i.activity, location: i.location });
+                } else if(i.type === 'accommodation-checkout'){
+                    autoItems.push({ date: i.date, time: i.time, type: 'accommodation', icon: 'logout', color: 'red', title: i.activity, location: i.location });
+                } else if(i.type === 'transport-departure'){
+                    autoItems.push({ date: i.date, time: i.time, type: 'transport', icon: 'directions_car', color: 'blue', title: i.activity, location: i.location });
+                } else if(i.type === 'transport-return'){
+                    autoItems.push({ date: i.date, time: i.time, type: 'transport', icon: 'directions_car', color: 'blue', title: i.activity, location: i.location });
+                } else {
+                    autoItems.push({ date: i.date, time: i.time, type: 'manual', icon: 'event', color: 'green', title: i.activity, location: i.location });
+                }
+            });
+            
+            const sortedItin = autoItems.filter(x=>x.date).sort((a,b)=>{ const dateA = new Date(a.date + ' ' + (a.time||'00:00')); const dateB = new Date(b.date + ' ' + (b.time||'00:00')); return dateA - dateB; });
+            
+            document.getElementById('tp-dash-events-count').textContent = `${sortedItin.length} eventos`;
+            
+            if(sortedItin.length === 0){
+                itineraryContainer.innerHTML = '<div class="text-sm text-gray-500 p-4 text-center">Nenhum evento no roteiro</div>';
+            } else {
+                itineraryContainer.innerHTML = '';
+                sortedItin.forEach(i=>{
+                    const item = document.createElement('div');
+                    item.className = 'p-3 rounded-lg border border-gray-200 bg-white hover:shadow-md transition-shadow flex items-center gap-3';
+                    const iconColors = { blue: '#0EA5E9', green: '#10B981', purple: '#A855F7', orange: '#F97316' };
+                    item.innerHTML = `
+                        <span class="material-symbols-outlined" style="color: ${iconColors[i.color] || '#6B7280'};">${i.icon}</span>
+                        <div class="flex-1">
+                            <div class="font-medium text-sm text-gray-800">${i.time} - ${escapeHtml(i.title)}</div>
+                            <div class="text-xs text-gray-600 mt-0.5">${escapeHtml(i.location||'')}</div>
+                        </div>
+                    `;
+                    itineraryContainer.appendChild(item);
+                });
+            }
+            
+            // Transportes
+            const transportsContainer = document.getElementById('tp-dash-transports');
+            document.getElementById('tp-dash-transport-count').textContent = (plan.transports||[]).length;
+            if(!plan.transports || plan.transports.length === 0){
+                transportsContainer.innerHTML = '<div class="text-xs text-gray-500 text-center py-4">Nenhum transporte</div>';
+            } else {
+                transportsContainer.innerHTML = '';
+                plan.transports.forEach(t=>{
+                    const item = document.createElement('div');
+                    item.className = 'p-3 rounded-lg border border-gray-200 bg-white hover:shadow-md transition-shadow';
+                    const paidBadge = t.paid ? '<span class="text-xs px-2 py-0.5 rounded ml-1" style="background-color: #D1FAE5; color: #065F46;">✓ Pago</span>' : '';
+                    item.innerHTML = `
+                        <div class="font-medium text-sm text-gray-800">${escapeHtml(t.description||t.type)}${paidBadge}</div>
+                        <div class="text-xs text-gray-600 mt-1">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>
+                    `;
+                    transportsContainer.appendChild(item);
+                });
+            }
+            
+            // Hospedagens
+            const accommodationsContainer = document.getElementById('tp-dash-accommodations');
+            document.getElementById('tp-dash-accommodation-count').textContent = (plan.accommodations||[]).length;
+            if(!plan.accommodations || plan.accommodations.length === 0){
+                accommodationsContainer.innerHTML = '<div class="text-xs text-gray-500 text-center py-4">Nenhuma hospedagem</div>';
+            } else {
+                accommodationsContainer.innerHTML = '';
+                plan.accommodations.forEach(a=>{
+                    const item = document.createElement('div');
+                    item.className = 'p-3 rounded-lg border border-gray-200 bg-white hover:shadow-md transition-shadow';
+                    const paidBadge = a.paid ? '<span class="text-xs px-2 py-0.5 rounded ml-1" style="background-color: #D1FAE5; color: #065F46;">✓ Pago</span>' : '';
+                    item.innerHTML = `
+                        <div class="font-medium text-sm text-gray-800">${escapeHtml(a.name)}${paidBadge}</div>
+                        <div class="text-xs text-gray-600 mt-1">${a.nights} diárias • ${formatBR(a.total||0)}</div>
+                    `;
+                    accommodationsContainer.appendChild(item);
+                });
+            }
+            
+            // Passeios
+            const activitiesContainer = document.getElementById('tp-dash-activities');
+            document.getElementById('tp-dash-activity-count').textContent = (plan.activities||[]).length;
+            if(!plan.activities || plan.activities.length === 0){
+                activitiesContainer.innerHTML = '<div class="text-xs text-gray-500 text-center py-4">Nenhum passeio</div>';
+            } else {
+                activitiesContainer.innerHTML = '';
+                plan.activities.forEach(a=>{
+                    const item = document.createElement('div');
+                    item.className = 'p-3 rounded-lg border border-gray-200 bg-white hover:shadow-md transition-shadow';
+                    const paidBadge = a.paid ? '<span class="text-xs px-2 py-0.5 rounded ml-1" style="background-color: #D1FAE5; color: #065F46;">✓ Pago</span>' : '';
+                    item.innerHTML = `
+                        <div class="font-medium text-sm">${escapeHtml(a.name)}${paidBadge}</div>
+                        <div class="text-xs text-gray-600">${a.type} • ${formatBR(a.price||0)}</div>
+                    `;
+                    activitiesContainer.appendChild(item);
+                });
+            }
+            
+            // Checklist
+            const checklistContainer = document.getElementById('tp-dash-checklist');
+            const checklist = plan.checklist || [];
+            const completedItems = checklist.filter(item => item.checked).length;
+            const checklistProgress = checklist.length > 0 ? Math.round((completedItems / checklist.length) * 100) : 0;
+            
+            document.getElementById('tp-dash-checklist-progress').textContent = `${checklistProgress}%`;
+            
+            if(checklist.length === 0){
+                checklistContainer.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Nenhum item no checklist</div>';
+            } else {
+                checklistContainer.innerHTML = '';
+                checklist.slice(0, 10).forEach(item=>{
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-2 p-2 rounded';
+                    div.style.backgroundColor = '#f9fafb';
+                    const iconColor = item.checked ? '#10b981' : '#9ca3af';
+                    const textClass = item.checked ? 'line-through text-gray-500' : 'text-gray-700';
+                    div.innerHTML = `
+                        <span class="material-symbols-outlined text-sm" style="color: ${iconColor};">${item.checked ? 'check_circle' : 'radio_button_unchecked'}</span>
+                        <span class="text-sm ${textClass}">${escapeHtml(item.item)}</span>
+                    `;
+                    checklistContainer.appendChild(div);
+                });
+                if(checklist.length > 10){
+                    const more = document.createElement('div');
+                    more.className = 'text-xs text-gray-500 text-center py-2';
+                    more.textContent = `+ ${checklist.length - 10} itens`;
+                    checklistContainer.appendChild(more);
+                }
+            }
+            
+            // Botão fechar (apenas oculta, mas mantém a persistência)
+            const closeBtn = document.getElementById('tp-dash-close');
+            closeBtn.onclick = ()=>{ dashContainer.classList.add('hidden'); };
+            
+        } catch(e){ console.error('renderPlanDashboard', e); } }
 
         async function renderPlanDetails(planId){ try {
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===planId); if (!plan) return; tpSummaryDestination.textContent = plan.destination||'—'; tpSummaryDate.textContent = plan.date||'—'; tpSummaryTransports.textContent = (plan.transports||[]).length || 0;
@@ -15718,11 +16293,12 @@ const firebaseConfig = {
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
                 const paidBadge = (t && t.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
-                left.innerHTML = `<div class="font-medium">${escapeHtml(t.description||t.type)} ${paidBadge}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>`;
+                const durationInfo = (t && t.duration && t.type === 'carro') ? `<div class="text-xs text-blue-600 mt-1">⏱️ Tempo de viagem: ${t.duration}h (ida)</div>` : '';
+                left.innerHTML = `<div class="font-medium">${escapeHtml(t.description||t.type)} ${paidBadge}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>${durationInfo}`;
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(t.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(t.paid?'paid':'payments')+'</span>'; toggle.title=(t.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ t.paid = !t.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showTransportForm(t); });
-                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir transporte?')) return; plan.transports = (plan.transports||[]).filter(x=>x.id!==t.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Transporte excluído','bg-green-600'); });
+                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir transporte?')) return; const trId = t.id; plan.transports = (plan.transports||[]).filter(x=>x.id!==trId); plan.itinerary = (plan.itinerary||[]).filter(i=>i.linkedId!==trId); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Transporte excluído','bg-green-600'); });
                 right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
                 row.appendChild(left); row.appendChild(right); list.appendChild(row);
             });
@@ -15740,7 +16316,29 @@ const firebaseConfig = {
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(a.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(a.paid?'paid':'payments')+'</span>'; toggle.title=(a.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ a.paid = !a.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showAccommodationForm(a); });
-                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir hospedagem?')) return; const accId = a.id; plan.accommodations = (plan.accommodations||[]).filter(x=>x.id!==accId); plan.itinerary = (plan.itinerary||[]).filter(i=>i.linkedId!==accId); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Hospedagem excluída','bg-green-600'); });
+                const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ 
+                    if (!confirm('Excluir hospedagem?')) return; 
+                    const accId = a.id; 
+                    plan.accommodations = (plan.accommodations||[]).filter(x=>x.id!==accId); 
+                    plan.itinerary = (plan.itinerary||[]).filter(i=>i.linkedId!==accId); 
+                    
+                    // Re-sincronizar transportes tipo carro após exclusão de hospedagem
+                    if (plan.transports && plan.transports.length > 0) {
+                        // Remover todos os itens de transporte IDA/VOLTA antigos
+                        plan.itinerary = (plan.itinerary||[]).filter(i=>i.type !== 'transport-departure' && i.type !== 'transport-return');
+                        
+                        // Re-sincronizar cada transporte tipo carro com as hospedagens restantes
+                        plan.transports.forEach(transport => {
+                            if (transport.type === 'carro' && transport.duration > 0) {
+                                syncTravelToItinerary(plan, transport);
+                            }
+                        });
+                    }
+                    
+                    await saveTravelPlans(plans); 
+                    renderPlanDetails(plan.id); 
+                    showToast('Hospedagem excluída','bg-green-600'); 
+                });
                 right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
                 row.appendChild(left); row.appendChild(right); accList.appendChild(row);
             }); }
@@ -15787,6 +16385,12 @@ const firebaseConfig = {
                     autoItems.push({ date: i.date, time: i.time, type: 'accommodation', subtype: 'checkin', icon: 'login', color: 'red', title: i.activity, location: i.location, notes: i.notes, id: i.id, auto: true, autoSync: i.autoSync, linkedId: i.linkedId });
                 } else if(i.type === 'accommodation-checkout'){
                     autoItems.push({ date: i.date, time: i.time, type: 'accommodation', subtype: 'checkout', icon: 'logout', color: 'red', title: i.activity, location: i.location, notes: i.notes, id: i.id, auto: true, autoSync: i.autoSync, linkedId: i.linkedId });
+                } else if(i.type === 'transport-departure'){
+                    // IDA - Transporte tipo carro
+                    autoItems.push({ date: i.date, time: i.time, type: 'transport', subtype: 'departure', icon: 'directions_car', color: 'blue', title: i.activity, location: i.location, notes: i.notes, id: i.id, auto: true, autoSync: i.autoSync, linkedId: i.linkedId });
+                } else if(i.type === 'transport-return'){
+                    // VOLTA - Transporte tipo carro
+                    autoItems.push({ date: i.date, time: i.time, type: 'transport', subtype: 'return', icon: 'directions_car', color: 'blue', title: i.activity, location: i.location, notes: i.notes, id: i.id, auto: true, autoSync: i.autoSync, linkedId: i.linkedId });
                 } else {
                     // Item manual
                     autoItems.push({ date: i.date, time: i.time, day: i.day, type: 'manual', icon: 'event', color: 'green', title: i.activity, location: i.location, notes: i.notes, id: i.id, auto: false });

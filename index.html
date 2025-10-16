@@ -2126,6 +2126,35 @@
     <title>Fluxo Financeiro</title>
 
     <script>
+        // Suprimir avisos desnecessários do console
+        (function() {
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            
+            console.warn = function(...args) {
+                const message = args.join(' ');
+                // Filtrar avisos do Tailwind CDN e source maps
+                if (message.includes('cdn.tailwindcss.com') || 
+                    message.includes('source map') || 
+                    message.includes('sourcemaps.d.musta.ch') ||
+                    message.includes('Deprecation warning')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+            
+            console.error = function(...args) {
+                const message = args.join(' ');
+                // Filtrar erros de source maps do Airbnb
+                if (message.includes('Could not read source map') || 
+                    message.includes('sourcemaps.d.musta.ch') ||
+                    message.includes('Bad Gateway')) {
+                    return;
+                }
+                originalError.apply(console, args);
+            };
+        })();
+        
         window.populateSelect = function(selectId, items, iconSpanSelector){
             try{
                 const sel = document.getElementById(selectId);
@@ -4778,6 +4807,21 @@
                             <span class="ml-2 text-base text-gray-700">É uma compra parcelada?</span>
                         </label>
                     </div>
+                    <div id="installment-fields" class="hidden ml-8 space-y-2 bg-indigo-50 rounded-lg p-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label for="installment-count" class="block text-sm text-gray-700">Número de parcelas</label>
+                                <input type="number" id="installment-count" min="2" max="48" value="12" class="w-full border rounded px-2 py-1 text-sm" />
+                            </div>
+                            <div>
+                                <label for="installment-start" class="block text-sm text-gray-700">Parcela inicial</label>
+                                <input type="number" id="installment-start" min="1" value="1" class="w-full border rounded px-2 py-1 text-sm" />
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            O valor total será dividido automaticamente em <span id="installment-preview-count">12</span> parcelas de <span id="installment-preview-value" class="font-medium">R$ 0,00</span>
+                        </div>
+                    </div>
                     <div class="option-row">
                         <label for="is-financing" class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for um financiamento">
                             <input type="checkbox" id="is-financing" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
@@ -5737,25 +5781,33 @@
                     if (typeof s === 'number') return s;
                     let str = String(s).trim();
                     if (str === '') return NaN;
-                    // Normalize NBSP to space
-                    str = str.replace(/\u00A0/g, ' ');
-                    // Remove any currency symbols, letters or other characters except digits, comma, dot and minus
-                    str = str.replace(/[^0-9,\.\-]/g, '');
+                    
+                    // Remove currency symbols and spaces
+                    str = str.replace(/[R$\s\u00A0]/g, '');
+                    
                     // Protect minus: allow only leading minus
                     str = str.replace(/(?!^)-/g, '');
-                    if (str === '' || str === '-' ) return NaN;
-                    // If both dot and comma present, assume format like 1.234,56 (pt-BR): remove dots and replace comma with dot
-                    if (str.indexOf('.') !== -1 && str.indexOf(',') !== -1) {
-                        str = str.replace(/\./g, '').replace(/,/g, '.');
-                    } else if (str.indexOf(',') !== -1) {
-                        // only comma present -> decimal separator
-                        str = str.replace(/,/g, '.');
+                    if (str === '' || str === '-') return NaN;
+                    
+                    // Detect format: if there's a comma followed by 1-2 digits at the end, it's BR format (123.456,78)
+                    // Otherwise, if there's a dot followed by 1-2 digits at the end, it's US format (123,456.78)
+                    const hasBRDecimal = /,\d{1,2}$/.test(str); // ends with ,XX or ,X
+                    const hasUSDecimal = /\.\d{1,2}$/.test(str); // ends with .XX or .X
+                    
+                    if (hasBRDecimal) {
+                        // Brazilian format: 1.234.567,89 -> remove dots, replace comma with dot
+                        str = str.replace(/\./g, '').replace(',', '.');
+                    } else if (hasUSDecimal) {
+                        // US format: 1,234,567.89 -> remove commas, keep dot
+                        str = str.replace(/,/g, '');
+                    } else {
+                        // No clear decimal separator, or integer - just remove all separators
+                        str = str.replace(/[.,]/g, '');
                     }
-                    // If multiple dots remain, keep first as decimal separator
-                    const parts = str.split('.');
-                    if (parts.length > 2) {
-                        str = parts.shift() + '.' + parts.join('');
-                    }
+                    
+                    // Remove any remaining non-numeric characters except dot and minus
+                    str = str.replace(/[^0-9.\-]/g, '');
+                    
                     const v = parseFloat(str);
                     return isNaN(v) ? NaN : v;
                 } catch (e) { return NaN; }
@@ -6639,8 +6691,33 @@ const firebaseConfig = {
                     if (typeof s === 'number') return s;
                     let str = String(s).trim();
                     if (str === '') return NaN;
-                    // Remove thousands separator '.' and replace decimal ',' with '.'
-                    str = str.replace(/\./g, '').replace(/,/g, '.');
+                    
+                    // Remove currency symbols and spaces
+                    str = str.replace(/[R$\s\u00A0]/g, '');
+                    
+                    // Protect minus: allow only leading minus
+                    str = str.replace(/(?!^)-/g, '');
+                    if (str === '' || str === '-') return NaN;
+                    
+                    // Detect format: if there's a comma followed by 1-2 digits at the end, it's BR format (123.456,78)
+                    // Otherwise, if there's a dot followed by 1-2 digits at the end, it's US format (123,456.78)
+                    const hasBRDecimal = /,\d{1,2}$/.test(str); // ends with ,XX or ,X
+                    const hasUSDecimal = /\.\d{1,2}$/.test(str); // ends with .XX or .X
+                    
+                    if (hasBRDecimal) {
+                        // Brazilian format: 1.234.567,89 -> remove dots, replace comma with dot
+                        str = str.replace(/\./g, '').replace(',', '.');
+                    } else if (hasUSDecimal) {
+                        // US format: 1,234,567.89 -> remove commas, keep dot
+                        str = str.replace(/,/g, '');
+                    } else {
+                        // No clear decimal separator, or integer - just remove all separators
+                        str = str.replace(/[.,]/g, '');
+                    }
+                    
+                    // Remove any remaining non-numeric characters except dot and minus
+                    str = str.replace(/[^0-9.\-]/g, '');
+                    
                     const v = parseFloat(str);
                     return isNaN(v) ? NaN : v;
                 } catch (e) { return NaN; }
@@ -7032,6 +7109,40 @@ const firebaseConfig = {
             ui.modalTypeToggles = document.querySelectorAll('.modal-type-toggle');
             // Map mobile bottom nav
             ui.mobileBottomNav = document.getElementById('mobile-bottom-nav');
+            
+            // Parcelamento - Toggle dos novos campos simplificados
+            const installmentCheckbox = document.getElementById('is-installment');
+            const installmentFields = document.getElementById('installment-fields');
+            const installmentCount = document.getElementById('installment-count');
+            const amountField = document.getElementById('amount');
+            const previewCount = document.getElementById('installment-preview-count');
+            const previewValue = document.getElementById('installment-preview-value');
+            
+            if (installmentCheckbox && installmentFields) {
+                installmentCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        installmentFields.classList.remove('hidden');
+                        updateInstallmentPreview();
+                    } else {
+                        installmentFields.classList.add('hidden');
+                    }
+                });
+                
+                // Atualizar preview quando mudar valor ou parcelas
+                if (installmentCount && amountField && previewCount && previewValue) {
+                    const updateInstallmentPreview = () => {
+                        const count = parseInt(installmentCount.value) || 12;
+                        const amount = parseLocaleNumber(amountField.value) || 0;
+                        const installmentValue = count > 0 ? amount / count : 0;
+                        
+                        previewCount.textContent = count;
+                        previewValue.textContent = formatCurrency(installmentValue);
+                    };
+                    
+                    installmentCount.addEventListener('input', updateInstallmentPreview);
+                    amountField.addEventListener('input', updateInstallmentPreview);
+                }
+            }
         }
 
         function bindEvents() {
@@ -11779,7 +11890,7 @@ const firebaseConfig = {
                 e.preventDefault();
                 const id = document.getElementById('goal-id').value;
                 const name = document.getElementById('goal-name').value;
-                const amount = parseFloat(document.getElementById('goal-amount').value) || 0;
+                const amount = parseLocaleNumber(document.getElementById('goal-amount').value) || 0;
                 if (!state.appData.settings.goals) state.appData.settings.goals = [];
                 if (id) {
                     const g = state.appData.settings.goals.find(x=>x.id===id);
@@ -12396,7 +12507,7 @@ const firebaseConfig = {
 
             const transactionData = {
                 description: document.getElementById('description').value,
-                amount: parseFloat(document.getElementById('amount').value),
+                amount: parseLocaleNumber(document.getElementById('amount').value) || 0,
                 isRecurring: document.getElementById('is-recurring').checked
             };
 
@@ -12566,7 +12677,7 @@ const firebaseConfig = {
             }
 
             const isInstallment = document.getElementById('is-installment').checked;
-            const installmentsCount = parseInt(document.getElementById('installments-count').value, 10);
+            const installmentsCount = parseInt(document.getElementById('installment-count')?.value || document.getElementById('installments-count')?.value, 10);
             const isFinancing = document.getElementById('is-financing').checked;
             const financingTotal = parseInt(document.getElementById('financing-total').value, 10);
             const financingCurrent = parseInt(document.getElementById('financing-current').value, 10);
@@ -12582,7 +12693,7 @@ const firebaseConfig = {
                             // remove original single transaction
                             const idx = currentMonthData.expenses.findIndex(t => t.id === id);
                             if (idx > -1) currentMonthData.expenses.splice(idx, 1);
-                            const startInstallment = parseInt((document.getElementById('installments-current') || { value: 1 }).value, 10) || 1;
+                            const startInstallment = parseInt(document.getElementById('installment-start')?.value || document.getElementById('installments-current')?.value || '1', 10) || 1;
                             await createInstallments(transactionData, installmentsCount, startInstallment);
                             // done
                             closeModal('transaction-modal');
@@ -12604,7 +12715,7 @@ const firebaseConfig = {
                 // Default flows for creating new or simple edits
                     if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
                     // console.debug('[handleFormSubmit] creating installments (new)', installmentsCount /*, transactionData */);
-                    const startInstallment = parseInt((document.getElementById('installments-current') || { value: 1 }).value, 10) || 1;
+                    const startInstallment = parseInt(document.getElementById('installment-start')?.value || document.getElementById('installments-current')?.value || '1', 10) || 1;
                     await createInstallments(transactionData, installmentsCount, startInstallment);
                 } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
                     // console.debug('[handleFormSubmit] creating financing (new)', financingTotal, financingCurrent /*, transactionData */);
@@ -12614,7 +12725,7 @@ const firebaseConfig = {
                     await createIncomeFinancing(transactionData, financingTotal, financingCurrent);
                 } else if (type === 'incomes' && isInstallment && installmentsCount > 1 && !id) {
                     // Creating parcelada (installments) for incomes (Serviço)
-                    const startInstallment = parseInt((document.getElementById('installments-current') || { value: 1 }).value, 10) || 1;
+                    const startInstallment = parseInt(document.getElementById('installment-start')?.value || document.getElementById('installments-current')?.value || '1', 10) || 1;
                     await createIncomeInstallments(transactionData, installmentsCount, startInstallment);
                 } else if (type === 'incomes' && document.getElementById('is-salary') && document.getElementById('is-salary').checked) {
                 // Special handling for salary: calculate breakdown and update/create entries
@@ -12622,8 +12733,8 @@ const firebaseConfig = {
                         const year = state.currentDate.getFullYear();
                         const month = state.currentDate.getMonth() + 1;
                         // If salary-base not provided, prefer the main 'amount' field when description indicates salary
-                        const amountFieldVal = parseFloat((document.getElementById('amount') || { value: 0 }).value) || 0;
-                        const providedSalaryBase = parseFloat((document.getElementById('salary-base') || { value: 0 }).value) || 0;
+                        const amountFieldVal = parseLocaleNumber((document.getElementById('amount') || { value: 0 }).value) || 0;
+                        const providedSalaryBase = parseLocaleNumber((document.getElementById('salary-base') || { value: 0 }).value) || 0;
                         const salarioBaseToUse = providedSalaryBase > 0 ? providedSalaryBase : amountFieldVal;
 
                         // read current recurring checkbox value at submit time
@@ -12654,11 +12765,11 @@ const firebaseConfig = {
                         const rawHoursRaw = (document.getElementById('salary-horas-trabalhadas') || { value: '' }).value;
                         const params = {
                             salarioBase: salarioBaseToUse,
-                            percentualPericulosidade: parseFloat((document.getElementById('salary-periculosidade') || { value: 0 }).value) || 0,
-                            outrosProventosTributaveis: parseFloat((document.getElementById('salary-outros-proventos') || { value: 0 }).value) || 0,
+                            percentualPericulosidade: parseLocaleNumber((document.getElementById('salary-periculosidade') || { value: 0 }).value) || 0,
+                            outrosProventosTributaveis: parseLocaleNumber((document.getElementById('salary-outros-proventos') || { value: 0 }).value) || 0,
                             numeroDependentes: parseInt((document.getElementById('salary-dependentes') || { value: 0 }).value, 10) || 0,
-                            valorDesjejumDia: parseFloat((document.getElementById('salary-desjejum-dia') || { value: 0 }).value) || 0,
-                            valorTransporteDia: parseFloat((document.getElementById('salary-transporte-dia') || { value: 0 }).value) || 0,
+                            valorDesjejumDia: parseLocaleNumber((document.getElementById('salary-desjejum-dia') || { value: 0 }).value) || 0,
+                            valorTransporteDia: parseLocaleNumber((document.getElementById('salary-transporte-dia') || { value: 0 }).value) || 0,
                             diasTrabalhados: parseInt((document.getElementById('salary-dias-trabalhados') || { value: '' }).value, 10) || undefined,
                             // hoursTrabalhadas accepts decimal or HH:MM (e.g. "117:20"). Minutes will be converted to fractional hours.
                             hoursTrabalhadas: parseHoursString(rawHoursRaw) || 0,
@@ -13049,7 +13160,7 @@ const firebaseConfig = {
                 try {
                     const id = document.getElementById('vr-entry-id').value;
                     const desc = document.getElementById('vr-entry-desc').value || 'Benefício - VR';
-                    const amount = parseFloat(document.getElementById('vr-entry-amount').value) || 0;
+                    const amount = parseLocaleNumber(document.getElementById('vr-entry-amount').value) || 0;
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vrLedger)) md.vrLedger = [];
                     if (id) {
@@ -13098,7 +13209,7 @@ const firebaseConfig = {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                     const id = document.getElementById('vr-usage-id').value;
                     const desc = document.getElementById('vr-usage-desc').value || '';
-                    const amount = parseFloat(document.getElementById('vr-usage-amount').value) || 0;
+                    const amount = parseLocaleNumber(document.getElementById('vr-usage-amount').value) || 0;
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
                     // Validate against available VR balance for this month.
@@ -13158,7 +13269,7 @@ const firebaseConfig = {
                 try {
                     const id = document.getElementById('vt-entry-id').value;
                     const desc = document.getElementById('vt-entry-desc').value || 'Benefício - VT';
-                    const amount = parseFloat(document.getElementById('vt-entry-amount').value) || 0;
+                    const amount = parseLocaleNumber(document.getElementById('vt-entry-amount').value) || 0;
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vtLedger)) md.vtLedger = [];
                     if (id) {
@@ -13206,7 +13317,7 @@ const firebaseConfig = {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                     const id = document.getElementById('vt-usage-id').value;
                     const desc = document.getElementById('vt-usage-desc').value || '';
-                    const amount = parseFloat(document.getElementById('vt-usage-amount').value) || 0;
+                    const amount = parseLocaleNumber(document.getElementById('vt-usage-amount').value) || 0;
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
                     // Validate against available VT balance for this month.
@@ -13718,6 +13829,18 @@ const firebaseConfig = {
                                 <p id="tp-transport-rental-error" class="text-xs text-red-600 hidden"></p>
                             </div>
                             <div>
+                                <label class="text-xs text-gray-500 flex items-center gap-2">
+                                    Link para aluguel
+                                    <a href="https://www.localiza.com/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-green-600 hover:text-green-700 transition-colors" title="Ir para Localiza">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                                        </svg>
+                                        Localiza
+                                    </a>
+                                </label>
+                                <input id="tp-transport-link" class="w-full border rounded p-2 mt-1" placeholder="https://..." />
+                            </div>
+                            <div>
                                 <label class="text-xs text-gray-500">Manutenção / Seguro (R$)</label>
                                 <input id="tp-transport-maint" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
                                 <p id="tp-transport-maint-error" class="text-xs text-red-600 hidden"></p>
@@ -13795,6 +13918,18 @@ const firebaseConfig = {
                             <div>
                                 <label class="text-xs text-gray-500">Preço por Diária (R$)</label>
                                 <input id="tp-accommodation-price" class="w-full border rounded p-2 mt-1" placeholder="R$ 0,00" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 flex items-center gap-2">
+                                    Link da Propriedade
+                                    <a href="https://www.airbnb.com.br/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-pink-600 hover:text-pink-700 transition-colors" title="Ir para Airbnb">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 1.95c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                                        </svg>
+                                        Airbnb
+                                    </a>
+                                </label>
+                                <input id="tp-accommodation-link" class="w-full border rounded p-2 mt-1" placeholder="https://..." />
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500">Total da Hospedagem (R$)</label>
@@ -14300,7 +14435,38 @@ const firebaseConfig = {
     (function(){
         // Helpers
         function q(id){ return document.getElementById(id); }
-        function parseBRNumber(v){ try { if (v===undefined||v===null) return 0; if (typeof v === 'number') return v; let s = String(v).trim(); if (!s) return 0; s = s.replace(/\./g,'').replace(/,/g,'.').replace(/[^0-9.\-]/g,''); const n = parseFloat(s); return isNaN(n)?0:n; } catch(e){return 0;} }
+        function parseBRNumber(v){ 
+            try { 
+                if (v===undefined||v===null) return 0; 
+                if (typeof v === 'number') return v; 
+                let s = String(v).trim(); 
+                if (!s) return 0; 
+                
+                // Remove currency symbols and spaces
+                s = s.replace(/[R$\s\u00A0]/g,'');
+                
+                // Detect format: if there's a comma followed by 1-2 digits at the end, it's BR format (123.456,78)
+                // Otherwise, if there's a dot followed by 1-2 digits at the end, it's US format (123,456.78)
+                const hasBRDecimal = /,\d{1,2}$/.test(s); // ends with ,XX or ,X
+                const hasUSDecimal = /\.\d{1,2}$/.test(s); // ends with .XX or .X
+                
+                if (hasBRDecimal) {
+                    // Brazilian format: 1.234.567,89 -> remove dots, replace comma with dot
+                    s = s.replace(/\./g,'').replace(',','.');
+                } else if (hasUSDecimal) {
+                    // US format: 1,234,567.89 -> remove commas, keep dot
+                    s = s.replace(/,/g,'');
+                } else {
+                    // No clear decimal separator, or integer - just remove all separators
+                    s = s.replace(/[.,]/g,'');
+                }
+                
+                // Remove any remaining non-numeric characters except dot and minus
+                s = s.replace(/[^0-9.\-]/g,'');
+                const n = parseFloat(s); 
+                return isNaN(n)?0:n; 
+            } catch(e){return 0;} 
+        }
         function formatBR(v){ try { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); } catch(e){ return String(v); } }
         // Local escape helper for planner (avoid relying on global definitions that may be inside other scopes)
         function escapeHtml(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -14308,6 +14474,83 @@ const firebaseConfig = {
     // Storage helpers: keep travelPlans inside state.appData.settings.travelPlans (consistent with the rest of the app)
     function loadTravelPlans(){ try { const s = (window.state && window.state.appData && window.state.appData.settings) ? window.state.appData.settings : null; return (s && Array.isArray(s.travelPlans)) ? s.travelPlans : []; } catch(e){ return []; } }
     async function saveTravelPlans(plans){ try { window.state = window.state || {}; window.state.appData = window.state.appData || {}; window.state.appData.settings = window.state.appData.settings || {}; window.state.appData.settings.travelPlans = plans; if (storage && typeof storage.saveData === 'function') await storage.saveData(window.state.appData); } catch(e){ console.error('saveTravelPlans', e); } }
+
+        // ===== MIGRAÇÃO DE DADOS (CORREÇÃO DE VALORES MULTIPLICADOS) =====
+        async function migrateTravelPlanValues() {
+            try {
+                const plans = loadTravelPlans();
+                if (!plans || plans.length === 0) return;
+                
+                let migrated = false;
+                
+                plans.forEach(plan => {
+                    // Detectar valores incorretos e corrigir
+                    // Um valor está incorreto se for > 10000 para hospedagens comuns ou transportes curtos
+                    
+                    // Migrar transportes
+                    if (plan.transports && Array.isArray(plan.transports)) {
+                        plan.transports.forEach(t => {
+                            // Se subtotal > 50000, provavelmente está multiplicado por 100
+                            if (t.subtotal && t.subtotal > 50000) {
+                                t.subtotal = t.subtotal / 100;
+                                t.fuelCost = t.fuelCost ? t.fuelCost / 100 : t.fuelCost;
+                                t.tolls = t.tolls ? t.tolls / 100 : t.tolls;
+                                t.rental = t.rental ? t.rental / 100 : t.rental;
+                                t.maint = t.maint ? t.maint / 100 : t.maint;
+                                t.transfers = t.transfers ? t.transfers / 100 : t.transfers;
+                                t.fuelPrice = t.fuelPrice ? t.fuelPrice / 100 : t.fuelPrice;
+                                migrated = true;
+                            }
+                        });
+                    }
+                    
+                    // Migrar hospedagens
+                    if (plan.accommodations && Array.isArray(plan.accommodations)) {
+                        plan.accommodations.forEach(a => {
+                            // Se price > 10000 ou total > 50000, provavelmente está multiplicado por 100
+                            if ((a.price && a.price > 10000) || (a.total && a.total > 50000)) {
+                                a.price = a.price ? a.price / 100 : a.price;
+                                a.total = a.total ? a.total / 100 : a.total;
+                                migrated = true;
+                            }
+                        });
+                    }
+                    
+                    // Migrar atividades
+                    if (plan.activities && Array.isArray(plan.activities)) {
+                        plan.activities.forEach(a => {
+                            // Se price > 10000, provavelmente está multiplicado por 100
+                            if (a.price && a.price > 10000) {
+                                a.price = a.price / 100;
+                                migrated = true;
+                            }
+                        });
+                    }
+                    
+                    // Migrar estimativa do plano
+                    if (plan.estimated && plan.estimated > 100000) {
+                        plan.estimated = plan.estimated / 100;
+                        migrated = true;
+                    }
+                    
+                    if (plan.saved && plan.saved > 100000) {
+                        plan.saved = plan.saved / 100;
+                        migrated = true;
+                    }
+                });
+                
+                if (migrated) {
+                    await saveTravelPlans(plans);
+                    showToast('Dados migrados com sucesso! Valores corrigidos.', 'bg-green-600');
+                    console.log('✅ Migração concluída: valores divididos por 100');
+                    return true;
+                }
+                return false;
+            } catch(e) {
+                console.error('Erro na migração:', e);
+                return false;
+            }
+        }
 
         // ===== SISTEMA DE ABAS =====
         function initTravelTabs() {
@@ -14580,7 +14823,43 @@ const firebaseConfig = {
         function currentPlan(){ const plans = loadTravelPlans(); const pid = q('tp-id').value; if (!pid) return null; return plans.find(p=>p.id===pid) || null; }
 
         function showTransportForm(edit){ if (!transportForm) return; transportForm.classList.remove('hidden'); if (!edit){ tId.value=''; tType.value='car'; tDesc.value=''; tDist.value=''; tEff.value=''; tFuelP.value=''; tTolls.value=''; tRental.value=''; tMaint.value=''; tTransfers.value=''; tCalcBox.innerHTML=''; } else { tId.value=edit.id||''; tType.value=edit.type||'car'; tDesc.value=edit.description||''; tDist.value=edit.distance||''; tEff.value=edit.efficiency||''; tFuelP.value=edit.fuelPrice||''; tTolls.value=edit.tolls||''; tRental.value=edit.rental||''; tMaint.value=edit.maint||''; tTransfers.value=edit.transfers||''; computeTransportCalc(); } }
-    function showTransportForm(edit){ if (!transportForm) return; transportForm.classList.remove('hidden'); if (!edit){ tId.value=''; tType.value='car'; tDesc.value=''; tDist.value=''; tDuration.value=''; tEff.value=''; tFuelP.value=''; tTolls.value=''; tRental.value=''; tMaint.value=''; tTransfers.value=''; if (tPaid) tPaid.checked = false; tCalcBox.innerHTML=''; } else { tId.value=edit.id||''; tType.value=edit.type||'car'; tDesc.value=edit.description||''; tDist.value=edit.distance||''; tDuration.value=edit.duration||''; tEff.value=edit.efficiency||''; tFuelP.value=edit.fuelPrice||''; tTolls.value=edit.tolls||''; tRental.value=edit.rental||''; tMaint.value=edit.maint||''; tTransfers.value=edit.transfers||''; if (tPaid) tPaid.checked = !!edit.paid; computeTransportCalc(); } }
+    function showTransportForm(edit){ 
+        if (!transportForm) return; 
+        transportForm.classList.remove('hidden'); 
+        if (!edit){ 
+            tId.value=''; 
+            tType.value='car'; 
+            tDesc.value=''; 
+            tDist.value=''; 
+            tDuration.value=''; 
+            tEff.value=''; 
+            tFuelP.value=''; 
+            tTolls.value=''; 
+            tRental.value=''; 
+            tMaint.value=''; 
+            tTransfers.value=''; 
+            const tLink = q('tp-transport-link');
+            if(tLink) tLink.value='';
+            if (tPaid) tPaid.checked = false; 
+            tCalcBox.innerHTML=''; 
+        } else { 
+            tId.value=edit.id||''; 
+            tType.value=edit.type||'car'; 
+            tDesc.value=edit.description||''; 
+            tDist.value=edit.distance||''; 
+            tDuration.value=edit.duration||''; 
+            tEff.value=edit.efficiency||''; 
+            tFuelP.value=edit.fuelPrice||''; 
+            tTolls.value=edit.tolls||''; 
+            tRental.value=edit.rental||''; 
+            tMaint.value=edit.maint||''; 
+            tTransfers.value=edit.transfers||''; 
+            const tLink = q('tp-transport-link');
+            if(tLink) tLink.value=edit.link||'';
+            if (tPaid) tPaid.checked = !!edit.paid; 
+            computeTransportCalc(); 
+        } 
+    }
         if (transportNewBtn) transportNewBtn.addEventListener('click', ()=>{ showTransportForm(null); });
         if (tCancel) tCancel.addEventListener('click', (e)=>{ e.preventDefault(); transportForm.classList.add('hidden'); });
 
@@ -14600,7 +14879,21 @@ const firebaseConfig = {
         async function saveTransport(){ try {
             const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar transportes', 'bg-yellow-600'); return; }
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
-            const obj = { id: tId.value || ('tr-'+Math.random().toString(36).slice(2,9)), type: tType.value, description: tDesc.value, distance: parseBRNumber(tDist.value), duration: parseFloat(tDuration.value) || 0, efficiency: parseBRNumber(tEff.value), fuelPrice: parseBRNumber(tFuelP.value), tolls: parseBRNumber(tTolls.value), rental: parseBRNumber(tRental.value), maint: parseBRNumber(tMaint.value), transfers: parseBRNumber(tTransfers.value), paid: (tPaid && !!tPaid.checked) };
+            const obj = { 
+                id: tId.value || ('tr-'+Math.random().toString(36).slice(2,9)), 
+                type: tType.value, 
+                description: tDesc.value, 
+                distance: parseBRNumber(tDist.value), 
+                duration: parseFloat(tDuration.value) || 0, 
+                efficiency: parseBRNumber(tEff.value), 
+                fuelPrice: parseBRNumber(tFuelP.value), 
+                tolls: parseBRNumber(tTolls.value), 
+                rental: parseBRNumber(tRental.value), 
+                maint: parseBRNumber(tMaint.value), 
+                transfers: parseBRNumber(tTransfers.value), 
+                link: q('tp-transport-link')?.value || '',
+                paid: (tPaid && !!tPaid.checked) 
+            };
             const calc = computeTransportCalc(); obj.fuelLiters = calc.fuelLiters; obj.fuelCost = calc.fuelCost; obj.subtotal = calc.subtotal;
             plan.transports = plan.transports || [];
             const idx = plan.transports.findIndex(t=>t.id===obj.id);
@@ -14631,7 +14924,41 @@ const firebaseConfig = {
         const aId = q('tp-accommodation-id'); const aName = q('tp-accommodation-name'); const aType = q('tp-accommodation-type'); const aAddress = q('tp-accommodation-address'); const aCheckin = q('tp-accommodation-checkin'); const aCheckinTime = q('tp-accommodation-checkin-time'); const aCheckout = q('tp-accommodation-checkout'); const aCheckoutTime = q('tp-accommodation-checkout-time'); const aNights = q('tp-accommodation-nights'); const aPrice = q('tp-accommodation-price'); const aTotal = q('tp-accommodation-total'); const aPaid = q('tp-accommodation-paid');
         const aSave = q('tp-accommodation-save'); const aCancel = q('tp-accommodation-cancel');
 
-        function showAccommodationForm(edit){ if (!accommodationForm) return; accommodationForm.classList.remove('hidden'); if (!edit){ if(aId) aId.value=''; if(aName) aName.value=''; if(aType) aType.value='hotel'; if(aAddress) aAddress.value=''; if(aCheckin) aCheckin.value=''; if(aCheckinTime) aCheckinTime.value=''; if(aCheckout) aCheckout.value=''; if(aCheckoutTime) aCheckoutTime.value=''; if(aNights) aNights.value=''; if(aPrice) aPrice.value=''; if(aTotal) aTotal.value='R$ 0,00'; if (aPaid) aPaid.checked = false; } else { if(aId) aId.value=edit.id||''; if(aName) aName.value=edit.name||''; if(aType) aType.value=edit.type||'hotel'; if(aAddress) aAddress.value=edit.address||''; if(aCheckin) aCheckin.value=edit.checkin||''; if(aCheckinTime) aCheckinTime.value=edit.checkinTime||''; if(aCheckout) aCheckout.value=edit.checkout||''; if(aCheckoutTime) aCheckoutTime.value=edit.checkoutTime||''; if(aNights) aNights.value=edit.nights||''; if(aPrice) aPrice.value=edit.price||''; computeAccommodationTotal(); if (aPaid) aPaid.checked = !!edit.paid; } }
+        function showAccommodationForm(edit){ 
+            if (!accommodationForm) return; 
+            accommodationForm.classList.remove('hidden'); 
+            if (!edit){ 
+                if(aId) aId.value=''; 
+                if(aName) aName.value=''; 
+                if(aType) aType.value='hotel'; 
+                if(aAddress) aAddress.value=''; 
+                if(aCheckin) aCheckin.value=''; 
+                if(aCheckinTime) aCheckinTime.value=''; 
+                if(aCheckout) aCheckout.value=''; 
+                if(aCheckoutTime) aCheckoutTime.value=''; 
+                if(aNights) aNights.value=''; 
+                if(aPrice) aPrice.value=''; 
+                if(aTotal) aTotal.value='R$ 0,00'; 
+                const aLink = q('tp-accommodation-link');
+                if(aLink) aLink.value='';
+                if (aPaid) aPaid.checked = false; 
+            } else { 
+                if(aId) aId.value=edit.id||''; 
+                if(aName) aName.value=edit.name||''; 
+                if(aType) aType.value=edit.type||'hotel'; 
+                if(aAddress) aAddress.value=edit.address||''; 
+                if(aCheckin) aCheckin.value=edit.checkin||''; 
+                if(aCheckinTime) aCheckinTime.value=edit.checkinTime||''; 
+                if(aCheckout) aCheckout.value=edit.checkout||''; 
+                if(aCheckoutTime) aCheckoutTime.value=edit.checkoutTime||''; 
+                if(aNights) aNights.value=edit.nights||''; 
+                if(aPrice) aPrice.value=edit.price||''; 
+                const aLink = q('tp-accommodation-link');
+                if(aLink) aLink.value=edit.link||'';
+                computeAccommodationTotal(); 
+                if (aPaid) aPaid.checked = !!edit.paid; 
+            } 
+        }
         if (accommodationNewBtn) accommodationNewBtn.addEventListener('click', ()=>{ showAccommodationForm(null); });
         if (aCancel) aCancel.addEventListener('click', (e)=>{ e.preventDefault(); accommodationForm.classList.add('hidden'); });
 
@@ -14640,13 +14967,37 @@ const firebaseConfig = {
         if(aCheckin) aCheckin.addEventListener('change', computeAccommodationNights);
         if(aCheckout) aCheckout.addEventListener('change', computeAccommodationNights);
 
-        function computeAccommodationTotal(){ try { const nights = parseInt(aNights?.value) || 0; const price = parseBRNumber(aPrice?.value || '0'); const total = nights * price; if (aTotal) aTotal.value = formatBR(total); return total; } catch(e){ return 0; } }
+        function computeAccommodationTotal(){ 
+            try { 
+                const nights = parseInt(aNights?.value) || 0; 
+                const price = parseBRNumber(aPrice?.value || '0'); 
+                const total = nights * price; 
+                if (aTotal) aTotal.value = formatBR(total); 
+                return total; 
+            } catch(e){ 
+                return 0; 
+            } 
+        }
         ['input','change'].forEach(evt => { [aNights,aPrice].forEach(el=>{ if (el) el.addEventListener(evt, computeAccommodationTotal); }); });
 
         async function saveAccommodation(){ try {
             const pid = q('tp-id')?.value; if (!pid) { showToast('Salve o plano antes de adicionar hospedagem', 'bg-yellow-600'); return; }
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
-            const obj = { id: aId?.value || ('acc-'+Math.random().toString(36).slice(2,9)), name: aName?.value || '', type: aType?.value || 'hotel', address: aAddress?.value || '', checkin: aCheckin?.value || '', checkinTime: aCheckinTime?.value || '', checkout: aCheckout?.value || '', checkoutTime: aCheckoutTime?.value || '', nights: parseInt(aNights?.value)||0, price: parseBRNumber(aPrice?.value || '0'), total: computeAccommodationTotal(), paid: (aPaid && !!aPaid.checked) };
+            const obj = { 
+                id: aId?.value || ('acc-'+Math.random().toString(36).slice(2,9)), 
+                name: aName?.value || '', 
+                type: aType?.value || 'hotel', 
+                address: aAddress?.value || '', 
+                checkin: aCheckin?.value || '', 
+                checkinTime: aCheckinTime?.value || '', 
+                checkout: aCheckout?.value || '', 
+                checkoutTime: aCheckoutTime?.value || '', 
+                nights: parseInt(aNights?.value)||0, 
+                price: parseBRNumber(aPrice?.value || '0'), 
+                total: computeAccommodationTotal(), 
+                link: q('tp-accommodation-link')?.value || '',
+                paid: (aPaid && !!aPaid.checked) 
+            };
             plan.accommodations = plan.accommodations || [];
             const idx = plan.accommodations.findIndex(a=>a.id===obj.id);
             if (idx === -1) plan.accommodations.push(obj); else plan.accommodations[idx] = obj;
@@ -16260,8 +16611,9 @@ const firebaseConfig = {
                     const paidBadge = t.paid ? '<span class="text-xs px-2 py-0.5 rounded ml-1" style="background-color: #D1FAE5; color: #065F46;">✓ Pago</span>' : '';
                     const transportLabel = transportTypeLabels[t.type] || t.type;
                     const displayText = t.description || transportLabel;
+                    const linkBtn = t.link ? `<a href="${escapeHtml(t.link)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 ml-1" title="Abrir link"><span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span></a>` : '';
                     item.innerHTML = `
-                        <div class="font-medium text-sm text-gray-800">${escapeHtml(displayText)}${paidBadge}</div>
+                        <div class="font-medium text-sm text-gray-800 flex items-center gap-1">${escapeHtml(displayText)}${paidBadge}${linkBtn}</div>
                         <div class="text-xs text-gray-600 mt-1">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>
                     `;
                     transportsContainer.appendChild(item);
@@ -16279,8 +16631,9 @@ const firebaseConfig = {
                     const item = document.createElement('div');
                     item.className = 'p-3 rounded-lg border border-gray-200 bg-white hover:shadow-md transition-shadow';
                     const paidBadge = a.paid ? '<span class="text-xs px-2 py-0.5 rounded ml-1" style="background-color: #D1FAE5; color: #065F46;">✓ Pago</span>' : '';
+                    const linkBtn = a.link ? `<a href="${escapeHtml(a.link)}" target="_blank" rel="noopener noreferrer" class="text-pink-600 hover:text-pink-700 ml-1" title="Abrir link da propriedade"><span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span></a>` : '';
                     item.innerHTML = `
-                        <div class="font-medium text-sm text-gray-800">${escapeHtml(a.name)}${paidBadge}</div>
+                        <div class="font-medium text-sm text-gray-800 flex items-center gap-1">${escapeHtml(a.name)}${paidBadge}${linkBtn}</div>
                         <div class="text-xs text-gray-600 mt-1">${a.nights} diárias • ${formatBR(a.total||0)}</div>
                     `;
                     accommodationsContainer.appendChild(item);
@@ -16370,12 +16723,14 @@ const firebaseConfig = {
                 const durationInfo = (t && t.duration && t.type === 'carro') ? `<div class="text-xs text-blue-600 mt-1">⏱️ Tempo de viagem: ${t.duration}h (ida)</div>` : '';
                 const transportLabel = transportTypeLabels[t.type] || t.type;
                 const displayText = t.description || transportLabel;
-                left.innerHTML = `<div class="font-medium">${escapeHtml(displayText)} ${paidBadge}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>${durationInfo}`;
+                const linkBtn = t.link ? `<a href="${escapeHtml(t.link)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs ml-2" title="Abrir link"><span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>Link</a>` : '';
+                left.innerHTML = `<div class="font-medium">${escapeHtml(displayText)} ${paidBadge}${linkBtn}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>${durationInfo}`;
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(t.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(t.paid?'paid':'payments')+'</span>'; toggle.title=(t.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ t.paid = !t.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
+                const expense = document.createElement('button'); expense.className='px-2 py-1 rounded bg-purple-50 text-purple-700 mr-2'; expense.innerHTML='<span class="material-symbols-outlined">receipt_long</span>'; expense.title='Criar despesa financeira'; expense.addEventListener('click', ()=>{ createExpenseFromTransport(plan.id, t.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showTransportForm(t); });
                 const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir transporte?')) return; const trId = t.id; plan.transports = (plan.transports||[]).filter(x=>x.id!==trId); plan.itinerary = (plan.itinerary||[]).filter(i=>i.linkedId!==trId); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Transporte excluído','bg-green-600'); });
-                right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
+                right.appendChild(toggle); right.appendChild(expense); right.appendChild(edit); right.appendChild(del);
                 row.appendChild(left); row.appendChild(right); list.appendChild(row);
             });
 
@@ -16397,9 +16752,11 @@ const firebaseConfig = {
                 const checkoutInfo = a.checkout ? `Check-out: ${new Date(a.checkout).toLocaleDateString('pt-BR')}${a.checkoutTime ? ' às ' + a.checkoutTime : ''}` : '';
                 const datesInfo = checkinInfo && checkoutInfo ? `${checkinInfo} • ${checkoutInfo}` : (checkinInfo || checkoutInfo);
                 const accLabel = accommodationTypeLabels[a.type] || a.type;
-                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${accLabel} • ${a.nights} diárias • ${formatBR(a.total||0)}</div>${datesInfo ? `<div class="text-xs text-blue-600 mt-1">📅 ${datesInfo}</div>` : ''}`;
+                const linkBtn = a.link ? `<a href="${escapeHtml(a.link)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-pink-600 hover:text-pink-700 text-xs ml-2" title="Abrir link da propriedade"><span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>Link</a>` : '';
+                left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}${linkBtn}</div><div class="text-xs text-gray-500">${accLabel} • ${a.nights} diárias • ${formatBR(a.total||0)}</div>${datesInfo ? `<div class="text-xs text-blue-600 mt-1">📅 ${datesInfo}</div>` : ''}`;
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(a.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(a.paid?'paid':'payments')+'</span>'; toggle.title=(a.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ a.paid = !a.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
+                const expense = document.createElement('button'); expense.className='px-2 py-1 rounded bg-purple-50 text-purple-700 mr-2'; expense.innerHTML='<span class="material-symbols-outlined">receipt_long</span>'; expense.title='Criar despesa financeira'; expense.addEventListener('click', ()=>{ createExpenseFromAccommodation(plan.id, a.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showAccommodationForm(a); });
                 const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ 
                     if (!confirm('Excluir hospedagem?')) return; 
@@ -16424,7 +16781,7 @@ const firebaseConfig = {
                     renderPlanDetails(plan.id); 
                     showToast('Hospedagem excluída','bg-green-600'); 
                 });
-                right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
+                right.appendChild(toggle); right.appendChild(expense); right.appendChild(edit); right.appendChild(del);
                 row.appendChild(left); row.appendChild(right); accList.appendChild(row);
             }); }
 
@@ -16443,9 +16800,10 @@ const firebaseConfig = {
                 left.innerHTML = `<div class="font-medium">${escapeHtml(a.name)} ${paidBadge}</div><div class="text-xs text-gray-500">${actLabel} • ${a.date||'Sem data'} ${a.time||''} • ${formatBR(a.price||0)}</div>`;
                 const right = document.createElement('div');
                 const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(a.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(a.paid?'paid':'payments')+'</span>'; toggle.title=(a.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ a.paid = !a.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
+                const expense = document.createElement('button'); expense.className='px-2 py-1 rounded bg-purple-50 text-purple-700 mr-2'; expense.innerHTML='<span class="material-symbols-outlined">receipt_long</span>'; expense.title='Criar despesa financeira'; expense.addEventListener('click', ()=>{ createExpenseFromActivity(plan.id, a.id); });
                 const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showActivityForm(a); });
                 const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir passeio?')) return; plan.activities = (plan.activities||[]).filter(x=>x.id!==a.id); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Passeio excluído','bg-green-600'); });
-                right.appendChild(toggle); right.appendChild(edit); right.appendChild(del);
+                right.appendChild(toggle); right.appendChild(expense); right.appendChild(edit); right.appendChild(del);
                 row.appendChild(left); row.appendChild(right); actList.appendChild(row);
             }); }
 
@@ -16978,6 +17336,178 @@ const firebaseConfig = {
             } catch(e){}
         }
 
+        // ===== CRIAR TRANSAÇÕES FINANCEIRAS A PARTIR DO PLANO =====
+        
+        // Labels para tipos (usados na criação de despesas)
+        // Expostos globalmente para serem acessíveis nos event handlers
+        window.transportTypeLabels = {
+            'carro': 'Carro/Moto',
+            'voo': 'Voo',
+            'aluguel': 'Aluguel de Carro',
+            'uber': 'Uber/Taxi',
+            'publico': 'Transporte Público'
+        };
+        
+        window.accommodationTypeLabels = {
+            'hotel': 'Hotel/Hostel',
+            'airbnb': 'Airbnb',
+            'reserva': 'Reserva'
+        };
+        
+        window.activityLabels = {
+            'passeio': 'Passeio Turístico',
+            'ingresso': 'Ingresso/Show',
+            'evento': 'Evento',
+            'compras': 'Compras',
+            'restaurante': 'Restaurante',
+            'experiencia': 'Experiência',
+            'esporte': 'Esporte/Aventura',
+            'cultura': 'Cultura',
+            'natureza': 'Natureza',
+            'diversao': 'Diversão'
+        };
+        
+        async function createExpenseFromTransport(planId, transportId) {
+            try {
+                const plans = loadTravelPlans();
+                const plan = plans.find(p => p.id === planId);
+                if (!plan) return;
+                
+                const transport = (plan.transports || []).find(t => t.id === transportId);
+                if (!transport) return;
+                
+                // Descrição do transporte (Nome do Destino)
+                const typeLabel = window.transportTypeLabels[transport.type] || transport.type;
+                
+                // Abrir modal de transação preenchido
+                await openExpenseModalFromTravelItem({
+                    description: `${typeLabel} (${plan.destination})`,
+                    amount: transport.subtotal || 0,
+                    category: 'Transporte',
+                    date: plan.date,
+                    linkedTo: { planId, itemType: 'transport', itemId: transportId }
+                });
+            } catch(e) {
+                console.error('createExpenseFromTransport', e);
+                showToast('Erro ao criar despesa', 'bg-red-600');
+            }
+        }
+        
+        async function createExpenseFromAccommodation(planId, accommodationId) {
+            try {
+                const plans = loadTravelPlans();
+                const plan = plans.find(p => p.id === planId);
+                if (!plan) return;
+                
+                const accommodation = (plan.accommodations || []).find(a => a.id === accommodationId);
+                if (!accommodation) return;
+                
+                // Nome do estabelecimento (Nome do Destino)
+                await openExpenseModalFromTravelItem({
+                    description: `${accommodation.name} (${plan.destination})`,
+                    amount: accommodation.total || 0,
+                    category: 'Viagem',
+                    date: accommodation.checkin || plan.date,
+                    linkedTo: { planId, itemType: 'accommodation', itemId: accommodationId }
+                });
+            } catch(e) {
+                console.error('createExpenseFromAccommodation', e);
+                showToast('Erro ao criar despesa', 'bg-red-600');
+            }
+        }
+        async function createExpenseFromActivity(planId, activityId) {
+            try {
+                const plans = loadTravelPlans();
+                const plan = plans.find(p => p.id === planId);
+                if (!plan) return;
+                
+                const activity = (plan.activities || []).find(a => a.id === activityId);
+                if (!activity) return;
+                
+                // Nome da Atividade (Nome do Destino)
+                await openExpenseModalFromTravelItem({
+                    description: `${activity.name} (${plan.destination})`,
+                    amount: activity.price || 0,
+                    category: 'Compras',
+                    date: activity.date || plan.date,
+                    linkedTo: { planId, itemType: 'activity', itemId: activityId }
+                });
+            } catch(e) {
+                console.error('createExpenseFromActivity', e);
+                showToast('Erro ao criar despesa', 'bg-red-600');
+            }
+        }
+        
+        // Função auxiliar para abrir modal de transação com dados preenchidos
+        async function openExpenseModalFromTravelItem(data) {
+            try {
+                // Verificar se já existe transação vinculada
+                const existingTransaction = findLinkedTransaction(data.linkedTo);
+                if (existingTransaction) {
+                    showToast('Já existe uma despesa vinculada a este item', 'bg-yellow-600');
+                    return;
+                }
+                
+                // Fechar modal do travel planner
+                closeModal();
+                
+                // Aguardar um momento para o modal fechar
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // Abrir modal de transação
+                if (typeof openTransactionModal === 'function') {
+                    openTransactionModal('expenses');
+                    
+                    // Aguardar modal abrir
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Preencher campos
+                    const descField = document.getElementById('description');
+                    const amountField = document.getElementById('amount');
+                    const categoryField = document.getElementById('category-expense');
+                    const dateField = document.getElementById('date');
+                    
+                    if (descField) descField.value = data.description || '';
+                    if (amountField) amountField.value = data.amount || 0;
+                    if (categoryField && data.category) categoryField.value = data.category;
+                    if (dateField && data.date) dateField.value = data.date;
+                    
+                    // Armazenar vínculo temporário para salvar depois
+                    window._tempTravelLink = data.linkedTo;
+                    
+                    showToast('Preencha os detalhes e salve a despesa', 'bg-blue-600');
+                } else {
+                    showToast('Módulo de transações não disponível', 'bg-red-600');
+                }
+            } catch(e) {
+                console.error('openExpenseModalFromTravelItem', e);
+                showToast('Erro ao abrir modal de despesa', 'bg-red-600');
+            }
+        }
+        
+        // Verificar se já existe transação vinculada
+        function findLinkedTransaction(linkedTo) {
+            try {
+                if (!window.state || !window.state.appData || !window.state.appData.data) return null;
+                
+                const data = window.state.appData.data;
+                for (const year in data) {
+                    for (const month in data[year]) {
+                        const expenses = data[year][month].expenses || [];
+                        const found = expenses.find(e => 
+                            e.travelLink && 
+                            e.travelLink.planId === linkedTo.planId && 
+                            e.travelLink.itemId === linkedTo.itemId
+                        );
+                        if (found) return found;
+                    }
+                }
+                return null;
+            } catch(e) {
+                return null;
+            }
+        }
+
         // Seed helper for demo plan
         window.seedTravelPlanner = async function(){ try {
             const plans = loadTravelPlans(); const id = 'seed-'+Math.random().toString(36).slice(2,8); const plan = { id, destination: 'Gramado, RS', date: new Date().toISOString().slice(0,10), estimated: 2000, saved: 250, transports: [{ id: id+'-t1', type:'car', description:'Aluguel 3 dias', distance:300, efficiency:12.5, fuelPrice:5.79, tolls:60, rental:350, maint:0, transfers:0, fuelLiters:24, fuelCost:24*5.79, subtotal:24*5.79+60+350 }] };
@@ -16985,7 +17515,12 @@ const firebaseConfig = {
         } catch(e){ console.error('seedTravelPlanner', e); showToast('Falha ao criar plano de exemplo','bg-red-600'); }};
 
         // Wire planner helpers after DOM ready
-        document.addEventListener('DOMContentLoaded', function(){ attachPlannerCurrencyAndValidation(); try { document.addEventListener('keydown', trapFocusForPlanner); } catch(e){} });
+        document.addEventListener('DOMContentLoaded', async function(){ 
+            attachPlannerCurrencyAndValidation(); 
+            // Executar migração automática ao carregar
+            await migrateTravelPlanValues();
+            try { document.addEventListener('keydown', trapFocusForPlanner); } catch(e){} 
+        });
 
         // When modal opens, ensure plans are listed
         document.addEventListener('DOMContentLoaded', function(){ renderPlansList();

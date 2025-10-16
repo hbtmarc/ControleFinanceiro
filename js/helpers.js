@@ -8,17 +8,33 @@
             if (typeof s === 'number') return s;
             let str = String(s).trim();
             if (str === '') return NaN;
-            str = str.replace(/\u00A0/g, ' ');
-            str = str.replace(/[^0-9,\.\-]/g, '');
+            
+            // Remove currency symbols and spaces
+            str = str.replace(/[R$\s\u00A0]/g, '');
+            
+            // Protect minus: allow only leading minus
             str = str.replace(/(?!^)-/g, '');
-            if (str === '' || str === '-' ) return NaN;
-            if (str.indexOf('.') !== -1 && str.indexOf(',') !== -1) {
-                str = str.replace(/\./g, '').replace(/,/g, '.');
-            } else if (str.indexOf(',') !== -1) {
-                str = str.replace(/,/g, '.');
+            if (str === '' || str === '-') return NaN;
+            
+            // Detect format: if there's a comma followed by 1-2 digits at the end, it's BR format (123.456,78)
+            // Otherwise, if there's a dot followed by 1-2 digits at the end, it's US format (123,456.78)
+            const hasBRDecimal = /,\d{1,2}$/.test(str); // ends with ,XX or ,X
+            const hasUSDecimal = /\.\d{1,2}$/.test(str); // ends with .XX or .X
+            
+            if (hasBRDecimal) {
+                // Brazilian format: 1.234.567,89 -> remove dots, replace comma with dot
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else if (hasUSDecimal) {
+                // US format: 1,234,567.89 -> remove commas, keep dot
+                str = str.replace(/,/g, '');
+            } else {
+                // No clear decimal separator, or integer - just remove all separators
+                str = str.replace(/[.,]/g, '');
             }
-            const parts = str.split('.');
-            if (parts.length > 2) { str = parts.shift() + '.' + parts.join(''); }
+            
+            // Remove any remaining non-numeric characters except dot and minus
+            str = str.replace(/[^0-9.\-]/g, '');
+            
             const v = parseFloat(str);
             return isNaN(v) ? NaN : v;
         } catch (e) { return NaN; }

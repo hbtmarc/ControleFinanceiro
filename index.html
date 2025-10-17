@@ -15249,7 +15249,7 @@ const firebaseConfig = {
                     arrivalTimeIda = firstAccommodation.checkinTime || '14:00';
                 }
                 
-                // Criar/atualizar entrada de IDA no roteiro
+                // Criar/atualizar entrada de IDA (Partida) no roteiro
                 const departureId = `transport-departure-${transport.id}`;
                 const departureEntry = {
                     id: departureId,
@@ -15268,6 +15268,27 @@ const firebaseConfig = {
                     plan.itinerary.push(departureEntry);
                 } else {
                     plan.itinerary[existingDepartureIdx] = departureEntry;
+                }
+                
+                // Criar/atualizar entrada de IDA (Chegada) no roteiro
+                const arrivalIdaId = `transport-arrival-ida-${transport.id}`;
+                const arrivalIdaEntry = {
+                    id: arrivalIdaId,
+                    date: departureDate,
+                    time: arrivalTimeIda,
+                    activity: `🛬 Chegada prevista (IDA)`,
+                    location: `${plan.destination || 'Destino'}`,
+                    notes: `Chegada da viagem de ${transport.description || 'carro'}`,
+                    type: 'transport-arrival',
+                    linkedId: transport.id,
+                    autoSync: true
+                };
+                
+                const existingArrivalIdaIdx = plan.itinerary.findIndex(i => i.id === arrivalIdaId);
+                if (existingArrivalIdaIdx === -1) {
+                    plan.itinerary.push(arrivalIdaEntry);
+                } else {
+                    plan.itinerary[existingArrivalIdaIdx] = arrivalIdaEntry;
                 }
                 
                 // ===== VOLTA =====
@@ -15297,7 +15318,7 @@ const firebaseConfig = {
                     returnArrivalTime = arrivalDateTime.toTimeString().slice(0, 5);
                 }
                 
-                // Criar/atualizar entrada de VOLTA no roteiro
+                // Criar/atualizar entrada de VOLTA (Partida) no roteiro
                 const returnId = `transport-return-${transport.id}`;
                 const returnEntry = {
                     id: returnId,
@@ -15316,6 +15337,33 @@ const firebaseConfig = {
                     plan.itinerary.push(returnEntry);
                 } else {
                     plan.itinerary[existingReturnIdx] = returnEntry;
+                }
+                
+                // Criar/atualizar entrada de VOLTA (Chegada) no roteiro
+                const arrivalVoltaId = `transport-arrival-volta-${transport.id}`;
+                
+                // Calcular a data de chegada da volta (pode ser no dia seguinte se passar da meia-noite)
+                const returnDatetime = new Date(returnDate + ' ' + returnTime);
+                const arrivalDatetime = new Date(returnDatetime.getTime() + (transport.duration * 60 * 60 * 1000));
+                const arrivalVoltaDate = arrivalDatetime.toISOString().split('T')[0];
+                
+                const arrivalVoltaEntry = {
+                    id: arrivalVoltaId,
+                    date: arrivalVoltaDate,
+                    time: returnArrivalTime,
+                    activity: `🏠 Chegada prevista (VOLTA)`,
+                    location: `Retorno para casa`,
+                    notes: `Chegada da viagem de ${transport.description || 'carro'}`,
+                    type: 'transport-arrival',
+                    linkedId: transport.id,
+                    autoSync: true
+                };
+                
+                const existingArrivalVoltaIdx = plan.itinerary.findIndex(i => i.id === arrivalVoltaId);
+                if (existingArrivalVoltaIdx === -1) {
+                    plan.itinerary.push(arrivalVoltaEntry);
+                } else {
+                    plan.itinerary[existingArrivalVoltaIdx] = arrivalVoltaEntry;
                 }
                 
                 // Ordenar roteiro por data e hora
@@ -16881,16 +16929,16 @@ const firebaseConfig = {
                 const displayText = t.description || transportLabel;
                 const linkBtn = t.link ? `<a href="${escapeHtml(t.link)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs ml-2" title="Abrir link"><span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>Link</a>` : '';
                 
-                // Detalhamento de valores
+                // Detalhamento de valores em formato KPI compacto
                 const hasBreakdown = (t.fuelCost > 0) || (t.tolls > 0) || (t.rental > 0) || (t.maint > 0) || (t.transfers > 0);
                 let breakdown = '';
                 if (hasBreakdown) {
-                    breakdown = '<div class="mt-2 pt-2 border-t space-y-1">';
-                    if (t.fuelCost > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>⛽ Combustível:</span><span class="font-medium">${formatBR(t.fuelCost)}</span></div>`;
-                    if (t.tolls > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>🛣️ Pedágios:</span><span class="font-medium">${formatBR(t.tolls)}</span></div>`;
-                    if (t.rental > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>🚗 Aluguel:</span><span class="font-medium">${formatBR(t.rental)}</span></div>`;
-                    if (t.maint > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>🔧 Manutenção/Seguro:</span><span class="font-medium">${formatBR(t.maint)}</span></div>`;
-                    if (t.transfers > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>🎫 Atividades:</span><span class="font-medium">${formatBR(t.transfers)}</span></div>`;
+                    breakdown = '<div class="flex flex-wrap gap-3 mt-2">';
+                    if (t.fuelCost > 0) breakdown += `<div class="flex items-center gap-1 text-xs bg-red-50 px-2 py-1 rounded"><span>⛽ Combustível:</span><span class="font-semibold text-red-700">${formatBR(t.fuelCost)}</span></div>`;
+                    if (t.tolls > 0) breakdown += `<div class="flex items-center gap-1 text-xs bg-blue-50 px-2 py-1 rounded"><span>🛣️ Pedágios:</span><span class="font-semibold text-blue-700">${formatBR(t.tolls)}</span></div>`;
+                    if (t.rental > 0) breakdown += `<div class="flex items-center gap-1 text-xs bg-purple-50 px-2 py-1 rounded"><span>🚗 Aluguel:</span><span class="font-semibold text-purple-700">${formatBR(t.rental)}</span></div>`;
+                    if (t.maint > 0) breakdown += `<div class="flex items-center gap-1 text-xs bg-orange-50 px-2 py-1 rounded"><span>🔧 Manutenção:</span><span class="font-semibold text-orange-700">${formatBR(t.maint)}</span></div>`;
+                    if (t.transfers > 0) breakdown += `<div class="flex items-center gap-1 text-xs bg-green-50 px-2 py-1 rounded"><span>🎫 Atividades:</span><span class="font-semibold text-green-700">${formatBR(t.transfers)}</span></div>`;
                     breakdown += '</div>';
                 }
                 

@@ -1,6 +1,6 @@
 (function(global){
     'use strict';
-    function formatCurrency(v){ try{ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); }catch(e){ return String(v); } }
+    function formatCurrency(v){ try{ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v)||0); }catch(e){ return String(v); } }
 
     function parseLocaleNumber(s) {
         try {

@@ -13808,6 +13808,26 @@ const firebaseConfig = {
                                 <label class="text-xs text-gray-500">Tempo médio de viagem (horas)</label>
                                 <input id="tp-transport-duration" type="number" step="0.5" class="w-full border rounded p-2 mt-1" placeholder="Ex: 10.5" />
                             </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-500">Partida (IDA)</label>
+                                    <input id="tp-transport-departure-time" type="time" class="w-full border rounded p-2 mt-1" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500">Chegada (IDA)</label>
+                                    <input id="tp-transport-arrival-time" type="time" class="w-full border rounded p-2 mt-1" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-500">Partida (VOLTA)</label>
+                                    <input id="tp-transport-return-departure-time" type="time" class="w-full border rounded p-2 mt-1" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500">Chegada (VOLTA)</label>
+                                    <input id="tp-transport-return-arrival-time" type="time" class="w-full border rounded p-2 mt-1" />
+                                </div>
+                            </div>
                             <div>
                                 <label class="text-xs text-gray-500">Consumo (km/L) — eficiência</label>
                                 <input id="tp-transport-efficiency" class="w-full border rounded p-2 mt-1" placeholder="Ex: 12,5" />
@@ -14817,21 +14837,23 @@ const firebaseConfig = {
 
         // Transports CRUD
     const transportNewBtn = q('tp-transport-new'); const transportForm = q('tp-transport-form');
-    const tId = q('tp-transport-id'); const tType = q('tp-transport-type'); const tDesc = q('tp-transport-desc'); const tDist = q('tp-transport-distance'); const tDuration = q('tp-transport-duration'); const tEff = q('tp-transport-efficiency'); const tFuelP = q('tp-transport-fuelprice'); const tTolls = q('tp-transport-tolls'); const tRental = q('tp-transport-rental'); const tMaint = q('tp-transport-maint'); const tTransfers = q('tp-transport-transfers'); const tPaid = q('tp-transport-paid');
+    const tId = q('tp-transport-id'); const tType = q('tp-transport-type'); const tDesc = q('tp-transport-desc'); const tDist = q('tp-transport-distance'); const tDuration = q('tp-transport-duration'); const tDepartureTime = q('tp-transport-departure-time'); const tArrivalTime = q('tp-transport-arrival-time'); const tReturnDepartureTime = q('tp-transport-return-departure-time'); const tReturnArrivalTime = q('tp-transport-return-arrival-time'); const tEff = q('tp-transport-efficiency'); const tFuelP = q('tp-transport-fuelprice'); const tTolls = q('tp-transport-tolls'); const tRental = q('tp-transport-rental'); const tMaint = q('tp-transport-maint'); const tTransfers = q('tp-transport-transfers'); const tPaid = q('tp-transport-paid');
     const tSave = q('tp-transport-save'); const tCancel = q('tp-transport-cancel'); const tCalcBox = q('tp-transport-calculations');
 
         function currentPlan(){ const plans = loadTravelPlans(); const pid = q('tp-id').value; if (!pid) return null; return plans.find(p=>p.id===pid) || null; }
 
-        function showTransportForm(edit){ if (!transportForm) return; transportForm.classList.remove('hidden'); if (!edit){ tId.value=''; tType.value='car'; tDesc.value=''; tDist.value=''; tEff.value=''; tFuelP.value=''; tTolls.value=''; tRental.value=''; tMaint.value=''; tTransfers.value=''; tCalcBox.innerHTML=''; } else { tId.value=edit.id||''; tType.value=edit.type||'car'; tDesc.value=edit.description||''; tDist.value=edit.distance||''; tEff.value=edit.efficiency||''; tFuelP.value=edit.fuelPrice||''; tTolls.value=edit.tolls||''; tRental.value=edit.rental||''; tMaint.value=edit.maint||''; tTransfers.value=edit.transfers||''; computeTransportCalc(); } }
     function showTransportForm(edit){ 
         if (!transportForm) return; 
         transportForm.classList.remove('hidden'); 
         if (!edit){ 
             tId.value=''; 
-            tType.value='car'; 
             tDesc.value=''; 
             tDist.value=''; 
             tDuration.value=''; 
+            if(tDepartureTime) tDepartureTime.value=''; 
+            if(tArrivalTime) tArrivalTime.value=''; 
+            if(tReturnDepartureTime) tReturnDepartureTime.value=''; 
+            if(tReturnArrivalTime) tReturnArrivalTime.value=''; 
             tEff.value=''; 
             tFuelP.value=''; 
             tTolls.value=''; 
@@ -14842,12 +14864,17 @@ const firebaseConfig = {
             if(tLink) tLink.value='';
             if (tPaid) tPaid.checked = false; 
             tCalcBox.innerHTML=''; 
+            // Definir tipo após um pequeno delay para garantir que o select está pronto
+            setTimeout(() => { if(tType) tType.value='carro'; }, 10);
         } else { 
             tId.value=edit.id||''; 
-            tType.value=edit.type||'car'; 
             tDesc.value=edit.description||''; 
             tDist.value=edit.distance||''; 
             tDuration.value=edit.duration||''; 
+            if(tDepartureTime) tDepartureTime.value=edit.departureTime||''; 
+            if(tArrivalTime) tArrivalTime.value=edit.arrivalTime||''; 
+            if(tReturnDepartureTime) tReturnDepartureTime.value=edit.returnDepartureTime||''; 
+            if(tReturnArrivalTime) tReturnArrivalTime.value=edit.returnArrivalTime||''; 
             tEff.value=edit.efficiency||''; 
             tFuelP.value=edit.fuelPrice||''; 
             tTolls.value=edit.tolls||''; 
@@ -14857,6 +14884,8 @@ const firebaseConfig = {
             const tLink = q('tp-transport-link');
             if(tLink) tLink.value=edit.link||'';
             if (tPaid) tPaid.checked = !!edit.paid; 
+            // Definir tipo após um pequeno delay para garantir que o select está pronto
+            setTimeout(() => { if(tType) tType.value=edit.type||'carro'; }, 10);
             computeTransportCalc(); 
         } 
     }
@@ -14876,6 +14905,90 @@ const firebaseConfig = {
         // recompute live on input
         ['input','change'].forEach(evt => { [tDist,tEff,tFuelP,tTolls,tRental,tMaint,tTransfers].forEach(el=>{ if (el) el.addEventListener(evt, computeTransportCalc); }); });
 
+        // Função para calcular horário de chegada automaticamente (partida → chegada)
+        function calculateArrivalTime(departureTimeInput, arrivalTimeInput) {
+            try {
+                const departureTime = departureTimeInput.value;
+                const duration = parseFloat(tDuration.value);
+                
+                if (!departureTime || !duration || duration <= 0) {
+                    return;
+                }
+                
+                // Criar data base com horário de partida
+                const [hours, minutes] = departureTime.split(':').map(Number);
+                const departure = new Date();
+                departure.setHours(hours, minutes, 0, 0);
+                
+                // Adicionar duração (em horas)
+                const durationMs = duration * 60 * 60 * 1000;
+                const arrival = new Date(departure.getTime() + durationMs);
+                
+                // Formatar como HH:MM
+                const arrivalHours = String(arrival.getHours()).padStart(2, '0');
+                const arrivalMinutes = String(arrival.getMinutes()).padStart(2, '0');
+                arrivalTimeInput.value = `${arrivalHours}:${arrivalMinutes}`;
+            } catch(e) {
+                console.error('calculateArrivalTime', e);
+            }
+        }
+        
+        // Função para calcular horário de partida automaticamente (chegada → partida - REVERSO)
+        function calculateDepartureTime(departureTimeInput, arrivalTimeInput) {
+            try {
+                const arrivalTime = arrivalTimeInput.value;
+                const duration = parseFloat(tDuration.value);
+                
+                if (!arrivalTime || !duration || duration <= 0) {
+                    return;
+                }
+                
+                // Criar data base com horário de chegada
+                const [hours, minutes] = arrivalTime.split(':').map(Number);
+                const arrival = new Date();
+                arrival.setHours(hours, minutes, 0, 0);
+                
+                // Subtrair duração (em horas)
+                const durationMs = duration * 60 * 60 * 1000;
+                const departure = new Date(arrival.getTime() - durationMs);
+                
+                // Formatar como HH:MM
+                const departureHours = String(departure.getHours()).padStart(2, '0');
+                const departureMinutes = String(departure.getMinutes()).padStart(2, '0');
+                departureTimeInput.value = `${departureHours}:${departureMinutes}`;
+            } catch(e) {
+                console.error('calculateDepartureTime', e);
+            }
+        }
+        
+        // Event listeners para cálculo automático de chegada (IDA)
+        if (tDepartureTime && tArrivalTime) {
+            ['input', 'change'].forEach(evt => {
+                // Partida → Chegada
+                tDepartureTime.addEventListener(evt, () => calculateArrivalTime(tDepartureTime, tArrivalTime));
+                // Chegada → Partida (REVERSO)
+                tArrivalTime.addEventListener(evt, () => calculateDepartureTime(tDepartureTime, tArrivalTime));
+                // Quando mudar duração, recalcula se houver partida
+                if (tDuration) tDuration.addEventListener(evt, () => {
+                    if (tDepartureTime.value) calculateArrivalTime(tDepartureTime, tArrivalTime);
+                });
+            });
+        }
+        
+        // Event listeners para cálculo automático de chegada (VOLTA)
+        if (tReturnDepartureTime && tReturnArrivalTime) {
+            ['input', 'change'].forEach(evt => {
+                // Partida → Chegada
+                tReturnDepartureTime.addEventListener(evt, () => calculateArrivalTime(tReturnDepartureTime, tReturnArrivalTime));
+                // Chegada → Partida (REVERSO)
+                tReturnArrivalTime.addEventListener(evt, () => calculateDepartureTime(tReturnDepartureTime, tReturnArrivalTime));
+                // Quando mudar duração, recalcula se houver partida
+                if (tDuration) tDuration.addEventListener(evt, () => {
+                    if (tReturnDepartureTime.value) calculateArrivalTime(tReturnDepartureTime, tReturnArrivalTime);
+                });
+            });
+        }
+
         async function saveTransport(){ try {
             const pid = q('tp-id').value; if (!pid) { showToast('Salve o plano antes de adicionar transportes', 'bg-yellow-600'); return; }
             const plans = loadTravelPlans(); const plan = plans.find(p=>p.id===pid); if (!plan) return;
@@ -14885,6 +14998,10 @@ const firebaseConfig = {
                 description: tDesc.value, 
                 distance: parseBRNumber(tDist.value), 
                 duration: parseFloat(tDuration.value) || 0, 
+                departureTime: (tDepartureTime && tDepartureTime.value) || '',
+                arrivalTime: (tArrivalTime && tArrivalTime.value) || '',
+                returnDepartureTime: (tReturnDepartureTime && tReturnDepartureTime.value) || '',
+                returnArrivalTime: (tReturnArrivalTime && tReturnArrivalTime.value) || '',
                 efficiency: parseBRNumber(tEff.value), 
                 fuelPrice: parseBRNumber(tFuelP.value), 
                 tolls: parseBRNumber(tTolls.value), 
@@ -15106,34 +15223,31 @@ const firebaseConfig = {
                 
                 plan.itinerary = plan.itinerary || [];
                 
-                // Encontrar primeira hospedagem (check-in mais cedo)
-                const firstAccommodation = (plan.accommodations || [])
-                    .filter(a => a.checkin)
-                    .sort((a, b) => new Date(a.checkin) - new Date(b.checkin))[0];
-                
-                // Encontrar última hospedagem (check-out mais tarde)
-                const lastAccommodation = (plan.accommodations || [])
-                    .filter(a => a.checkout)
-                    .sort((a, b) => new Date(b.checkout) - new Date(a.checkout))[0];
-                
-                if (!firstAccommodation || !lastAccommodation) {
-                    return;
-                }
-                
-                // Calcular horário de partida IDA (subtrair duração da viagem do check-in)
-                const checkinDateTime = new Date(firstAccommodation.checkin + ' ' + (firstAccommodation.checkinTime || '14:00'));
-                const departureDateTime = new Date(checkinDateTime.getTime() - (transport.duration * 60 * 60 * 1000));
-                const departureDate = departureDateTime.toISOString().split('T')[0];
-                const departureTime = departureDateTime.toTimeString().slice(0, 5);
-                
-                // Calcular horário de chegada VOLTA (adicionar duração da viagem ao check-out)
-                const checkoutDateTime = new Date(lastAccommodation.checkout + ' ' + (lastAccommodation.checkoutTime || '12:00'));
-                const arrivalDateTime = new Date(checkoutDateTime.getTime() + (transport.duration * 60 * 60 * 1000));
-                const arrivalDate = arrivalDateTime.toISOString().split('T')[0];
-                const arrivalTime = arrivalDateTime.toTimeString().slice(0, 5);
-                
                 // Calcular distância de IDA e VOLTA (metade da distância total cada)
                 const halfDistance = Math.round((transport.distance || 0) / 2);
+                
+                // ===== IDA =====
+                let departureDate, departureTime, arrivalTimeIda;
+                
+                if (transport.departureTime && transport.arrivalTime) {
+                    // Usar horários manuais informados pelo usuário
+                    departureDate = plan.date || new Date().toISOString().split('T')[0];
+                    departureTime = transport.departureTime;
+                    arrivalTimeIda = transport.arrivalTime;
+                } else {
+                    // Fallback: calcular baseado no check-in (comportamento antigo)
+                    const firstAccommodation = (plan.accommodations || [])
+                        .filter(a => a.checkin)
+                        .sort((a, b) => new Date(a.checkin) - new Date(b.checkin))[0];
+                    
+                    if (!firstAccommodation) return;
+                    
+                    const checkinDateTime = new Date(firstAccommodation.checkin + ' ' + (firstAccommodation.checkinTime || '14:00'));
+                    const departureDateTime = new Date(checkinDateTime.getTime() - (transport.duration * 60 * 60 * 1000));
+                    departureDate = departureDateTime.toISOString().split('T')[0];
+                    departureTime = departureDateTime.toTimeString().slice(0, 5);
+                    arrivalTimeIda = firstAccommodation.checkinTime || '14:00';
+                }
                 
                 // Criar/atualizar entrada de IDA no roteiro
                 const departureId = `transport-departure-${transport.id}`;
@@ -15143,7 +15257,7 @@ const firebaseConfig = {
                     time: departureTime,
                     activity: `🚗 IDA - ${transport.description || 'Viagem de carro'}`,
                     location: `Duração estimada: ${transport.duration}h • ${halfDistance}km`,
-                    notes: `Partida para ${firstAccommodation.name}. Chegada prevista: ${firstAccommodation.checkinTime || '14:00'}`,
+                    notes: `Partida prevista: ${departureTime}. Chegada prevista: ${arrivalTimeIda}`,
                     type: 'transport-departure',
                     linkedId: transport.id,
                     autoSync: true
@@ -15156,15 +15270,42 @@ const firebaseConfig = {
                     plan.itinerary[existingDepartureIdx] = departureEntry;
                 }
                 
+                // ===== VOLTA =====
+                let returnDate, returnTime, returnArrivalTime;
+                
+                if (transport.returnDepartureTime && transport.returnArrivalTime) {
+                    // Usar horários manuais informados pelo usuário
+                    const lastAccommodation = (plan.accommodations || [])
+                        .filter(a => a.checkout)
+                        .sort((a, b) => new Date(b.checkout) - new Date(a.checkout))[0];
+                    
+                    returnDate = lastAccommodation?.checkout || plan.date || new Date().toISOString().split('T')[0];
+                    returnTime = transport.returnDepartureTime;
+                    returnArrivalTime = transport.returnArrivalTime;
+                } else {
+                    // Fallback: calcular baseado no check-out (comportamento antigo)
+                    const lastAccommodation = (plan.accommodations || [])
+                        .filter(a => a.checkout)
+                        .sort((a, b) => new Date(b.checkout) - new Date(a.checkout))[0];
+                    
+                    if (!lastAccommodation) return;
+                    
+                    const checkoutDateTime = new Date(lastAccommodation.checkout + ' ' + (lastAccommodation.checkoutTime || '12:00'));
+                    const arrivalDateTime = new Date(checkoutDateTime.getTime() + (transport.duration * 60 * 60 * 1000));
+                    returnDate = arrivalDateTime.toISOString().split('T')[0];
+                    returnTime = lastAccommodation.checkoutTime || '12:00';
+                    returnArrivalTime = arrivalDateTime.toTimeString().slice(0, 5);
+                }
+                
                 // Criar/atualizar entrada de VOLTA no roteiro
                 const returnId = `transport-return-${transport.id}`;
                 const returnEntry = {
                     id: returnId,
-                    date: arrivalDate,
-                    time: arrivalTime,
+                    date: returnDate,
+                    time: returnTime,
                     activity: `🚗 VOLTA - ${transport.description || 'Viagem de carro'}`,
                     location: `Duração estimada: ${transport.duration}h • ${halfDistance}km`,
-                    notes: `Retorno de ${lastAccommodation.name}. Saída: ${lastAccommodation.checkoutTime || '12:00'}`,
+                    notes: `Partida: ${returnTime}. Chegada prevista: ${returnArrivalTime}`,
                     type: 'transport-return',
                     linkedId: transport.id,
                     autoSync: true
@@ -16717,21 +16858,72 @@ const firebaseConfig = {
             };
             
             (plan.transports||[]).forEach(t=>{
-                const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
-                const left = document.createElement('div');
+                const row = document.createElement('div'); row.className='p-3 border rounded';
+                const mainRow = document.createElement('div'); mainRow.className='flex items-center justify-between';
+                const left = document.createElement('div'); left.className='flex-1';
                 const paidBadge = (t && t.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
-                const durationInfo = (t && t.duration && t.type === 'carro') ? `<div class="text-xs text-blue-600 mt-1">⏱️ Tempo de viagem: ${t.duration}h (ida)</div>` : '';
+                
+                // Informações de horário
+                let timeInfo = '';
+                if (t && t.type === 'carro') {
+                    if (t.departureTime && t.arrivalTime) {
+                        timeInfo += `<div class="text-xs text-blue-600 mt-1">🛫 IDA: Partida ${t.departureTime} • Chegada prevista ${t.arrivalTime}</div>`;
+                    }
+                    if (t.returnDepartureTime && t.returnArrivalTime) {
+                        timeInfo += `<div class="text-xs text-blue-600 mt-1">🛬 VOLTA: Partida ${t.returnDepartureTime} • Chegada prevista ${t.returnArrivalTime}</div>`;
+                    }
+                    if (t.duration && !timeInfo) {
+                        timeInfo = `<div class="text-xs text-blue-600 mt-1">⏱️ Tempo de viagem: ${t.duration}h (ida)</div>`;
+                    }
+                }
+                
                 const transportLabel = transportTypeLabels[t.type] || t.type;
                 const displayText = t.description || transportLabel;
                 const linkBtn = t.link ? `<a href="${escapeHtml(t.link)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs ml-2" title="Abrir link"><span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>Link</a>` : '';
-                left.innerHTML = `<div class="font-medium">${escapeHtml(displayText)} ${paidBadge}${linkBtn}</div><div class="text-xs text-gray-500">${t.distance||0} km • ${formatBR(t.subtotal||0)}</div>${durationInfo}`;
-                const right = document.createElement('div');
-                const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(t.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700')+' mr-2'; toggle.innerHTML='<span class="material-symbols-outlined">'+(t.paid?'paid':'payments')+'</span>'; toggle.title=(t.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ t.paid = !t.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
-                const expense = document.createElement('button'); expense.className='px-2 py-1 rounded bg-purple-50 text-purple-700 mr-2'; expense.innerHTML='<span class="material-symbols-outlined">receipt_long</span>'; expense.title='Criar despesa financeira'; expense.addEventListener('click', ()=>{ createExpenseFromTransport(plan.id, t.id); });
-                const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700 mr-2'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showTransportForm(t); });
+                
+                // Detalhamento de valores
+                const hasBreakdown = (t.fuelCost > 0) || (t.tolls > 0) || (t.rental > 0) || (t.maint > 0) || (t.transfers > 0);
+                let breakdown = '';
+                if (hasBreakdown) {
+                    breakdown = '<div class="mt-2 pt-2 border-t space-y-1">';
+                    if (t.fuelCost > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>⛽ Combustível:</span><span class="font-medium">${formatBR(t.fuelCost)}</span></div>`;
+                    if (t.tolls > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>🛣️ Pedágios:</span><span class="font-medium">${formatBR(t.tolls)}</span></div>`;
+                    if (t.rental > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>🚗 Aluguel:</span><span class="font-medium">${formatBR(t.rental)}</span></div>`;
+                    if (t.maint > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>🔧 Manutenção/Seguro:</span><span class="font-medium">${formatBR(t.maint)}</span></div>`;
+                    if (t.transfers > 0) breakdown += `<div class="flex items-center justify-between text-xs"><span>🎫 Atividades:</span><span class="font-medium">${formatBR(t.transfers)}</span></div>`;
+                    breakdown += '</div>';
+                }
+                
+                left.innerHTML = `<div class="font-medium">${escapeHtml(displayText)} ${paidBadge}${linkBtn}</div><div class="text-xs text-gray-500">${t.distance||0} km • Total: ${formatBR(t.subtotal||0)}</div>${timeInfo}${breakdown}`;
+                
+                const right = document.createElement('div'); right.className='flex items-start gap-1';
+                const toggle = document.createElement('button'); toggle.className='px-2 py-1 rounded '+(t.paid?'bg-green-50 text-green-700':'bg-gray-50 text-gray-700'); toggle.innerHTML='<span class="material-symbols-outlined">'+(t.paid?'paid':'payments')+'</span>'; toggle.title=(t.paid?'Marcar como não pago':'Marcar como pago'); toggle.addEventListener('click', async ()=>{ t.paid = !t.paid; await saveTravelPlans(plans); renderPlanDetails(plan.id); });
+                
+                // Dropdown para criar despesas separadas
+                const expenseDropdown = document.createElement('div'); expenseDropdown.className='relative';
+                const expenseBtn = document.createElement('button'); expenseBtn.className='px-2 py-1 rounded bg-purple-50 text-purple-700'; expenseBtn.innerHTML='<span class="material-symbols-outlined">receipt_long</span>'; expenseBtn.title='Criar despesa';
+                const expenseMenu = document.createElement('div'); expenseMenu.className='hidden absolute right-0 mt-1 bg-white border rounded shadow-lg z-10 min-w-[180px]';
+                expenseMenu.innerHTML = `
+                    <button class="expense-total w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined text-purple-600" style="font-size:18px;">receipt_long</span>
+                        <span>Total (${formatBR(t.subtotal||0)})</span>
+                    </button>
+                    ${t.fuelCost > 0 ? `<button class="expense-fuel w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 border-t"><span>⛽</span><span>Combustível (${formatBR(t.fuelCost)})</span></button>` : ''}
+                    ${t.tolls > 0 ? `<button class="expense-tolls w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 border-t"><span>🛣️</span><span>Pedágios (${formatBR(t.tolls)})</span></button>` : ''}
+                    ${t.rental > 0 ? `<button class="expense-rental w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 border-t"><span>🚗</span><span>Aluguel (${formatBR(t.rental)})</span></button>` : ''}
+                `;
+                expenseBtn.addEventListener('click', (e)=>{ e.stopPropagation(); expenseMenu.classList.toggle('hidden'); });
+                document.addEventListener('click', ()=>{ expenseMenu.classList.add('hidden'); });
+                expenseMenu.querySelector('.expense-total').addEventListener('click', ()=>{ createExpenseFromTransport(plan.id, t.id); expenseMenu.classList.add('hidden'); });
+                if (t.fuelCost > 0) expenseMenu.querySelector('.expense-fuel').addEventListener('click', ()=>{ createExpenseFromTransport(plan.id, t.id, 'fuel'); expenseMenu.classList.add('hidden'); });
+                if (t.tolls > 0) expenseMenu.querySelector('.expense-tolls').addEventListener('click', ()=>{ createExpenseFromTransport(plan.id, t.id, 'tolls'); expenseMenu.classList.add('hidden'); });
+                if (t.rental > 0) expenseMenu.querySelector('.expense-rental').addEventListener('click', ()=>{ createExpenseFromTransport(plan.id, t.id, 'rental'); expenseMenu.classList.add('hidden'); });
+                expenseDropdown.appendChild(expenseBtn); expenseDropdown.appendChild(expenseMenu);
+                
+                const edit = document.createElement('button'); edit.className='px-2 py-1 rounded bg-yellow-50 text-yellow-700'; edit.innerHTML='<span class="material-symbols-outlined">edit</span>'; edit.addEventListener('click', ()=>{ q('tp-id').value = plan.id; showTransportForm(t); });
                 const del = document.createElement('button'); del.className='px-2 py-1 rounded bg-red-50 text-red-700'; del.innerHTML='<span class="material-symbols-outlined">delete</span>'; del.addEventListener('click', async ()=>{ if (!confirm('Excluir transporte?')) return; const trId = t.id; plan.transports = (plan.transports||[]).filter(x=>x.id!==trId); plan.itinerary = (plan.itinerary||[]).filter(i=>i.linkedId!==trId); await saveTravelPlans(plans); renderPlanDetails(plan.id); showToast('Transporte excluído','bg-green-600'); });
-                right.appendChild(toggle); right.appendChild(expense); right.appendChild(edit); right.appendChild(del);
-                row.appendChild(left); row.appendChild(right); list.appendChild(row);
+                right.appendChild(toggle); right.appendChild(expenseDropdown); right.appendChild(edit); right.appendChild(del);
+                mainRow.appendChild(left); mainRow.appendChild(right); row.appendChild(mainRow); list.appendChild(row);
             });
 
             // accommodations list - COM TOGGLE DE PAGO
@@ -17367,7 +17559,7 @@ const firebaseConfig = {
             'diversao': 'Diversão'
         };
         
-        async function createExpenseFromTransport(planId, transportId) {
+        async function createExpenseFromTransport(planId, transportId, expenseType) {
             try {
                 const plans = loadTravelPlans();
                 const plan = plans.find(p => p.id === planId);
@@ -17376,16 +17568,37 @@ const firebaseConfig = {
                 const transport = (plan.transports || []).find(t => t.id === transportId);
                 if (!transport) return;
                 
-                // Descrição do transporte (Nome do Destino)
                 const typeLabel = window.transportTypeLabels[transport.type] || transport.type;
+                
+                // Definir descrição e valor baseado no tipo de despesa
+                let description, amount, category;
+                
+                if (expenseType === 'fuel') {
+                    description = `⛽ Combustível - ${typeLabel} (${plan.destination})`;
+                    amount = transport.fuelCost || 0;
+                    category = 'Transporte';
+                } else if (expenseType === 'tolls') {
+                    description = `🛣️ Pedágios - ${typeLabel} (${plan.destination})`;
+                    amount = transport.tolls || 0;
+                    category = 'Transporte';
+                } else if (expenseType === 'rental') {
+                    description = `🚗 Aluguel de Veículo (${plan.destination})`;
+                    amount = transport.rental || 0;
+                    category = 'Transporte';
+                } else {
+                    // Total (padrão)
+                    description = `${typeLabel} (${plan.destination})`;
+                    amount = transport.subtotal || 0;
+                    category = 'Transporte';
+                }
                 
                 // Abrir modal de transação preenchido
                 await openExpenseModalFromTravelItem({
-                    description: `${typeLabel} (${plan.destination})`,
-                    amount: transport.subtotal || 0,
-                    category: 'Transporte',
+                    description: description,
+                    amount: amount,
+                    category: category,
                     date: plan.date,
-                    linkedTo: { planId, itemType: 'transport', itemId: transportId }
+                    linkedTo: { planId, itemType: 'transport', itemId: transportId, expenseType: expenseType || 'total' }
                 });
             } catch(e) {
                 console.error('createExpenseFromTransport', e);

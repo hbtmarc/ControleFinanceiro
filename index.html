@@ -987,7 +987,6 @@
             color: var(--gray-600);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: var(--spacing-sm);
         }
 
         .kpi-card .kpi-value {
@@ -997,6 +996,12 @@
             margin-bottom: var(--spacing-xs);
             position: relative;
             z-index: 1;
+            transition: filter 0.3s ease;
+        }
+
+        .kpi-card .kpi-value.blurred {
+            filter: blur(8px);
+            user-select: none;
         }
 
         .kpi-card .kpi-trend {
@@ -3917,16 +3922,26 @@
                                     <p id="tp-dash-subtitle" class="text-sm text-gray-500">Data da viagem</p>
                                 </div>
                             </div>
-                            <button id="tp-dash-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors" title="Fechar dashboard">
-                                <span class="material-symbols-outlined text-gray-600">close</span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button id="tp-dash-toggle-values" class="p-2 rounded-lg hover:bg-gray-100 transition-colors" title="Ocultar/Mostrar valores">
+                                    <span class="material-symbols-outlined text-gray-600">visibility</span>
+                                </button>
+                                <button id="tp-dash-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors" title="Fechar dashboard">
+                                    <span class="material-symbols-outlined text-gray-600">close</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Cards de Resumo Financeiro -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div class="kpi-card kpi-income">
-                            <div class="kpi-title">Orçado</div>
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="kpi-title">Orçado</div>
+                                <button class="kpi-toggle-btn p-1 rounded hover:bg-gray-100" data-kpi="budget" title="Ocultar/Mostrar">
+                                    <span class="material-symbols-outlined text-gray-500" style="font-size: 18px;">visibility</span>
+                                </button>
+                            </div>
                             <div id="tp-dash-budget" class="kpi-value">R$ 0,00</div>
                             <div class="kpi-trend">
                                 <span class="material-symbols-outlined" style="font-size: 16px;">savings</span>
@@ -3935,7 +3950,12 @@
                         </div>
 
                         <div class="kpi-card kpi-savings">
-                            <div class="kpi-title">Realizado</div>
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="kpi-title">Realizado</div>
+                                <button class="kpi-toggle-btn p-1 rounded hover:bg-gray-100" data-kpi="realized" title="Ocultar/Mostrar">
+                                    <span class="material-symbols-outlined text-gray-500" style="font-size: 18px;">visibility</span>
+                                </button>
+                            </div>
                             <div id="tp-dash-realized" class="kpi-value">R$ 0,00</div>
                             <div class="kpi-trend">
                                 <span class="material-symbols-outlined" style="font-size: 16px;">account_balance_wallet</span>
@@ -3944,7 +3964,12 @@
                         </div>
 
                         <div class="kpi-card" style="border-left: 4px solid #8B5CF6;">
-                            <div class="kpi-title">Pago</div>
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="kpi-title">Pago</div>
+                                <button class="kpi-toggle-btn p-1 rounded hover:bg-gray-100" data-kpi="paid" title="Ocultar/Mostrar">
+                                    <span class="material-symbols-outlined text-gray-500" style="font-size: 18px;">visibility</span>
+                                </button>
+                            </div>
                             <div id="tp-dash-paid" class="kpi-value" style="color: #8B5CF6;">R$ 0,00</div>
                             <div class="kpi-trend" style="color: #8B5CF6;">
                                 <span class="material-symbols-outlined" style="font-size: 16px;">paid</span>
@@ -3953,7 +3978,12 @@
                         </div>
 
                         <div class="kpi-card" id="tp-dash-balance-card" style="border-left: 4px solid #10b981;">
-                            <div class="kpi-title">Balanço</div>
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="kpi-title">Balanço</div>
+                                <button class="kpi-toggle-btn p-1 rounded hover:bg-gray-100" data-kpi="balance" title="Ocultar/Mostrar">
+                                    <span class="material-symbols-outlined text-gray-500" style="font-size: 18px;">visibility</span>
+                                </button>
+                            </div>
                             <div id="tp-dash-balance" class="kpi-value" style="color: #10b981;">R$ 0,00</div>
                             <div class="kpi-trend" id="tp-dash-balance-trend" style="color: #10b981;">
                                 <!-- <span class="material-symbols-outlined" style="font-size: 16px;">trending_up</span>
@@ -5146,6 +5176,61 @@
             </div>
         </form>
         <button id="close-vt-modal" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
+    </dialog>
+
+    <!-- Modal de Abastecimento (Travel Planner) -->
+    <dialog id="tp-fuel-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-orange-600">local_gas_station</span>
+            Registrar Abastecimento
+        </h2>
+        <form id="tp-fuel-form" class="space-y-3">
+            <input type="hidden" id="tp-fuel-id">
+            <div>
+                <label class="block text-sm text-gray-700">Valor (R$)</label>
+                <input id="tp-fuel-amount" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="R$ 0,00" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-700">Litros</label>
+                <input id="tp-fuel-liters" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="0,00 L" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-700">Quilometragem (km)</label>
+                <input id="tp-fuel-odometer" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="0 km" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-700">Posto / Local (opcional)</label>
+                <input id="tp-fuel-location" type="text" class="mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: Posto Shell" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-700">Data</label>
+                <input id="tp-fuel-date" type="date" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
+            </div>
+            <!-- Cálculos automáticos -->
+            <div id="tp-fuel-calculations" class="p-3 bg-blue-50 rounded-lg text-sm space-y-1 hidden">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Preço por litro:</span>
+                    <span id="tp-fuel-calc-price-per-liter" class="font-semibold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Distância percorrida:</span>
+                    <span id="tp-fuel-calc-distance" class="font-semibold">0 km</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Consumo médio:</span>
+                    <span id="tp-fuel-calc-efficiency" class="font-semibold">0,0 km/L</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Custo por km:</span>
+                    <span id="tp-fuel-calc-cost-per-km" class="font-semibold">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button id="tp-fuel-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
+                <button id="tp-fuel-save" type="submit" class="bg-orange-600 text-white px-3 py-1 rounded">Salvar</button>
+            </div>
+        </form>
+        <button id="tp-fuel-close" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
     </dialog>
 
     <!-- Salary breakdown modal (step-by-step ilustrative calculation) -->
@@ -14023,6 +14108,45 @@ const firebaseConfig = {
                     </div>
 
                     <div id="tp-transport-list" class="mt-4 space-y-2"></div>
+                    
+                    <!-- Card de Controle de Combustível -->
+                    <div class="p-3 rounded bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200 mt-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-orange-600">local_gas_station</span>
+                                <h4 class="text-sm font-semibold text-gray-800">Controle de Combustível</h4>
+                            </div>
+                            <button id="tp-fuel-add-btn" class="px-2 py-1 rounded bg-orange-600 text-white text-sm inline-flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
+                                Abastecer
+                            </button>
+                        </div>
+                        
+                        <!-- Resumo do Combustível -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                            <div class="bg-white rounded p-2 border border-orange-100">
+                                <div class="text-xs text-gray-500">Total Gasto</div>
+                                <div id="tp-fuel-total-spent" class="text-base font-bold text-orange-600">R$ 0,00</div>
+                            </div>
+                            <div class="bg-white rounded p-2 border border-orange-100">
+                                <div class="text-xs text-gray-500">Total Litros</div>
+                                <div id="tp-fuel-total-liters" class="text-base font-bold text-blue-600">0 L</div>
+                            </div>
+                            <div class="bg-white rounded p-2 border border-orange-100">
+                                <div class="text-xs text-gray-500">Distância Total</div>
+                                <div id="tp-fuel-total-distance" class="text-base font-bold text-green-600">0 km</div>
+                            </div>
+                            <div class="bg-white rounded p-2 border border-orange-100">
+                                <div class="text-xs text-gray-500">Média (km/L)</div>
+                                <div id="tp-fuel-avg-efficiency" class="text-base font-bold text-purple-600">0,0</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Lista de Abastecimentos -->
+                        <div id="tp-fuel-list" class="space-y-2">
+                            <!-- Gerado dinamicamente -->
+                        </div>
+                    </div>
                 </div>
                 </div>
                 <!-- FIM Aba de Transportes -->
@@ -14637,7 +14761,26 @@ const firebaseConfig = {
         function escapeHtml(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
     // Storage helpers: keep travelPlans inside state.appData.settings.travelPlans (consistent with the rest of the app)
-    function loadTravelPlans(){ try { const s = (window.state && window.state.appData && window.state.appData.settings) ? window.state.appData.settings : null; return (s && Array.isArray(s.travelPlans)) ? s.travelPlans : []; } catch(e){ return []; } }
+    function loadTravelPlans(){ 
+        try { 
+            const s = (window.state && window.state.appData && window.state.appData.settings) ? window.state.appData.settings : null; 
+            const plans = (s && Array.isArray(s.travelPlans)) ? s.travelPlans : [];
+            
+            // Normalizar valores para garantir que sejam números
+            plans.forEach(plan => {
+                if (plan.estimated !== undefined && plan.estimated !== null) {
+                    plan.estimated = parseBRNumber(plan.estimated);
+                }
+                if (plan.saved !== undefined && plan.saved !== null) {
+                    plan.saved = parseBRNumber(plan.saved);
+                }
+            });
+            
+            return plans;
+        } catch(e){ 
+            return []; 
+        } 
+    }
     async function saveTravelPlans(plans){ try { window.state = window.state || {}; window.state.appData = window.state.appData || {}; window.state.appData.settings = window.state.appData.settings || {}; window.state.appData.settings.travelPlans = plans; if (storage && typeof storage.saveData === 'function') await storage.saveData(window.state.appData); } catch(e){ console.error('saveTravelPlans', e); } }
 
         // ===== MIGRAÇÃO DE DADOS (CORREÇÃO DE VALORES MULTIPLICADOS) =====
@@ -14692,14 +14835,24 @@ const firebaseConfig = {
                         });
                     }
                     
-                    // Migrar estimativa do plano
-                    if (plan.estimated && plan.estimated > 100000) {
-                        plan.estimated = plan.estimated / 100;
+                    // Migrar estimativa do plano - usar parseBRNumber para interpretar corretamente
+                    const estimatedNum = parseBRNumber(plan.estimated);
+                    if (estimatedNum > 100000) {
+                        plan.estimated = estimatedNum / 100;
+                        migrated = true;
+                    } else if (plan.estimated !== estimatedNum) {
+                        // Normalizar o valor mesmo que não precise dividir
+                        plan.estimated = estimatedNum;
                         migrated = true;
                     }
                     
-                    if (plan.saved && plan.saved > 100000) {
-                        plan.saved = plan.saved / 100;
+                    const savedNum = parseBRNumber(plan.saved);
+                    if (savedNum > 100000) {
+                        plan.saved = savedNum / 100;
+                        migrated = true;
+                    } else if (plan.saved !== savedNum) {
+                        // Normalizar o valor mesmo que não precise dividir
+                        plan.saved = savedNum;
                         migrated = true;
                     }
                 });
@@ -15189,6 +15342,311 @@ const firebaseConfig = {
             renderPlanDetails(plan.id);
         } catch(e){ console.error('saveTransport', e); showToast('Erro ao salvar transporte', 'bg-red-600'); } }
         if (tSave) tSave.addEventListener('click', (e)=>{ e.preventDefault(); saveTransport(); });
+
+        // ===== CONTROLE DE COMBUSTÍVEL =====
+        const fuelModal = q('tp-fuel-modal');
+        const fuelForm = q('tp-fuel-form');
+        const fuelId = q('tp-fuel-id');
+        const fuelAmount = q('tp-fuel-amount');
+        const fuelLiters = q('tp-fuel-liters');
+        const fuelOdometer = q('tp-fuel-odometer');
+        const fuelLocation = q('tp-fuel-location');
+        const fuelDate = q('tp-fuel-date');
+        const fuelSave = q('tp-fuel-save');
+        const fuelCancel = q('tp-fuel-cancel');
+        const fuelClose = q('tp-fuel-close');
+        const fuelAddBtn = q('tp-fuel-add-btn');
+
+        // Abrir modal de combustível
+        function openFuelModal(editEntry = null) {
+            if (!fuelModal) return;
+            if (editEntry) {
+                fuelId.value = editEntry.id || '';
+                fuelAmount.value = editEntry.amount || '';
+                fuelLiters.value = editEntry.liters || '';
+                fuelOdometer.value = editEntry.odometer || '';
+                fuelLocation.value = editEntry.location || '';
+                fuelDate.value = editEntry.date || '';
+            } else {
+                fuelId.value = '';
+                fuelAmount.value = '';
+                fuelLiters.value = '';
+                fuelOdometer.value = '';
+                fuelLocation.value = '';
+                fuelDate.value = new Date().toISOString().split('T')[0];
+            }
+            calculateFuelMetrics();
+            fuelModal.showModal();
+        }
+
+        // Fechar modal
+        function closeFuelModal() {
+            if (fuelModal) fuelModal.close();
+        }
+
+        if (fuelAddBtn) fuelAddBtn.addEventListener('click', () => openFuelModal());
+        if (fuelCancel) fuelCancel.addEventListener('click', (e) => { e.preventDefault(); closeFuelModal(); });
+        if (fuelClose) fuelClose.addEventListener('click', () => closeFuelModal());
+
+        // Calcular métricas em tempo real
+        function calculateFuelMetrics() {
+            try {
+                const amount = parseBRNumber(fuelAmount?.value || '0');
+                const liters = parseBRNumber(fuelLiters?.value || '0');
+                const odometer = parseBRNumber(fuelOdometer?.value || '0');
+
+                const calcBox = q('tp-fuel-calculations');
+                const pricePerLiter = q('tp-fuel-calc-price-per-liter');
+                const distance = q('tp-fuel-calc-distance');
+                const efficiency = q('tp-fuel-calc-efficiency');
+                const costPerKm = q('tp-fuel-calc-cost-per-km');
+
+                if (amount > 0 && liters > 0) {
+                    const ppl = amount / liters;
+                    if (pricePerLiter) pricePerLiter.textContent = formatBR(ppl);
+
+                    // Pegar último abastecimento para calcular distância e consumo
+                    const pid = q('tp-id')?.value;
+                    if (pid) {
+                        const plans = loadTravelPlans();
+                        const plan = plans.find(p => p.id === pid);
+                        if (plan && plan.fuelEntries && plan.fuelEntries.length > 0) {
+                            const sorted = plan.fuelEntries.slice().sort((a, b) => (b.odometer || 0) - (a.odometer || 0));
+                            const lastEntry = sorted[0];
+                            if (lastEntry && lastEntry.odometer) {
+                                const dist = odometer - lastEntry.odometer;
+                                const eff = liters > 0 ? dist / liters : 0;
+                                const cpk = dist > 0 ? amount / dist : 0;
+
+                                if (distance) distance.textContent = `${dist.toFixed(0)} km`;
+                                if (efficiency) efficiency.textContent = `${eff.toFixed(1)} km/L`;
+                                if (costPerKm) costPerKm.textContent = formatBR(cpk);
+
+                                if (calcBox) calcBox.classList.remove('hidden');
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                // Se não conseguiu calcular, mostra só preço por litro
+                if (calcBox && amount > 0 && liters > 0) {
+                    calcBox.classList.remove('hidden');
+                } else if (calcBox) {
+                    calcBox.classList.add('hidden');
+                }
+            } catch (e) {
+                console.error('calculateFuelMetrics', e);
+            }
+        }
+
+        // Event listeners para atualizar cálculos
+        [fuelAmount, fuelLiters, fuelOdometer].forEach(el => {
+            if (el) {
+                el.addEventListener('input', calculateFuelMetrics);
+                el.addEventListener('change', calculateFuelMetrics);
+            }
+        });
+
+        // Salvar abastecimento
+        async function saveFuelEntry() {
+            try {
+                const pid = q('tp-id')?.value;
+                if (!pid) {
+                    showToast('Salve o plano antes de adicionar abastecimentos', 'bg-yellow-600');
+                    return;
+                }
+
+                const plans = loadTravelPlans();
+                const plan = plans.find(p => p.id === pid);
+                if (!plan) return;
+
+                // Gerar ID único
+                const genId = () => 'fuel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const id = fuelId.value || genId();
+                const entry = {
+                    id,
+                    amount: parseBRNumber(fuelAmount.value || '0'),
+                    liters: parseBRNumber(fuelLiters.value || '0'),
+                    odometer: parseBRNumber(fuelOdometer.value || '0'),
+                    location: fuelLocation.value || '',
+                    date: fuelDate.value || new Date().toISOString().split('T')[0]
+                };
+
+                if (!plan.fuelEntries) plan.fuelEntries = [];
+                
+                const existingIndex = plan.fuelEntries.findIndex(e => e.id === id);
+                if (existingIndex !== -1) {
+                    plan.fuelEntries[existingIndex] = entry;
+                } else {
+                    plan.fuelEntries.push(entry);
+                }
+
+                // Ordenar por quilometragem
+                plan.fuelEntries.sort((a, b) => (a.odometer || 0) - (b.odometer || 0));
+
+                await saveTravelPlans(plans);
+                showToast('Abastecimento salvo', 'bg-green-600');
+                closeFuelModal();
+                renderPlanDetails(plan.id);
+            } catch (e) {
+                console.error('saveFuelEntry', e);
+                showToast('Erro ao salvar abastecimento', 'bg-red-600');
+            }
+        }
+
+        if (fuelSave) fuelSave.addEventListener('click', (e) => { e.preventDefault(); saveFuelEntry(); });
+        if (fuelForm) fuelForm.addEventListener('submit', (e) => { e.preventDefault(); saveFuelEntry(); });
+
+        // Renderizar lista de abastecimentos
+        function renderFuelList(plan) {
+            const fuelList = q('tp-fuel-list');
+            const totalSpent = q('tp-fuel-total-spent');
+            const totalLiters = q('tp-fuel-total-liters');
+            const totalDistance = q('tp-fuel-total-distance');
+            const avgEfficiency = q('tp-fuel-avg-efficiency');
+
+            if (!fuelList || !plan) return;
+
+            const entries = plan.fuelEntries || [];
+
+            // Calcular totais
+            const spent = entries.reduce((sum, e) => sum + (e.amount || 0), 0);
+            const liters = entries.reduce((sum, e) => sum + (e.liters || 0), 0);
+
+            // Calcular distância total e média
+            let distance = 0;
+            let avgEff = 0;
+            if (entries.length > 1) {
+                const sorted = entries.slice().sort((a, b) => (a.odometer || 0) - (b.odometer || 0));
+                distance = (sorted[sorted.length - 1].odometer || 0) - (sorted[0].odometer || 0);
+                if (liters > 0) avgEff = distance / liters;
+            }
+
+            if (totalSpent) totalSpent.textContent = formatBR(spent);
+            if (totalLiters) totalLiters.textContent = `${liters.toFixed(2)} L`;
+            if (totalDistance) totalDistance.textContent = `${distance.toFixed(0)} km`;
+            if (avgEfficiency) avgEfficiency.textContent = avgEff.toFixed(1);
+
+            // Renderizar lista
+            if (entries.length === 0) {
+                fuelList.innerHTML = '<div class="text-sm text-gray-500 text-center py-2">Nenhum abastecimento registrado</div>';
+                return;
+            }
+
+            const sortedEntries = entries.slice().sort((a, b) => {
+                return (b.odometer || 0) - (a.odometer || 0);
+            });
+
+            // Limpar lista
+            fuelList.innerHTML = '';
+
+            sortedEntries.forEach((entry, idx) => {
+                const pricePerLiter = entry.liters > 0 ? entry.amount / entry.liters : 0;
+                
+                // Calcular consumo com base no abastecimento anterior
+                let efficiency = '';
+                let effValue = 0;
+                if (idx < sortedEntries.length - 1) {
+                    const nextEntry = sortedEntries[idx + 1];
+                    const dist = entry.odometer - nextEntry.odometer;
+                    const eff = entry.liters > 0 ? dist / entry.liters : 0;
+                    if (dist > 0 && eff > 0) {
+                        effValue = eff;
+                        efficiency = `⚡ ${eff.toFixed(1)} km/L`;
+                    }
+                }
+
+                // Criar elemento do item
+                const item = document.createElement('div');
+                item.className = 'bg-white border border-orange-100 rounded p-2 flex items-center justify-between hover:bg-orange-50 transition-colors';
+                
+                // Lado esquerdo com informações
+                const left = document.createElement('div');
+                left.className = 'flex-1';
+                left.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-orange-600" style="font-size: 20px;">local_gas_station</span>
+                        <div>
+                            <div class="text-sm font-semibold">${escapeHtml(entry.location || 'Abastecimento')}</div>
+                            <div class="text-xs text-gray-500">${new Date(entry.date).toLocaleDateString('pt-BR')}</div>
+                        </div>
+                    </div>
+                    <div class="mt-1 grid grid-cols-3 gap-2 text-xs">
+                        <div class="text-orange-600 font-semibold">${formatBR(entry.amount)}</div>
+                        <div class="text-blue-600">${entry.liters.toFixed(2)} L • ${formatBR(pricePerLiter)}/L</div>
+                        <div class="text-green-600">${entry.odometer.toFixed(0)} km</div>
+                    </div>
+                    ${efficiency ? `<div class="text-xs text-purple-600">${efficiency}</div>` : ''}
+                `;
+                
+                // Lado direito com botões
+                const right = document.createElement('div');
+                right.className = 'flex gap-1';
+                
+                // Botão criar despesa (roxo)
+                const expenseBtn = document.createElement('button');
+                expenseBtn.className = 'px-2 py-1 rounded bg-purple-50 text-purple-700';
+                expenseBtn.innerHTML = '<span class="material-symbols-outlined">receipt_long</span>';
+                expenseBtn.title = 'Criar despesa financeira';
+                expenseBtn.addEventListener('click', () => { 
+                    const pid = q('tp-id')?.value;
+                    if (pid) createExpenseFromFuel(pid, entry.id); 
+                });
+                
+                // Botão editar
+                const editBtn = document.createElement('button');
+                editBtn.className = 'px-2 py-1 rounded bg-yellow-50 text-yellow-700';
+                editBtn.innerHTML = '<span class="material-symbols-outlined">edit</span>';
+                editBtn.title = 'Editar';
+                editBtn.addEventListener('click', () => { editFuelEntry(entry.id); });
+                
+                // Botão deletar
+                const delBtn = document.createElement('button');
+                delBtn.className = 'px-2 py-1 rounded bg-red-50 text-red-700';
+                delBtn.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+                delBtn.title = 'Deletar';
+                delBtn.addEventListener('click', () => { deleteFuelEntry(entry.id); });
+                
+                right.appendChild(expenseBtn);
+                right.appendChild(editBtn);
+                right.appendChild(delBtn);
+                
+                item.appendChild(left);
+                item.appendChild(right);
+                fuelList.appendChild(item);
+            });
+        }
+
+        // Editar abastecimento
+        function editFuelEntry(entryId) {
+            const pid = q('tp-id')?.value;
+            if (!pid) return;
+            const plans = loadTravelPlans();
+            const plan = plans.find(p => p.id === pid);
+            if (!plan || !plan.fuelEntries) return;
+            const entry = plan.fuelEntries.find(e => e.id === entryId);
+            if (entry) openFuelModal(entry);
+        }
+
+        // Deletar abastecimento
+        async function deleteFuelEntry(entryId) {
+            if (!confirm('Deseja realmente deletar este abastecimento?')) return;
+            try {
+                const pid = q('tp-id')?.value;
+                if (!pid) return;
+                const plans = loadTravelPlans();
+                const plan = plans.find(p => p.id === pid);
+                if (!plan || !plan.fuelEntries) return;
+                plan.fuelEntries = plan.fuelEntries.filter(e => e.id !== entryId);
+                await saveTravelPlans(plans);
+                showToast('Abastecimento deletado', 'bg-green-600');
+                renderPlanDetails(plan.id);
+            } catch (e) {
+                console.error('deleteFuelEntry', e);
+                showToast('Erro ao deletar abastecimento', 'bg-red-600');
+            }
+        }
 
         // ===== HOSPEDAGEM CRUD =====
         const accommodationNewBtn = q('tp-accommodation-new'); const accommodationForm = q('tp-accommodation-form');
@@ -16789,19 +17247,20 @@ const firebaseConfig = {
             document.getElementById('tp-dash-title').textContent = plan.destination || 'Destino';
             document.getElementById('tp-dash-subtitle').textContent = plan.date ? new Date(plan.date + 'T00:00:00').toLocaleDateString('pt-BR', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) : 'Data não definida';
             
-            // Calcular totais
-            const totalTransports = (plan.transports||[]).reduce((sum, t)=>sum+(t.subtotal||0), 0);
-            const totalAccommodations = (plan.accommodations||[]).reduce((sum, a)=>sum+(a.total||0), 0);
-            const totalActivities = (plan.activities||[]).reduce((sum, a)=>sum+(a.price||0), 0);
+            // Calcular totais - usar parseBRNumber para converter valores corretamente
+            const totalTransports = (plan.transports||[]).reduce((sum, t)=>sum+parseBRNumber(t.subtotal||0), 0);
+            const totalAccommodations = (plan.accommodations||[]).reduce((sum, a)=>sum+parseBRNumber(a.total||0), 0);
+            const totalActivities = (plan.activities||[]).reduce((sum, a)=>sum+parseBRNumber(a.price||0), 0);
             const totalCosts = totalTransports + totalAccommodations + totalActivities;
             
-            const paidTransports = (plan.transports||[]).filter(t=>t.paid).reduce((sum, t)=>sum+(t.subtotal||0), 0);
-            const paidAccommodations = (plan.accommodations||[]).filter(a=>a.paid).reduce((sum, a)=>sum+(a.total||0), 0);
-            const paidActivities = (plan.activities||[]).filter(a=>a.paid).reduce((sum, a)=>sum+(a.price||0), 0);
+            const paidTransports = (plan.transports||[]).filter(t=>t.paid).reduce((sum, t)=>sum+parseBRNumber(t.subtotal||0), 0);
+            const paidAccommodations = (plan.accommodations||[]).filter(a=>a.paid).reduce((sum, a)=>sum+parseBRNumber(a.total||0), 0);
+            const paidActivities = (plan.activities||[]).filter(a=>a.paid).reduce((sum, a)=>sum+parseBRNumber(a.price||0), 0);
             const totalPaid = paidTransports + paidAccommodations + paidActivities;
             
-            const budgeted = plan.estimated || 0;
-            const realized = plan.saved || 0;
+            // Garantir que budgeted e realized sejam números - usar parseBRNumber para converter corretamente
+            const budgeted = parseBRNumber(plan.estimated);
+            const realized = parseBRNumber(plan.saved);
             const balance = budgeted - totalPaid; // Balanço: Orçado - Pago
             
             // Calcular porcentagem do balanço
@@ -17114,6 +17573,113 @@ const firebaseConfig = {
             // Botão fechar (apenas oculta, mas mantém a persistência)
             const closeBtn = document.getElementById('tp-dash-close');
             closeBtn.onclick = ()=>{ dashContainer.classList.add('hidden'); };
+            
+            // Botão toggle global para ocultar/mostrar todos os valores
+            const toggleValuesBtn = document.getElementById('tp-dash-toggle-values');
+            const kpiValueElements = {
+                budget: document.getElementById('tp-dash-budget'),
+                realized: document.getElementById('tp-dash-realized'),
+                paid: document.getElementById('tp-dash-paid'),
+                balance: document.getElementById('tp-dash-balance')
+            };
+            
+            // Função para obter estado de visibilidade de um KPI
+            const getKpiVisibility = (kpiName) => {
+                return localStorage.getItem(`tp-kpi-${kpiName}-hidden`) !== 'true';
+            };
+            
+            // Função para definir estado de visibilidade de um KPI
+            const setKpiVisibility = (kpiName, isVisible) => {
+                localStorage.setItem(`tp-kpi-${kpiName}-hidden`, isVisible ? 'false' : 'true');
+            };
+            
+            // Função para atualizar ícone de um botão KPI
+            const updateKpiIcon = (button, isVisible) => {
+                const icon = button.querySelector('.material-symbols-outlined');
+                if (icon) icon.textContent = isVisible ? 'visibility' : 'visibility_off';
+            };
+            
+            // Restaurar estado individual de cada KPI
+            document.querySelectorAll('.kpi-toggle-btn').forEach(btn => {
+                const kpiName = btn.getAttribute('data-kpi');
+                const kpiElement = kpiValueElements[kpiName];
+                const isVisible = getKpiVisibility(kpiName);
+                
+                if (!isVisible && kpiElement) {
+                    kpiElement.classList.add('blurred');
+                }
+                updateKpiIcon(btn, isVisible);
+                
+                // Click handler individual
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const currentlyVisible = !kpiElement.classList.contains('blurred');
+                    
+                    if (currentlyVisible) {
+                        kpiElement.classList.add('blurred');
+                        setKpiVisibility(kpiName, false);
+                        updateKpiIcon(btn, false);
+                    } else {
+                        kpiElement.classList.remove('blurred');
+                        setKpiVisibility(kpiName, true);
+                        updateKpiIcon(btn, true);
+                    }
+                    
+                    // Atualizar ícone global
+                    updateGlobalToggleIcon();
+                };
+            });
+            
+            // Função para atualizar ícone do botão global
+            const updateGlobalToggleIcon = () => {
+                const allHidden = Object.keys(kpiValueElements).every(key => 
+                    kpiValueElements[key]?.classList.contains('blurred')
+                );
+                const allVisible = Object.keys(kpiValueElements).every(key => 
+                    !kpiValueElements[key]?.classList.contains('blurred')
+                );
+                
+                const icon = toggleValuesBtn.querySelector('.material-symbols-outlined');
+                if (allVisible) {
+                    if (icon) icon.textContent = 'visibility';
+                } else if (allHidden) {
+                    if (icon) icon.textContent = 'visibility_off';
+                } else {
+                    if (icon) icon.textContent = 'visibility_off';
+                }
+            };
+            
+            // Botão global: toggle todos os KPIs
+            toggleValuesBtn.onclick = () => {
+                const allVisible = Object.keys(kpiValueElements).every(key => 
+                    !kpiValueElements[key]?.classList.contains('blurred')
+                );
+                
+                // Se todos visíveis, oculta todos. Caso contrário, mostra todos
+                const shouldHide = allVisible;
+                
+                document.querySelectorAll('.kpi-toggle-btn').forEach(btn => {
+                    const kpiName = btn.getAttribute('data-kpi');
+                    const kpiElement = kpiValueElements[kpiName];
+                    
+                    if (kpiElement) {
+                        if (shouldHide) {
+                            kpiElement.classList.add('blurred');
+                            setKpiVisibility(kpiName, false);
+                            updateKpiIcon(btn, false);
+                        } else {
+                            kpiElement.classList.remove('blurred');
+                            setKpiVisibility(kpiName, true);
+                            updateKpiIcon(btn, true);
+                        }
+                    }
+                });
+                
+                updateGlobalToggleIcon();
+            };
+            
+            // Inicializar ícone global
+            updateGlobalToggleIcon();
             
         } catch(e){ console.error('renderPlanDashboard', e); } }
 
@@ -17855,6 +18421,12 @@ const firebaseConfig = {
                     }
                 }
             } catch(e) { console.error('update dashboards', e); }
+            
+            // Renderizar lista de combustível
+            try {
+                renderFuelList(plan);
+            } catch(e) { console.error('renderFuelList', e); }
+            
         } catch(e){ console.error('renderPlanDetails', e); } }
 
         // Attach currency handlers for planner money fields and basic validation
@@ -17993,6 +18565,34 @@ const firebaseConfig = {
                 showToast('Erro ao criar despesa', 'bg-red-600');
             }
         }
+        
+        async function createExpenseFromFuel(planId, fuelId) {
+            try {
+                const plans = loadTravelPlans();
+                const plan = plans.find(p => p.id === planId);
+                if (!plan) return;
+                
+                const fuel = (plan.fuelEntries || []).find(f => f.id === fuelId);
+                if (!fuel) return;
+                
+                // Abastecimento - Local (Nome do Destino)
+                const description = fuel.location 
+                    ? `Abastecimento - ${fuel.location} (${plan.destination})`
+                    : `Abastecimento (${plan.destination})`;
+                
+                await openExpenseModalFromTravelItem({
+                    description: description,
+                    amount: fuel.amount || 0,
+                    category: 'Transporte',
+                    date: fuel.date || plan.date,
+                    linkedTo: { planId, itemType: 'fuel', itemId: fuelId }
+                });
+            } catch(e) {
+                console.error('createExpenseFromFuel', e);
+                showToast('Erro ao criar despesa', 'bg-red-600');
+            }
+        }
+        
         async function createExpenseFromActivity(planId, activityId) {
             try {
                 const plans = loadTravelPlans();

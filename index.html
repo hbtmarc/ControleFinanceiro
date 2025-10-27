@@ -711,9 +711,55 @@
             color: #ef4444;
         }
 
-        .travel-summary-item.remaining .travel-kpi-value {
-            color: #10b981;
+        .travel-summary-item.balance .travel-kpi-value {
             font-size: 18px;
+            font-weight: 700;
+        }
+
+        .travel-summary-item.balance .travel-kpi-value.positive {
+            color: #10b981;
+        }
+
+        .travel-summary-item.balance .travel-kpi-value.negative {
+            color: #ef4444;
+        }
+
+        .travel-balance-percentage {
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .travel-balance-percentage.positive {
+            color: #10b981;
+        }
+
+        .travel-balance-percentage.negative {
+            color: #ef4444;
+        }
+
+        .travel-balance-bar {
+            margin-top: 8px;
+            height: 6px;
+            background: #f1f5f9;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .travel-balance-bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .travel-balance-bar-fill.positive {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .travel-balance-bar-fill.negative {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
         }
 
         /* Responsividade mobile */
@@ -3906,12 +3952,19 @@
                             </div>
                         </div>
 
-                        <div class="kpi-card" style="border-left: 4px solid #F59E0B;">
-                            <div class="kpi-title">Restante</div>
-                            <div id="tp-dash-remaining" class="kpi-value" style="color: #F59E0B;">R$ 0,00</div>
-                            <div class="kpi-trend" style="color: #F59E0B;">
-                                <span class="material-symbols-outlined" style="font-size: 16px;">trending_up</span>
-                                <span>A poupar</span>
+                        <div class="kpi-card" id="tp-dash-balance-card" style="border-left: 4px solid #10b981;">
+                            <div class="kpi-title">Balanço</div>
+                            <div id="tp-dash-balance" class="kpi-value" style="color: #10b981;">R$ 0,00</div>
+                            <div class="kpi-trend" id="tp-dash-balance-trend" style="color: #10b981;">
+                                <!-- <span class="material-symbols-outlined" style="font-size: 16px;">trending_up</span>
+                                <span id="tp-dash-balance-label">Orçado - Pago</span> -->
+                            </div>
+                            <div id="tp-dash-balance-percentage" class="mt-2 text-xs font-semibold" style="display: none;">
+                                <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">trending_up</span>
+                                <span id="tp-dash-balance-percentage-text">0%</span>
+                            </div>
+                            <div class="mt-2" style="height: 4px; background: #f1f5f9; border-radius: 2px; overflow: hidden;">
+                                <div id="tp-dash-balance-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #059669); transition: width 0.3s ease;"></div>
                             </div>
                         </div>
                     </div>
@@ -6625,8 +6678,8 @@ const firebaseConfig = {
                     paymentMethods: [
                         { name: "BB (Débito)", type: "debit" },
                         { name: "Inter (Débito)", type: "debit" },
-                        { name: "Nubank", type: "credit_card" },
-                        { name: "Porto", type: "credit_card" },
+                        { name: "Nubank", type: "credit_card", closeDay: 3, dueDay: 10 },
+                        { name: "Porto", type: "credit_card", closeDay: 31, dueDay: 11 },
                         { name: "Dinheiro", type: "cash" },
                         { name: "PIX", type: "pix" },
                         { name: "Transferência", type: "transfer" },
@@ -6931,6 +6984,25 @@ const firebaseConfig = {
                 // ensure settings.travelPlans exists
                 state.appData.settings.travelPlans = state.appData.settings.travelPlans || [];
             } catch(e) { console.error('travelPlans migration', e); }
+            
+            // MIGRATE: Update credit cards with closeDay and dueDay if missing
+            try {
+                if (!state.appData.settings) state.appData.settings = {};
+                if (!Array.isArray(state.appData.settings.paymentMethods)) state.appData.settings.paymentMethods = [];
+                
+                state.appData.settings.paymentMethods.forEach(pm => {
+                    if (pm.type === 'credit_card') {
+                        if (pm.name === 'Nubank' && !pm.closeDay) {
+                            pm.closeDay = 3;
+                            pm.dueDay = 10;
+                        } else if (pm.name === 'Porto' && !pm.closeDay) {
+                            pm.closeDay = 31;
+                            pm.dueDay = 11;
+                        }
+                    }
+                });
+            } catch(e) { console.error('credit card migration', e); }
+            
             // Limpa todos os filtros ao iniciar
             state.filters = { searchTerm: '' };
             state.filters.expenseFilters = {};
@@ -7067,6 +7139,15 @@ const firebaseConfig = {
                 }
             } catch (e) { console.error('VR expenses migration', e); }
             goToDate(new Date());
+            
+            // Restore last active view from localStorage
+            try {
+                const lastView = localStorage.getItem('lastActiveView');
+                if (lastView && ['dashboard', 'credit-cards', 'investments', 'travel-planner'].includes(lastView)) {
+                    changeView(lastView);
+                }
+            } catch(e) { console.error('Error restoring lastActiveView', e); }
+            
             // console.debug("App.init() finalizado.");
         }
 
@@ -7778,21 +7859,25 @@ const firebaseConfig = {
                             const toggle = ev.target.closest && ev.target.closest('.card-group-toggle');
                             if (!toggle) return;
                             ev.preventDefault();
-                                const name = toggle.dataset.cardName;
+                            const name = toggle.dataset.cardName;
                             // Determine new state as inverse of current state of clicked card
                             const newState = !state.cardGrouped[name];
-                            // Apply to all cards
+                            // Apply only to this specific card
+                            state.cardGrouped[name] = newState;
+                            // Update icon for this card only
                             const container = document.getElementById('credit-cards-container');
                             if (!container) return;
-                            const roots = Array.from(container.querySelectorAll('[data-card-root]'));
-                                roots.forEach(r => {
-                                const nm = r.dataset.cardRoot;
-                                state.cardGrouped[nm] = newState;
-                                // update per-card icon
-                                try { const b = r.querySelector('.card-group-toggle .material-symbols-outlined'); if (b) b.textContent = newState ? 'vertical_split' : 'merge_type'; } catch(e){}
-                                // repopulate each card using tolerant matching
-                                try { const exps = (getCurrentMonthData().expenses || []).filter(e => paymentMatches(e.payment || '', nm)); populateCardExpenses(nm, exps); } catch(e){}
-                            });
+                            const cardRoot = container.querySelector(`[data-card-root="${name}"]`);
+                            if (!cardRoot) return;
+                            try { 
+                                const iconEl = cardRoot.querySelector('.card-group-toggle .material-symbols-outlined'); 
+                                if (iconEl) iconEl.textContent = newState ? 'vertical_split' : 'merge_type'; 
+                            } catch(e){}
+                            // Repopulate only this card
+                            try { 
+                                const exps = (getCurrentMonthData().expenses || []).filter(e => paymentMatches(e.payment || '', name)); 
+                                populateCardExpenses(name, exps); 
+                            } catch(e){}
                         });
                     }
                 } catch(e) { console.error('attach delegated card-group-toggle', e); }
@@ -8247,6 +8332,12 @@ const firebaseConfig = {
 
         function changeView(view) {
             state.currentView = view;
+            
+            // Save current view to localStorage for persistence
+            try {
+                localStorage.setItem('lastActiveView', view);
+            } catch(e) { console.error('Error saving lastActiveView', e); }
+            
             ['dashboard', 'credit-cards', 'investments', 'travel-planner'].forEach(v => {
                 const el = document.getElementById(`${v}-view`);
                 if (el) el.classList.toggle('hidden', view !== v);
@@ -8275,13 +8366,16 @@ const firebaseConfig = {
             const creditCards = ((state.appData.settings.paymentMethods || []).filter(p => p.type === 'credit_card')).slice().sort((a,b) => {
                 const A = (a && a.name || '').toLowerCase(); const B = (b && b.name || '').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0;
             });
-            // Default: start with all cards grouped unless explicitly set otherwise
-            creditCards.forEach(c => { if (state.cardGrouped[c.name] === undefined) state.cardGrouped[c.name] = true; });
+            // Default: start with all cards ungrouped and sorted by value descending
+            creditCards.forEach(c => { 
+                if (state.cardGrouped[c.name] === undefined) state.cardGrouped[c.name] = false; 
+            });
             creditCards.forEach(card => {
                 let cardExpenses = (currentMonthData.expenses || []).filter(e => normalize((typeof getPaymentLabel === 'function' ? getPaymentLabel(e.payment || '') : (e.payment || ''))) === normalize(card.name || ''));
-                // choose sort mode per-card: default alphabetical
+                // choose sort mode per-card: default value descending
                 ui.cardSorts = ui.cardSorts || {};
-                const sortMode = ui.cardSorts[card.name] || 'alf';
+                if (ui.cardSorts[card.name] === undefined) ui.cardSorts[card.name] = 'value-desc';
+                const sortMode = ui.cardSorts[card.name];
                 // If grouped display is active for this card, defer ordering to populateCardExpenses
                 if (!state.cardGrouped[card.name]) {
                     if (sortMode === 'alf') {
@@ -8300,9 +8394,22 @@ const firebaseConfig = {
                 const cardAnticipations = state.appData.data[y][m].cardAnticipations || {};
                 const anticipated = Number(cardAnticipations[card.name] || 0);
                 const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
+                
+                // Calculate closing and due dates
+                const closeDate = new Date(state.currentDate);
                 const dueDate = new Date(state.currentDate);
-                if (card.dueDay < 15) dueDate.setMonth(dueDate.getMonth() + 1);
-                dueDate.setDate(card.dueDay || 1);
+                
+                // Get closing and due days from card configuration
+                const closeDay = card.closeDay || 1;
+                const cardDueDay = card.dueDay || 1;
+                
+                // Set closing date
+                closeDate.setDate(closeDay);
+                
+                // Set due date - if due day is early in month, it's for next month
+                if (cardDueDay < 15) dueDate.setMonth(dueDate.getMonth() + 1);
+                dueDate.setDate(cardDueDay);
+                
                 container.innerHTML += `
                     <div class="card p-6 rounded-2xl shadow-sm flex flex-col" data-card-root="${card.name}">
                         <div class="flex-grow">
@@ -8315,13 +8422,16 @@ const firebaseConfig = {
                                         <button class="card-group-toggle p-1 ml-1" data-card-name="${card.name}" title="Agrupar/Desagrupar"><span class="material-symbols-outlined">${state.cardGrouped[card.name] ? 'vertical_split' : 'merge_type'}</span></button>
                                     </div>
                                 </div>
-                                <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Venc. ${dueDate.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-medium bg-orange-100 text-orange-800 px-2 py-1 rounded-full">Fecha ${closeDate.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
+                                    <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Venc. ${dueDate.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
+                                </div>
                             </div>
                             <p class="text-3xl font-bold text-blue-600 mb-1">${formatCurrency(invoiceTotal)}</p>
                             <!-- small icon row under badges: due, anticipated, purchases -->
                             <div class="flex items-center gap-4 text-sm text-gray-500 mt-1 mb-2">
-                                <div class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">calendar_today</span><span>Venc.</span></div>
-                                <div class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">paid</span><span>Créd.</span></div>
+                                <div class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">event_busy</span><span>Fech. dia ${closeDay}</span></div>
+                                <div class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">calendar_today</span><span>Venc. dia ${cardDueDay}</span></div>
                                 <div class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">shopping_cart</span><span>${cardExpenses.length} compras</span></div>
                             </div>
                             <p class="text-sm text-green-600 mb-1">- <span class="anticipation-amount cursor-pointer" data-card-name="${card.name}">${formatCurrency(anticipated)}</span> antecipado</p>
@@ -8352,26 +8462,50 @@ const firebaseConfig = {
                     // normalization helper to compare stored expense.payment with configured names
                     const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
                     const nonCardPayments = (paymentsSettings || []).filter(p => ((p && p.type) || '').toString() !== 'credit_card');
+                    // Default: start with all payment cards ungrouped and sorted by value descending
+                    nonCardPayments.forEach(pm => {
+                        const pmName = (typeof getPaymentLabel === 'function') ? getPaymentLabel(pm) : ((typeof pm === 'string') ? pm : (pm.name || pm.label || pm.value || ''));
+                        if (!pmName) return;
+                        if (state.cardGrouped[pmName] === undefined) state.cardGrouped[pmName] = false;
+                    });
                     nonCardPayments.forEach(pm => {
                         const pmName = (typeof getPaymentLabel === 'function') ? getPaymentLabel(pm) : ((typeof pm === 'string') ? pm : (pm.name || pm.label || pm.value || ''));
                         if (!pmName) return;
                         const pmNorm = normalize(pmName);
-                        const pmExpenses = (currentMonthData.expenses || []).filter(e => normalize((typeof getPaymentLabel === 'function' ? getPaymentLabel(e.payment || '') : (e.payment || ''))) === pmNorm);
+                        let pmExpenses = (currentMonthData.expenses || []).filter(e => normalize((typeof getPaymentLabel === 'function' ? getPaymentLabel(e.payment || '') : (e.payment || ''))) === pmNorm);
                         if (!pmExpenses || pmExpenses.length === 0) return; // only show if there's at least one expense with this payment
+                        
+                        // Apply sorting per-card: default value descending
+                        ui.cardSorts = ui.cardSorts || {};
+                        if (ui.cardSorts[pmName] === undefined) ui.cardSorts[pmName] = 'value-desc';
+                        const sortMode = ui.cardSorts[pmName];
+                        if (!state.cardGrouped[pmName]) {
+                            if (sortMode === 'alf') {
+                                pmExpenses = pmExpenses.slice().sort((a,b) => { const A=(a.description||'').toLowerCase(); const B=(b.description||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
+                            } else if (sortMode === 'value-desc') {
+                                pmExpenses = pmExpenses.slice().sort((a,b) => (Number(b.amount)||0) - (Number(a.amount)||0));
+                            } else if (sortMode === 'value-asc') {
+                                pmExpenses = pmExpenses.slice().sort((a,b) => (Number(a.amount)||0) - (Number(b.amount)||0));
+                            }
+                        }
+                        
                         const totalPM = pmExpenses.reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
                         container.innerHTML += `
-                            <div class="card p-6 rounded-2xl shadow-sm flex flex-col" data-payment-method="${pmName}">
+                            <div class="card p-6 rounded-2xl shadow-sm flex flex-col" data-card-root="${pmName}" data-payment-method="${pmName}">
                                 <div class="flex-grow">
                                     <div class="flex justify-between items-start mb-2">
-                                        <h3 class="text-xl font-semibold">${pmName}</h3>
+                                        <div class="flex items-center gap-3">
+                                            <h3 class="text-xl font-semibold card-title-sortable cursor-pointer" data-card-name="${pmName}">${pmName}</h3>
+                                            <div class="flex items-center text-sm text-gray-500" style="gap:6px;">
+                                                <button class="card-sort-arrow" data-card-name="${pmName}" data-sort="value-desc" title="Ordenar por valor desc">▲</button>
+                                                <button class="card-sort-arrow" data-card-name="${pmName}" data-sort="value-asc" title="Ordenar por valor asc">▼</button>
+                                                <button class="card-group-toggle p-1 ml-1" data-card-name="${pmName}" title="Agrupar/Desagrupar"><span class="material-symbols-outlined">${state.cardGrouped[pmName] ? 'vertical_split' : 'merge_type'}</span></button>
+                                            </div>
+                                        </div>
                                         <span class="text-xs font-medium bg-gray-100 text-gray-800 px-2 py-1 rounded-full">${pmExpenses.length} compras</span>
                                     </div>
                                     <p class="text-3xl font-bold text-gray-800 mb-1">${formatCurrency(totalPM)}</p>
-                                    <div class="mt-3 text-sm text-gray-600">
-                                        <div class="space-y-1 mt-2">
-                                            ${pmExpenses.slice(0,8).map(u => `<div class="flex justify-between items-center text-sm"><div class="flex items-center"><span class="truncate pr-2">${(u.description||'Despesa')}</span></div><div class="flex items-center"><span class="font-medium mr-2">${formatCurrency(Number(u.amount)||0)}</span></div></div>`).join('')}
-                                        </div>
-                                    </div>
+                                    <div class="space-y-1 max-h-48 overflow-y-auto pr-2 card-items-list" data-card-name="${pmName}"></div>
                                 </div>
                                 <div class="mt-4">
                                     <div class="flex w-full items-center" style="gap:8px;">
@@ -8380,6 +8514,10 @@ const firebaseConfig = {
                                     </div>
                                 </div>
                             </div>`;
+                        // Populate the card items area (grouped or normal depending on state)
+                        try {
+                            populateCardExpenses(pmName, pmExpenses);
+                        } catch(e) { console.error('populateCardExpenses error for payment method', e); }
                     });
 
                     // Attach handlers for the payment-method cards (same as previous behavior)
@@ -14440,10 +14578,17 @@ const firebaseConfig = {
                                 <div class="travel-kpi-value" id="tp-kpi-costs">R$ 0,00</div>
                                 <div class="travel-kpi-description">Soma de todas as seções do plano</div>
                             </div>
-                            <div class="travel-summary-item remaining">
-                                <div class="travel-kpi-label">Restante</div>
-                                <div class="travel-kpi-value" id="tp-kpi-remaining">R$ 0,00</div>
-                                <div class="travel-kpi-description">Valor a ser poupado</div>
+                            <div class="travel-summary-item balance">
+                                <div class="travel-kpi-label">Balanço</div>
+                                <div class="travel-kpi-value" id="tp-kpi-balance">R$ 0,00</div>
+                                <!-- <div class="travel-kpi-description">Orçado - Pago</div> -->
+                                <div class="travel-balance-percentage" id="tp-balance-percentage" style="display:none;">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">trending_up</span>
+                                    <span id="tp-balance-percentage-text">0%</span>
+                                </div>
+                                <div class="travel-balance-bar">
+                                    <div class="travel-balance-bar-fill" id="tp-balance-bar-fill" style="width:0%;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -14762,8 +14907,17 @@ const firebaseConfig = {
             const kpiCosts = q('tp-kpi-costs');
             if (kpiCosts) kpiCosts.textContent = formatBR(0);
             
-            const kpiRemaining = q('tp-kpi-remaining');
-            if (kpiRemaining) kpiRemaining.textContent = formatBR(0);
+            const kpiBalance = q('tp-kpi-balance');
+            if (kpiBalance) {
+                kpiBalance.textContent = formatBR(0);
+                kpiBalance.classList.remove('positive', 'negative');
+            }
+            
+            const balancePercentageEl = q('tp-balance-percentage');
+            if (balancePercentageEl) balancePercentageEl.style.display = 'none';
+            
+            const balanceBarFillEl = q('tp-balance-bar-fill');
+            if (balanceBarFillEl) balanceBarFillEl.style.width = '0%';
             
             const kpiProgress = q('tp-kpi-progress');
             if (kpiProgress) kpiProgress.style.width = '0%';
@@ -16648,13 +16802,89 @@ const firebaseConfig = {
             
             const budgeted = plan.estimated || 0;
             const realized = plan.saved || 0;
-            const remaining = budgeted - realized;
+            const balance = budgeted - totalPaid; // Balanço: Orçado - Pago
+            
+            // Calcular porcentagem do balanço
+            let balancePercentage = 0;
+            let balancePercentageText = '';
+            
+            if (budgeted > 0) {
+                if (balance >= 0) {
+                    // Positivo: mostra quanto % foi pago dentro do orçado
+                    balancePercentage = (totalPaid / budgeted) * 100;
+                    balancePercentageText = `${balancePercentage.toFixed(1)}% do orçamento utilizado`;
+                } else {
+                    // Negativo: mostra quanto % gastou a mais
+                    const excess = Math.abs(balance);
+                    balancePercentage = (excess / budgeted) * 100;
+                    balancePercentageText = `${balancePercentage.toFixed(1)}% acima do orçamento`;
+                }
+            }
             
             // Cards financeiros
             document.getElementById('tp-dash-budget').textContent = formatBR(budgeted);
             document.getElementById('tp-dash-realized').textContent = formatBR(realized);
             document.getElementById('tp-dash-paid').textContent = formatBR(totalPaid);
-            document.getElementById('tp-dash-remaining').textContent = formatBR(remaining);
+            
+            // Atualizar card de balanço
+            const balanceEl = document.getElementById('tp-dash-balance');
+            const balanceCard = document.getElementById('tp-dash-balance-card');
+            const balanceTrend = document.getElementById('tp-dash-balance-trend');
+            const balanceLabel = document.getElementById('tp-dash-balance-label');
+            const balancePercentageEl = document.getElementById('tp-dash-balance-percentage');
+            const balancePercentageTextEl = document.getElementById('tp-dash-balance-percentage-text');
+            const balanceBar = document.getElementById('tp-dash-balance-bar');
+            const balanceIcon = balanceTrend ? balanceTrend.querySelector('.material-symbols-outlined') : null;
+            
+            if (balanceEl) {
+                balanceEl.textContent = formatBR(balance);
+                
+                // Atualizar cores e ícones baseado no sinal do balanço
+                if (balance >= 0) {
+                    // Positivo - Verde
+                    balanceEl.style.color = '#10b981';
+                    if (balanceCard) balanceCard.style.borderLeftColor = '#10b981';
+                    if (balanceTrend) balanceTrend.style.color = '#10b981';
+                    if (balanceIcon) balanceIcon.textContent = 'trending_up';
+                    if (balanceBar) {
+                        balanceBar.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+                    }
+                } else {
+                    // Negativo - Vermelho
+                    balanceEl.style.color = '#ef4444';
+                    if (balanceCard) balanceCard.style.borderLeftColor = '#ef4444';
+                    if (balanceTrend) balanceTrend.style.color = '#ef4444';
+                    if (balanceIcon) balanceIcon.textContent = 'trending_down';
+                    if (balanceBar) {
+                        balanceBar.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+                    }
+                }
+            }
+            
+            // Atualizar texto da porcentagem
+            if (balancePercentageTextEl) {
+                balancePercentageTextEl.textContent = balancePercentageText;
+            }
+            
+            // Mostrar/ocultar porcentagem
+            if (balancePercentageEl) {
+                if (budgeted > 0) {
+                    balancePercentageEl.style.display = 'block';
+                    balancePercentageEl.style.color = balance >= 0 ? '#10b981' : '#ef4444';
+                    const percentIcon = balancePercentageEl.querySelector('.material-symbols-outlined');
+                    if (percentIcon) {
+                        percentIcon.textContent = balance >= 0 ? 'trending_up' : 'trending_down';
+                    }
+                } else {
+                    balancePercentageEl.style.display = 'none';
+                }
+            }
+            
+            // Atualizar barra de progresso do balanço
+            if (balanceBar) {
+                const barWidth = Math.min(100, Math.abs(balancePercentage));
+                balanceBar.style.width = `${barWidth}%`;
+            }
             
             // Progresso
             const progress = budgeted > 0 ? Math.min(Math.round((realized / budgeted) * 100), 100) : 0;
@@ -17025,9 +17255,27 @@ const firebaseConfig = {
                 row.appendChild(left); row.appendChild(right); accList.appendChild(row);
             }); }
 
-            // activities list - COM TOGGLE DE PAGO
+            // activities list - COM TOGGLE DE PAGO E ORDENAÇÃO CRONOLÓGICA
             const actList = document.getElementById('tp-activity-list'); if (actList) { actList.innerHTML='';
-            (plan.activities||[]).forEach(a=>{
+            
+            // Ordenar atividades por data e hora (ordem cronológica)
+            const sortedActivities = (plan.activities||[]).slice().sort((a, b) => {
+                // Criar strings de data/hora para comparação
+                const dateA = a.date || '9999-12-31'; // Atividades sem data vão pro final
+                const timeA = a.time || '00:00';
+                const dateTimeA = `${dateA} ${timeA}`;
+                
+                const dateB = b.date || '9999-12-31';
+                const timeB = b.time || '00:00';
+                const dateTimeB = `${dateB} ${timeB}`;
+                
+                // Comparação de strings funciona bem com formato ISO (YYYY-MM-DD HH:MM)
+                if (dateTimeA < dateTimeB) return -1;
+                if (dateTimeA > dateTimeB) return 1;
+                return 0;
+            });
+            
+            sortedActivities.forEach(a=>{
                 const row = document.createElement('div'); row.className='p-2 border rounded flex items-center justify-between';
                 const left = document.createElement('div');
                 const paidBadge = (a && a.paid) ? `<span class="ml-2 inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">✓ Pago</span>` : '';
@@ -17277,7 +17525,27 @@ const firebaseConfig = {
             paid += (plan.accommodations || []).reduce((s,a) => s + ((a && a.paid) ? Number(a.total || 0) : 0), 0);
             paid += (plan.activities || []).reduce((s,a) => s + ((a && a.paid) ? Number(a.price || 0) : 0), 0);
 
-            // ===== CÁLCULO DO RESTANTE COM LÓGICA MELHORADA =====
+            // ===== CÁLCULO DO BALANÇO (ORÇADO - PAGO) =====
+            const balance = estimated - paid;
+            
+            // Calcular porcentagem: se positivo = % pago do orçado, se negativo = % a mais que gastou
+            let balancePercentage = 0;
+            let balancePercentageText = '';
+            
+            if (estimated > 0) {
+                if (balance >= 0) {
+                    // Positivo: mostra quanto % foi pago dentro do orçado
+                    balancePercentage = (paid / estimated) * 100;
+                    balancePercentageText = `${balancePercentage.toFixed(1)}% do orçamento utilizado`;
+                } else {
+                    // Negativo: mostra quanto % gastou a mais
+                    const excess = Math.abs(balance);
+                    balancePercentage = (excess / estimated) * 100;
+                    balancePercentageText = `${balancePercentage.toFixed(1)}% acima do orçamento`;
+                }
+            }
+
+            // ===== CÁLCULO DO RESTANTE (MANTIDO PARA COMPATIBILIDADE) =====
             // Se o valor Realizado for maior que o Orçado, usa Realizado como base
             // Caso contrário, usa Orçado como base (comportamento padrão)
             let remaining = 0;
@@ -17322,7 +17590,7 @@ const firebaseConfig = {
             try {
                 if (typeof animateKPINumber === 'function') {
                     // animate only targets that exist (created above)
-                    ['tp-total-fuel','tp-total-rental','tp-total-transfers','tp-total-tolls','tp-kpi-costs','tp-total-trip','tp-kpi-estimated','tp-kpi-realized','tp-kpi-paid','tp-kpi-remaining'].forEach(id => {
+                    ['tp-total-fuel','tp-total-rental','tp-total-transfers','tp-total-tolls','tp-kpi-costs','tp-total-trip','tp-kpi-estimated','tp-kpi-realized','tp-kpi-paid','tp-kpi-balance'].forEach(id => {
                         const valMap = {
                             'tp-total-fuel': totFuel,
                             'tp-total-rental': totRental,
@@ -17333,7 +17601,7 @@ const firebaseConfig = {
                             'tp-kpi-estimated': estimated,
                             'tp-kpi-realized': realized,
                             'tp-kpi-paid': paid,
-                            'tp-kpi-remaining': remaining
+                            'tp-kpi-balance': balance
                         };
                         if (document.getElementById(id)) animateKPINumber(id, valMap[id]);
                     });
@@ -17344,12 +17612,61 @@ const firebaseConfig = {
                     if (document.getElementById('tp-total-tolls')) document.getElementById('tp-total-tolls').textContent = formatBR(totTolls);
                     if (q('tp-total-trip')) q('tp-total-trip').textContent = formatBR(costs);
                     if (tpSummaryCost) tpSummaryCost.textContent = formatBR(estimated);
-                    const estEl = document.getElementById('tp-kpi-estimated'); const realEl = document.getElementById('tp-kpi-realized'); const paidEl = document.getElementById('tp-kpi-paid'); const costsEl = document.getElementById('tp-kpi-costs'); const remEl = document.getElementById('tp-kpi-remaining');
+                    const estEl = document.getElementById('tp-kpi-estimated'); const realEl = document.getElementById('tp-kpi-realized'); const paidEl = document.getElementById('tp-kpi-paid'); const costsEl = document.getElementById('tp-kpi-costs'); const balanceEl = document.getElementById('tp-kpi-balance');
                     if (estEl) estEl.textContent = formatBR(estimated);
                     if (realEl) realEl.textContent = formatBR(realized);
                     if (paidEl) paidEl.textContent = formatBR(paid);
                     if (costsEl) costsEl.textContent = formatBR(costs);
-                    if (remEl) remEl.textContent = formatBR(remaining);
+                    if (balanceEl) balanceEl.textContent = formatBR(balance);
+                }
+
+                // Atualizar aparência do balanço (cor, porcentagem e barra)
+                const balanceEl = document.getElementById('tp-kpi-balance');
+                const balancePercentageEl = document.getElementById('tp-balance-percentage');
+                const balancePercentageTextEl = document.getElementById('tp-balance-percentage-text');
+                const balanceBarFillEl = document.getElementById('tp-balance-bar-fill');
+                const balanceIconEl = balancePercentageEl ? balancePercentageEl.querySelector('.material-symbols-outlined') : null;
+                
+                if (balanceEl) {
+                    // Remover classes anteriores
+                    balanceEl.classList.remove('positive', 'negative');
+                    
+                    // Adicionar classe baseada no sinal
+                    if (balance >= 0) {
+                        balanceEl.classList.add('positive');
+                        if (balancePercentageEl) balancePercentageEl.classList.remove('negative');
+                        if (balancePercentageEl) balancePercentageEl.classList.add('positive');
+                        if (balanceBarFillEl) balanceBarFillEl.classList.remove('negative');
+                        if (balanceBarFillEl) balanceBarFillEl.classList.add('positive');
+                        if (balanceIconEl) balanceIconEl.textContent = 'trending_up';
+                    } else {
+                        balanceEl.classList.add('negative');
+                        if (balancePercentageEl) balancePercentageEl.classList.remove('positive');
+                        if (balancePercentageEl) balancePercentageEl.classList.add('negative');
+                        if (balanceBarFillEl) balanceBarFillEl.classList.remove('positive');
+                        if (balanceBarFillEl) balanceBarFillEl.classList.add('negative');
+                        if (balanceIconEl) balanceIconEl.textContent = 'trending_down';
+                    }
+                }
+                
+                // Atualizar texto da porcentagem
+                if (balancePercentageTextEl) {
+                    balancePercentageTextEl.textContent = balancePercentageText;
+                }
+                
+                // Mostrar/ocultar a porcentagem se houver orçamento
+                if (balancePercentageEl) {
+                    if (estimated > 0) {
+                        balancePercentageEl.style.display = 'flex';
+                    } else {
+                        balancePercentageEl.style.display = 'none';
+                    }
+                }
+                
+                // Atualizar largura da barra de progresso (máximo 100%)
+                if (balanceBarFillEl) {
+                    const barWidth = Math.min(100, Math.abs(balancePercentage));
+                    balanceBarFillEl.style.width = `${barWidth}%`;
                 }
             } catch(e) { console.error('animate planner numbers', e); }
 

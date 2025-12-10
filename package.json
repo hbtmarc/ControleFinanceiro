@@ -1,8 +1,0 @@
-{
-  "name": "controlefinanceiro",
-  "version": "1.0.0",
-  "scripts": {
-    "test": "node tests/helpers.test.js"
-  },
-  "license": "MIT"
-}

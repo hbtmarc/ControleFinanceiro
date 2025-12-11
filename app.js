@@ -1,1907 +1,4 @@
-﻿        <style>
-        /* ===== TELA DE LOGIN ===== */
-        #loginScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 999999;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        .login-container {
-            background: white;
-            padding: 3rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 90%;
-            max-width: 400px;
-            animation: slideUp 0.5s ease;
-        }
-        
-        .login-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-        
-        .login-subtitle {
-            font-size: 0.95rem;
-            color: #6b7280;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        .login-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.75rem;
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 0.75rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-        
-        .login-btn:active {
-            transform: translateY(0);
-        }
-        
-        .login-error {
-            color: #dc2626;
-            font-size: 0.9rem;
-            margin-top: -1rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            display: none;
-            animation: shake 0.4s ease;
-        }
-        
-        .login-error.show {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-        
-        #mainApp {
-            display: none;
-        }
-        
-        #mainApp.authenticated {
-            display: block;
-        }
-        /* ===== FIM DA TELA DE LOGIN ===== */
-        
-        /* ===== BARRAS DE ROLAGEM PERSONALIZADAS ===== */
-        /* Estilização global para todas as barras de rolagem */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 #f1f5f9;
-        }
-        
-        /* Webkit browsers (Chrome, Safari, Edge) */
-        *::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        *::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-        
-        *::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
-            border-radius: 10px;
-            border: 2px solid #f1f5f9;
-            transition: all 0.3s ease;
-        }
-        
-        *::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
-            border-color: #e2e8f0;
-        }
-        
-        *::-webkit-scrollbar-thumb:active {
-            background: linear-gradient(180deg, #64748b 0%, #475569 100%);
-        }
-        
-        /* Barras de rolagem para modais e dialogs */
-        dialog::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-        dialog::-webkit-scrollbar-track {
-            background: #f8fafc;
-            border-radius: 10px;
-        }
-        
-        dialog::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-            border-radius: 10px;
-            border: 2px solid #f8fafc;
-        }
-        
-        dialog::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
-        }
-        
-        /* Barras de rolagem para tabelas */
-        .overflow-x-auto::-webkit-scrollbar,
-        .overflow-y-auto::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        
-        .overflow-x-auto::-webkit-scrollbar-thumb,
-        .overflow-y-auto::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
-            border-radius: 6px;
-        }
-        
-        .overflow-x-auto::-webkit-scrollbar-thumb:hover,
-        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #059669 0%, #047857 100%);
-        }
-        /* ===== FIM DAS BARRAS DE ROLAGEM ===== */
-        
-        /* Animação de foco nos inputs */
-        .modal-group input:focus, .modal-group select:focus {
-            box-shadow: 0 0 0 2px #2563eb44;
-            transition: box-shadow 0.2s;
-        }
-        /* Botão de ação destacado */
-        .modal-action-btn {
-            color: #fff;
-            font-weight: 600;
-            border-radius: 0.75rem;
-            box-shadow: 0 2px 8px #2563eb22;
-            padding: 0.75rem 2.5rem;
-            font-size: 1.15rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.2s, box-shadow 0.2s;
-            background-color: #e5e7eb;
-            opacity: 1;
-        }
-        /* Deterministic save button type classes */
-        .modal-action-btn.save-type-expenses {
-            background-color: #dc2626 !important; /* red */
-            border: 2px solid #b91c1c !important;
-            box-shadow: 0 2px 10px #dc262644 !important;
-            color: #fff !important;
-        }
-        .modal-action-btn.save-type-incomes {
-            background-color: #16a34a !important; /* green */
-            border: 2px solid #15803d !important;
-            box-shadow: 0 2px 10px #16a34a44 !important;
-            color: #fff !important;
-        }
-        .modal-action-btn.save-type-reserve {
-            background-color: #eab308 !important; /* yellow */
-            border: 2px solid #d6a013 !important;
-            box-shadow: 0 2px 10px #eab30844 !important;
-            color: #111827 !important;
-        }
-        /* Keep colors when disabled */
-        .modal-action-btn.save-type-expenses:disabled,
-        .modal-action-btn.save-type-expenses[disabled] {
-            background-color: #dc2626 !important;
-            border-color: #b91c1c !important;
-            box-shadow: 0 2px 10px #dc262644 !important;
-            color: #fff !important;
-            opacity: 1 !important;
-        }
-        .modal-action-btn.save-type-incomes:disabled,
-        .modal-action-btn.save-type-incomes[disabled] {
-            background-color: #16a34a !important;
-            border-color: #15803d !important;
-            box-shadow: 0 2px 10px #16a34a44 !important;
-            color: #fff !important;
-            opacity: 1 !important;
-        }
-        .modal-action-btn.save-type-reserve:disabled,
-        .modal-action-btn.save-type-reserve[disabled] {
-            background-color: #eab308 !important;
-            border-color: #d6a013 !important;
-            box-shadow: 0 2px 10px #eab30844 !important;
-            color: #111827 !important;
-            opacity: 1 !important;
-        }
-
-        /* ID-specific rules with higher specificity to override other styles */
-        #modal-save-btn.save-type-expenses,
-        #modal-save-btn.save-type-expenses[disabled] {
-            background-color: #dc2626 !important;
-            border-color: #b91c1c !important;
-            box-shadow: 0 2px 10px #dc262644 !important;
-            color: #fff !important;
-            opacity: 1 !important;
-        }
-        #modal-save-btn.save-type-incomes,
-        #modal-save-btn.save-type-incomes[disabled] {
-            background-color: #16a34a !important;
-            border-color: #15803d !important;
-            box-shadow: 0 2px 10px #16a34a44 !important;
-            color: #fff !important;
-            opacity: 1 !important;
-        }
-        #modal-save-btn.save-type-reserve,
-        #modal-save-btn.save-type-reserve[disabled] {
-            background-color: #eab308 !important;
-            border-color: #d6a013 !important;
-            box-shadow: 0 2px 10px #eab30844 !important;
-            color: #111827 !important;
-            opacity: 1 !important;
-        }
-        /* Force native appearance off and clip background to avoid gradient leaks */
-        #modal-save-btn {
-            -webkit-appearance: none !important;
-            appearance: none !important;
-            background-clip: padding-box !important;
-            -webkit-background-clip: padding-box !important;
-        }
-        .modal-action-btn:disabled {
-            cursor: not-allowed;
-        }
-        .modal-action-btn:hover {
-            box-shadow: 0 4px 16px #2563eb33;
-            filter: brightness(0.95);
-        }
-        /* Tooltip */
-        .modal-tooltip {
-            position: relative;
-            cursor: help;
-        }
-        .modal-tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            left: 50%;
-            top: 110%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: #fff;
-            padding: 0.3em 0.7em;
-            border-radius: 0.5em;
-            font-size: 0.85em;
-            white-space: nowrap;
-            z-index: 10;
-        }
-        /* Transaction modal spacing adjustments for a more airy layout */
-    #transaction-modal .modal-title-row { padding: 0.5rem 0.75rem; }
-    /* Increased bottom padding so the save button fits inside the modal without overlapping content */
-    #transaction-modal form { padding: 0.5rem 0.75rem 3.5rem 0.75rem; }
-        #transaction-modal .modal-group { padding: 0.9rem; }
-        #transaction-modal .flex.justify-end { padding: 0.75rem 0.5rem 0 0; }
-        @media (max-width: 639px) {
-            /* On narrow screens keep modal full-bleed and allow page scrolling instead of inner scroll */
-            #transaction-modal { width: 100vw !important; left: 0 !important; right: 0 !important; max-width: 100vw !important; border-radius: 0.75rem !important; }
-            #transaction-modal { padding: 1rem !important; }
-            #transaction-modal .modal-group { padding: 0.75rem !important; }
-        }
-        /* Select icon helper: leaves space and positions an icon inside select */
-        .select-with-icon { position: relative; }
-        .select-with-icon .select-icon {
-            position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 1.05rem; opacity: 0.95;
-        }
-        /* Custom icon-enabled select (replaces native dropdown visually but keeps native select hidden for form semantics) */
-        .icon-select { position: relative; display: inline-block; width: 100%; }
-        .icon-select-button {
-            display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left; padding: .5rem .75rem; border: 1px solid #e5e7eb; background: white; border-radius: .5rem; cursor: pointer;
-        }
-        .icon-select-button .material-symbols-outlined { font-size: 18px; margin-right: 6px; color: #6b7280; }
-        .icon-select-list { position: absolute; left: 0; right: 0; z-index: 50; background: white; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 6px 18px rgba(2,6,23,0.08); border-radius: 8px; margin-top: 6px; max-height: 260px; overflow: auto; }
-        .icon-select-list.hidden { display: none; }
-        .icon-select-item { display:flex; align-items:center; gap:0.5rem; padding: 0.55rem .75rem; cursor: pointer; }
-        .icon-select-item:hover { background: #f8fafc; }
-        .icon-select-item .material-symbols-outlined { font-size: 18px; color: #6b7280; }
-        /* Entradas table specific styling: keep rows single-line and prevent action icons from wrapping */
-        #income-table td, #income-table th {
-            white-space: nowrap;
-            vertical-align: middle;
-        }
-        /* Make first column (description) truncate with ellipsis and take remaining space */
-        #income-table td:first-child { 
-            min-width: 0; 
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        /* Make value column (second column) display full values without truncation */
-        #income-table td:nth-child(2), #income-table th:nth-child(2) {
-            overflow: visible;
-            text-overflow: clip;
-            white-space: nowrap;
-            text-align: right;
-            font-weight: 600;
-        }
-    /* Keep actions cell compact and keep icons on one line; width adjusted so both icons fit */
-    #income-table td:last-child, #income-table th:last-child { 
-        width: 80px; 
-        text-align: right;
-        padding-right: 8px !important;
-    }
-    /* Ensure actions cell content is not truncated with ellipsis */
-    #income-table td.actions-cell, #income-table th.actions-cell { 
-        overflow: visible; 
-        text-overflow: clip; 
-        white-space: nowrap;
-        display: flex !important;
-        justify-content: flex-end !important;
-        align-items: center !important;
-        gap: 2px !important;
-        padding-right: 8px !important;
-    }
-    #income-table td.actions-cell .edit-btn, #income-table td.actions-cell .delete-btn, #income-table td.actions-cell button { 
-        display: inline-flex !important; 
-        align-items: center !important; 
-        justify-content: center !important; 
-        padding: 0.25rem !important;
-        width: 32px !important;
-        height: 32px !important;
-        margin: 0 !important;
-    }
-    
-    /* Estilos consistentes para todas as outras tabelas - Despesas e Poupanças */
-    .modern-table td.actions-cell, .modern-table th.actions-cell,
-    #expenses-table td.actions-cell, #expenses-table th.actions-cell,
-    #savings-table td.actions-cell, #savings-table th.actions-cell { 
-        display: flex !important;
-        justify-content: flex-end !important;
-        align-items: center !important;
-        gap: 2px !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
-        white-space: nowrap !important;
-        padding-right: 8px !important;
-    }
-    
-    .modern-table td.actions-cell .edit-btn, .modern-table td.actions-cell .delete-btn, .modern-table td.actions-cell button,
-    #expenses-table td.actions-cell .edit-btn, #expenses-table td.actions-cell .delete-btn, #expenses-table td.actions-cell button,
-    #savings-table td.actions-cell .edit-btn, #savings-table td.actions-cell .delete-btn, #savings-table td.actions-cell button { 
-        display: inline-flex !important; 
-        align-items: center !important; 
-        justify-content: center !important; 
-        padding: 0.25rem !important;
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 4px !important;
-        transition: all 0.2s ease !important;
-        margin: 0 !important;
-    }
-    
-    /* Ajuste especí­fico para a coluna de AÇÕES na tabela de despesas */
-    #expenses-table td:last-child, #expenses-table th:last-child {
-        width: 80px;
-        text-align: right;
-        padding-right: 8px !important;
-    }
-    
-    /* Toast sempre acima de tudo - z-index má¡ximo */
-    #toast {
-        z-index: 2147483647 !important;
-        position: fixed !important;
-    }
-    
-    /* Estilos baseados em classes JavaScript de detecção mobile */
-    .is-touch button:hover,
-    .is-touch .btn:hover {
-        /* Remove efeitos hover em dispositivos touch para melhor performance */
-        background-color: inherit;
-    }
-    
-    .is-mobile {
-        /* Ajustes globais para mobile */
-        font-size: 16px; /* Previne zoom no iOS */
-    }
-    
-    .is-smartphone dialog {
-        /* Modais em tela cheia em smartphones */
-        border-radius: 0 !important;
-    }
-    
-    /* Altura do viewport corrigida para iOS */
-    .is-mobile dialog,
-    .is-mobile .modal {
-        max-height: calc(var(--vh, 1vh) * 100) !important;
-    }
-        </style>
-        <style>
-        /* Modal mobile layout fixes: ensure modal content stacks and buttons fit on small screens */
-        @media (max-width: 639px) {
-            #transaction-modal { padding: 0.75rem !important; border-radius: 0.75rem !important; }
-            #transaction-modal .modal-group { padding: 0.6rem !important; }
-            #transaction-modal form { max-width: 100% !important; padding: 0.6rem !important; }
-            /* Stack the modal-type toggles horizontally in small buttons to save space */
-            .modal-type-toggle { padding: 0.5rem !important; gap: 6px !important; }
-            .modal-type-toggle span.text-sm { font-size: 0.85rem !important; }
-            /* Make inputs full width and avoid extra right padding that pushed elements off-screen */
-            #transaction-modal input, #transaction-modal select, #transaction-modal textarea { width: 100% !important; box-sizing: border-box !important; }
-            /* Ensure advanced option checkboxes layout in column for narrow screens */
-            #advanced-options .flex { flex-direction: column !important; }
-            /* Make save button full-width and pinned at bottom with comfortable margin */
-            #transaction-modal .modal-footer { position: sticky; bottom: 0; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1)); padding-top: 0.75rem; margin-top: 0.5rem; }
-            #modal-save-btn { width: 100% !important; display: inline-flex; justify-content: center; }
-            /* Reduce card shadows and borders to keep content readable on tiny screens */
-            #transaction-modal .card { box-shadow: none !important; border: none !important; }
-        }
-        /* Visible focus ring improvements for keyboard users */
-        #transaction-modal :focus { outline: 3px solid rgba(59,130,246,0.25); outline-offset: 2px; }
-        /* Make inputs inside installments/financing cards cleaner by removing extra bottom borders */
-        #installments-section .bg-white input, #installments-section .bg-white select, #installments-section .bg-white textarea {
-            border-bottom: none !important;
-        }
-        /* Show both cards but low-opacity by default; when .active is set, make them fully opaque */
-        #installments-fields, #financing-fields {
-            opacity: 0.1;
-            transition: opacity 160ms ease-in-out, box-shadow 160ms ease-in-out;
-            pointer-events: none; /* prevent interaction when not active */
-        }
-        #installments-fields.active, #financing-fields.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        /* Make placeholder / input text inside the small cards low-opacity until user types */
-        #installments-fields input, #financing-fields input {
-            color: rgba(17,24,39,0.10); /* very light text for placeholders/initial state */
-            transition: color 120ms ease;
-        }
-        #installments-fields input::placeholder, #financing-fields input::placeholder {
-            color: rgba(17,24,39,0.12);
-            opacity: 1; /* use explicit color above */
-        }
-        /* If the input has a value (placeholder not shown) show full opacity text */
-        #installments-fields input:not(:placeholder-shown), #financing-fields input:not(:placeholder-shown) {
-            color: #111827;
-        }
-        /* Fallback when :placeholder-shown isn't available: use .has-value class toggled by JS */
-        #installments-fields input.has-value, #financing-fields input.has-value { color: #111827 !important; }
-        /* Animated show/hide for advanced option rows (tighter spacing) */
-        #advanced-options .option-row {
-            overflow: hidden;
-            transition: opacity 220ms cubic-bezier(.22,.9,.25,1), max-height 260ms cubic-bezier(.22,.9,.25,1), margin 180ms ease, padding 180ms ease, transform 220ms ease;
-            opacity: 1;
-            max-height: 56px; /* enough to contain a label */
-            margin: 0.25rem 0; /* tighter spacing */
-            padding: 0.25rem 0.15rem;
-            display: block;
-            transform: translateY(0);
-            background: transparent !important;
-        }
-        #advanced-options .option-row.option-collapsed {
-            opacity: 0;
-            max-height: 0 !important;
-            margin: 0 !important;
-            padding-top: 0 !important; padding-bottom: 0 !important;
-            pointer-events: none;
-            transform: translateY(-4px);
-        }
-        /* Ensure label inside option-row has no border/shadow and is vertically centered */
-        #advanced-options .option-row label {
-            display: flex; align-items: center; gap: 0.45rem; width: 100%; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0.1rem 0.4rem;
-            line-height: 1.15;
-        }
-        #advanced-options .option-row label span.ml-2 { line-height: 1.15; }
-        /* Avoid accidental underlines or after pseudo-elements affecting option rows */
-        #advanced-options .option-row label::after, #advanced-options .option-row label::before { content: none !important; }
-        /* Reduce the gap used by the flex column container inside advanced options */
-        #advanced-options .flex.flex-col.gap-2 { gap: 0.35rem !important; }
-
-        /* ===== SISTEMA DE DESIGN MODERNO - UX/UI COMPLETO ===== */
-        
-        /* Variá¡veis CSS para consistência do design */
-        :root {
-            /* Cores principais */
-            --primary-50: #eff6ff;
-            --primary-100: #dbeafe;
-            --primary-500: #3b82f6;
-            --primary-600: #2563eb;
-            --primary-700: #1d4ed8;
-            
-            /* Cores semânticas melhoradas */
-            --success-50: #f0fdf4;
-            --success-100: #dcfce7;
-            --success-500: #22c55e;
-            --success-600: #16a34a;
-            --success-700: #15803d;
-            
-            --warning-50: #fffbeb;
-            --warning-100: #fef3c7;
-            --warning-500: #f59e0b;
-            --warning-600: #d97706;
-            
-            --error-50: #fef2f2;
-            --error-100: #fee2e2;
-            --error-500: #ef4444;
-            --error-600: #dc2626;
-            
-            /* Cores neutras */
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-            
-            /* Sombras modernas */
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            
-            /* Raios de borda */
-            --radius-sm: 0.375rem;
-            --radius-md: 0.5rem;
-            --radius-lg: 0.75rem;
-            --radius-xl: 1rem;
-            
-            /* Espaçamentos */
-            --spacing-xs: 0.25rem;
-            --spacing-sm: 0.5rem;
-            --spacing-md: 1rem;
-            --spacing-lg: 1.5rem;
-            --spacing-xl: 2rem;
-            
-            /* TransiçÕES */
-            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* ===== CARDS MODERNOS ===== */
-        .modern-card {
-            background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
-            border: 1px solid var(--gray-200);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            transition: all var(--transition-normal);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .modern-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
-            transform: translateX(-100%);
-            transition: transform var(--transition-normal);
-        }
-
-        .modern-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--gray-300);
-        }
-
-        .modern-card:hover::before {
-            transform: translateX(0);
-        }
-
-        /* KPI Cards melhorados */
-        .kpi-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid var(--gray-200);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
-            transition: all var(--transition-normal);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .kpi-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(45deg, var(--primary-100), var(--primary-50));
-            border-radius: 50%;
-            transform: translate(30px, -30px);
-            opacity: 0.6;
-        }
-
-        .kpi-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary-300);
-        }
-
-        .kpi-card .kpi-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--gray-600);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .kpi-card .kpi-value {
-            font-size: 1.875rem;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: var(--spacing-xs);
-            position: relative;
-            z-index: 1;
-            transition: filter 0.3s ease;
-        }
-
-        .kpi-card .kpi-value.blurred {
-            filter: blur(8px);
-            user-select: none;
-        }
-
-        .kpi-card .kpi-trend {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        /* Cores especí­ficas dos KPIs */
-        .kpi-income {
-            border-left: 4px solid var(--success-500);
-        }
-
-        .kpi-income .kpi-value {
-            color: var(--success-600);
-        }
-
-        .kpi-income::after {
-            background: linear-gradient(45deg, var(--success-100), var(--success-50));
-        }
-
-        .kpi-expenses {
-            border-left: 4px solid var(--error-500);
-        }
-
-        .kpi-expenses .kpi-value {
-            color: var(--error-600);
-        }
-
-        .kpi-expenses::after {
-            background: linear-gradient(45deg, var(--error-100), var(--error-50));
-        }
-
-        .kpi-savings {
-            border-left: 4px solid var(--primary-500);
-        }
-
-        .kpi-savings .kpi-value {
-            color: var(--primary-600);
-        }
-
-        .kpi-savings::after {
-            background: linear-gradient(45deg, var(--primary-100), var(--primary-50));
-        }
-
-        .kpi-balance {
-            border-left: 4px solid var(--gray-500);
-        }
-
-        .kpi-balance .kpi-value {
-            color: var(--gray-700);
-        }
-
-        .kpi-balance::after {
-            background: linear-gradient(45deg, var(--gray-100), var(--gray-50));
-        }
-
-        /* ===== TABELAS MODERNAS ===== */
-        .modern-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: white;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .modern-table thead {
-            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
-        }
-
-        .modern-table th {
-            padding: var(--spacing-md) var(--spacing-lg);
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--gray-700);
-            text-align: left;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .modern-table td {
-            padding: var(--spacing-md) var(--spacing-lg);
-            border-bottom: 1px solid var(--gray-100);
-            vertical-align: middle;
-            transition: background-color var(--transition-fast);
-        }
-
-        .modern-table tbody tr:hover {
-            background-color: var(--gray-50);
-        }
-
-        .modern-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* ===== botões MODERNOS ===== */
-        .modern-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            padding: var(--spacing-sm) var(--spacing-md);
-            font-weight: 600;
-            font-size: 0.875rem;
-            border-radius: var(--radius-md);
-            border: 1px solid transparent;
-            transition: all var(--transition-fast);
-            cursor: pointer;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .modern-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transform: translateX(-100%);
-            transition: transform var(--transition-normal);
-        }
-
-        .modern-btn:hover::before {
-            transform: translateX(100%);
-        }
-
-        .modern-btn-primary {
-            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-            color: white;
-            box-shadow: var(--shadow-md);
-        }
-
-        .modern-btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .modern-btn-secondary {
-            background: var(--gray-100);
-            color: var(--gray-700);
-            border-color: var(--gray-300);
-        }
-
-        .modern-btn-secondary:hover {
-            background: var(--gray-200);
-            border-color: var(--gray-400);
-            transform: translateY(-1px);
-        }
-
-        .modern-btn-success {
-            background: linear-gradient(135deg, var(--success-500), var(--success-600));
-            color: white;
-            box-shadow: var(--shadow-md);
-        }
-
-        .modern-btn-success:hover {
-            background: linear-gradient(135deg, var(--success-600), var(--success-700));
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .modern-btn-danger {
-            background: linear-gradient(135deg, var(--error-500), var(--error-600));
-            color: white;
-            box-shadow: var(--shadow-md);
-        }
-
-        .modern-btn-danger:hover {
-            background: linear-gradient(135deg, var(--error-600), #b91c1c);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* ===== INPUTS MODERNOS ===== */
-        .modern-input {
-            width: 100%;
-            padding: var(--spacing-md);
-            border: 2px solid var(--gray-200);
-            border-radius: var(--radius-md);
-            font-size: 0.875rem;
-            transition: all var(--transition-fast);
-            background: white;
-            color: var(--gray-800);
-        }
-
-        .modern-input:focus {
-            outline: none;
-            border-color: var(--primary-500);
-            box-shadow: 0 0 0 3px var(--primary-100);
-        }
-
-        .modern-input::placeholder {
-            color: var(--gray-400);
-        }
-
-        .modern-input-group {
-            position: relative;
-        }
-
-        .modern-input-icon {
-            position: absolute;
-            left: var(--spacing-md);
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray-400);
-            pointer-events: none;
-        }
-
-        .modern-input-group .modern-input {
-            padding-left: 2.5rem;
-        }
-
-        /* ===== BADGES E INDICATORS ===== */
-        .modern-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--spacing-xs);
-            padding: var(--spacing-xs) var(--spacing-sm);
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: var(--radius-sm);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .modern-badge-success {
-            background: var(--success-100);
-            color: var(--success-700);
-        }
-
-        .modern-badge-warning {
-            background: var(--warning-100);
-            color: var(--warning-700);
-        }
-
-        .modern-badge-error {
-            background: var(--error-100);
-            color: var(--error-700);
-        }
-
-        .modern-badge-info {
-            background: var(--primary-100);
-            color: var(--primary-700);
-        }
-
-        /* ===== ANIMAÇÕES GLOBAIS ===== */
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .animate-slide-up {
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .animate-scale-in {
-            animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* ===== RESPONSIVIDADE APRIMORADA ===== */
-        @media (max-width: 640px) {
-            .kpi-card {
-                padding: var(--spacing-md);
-            }
-            
-            .kpi-card .kpi-value {
-                font-size: 1.5rem;
-            }
-            
-            .modern-table th,
-            .modern-table td {
-                padding: var(--spacing-sm) var(--spacing-md);
-                font-size: 0.8rem;
-            }
-            
-            .modern-btn {
-                padding: var(--spacing-sm);
-                font-size: 0.8rem;
-            }
-        }
-
-        /* ===== GRíFICOS E VISUALIZAí‡í•ES MODERNOS ===== */
-        .modern-chart-container {
-            background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
-            border: 1px solid var(--gray-200);
-            border-radius: var(--radius-xl);
-            padding: var(--spacing-lg);
-            box-shadow: var(--shadow-md);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .modern-chart-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-500), var(--success-500), var(--warning-500));
-        }
-
-        .modern-chart-header {
-            display: flex;
-            align-items: center;
-            justify-content: between;
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .modern-chart-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--gray-800);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-
-        .modern-chart-subtitle {
-            font-size: 0.875rem;
-            color: var(--gray-500);
-            margin-top: 0.25rem;
-        }
-
-        .chart-canvas-wrapper {
-            position: relative;
-            padding: var(--spacing-md);
-            background: white;
-            border-radius: var(--radius-lg);
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        /* ===== MICROINTERAí‡í•ES E ANIMAí‡í•ES ===== */
-        .loading-shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-
-        .pulse-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        .success-pulse { background-color: var(--success-500); }
-        .error-pulse { background-color: var(--error-500); }
-        .warning-pulse { background-color: var(--warning-500); }
-
-        /* Feedback visual para AÇÕES do usuá¡rio */
-        .success-feedback {
-            background: var(--success-50);
-            border: 1px solid var(--success-200);
-            color: var(--success-800);
-            padding: var(--spacing-md);
-            border-radius: var(--radius-md);
-            animation: slideUp 0.3s ease-out;
-        }
-
-        .error-feedback {
-            background: var(--error-50);
-            border: 1px solid var(--error-200);
-            color: var(--error-800);
-            padding: var(--spacing-md);
-            border-radius: var(--radius-md);
-            animation: slideUp 0.3s ease-out;
-        }
-
-        /* ===== NAVEGAí‡íƒO MOBILE APRIMORADA ===== */
-        .modern-fab {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-            border: none;
-            border-radius: 50%;
-            box-shadow: var(--shadow-xl);
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            z-index: 1000;
-            transition: all var(--transition-normal);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modern-fab:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 25px -8px var(--primary-500);
-        }
-
-        .modern-fab:active {
-            transform: translateY(0) scale(0.95);
-        }
-
-        .modern-bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-            border-top: 1px solid var(--gray-200);
-            padding: var(--spacing-sm) var(--spacing-md);
-            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-        }
-
-        .modern-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25rem;
-            padding: var(--spacing-sm);
-            border-radius: var(--radius-md);
-            transition: all var(--transition-fast);
-            text-decoration: none;
-            color: var(--gray-600);
-        }
-
-        .modern-nav-item:hover,
-        .modern-nav-item.active {
-            background: var(--primary-50);
-            color: var(--primary-600);
-            transform: translateY(-1px);
-        }
-
-        .modern-nav-item .material-symbols-outlined {
-            font-size: 1.25rem;
-        }
-
-        .modern-nav-item span {
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        /* ===== ACESSIBILIDADE APRIMORADA ===== */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
-        .focus-visible:focus {
-            outline: 2px solid var(--primary-500);
-            outline-offset: 2px;
-        }
-
-        /* Estados de loading melhorados */
-        .loading-state {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--spacing-sm);
-            padding: var(--spacing-xl);
-            color: var(--gray-500);
-        }
-
-        .loading-spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--gray-200);
-            border-top: 2px solid var(--primary-500);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* ===== RESPONSIVIDADE GLOBAL MELHORADA ===== */
-        @media (max-width: 1024px) {
-            .modern-card {
-                padding: var(--spacing-md);
-            }
-            
-            .kpi-card {
-                padding: var(--spacing-md);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .modern-chart-container {
-                padding: var(--spacing-md);
-            }
-            
-            .modern-chart-title {
-                font-size: 1rem;
-            }
-            
-            .modern-fab {
-                bottom: 5rem;
-                right: 1rem;
-                width: 56px;
-                height: 56px;
-            }
-        }
-
-        @media (max-width: 640px) {
-            :root {
-                --spacing-xs: 0.125rem;
-                --spacing-sm: 0.375rem;
-                --spacing-md: 0.75rem;
-                --spacing-lg: 1rem;
-                --spacing-xl: 1.25rem;
-            }
-            
-            .modern-card {
-                border-radius: var(--radius-lg);
-                margin: var(--spacing-xs);
-            }
-            
-            .kpi-card {
-                padding: var(--spacing-sm);
-            }
-            
-            .kpi-card .kpi-value {
-                font-size: 1.5rem;
-            }
-        }
-
-        /* ===== ESTILOS PARA DISPOSITIVOS TOUCH ===== */
-        .touch-device .modern-btn.touch-hover,
-        .touch-device .kpi-card.touch-hover,
-        .touch-device .modern-card.touch-hover {
-            transform: translateY(-1px) scale(1.02);
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* ===== MELHORIAS DE PERFORMANCE MOBILE ===== */
-        .mobile-device .animate-slide-up,
-        .mobile-device .animate-fade-in,
-        .mobile-device .animate-scale-in {
-            animation-duration: 0.3s;
-        }
-
-        .mobile-device .modern-btn::before,
-        .mobile-device .kpi-card::after {
-            display: none; /* Remove animAÇÕES complexas em mobile */
-        }
-
-        /* ===== ESTADOS DE FOCO MELHORADOS ===== */
-        .modern-btn:focus-visible,
-        .kpi-card:focus-visible,
-        .modern-card:focus-visible {
-            outline: 2px solid var(--primary-500);
-            outline-offset: 2px;
-            box-shadow: 0 0 0 4px var(--primary-100);
-        }
-
-        /* ===== SKELETON LOADING ===== */
-        .loading-shimmer {
-            background: linear-gradient(90deg, 
-                var(--gray-200) 25%, 
-                var(--gray-100) 50%, 
-                var(--gray-200) 75%
-            );
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: var(--radius-sm);
-        }
-        </style>
-        <style>
-        /* Salary breakdown tooltip card */
-        .salary-tooltip {
-            position: absolute;
-            z-index: 99999;
-            min-width: 260px;
-            max-width: 360px;
-            background: linear-gradient(180deg, #ffffff, #fbfdff);
-            border: 1px solid rgba(16,24,40,0.06);
-            box-shadow: 0 10px 30px rgba(2,6,23,0.12);
-            border-radius: 12px;
-            padding: 12px 14px;
-            color: #0f172a;
-            display: none;
-            font-size: 0.95rem;
-        }
-        .salary-tooltip h4 { margin: 0 0 6px 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; }
-        .salary-tooltip .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
-        .salary-tooltip .label { color: #6b7280; font-weight: 600; }
-        .salary-tooltip .value { font-weight: 700; }
-        .salary-tooltip .value.negative { color: #dc2626; }
-        .salary-tooltip .value.positive { color: #16a34a; }
-        .salary-tooltip .divider { height: 1px; background: rgba(0,0,0,0.04); margin: 8px 0; border-radius: 1px; }
-        .salary-tooltip .summary { display:flex; align-items:center; gap:8px; }
-        
-        /* ===== MOBILE OTIMIZADO - CENTRALIZADO E SEM SOBREPOSIí‡íƒO ===== */
-        
-        @media (max-width: 768px) {
-            /* Reset bá¡sico para mobile */
-            * {
-                box-sizing: border-box !important;
-            }
-            
-            html, body {
-                overflow-x: hidden !important;
-                width: 100% !important;
-                max-width: 100vw !important;
-            }
-            
-            body {
-                padding: 0 !important;
-                margin: 0 !important;
-                padding-bottom: 70px !important;
-            }
-            
-            /* Container principal centralizado */
-            body > div,
-            #app,
-            main,
-            .container {
-                width: 100% !important;
-                max-width: 100vw !important;
-                padding: 0.75rem !important;
-                margin: 0 auto !important;
-                overflow-x: hidden !important;
-            }
-            
-            /* Modais centralizados e responsivos */
-            dialog {
-                position: fixed !important;
-                width: 90vw !important;
-                max-width: 90vw !important;
-                max-height: 85vh !important;
-                padding: 1rem !important;
-                border-radius: 0.75rem !important;
-                overflow-y: auto !important;
-                left: 50% !important;
-                top: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                margin: 0 !important;
-                box-sizing: border-box !important;
-            }
-            
-            /* Cards perfeitamente centralizados */
-            .card,
-            .modern-card {
-                width: calc(100% - 1.5rem) !important;
-                max-width: calc(100% - 1.5rem) !important;
-                padding: 1rem !important;
-                margin: 0 auto 1rem auto !important;
-                overflow: hidden !important;
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-                box-sizing: border-box !important;
-            }
-            
-            /* Headers de cards sem sobreposição */
-            .modern-card h2,
-            .card h2 {
-                font-size: 1.125rem !important;
-                margin-bottom: 0.75rem !important;
-                line-height: 1.4 !important;
-                word-wrap: break-word !important;
-            }
-            
-            /* Conteúdo de cards centralizado */
-            .modern-card > *,
-            .card > * {
-                max-width: 100% !important;
-                margin-left: auto !important;
-                margin-right: auto !important;
-            }
-            
-            /* Flex items sem sobreposição */
-            .flex {
-                flex-wrap: wrap !important;
-                gap: 0.5rem !important;
-                max-width: 100% !important;
-            }
-            
-            .flex > * {
-                min-width: 0 !important;
-                flex-shrink: 1 !important;
-            }
-            
-            /* Grid centralizado */
-            .grid {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 1rem !important;
-                align-items: center !important;
-                width: 100% !important;
-            }
-            
-            .grid > * {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            
-            /* KPI Cards perfeitamente centralizados */
-            [class*="kpi"],
-            .kpi-card {
-                width: calc(100% - 1.5rem) !important;
-                max-width: calc(100% - 1.5rem) !important;
-                margin: 0 auto 0.75rem auto !important;
-                padding: 1rem !important;
-                text-align: center !important;
-                box-sizing: border-box !important;
-            }
-            
-            /* KPI VR/VT cards especí­ficos */
-            #kpi-vr-card,
-            #kpi-vt-card {
-                width: calc(100% - 1.5rem) !important;
-                max-width: calc(100% - 1.5rem) !important;
-                margin: 0 auto 0.75rem auto !important;
-                padding: 0.75rem !important;
-                box-sizing: border-box !important;
-            }
-            
-            #kpi-vr-card .flex,
-            #kpi-vt-card .flex {
-                flex-wrap: nowrap !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-                gap: 0.5rem !important;
-            }
-            
-            #kpi-vr-card h4,
-            #kpi-vt-card h4 {
-                font-size: 0.75rem !important;
-                text-align: left !important;
-                margin: 0 !important;
-            }
-            
-            #kpi-vr-values,
-            #kpi-vt-values {
-                font-size: 0.875rem !important;
-                text-align: right !important;
-                white-space: nowrap !important;
-            }
-            
-            #kpi-vr-card .mt-2,
-            #kpi-vt-card .mt-2 {
-                margin-top: 0.5rem !important;
-                width: 100% !important;
-            }
-            
-            #kpi-vr-progress,
-            #kpi-vt-progress {
-                min-width: 0 !important;
-                max-width: 100% !important;
-            }
-            
-            #kpi-vr-bar-text,
-            #kpi-vt-bar-text {
-                font-size: 0.625rem !important;
-                white-space: nowrap !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-            }
-            
-            /* Tí­tulos legí­veis e centralizados */
-            h1 { 
-                font-size: 1.5rem !important;
-                text-align: center !important;
-                margin: 0.5rem auto !important;
-            }
-            h2 { 
-                font-size: 1.25rem !important;
-                line-height: 1.4 !important;
-            }
-            h3 { 
-                font-size: 1.1rem !important;
-                line-height: 1.4 !important;
-            }
-            
-            /* Inputs e botões funcionais */
-            input:not([type="checkbox"]):not([type="radio"]),
-            select,
-            textarea {
-                width: 100% !important;
-                max-width: 100% !important;
-                padding: 0.75rem !important;
-                font-size: 16px !important;
-                min-height: 44px !important;
-                box-sizing: border-box !important;
-            }
-            
-            button,
-            .btn,
-            .modern-btn {
-                padding: 0.75rem 1rem !important;
-                min-height: 44px !important;
-                font-size: 1rem !important;
-                white-space: nowrap !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-            }
-            
-            /* Checkboxes normais */
-            input[type="checkbox"] {
-                width: 20px !important;
-                height: 20px !important;
-                min-width: 20px !important;
-                min-height: 20px !important;
-                flex-shrink: 0 !important;
-            }
-            
-            /* Tabelas scrollá¡veis e legí­veis */
-            .overflow-x-auto {
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-            }
-            
-            table {
-                min-width: 100% !important;
-                table-layout: auto !important;
-                font-size: 0.875rem !important;
-                margin: 0 auto !important;
-            }
-            
-            table colgroup {
-                display: none !important;
-            }
-            
-            table th {
-                padding: 0.75rem 0.5rem !important;
-                font-size: 0.875rem !important;
-                white-space: normal !important;
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-                vertical-align: middle !important;
-                text-align: center !important;
-            }
-            
-            table td {
-                padding: 0.75rem 0.5rem !important;
-                font-size: 0.875rem !important;
-                white-space: normal !important;
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-                vertical-align: top !important;
-                text-align: left !important;
-            }
-            
-            table th:first-child,
-            table td:first-child {
-                min-width: 30px !important;
-                width: 30px !important;
-                text-align: center !important;
-            }
-            
-            table th:nth-child(2),
-            table td:nth-child(2) {
-                min-width: 150px !important;
-            }
-            
-            table th:last-child,
-            table td:last-child {
-                min-width: 80px !important;
-                width: 80px !important;
-                text-align: center !important;
-            }
-            
-            #income-table th:nth-child(1),
-            #income-table td:nth-child(1) {
-                min-width: 200px !important;
-            }
-            
-            #income-table th:nth-child(2),
-            #income-table td:nth-child(2) {
-                min-width: 120px !important;
-                text-align: right !important;
-                font-weight: 600 !important;
-            }
-            
-            /* Credit Cards Container */
-            #credit-cards-container {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 1rem !important;
-                padding: 0 !important;
-            }
-            
-            #credit-cards-container > div {
-                width: 100% !important;
-                max-width: 100% !important;
-                margin: 0 auto !important;
-                box-sizing: border-box !important;
-            }
-            
-            /* Credit Card individual cards */
-            [data-card-root] {
-                width: calc(100% - 1.5rem) !important;
-                max-width: calc(100% - 1.5rem) !important;
-                margin: 0 auto 1rem auto !important;
-                padding: 1rem !important;
-                box-sizing: border-box !important;
-            }
-            
-            /* Credit card header */
-            [data-card-root] h3 {
-                font-size: 1.125rem !important;
-                margin-bottom: 0.75rem !important;
-            }
-            
-            /* Credit card values */
-            [data-card-root] .text-2xl,
-            [data-card-root] .text-3xl {
-                font-size: 1.5rem !important;
-            }
-            
-            [data-card-root] .text-sm {
-                font-size: 0.875rem !important;
-            }
-            
-            /* Credit card buttons */
-            [data-card-root] button {
-                width: 100% !important;
-                margin-top: 0.5rem !important;
-                padding: 0.75rem !important;
-            }
-            
-            /* Percentual de despesas card */
-            #kpi-expense-percentuals {
-                max-height: 400px !important;
-                overflow-y: auto !important;
-            }
-            
-            #kpi-expense-percentuals > div {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding: 0.5rem 0 !important;
-                gap: 0.75rem !important;
-                flex-wrap: nowrap !important;
-            }
-            
-            #kpi-expense-percentuals .text-sm {
-                flex: 1 !important;
-                min-width: 0 !important;
-                font-size: 0.8125rem !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-                white-space: nowrap !important;
-            }
-            
-            #kpi-expense-percentuals .text-xs {
-                flex-shrink: 0 !important;
-                font-size: 0.75rem !important;
-                text-align: right !important;
-                min-width: 60px !important;
-            }
-            
-            #kpi-expense-percentuals .font-semibold {
-                flex-shrink: 0 !important;
-                font-size: 0.875rem !important;
-                text-align: right !important;
-                min-width: 80px !important;
-                white-space: nowrap !important;
-            }
-            
-            /* Bottom navigation */
-            #mobile-bottom-nav {
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                width: 100% !important;
-                height: 60px !important;
-                background: white !important;
-                border-top: 1px solid #e5e7eb !important;
-                z-index: 1000 !important;
-                display: flex !important;
-                justify-content: space-around !important;
-                align-items: center !important;
-                padding: 0.5rem !important;
-            }
-            
-            .mobile-nav-btn {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 0.5rem !important;
-                min-height: 50px !important;
-                font-size: 0.75rem !important;
-                gap: 0.25rem !important;
-                text-align: center !important;
-            }
-            
-            .mobile-nav-btn .material-symbols-outlined {
-                font-size: 24px !important;
-            }
-            
-            /* FAB */
-            button[onclick*="showModal"],
-            [class*="fab"] {
-                position: fixed !important;
-                bottom: 70px !important;
-                right: 1rem !important;
-                width: 56px !important;
-                height: 56px !important;
-                border-radius: 50% !important;
-                z-index: 999 !important;
-            }
-            
-            /* Toast centralizado */
-            #toast {
-                position: fixed !important;
-                bottom: 75px !important;
-                left: 50% !important;
-                transform: translateX(-50%) !important;
-                width: calc(100% - 2rem) !important;
-                max-width: 400px !important;
-                margin: 0 !important;
-                text-align: center !important;
-            }
-            
-            /* Esconde elementos desktop */
-            .hide-on-mobile {
-                display: none !important;
-            }
-            
-            /* Evita texto sobreposto */
-            p, span, div {
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-            }
-            
-            /* Labels e textos espaçados */
-            label {
-                display: block !important;
-                margin-bottom: 0.5rem !important;
-                line-height: 1.5 !important;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            body > div,
-            #app {
-                padding: 0.5rem !important;
-            }
-            
-            .card,
-            .modern-card {
-                width: calc(100% - 1rem) !important;
-                max-width: calc(100% - 1rem) !important;
-                padding: 0.75rem !important;
-                margin: 0 auto 0.75rem auto !important;
-            }
-            
-            [class*="kpi"],
-            .kpi-card {
-                width: calc(100% - 1rem) !important;
-                max-width: calc(100% - 1rem) !important;
-                margin: 0 auto 0.75rem auto !important;
-                padding: 0.75rem !important;
-            }
-            
-            #kpi-vr-card,
-            #kpi-vt-card {
-                width: calc(100% - 1rem) !important;
-                max-width: calc(100% - 1rem) !important;
-                padding: 0.5rem !important;
-            }
-            
-            [data-card-root] {
-                width: calc(100% - 1rem) !important;
-                max-width: calc(100% - 1rem) !important;
-                margin: 0 auto 0.75rem auto !important;
-                padding: 0.75rem !important;
-            }
-            
-            dialog {
-                width: 95vw !important;
-                max-width: 95vw !important;
-                padding: 0.75rem !important;
-            }
-            
-            h1 { font-size: 1.25rem !important; }
-            h2 { font-size: 1.1rem !important; }
-            h3 { font-size: 1rem !important; }
-            
-            table th,
-            table td {
-                padding: 0.5rem 0.375rem !important;
-                font-size: 0.8125rem !important;
-            }
-            
-            .overflow-x-auto {
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-        }
-        
-        /* Touch feedback suave */
-        @media (hover: none) and (pointer: coarse) {
-            button:active,
-            .btn:active {
-                transform: scale(0.98) !important;
-                opacity: 0.92 !important;
-                transition: transform 0.1s ease !important;
-            }
-        }
-        
-        </style>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#3b82f6">
-    <title>Fluxo Financeiro</title>
-
-    <!-- Firebase CDN Scripts (v10 Modular Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-    <script>
-        // Suprimir avisos desnecessí¡rios do console
-        (function() {
-            const originalWarn = console.warn;
-            const originalError = console.error;
-            
-            console.warn = function(...args) {
-                const message = args.join(' ');
-                // Filtrar avisos do Tailwind CDN, source maps e Firebase duplicado
-                if (message.includes('cdn.tailwindcss.com') || 
-                    message.includes('source map') || 
-                    message.includes('sourcemaps.d.musta.ch') ||
-                    message.includes('Deprecation warning') ||
-                    message.includes('Firebase is already defined') ||
-                    message.includes('only loaded once')) {
-                    return;
-                }
-                originalWarn.apply(console, args);
-            };
-            
-            console.error = function(...args) {
-                const message = args.join(' ');
-                // Filtrar erros de source maps do Airbnb
-                if (message.includes('Could not read source map') || 
-                    message.includes('sourcemaps.d.musta.ch') ||
-                    message.includes('Bad Gateway')) {
-                    return;
-                }
-                originalError.apply(console, args);
-            };
-        })();
-        
-        window.populateSelect = function(selectId, items, iconSpanSelector){
+﻿window.populateSelect = function(selectId, items, iconSpanSelector){
             try{
                 const sel = document.getElementById(selectId);
                 if (!sel) return;
@@ -1918,48 +15,29 @@
                 try { updateIcon(); } catch(e){}
             } catch (e) { console.error('early populateSelect error', e); }
         };
-        // Provide a global function name as well (some code calls populateSelect unqualified)
+
         try { if (typeof populateSelect === 'undefined') {
             function populateSelect(selectId, items, iconSpanSelector) { return window.populateSelect(selectId, items, iconSpanSelector); }
         } } catch(e) {}
-    </script>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-
-    <!-- Google Fonts & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-
-    <!-- Mobile Detection & Optimizations -->
-    <script>
-        // Sistema de detecção e otimização mobile
         window.mobileUtils = {
-            // Detecta se í© dispositivo mobile
+
             isMobile: function() {
                 return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             },
-            
-            // Detecta se í© smartphone (tela pequena)
+
             isSmartphone: function() {
                 return window.innerWidth <= 480;
             },
-            
-            // Detecta se í© tablet
+
             isTablet: function() {
                 return window.innerWidth > 480 && window.innerWidth <= 768;
             },
-            
-            // Detecta se suporta touch
+
             isTouch: function() {
                 return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             },
-            
-            // Previne zoom indesejado em duplo clique (exceto em inputs)
+
             preventDoubleTapZoom: function() {
                 let lastTouchEnd = 0;
                 document.addEventListener('touchend', function(event) {
@@ -1970,8 +48,7 @@
                     lastTouchEnd = now;
                 }, { passive: false });
             },
-            
-            // Ajusta altura do viewport para dispositivos iOS (barra de endereço)
+
             fixIOSViewportHeight: function() {
                 const setHeight = () => {
                     const vh = window.innerHeight * 0.01;
@@ -1981,15 +58,13 @@
                 window.addEventListener('resize', setHeight);
                 window.addEventListener('orientationchange', setHeight);
             },
-            
-            // Otimiza scroll em dispositivos touch
+
             optimizeTouchScroll: function() {
                 document.querySelectorAll('dialog, .modal, [role="dialog"]').forEach(element => {
                     element.style.webkitOverflowScrolling = 'touch';
                 });
             },
-            
-            // Adiciona classe mobile ao body para controle CSS
+
             addMobileClass: function() {
                 if (this.isMobile()) {
                     document.body.classList.add('is-mobile');
@@ -2004,8 +79,7 @@
                     document.body.classList.add('is-touch');
                 }
             },
-            
-            // Inicializa todas as OtimizAÇÕES
+
             init: function() {
                 this.addMobileClass();
                 this.fixIOSViewportHeight();
@@ -2013,1625 +87,22 @@
                     this.preventDoubleTapZoom();
                     this.optimizeTouchScroll();
                 }
-                
-                // Re-avalia em resize
+
                 window.addEventListener('resize', () => {
                     document.body.classList.remove('is-mobile', 'is-smartphone', 'is-tablet');
                     this.addMobileClass();
                 });
             }
         };
-        
-        // Inicializa quando o DOM estiver pronto
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => window.mobileUtils.init());
         } else {
             window.mobileUtils.init();
         }
-    </script>
 
-    <!-- Firebase já carregado no head (v10 compat) -->
-
-    <!-- Confetti.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-    <!-- SheetJS for client-side XLSX/CSV parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-    <style>
-/* AnimAÇÕES para KPIs principais */
-.kpi-animate {
-    animation: kpiPulse 0.7s;
-}
-@keyframes kpiPulse {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.15); }
-    60% { transform: scale(0.97); }
-    100% { transform: scale(1); }
-}
-.kpi-animate-up {
-    animation: kpiColorUp 0.7s;
-    color: #16a34a !important; /* verde entradas */
-}
-.kpi-animate-down {
-    animation: kpiColorDown 0.7s;
-    color: #dc2626 !important; /* vermelho */
-}
-@keyframes kpiColorUp {
-    0% { color: #16a34a; }
-    80% { color: #16a34a; }
-    100% { color: #1d1d1f; }
-}
-@keyframes kpiColorDown {
-    0% { color: #dc2626; }
-    80% { color: #dc2626; }
-    100% { color: #1d1d1f; }
-}
-        /* Deduplicated KPI animations (defined above) */
-        :root {
-            --background-color: #f8f8fa;
-            --card-background: rgba(255, 255, 255, 0.9);
-            --text-primary: #1d1d1f;
-            --text-secondary: #6e6e73;
-            --accent-blue: #0A84FF;
-            --accent-blue-hover: #0077ED;
-            --progress-bar-bg: #e5e7eb;
-        }
-
-        
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-primary);
-        }
-
-        dialog, .report-modal {
-            /* Slightly larger max-height to allow more content without inner scroll */
-            max-height: 95vh;
-        }
-
-        /* Class applied to expand the transaction modal vertically when needed (e.g., salary details) */
-        .modal-expanded {
-            /* Allow modal to grow with content but cap to avoid overflowing the viewport */
-            max-height: 90vh !important;
-            overflow: auto;
-            transition: max-height 220ms ease;
-        }
-        
-        dialog::backdrop {
-            background-color: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-        }
-        
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            vertical-align: middle;
-        }
-
-        .card {
-            background-color: var(--card-background);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            transition: box-shadow 0.25s ease-in-out;
-        }
-
-        .card:hover {
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        }
-        
-        .btn-primary {
-            background-color: var(--accent-blue);
-            color: white;
-            transition: background-color 0.2s ease;
-        }
-        .btn-primary:hover {
-            background-color: var(--accent-blue-hover);
-        }
-
-        .hidden { display: none !important; }
-
-        /* Infrequent controls (import/export) are hidden by default and shown on hover of the monthly report */
-        .infrequent-controls {
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(6px);
-            transition: opacity .15s ease, transform .15s ease;
-        }
-
-        /* Make visible when JS toggles .visible on desktop */
-        .infrequent-controls.visible {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0);
-        }
-
-        .material-symbols-outlined {
-            display: inline-block;
-            width: 1.2em;
-            font-size: 1em;
-            vertical-align: text-bottom;
-        }
-        .sortable-header.sorted .sort-icon {
-            opacity: 1;
-        }
-        .progress-bar {
-            background-color: var(--progress-bar-bg);
-            border-radius: 9999px;
-            overflow: hidden;
-            height: 0.75rem;
-        }
-    /* Grouped expenses visual cards */
-    .expenses-groups { display: flex; flex-wrap: wrap; gap: 12px; }
-    .expense-group-card { background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%); border: 1px solid rgba(99,102,241,0.08); padding: 14px 16px; border-radius: 12px; min-width: 220px; max-width: 340px; box-shadow: 0 6px 20px rgba(16,24,40,0.04); cursor: pointer; position: relative; transition: transform 0.12s ease, box-shadow 0.12s ease; }
-    .expense-group-card:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(16,24,40,0.08); }
-    .expense-group-title { font-weight: 700; color: var(--text-primary); font-size: 1rem; }
-    .expense-group-sub { color: var(--text-secondary); font-size: 0.88rem; margin-top: 6px; display:flex; align-items:center; gap:8px; }
-    .expense-category-badge { background: rgba(10,132,255,0.08); color: #0A84FF; padding: 4px 8px; border-radius: 999px; font-size: 0.78rem; font-weight:600; }
-    .expense-group-amount { font-weight: 800; margin-top: 8px; font-size: 1.08rem; color: #111827; }
-    .expense-group-count { font-size: 0.82rem; color: #6b7280; background: rgba(0,0,0,0.04); padding: 2px 6px; border-radius: 999px; }
-    /* Tooltip with breakdown on hover */
-    .expense-tooltip { position: absolute; z-index: 3000; background: #0f172a; color: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(2,6,23,0.6); white-space: nowrap; display: none; transform-origin: bottom left; }
-    .expense-tooltip::after { content: ''; position: absolute; left: 14px; bottom: -6px; width: 12px; height: 12px; background: #0f172a; transform: rotate(45deg); border-radius: 2px; }
-    .expense-group-card.show-tooltip .expense-tooltip { display: block; }
-        .progress-bar > div {
-            height: 100%;
-            border-radius: 9999px;
-            transition: width 0.5s ease-in-out;
-        }
-        tbody tr {
-            transition: background-color 0.2s ease;
-        }
-        tbody tr:hover {
-            background-color: #f0f0f5;
-        }
-
-        /* Responsive Tables - Mobile First */
-        /* Mobile UX - Melhor experiência, sem impactar desktop */
-        @media (max-width: 639px) {
-            body {
-                padding: 0 !important;
-                font-size: 15px;
-            }
-            .max-w-7xl {
-                padding: 0.5rem !important;
-            }
-            /* Header icon group: tighter spacing on mobile */
-            header .flex.items-center.gap-4 > div { gap: 0.5rem !important; }
-            #current-month-display { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
-            header {
-                flex-direction: column !important;
-                gap: 0.5rem !important;
-                margin-bottom: 1.5rem !important;
-            }
-            h1 {
-                font-size: 1.3rem !important;
-            }
-            .card {
-                border-radius: 1rem !important;
-                box-shadow: none !important;
-                padding: 1rem !important;
-            }
-            .tab-button {
-                font-size: 0.95rem !important;
-                padding: 0.7rem 0 !important;
-            }
-            .grid-cols-4, .sm\:grid-cols-2, .lg\:grid-cols-4 {
-                grid-template-columns: 1fr !important;
-            }
-            #kpi-projected-balance {
-                font-size: 1rem !important;
-            }
-            .responsive-table thead { display: none !important; }
-            /* Make each table row a full-width block on mobile so transactions stack vertically. */
-            .responsive-table, .responsive-table table {
-                width: 100% !important;
-                border-collapse: separate !important;
-                table-layout: auto !important;
-                overflow-x: hidden !important;
-            }
-            .responsive-table tbody, .responsive-table tr {
-                display: block !important;
-                width: 100% !important;
-                margin: 6px 0 !important; /* small spacing between rows */
-                padding: 0 !important;
-                background: transparent !important;
-            }
-            /* Each cell inside mobile row should be hidden except the full-width mobile-row-cell (rendered by JS with colspan). */
-            .responsive-table td { display: none !important; }
-            .mobile-row-cell { display: block !important; width: 100% !important; padding: 8px 10px !important; box-sizing: border-box !important; background: white !important; border-radius: 8px; border: 1px solid rgba(0,0,0,0.04); }
-            .mobile-row { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-width:0; }
-            .mobile-row .mobile-left { min-width:0; overflow:hidden; }
-            .mobile-row .mobile-left > div, .mobile-row .mobile-left span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-            .mobile-row .mobile-right { flex-shrink:0; display:flex; align-items:center; gap:8px; }
-            /* Prevent any overflow on wrappers that used to be scrollable */
-            .overflow-x-auto { overflow-x: hidden !important; }
-            /* Constrain amount and action buttons to avoid forcing horizontal scroll */
-            .mobile-row .mobile-right .amount, .mobile-row .mobile-right span { max-width: 160px; overflow: visible; text-overflow: clip; white-space: nowrap; display:inline-block; }
-            .mobile-row .mobile-right button { min-width:36px; width:36px; height:36px; padding:6px; }
-            /* Hide top tabs and enable bottom navigation on mobile */
-            #tabs { display: none !important; }
-            #mobile-bottom-nav { display: none; }
-            #mobile-bottom-nav.active { display: flex !important; }
-            .responsive-table td.actions-cell::before {
-                display: none !important;
-            }
-            .responsive-table td.checkbox-cell {
-                padding-top: 0.4rem !important;
-                padding-bottom: 0.4rem !important;
-            }
-            .responsive-table td.checkbox-cell::before {
-                display: none !important;
-            }
-            .responsive-table td.checkbox-cell input {
-                margin-left: auto !important;
-                width: 1.3em !important;
-                height: 1.3em !important;
-            }
-            .btn-primary, button, input[type="submit"] {
-                font-size: 1.1rem !important;
-                padding: 1rem 0.5rem !important;
-                border-radius: 0.7rem !important;
-            }
-            input, select, textarea {
-                font-size: 1.1rem !important;
-                padding: 0.8rem !important;
-            }
-            /* Mobile improvements: spacing, touch targets and mobile infrequent-controls presentation */
-            .card { padding: 1rem !important; }
-            .kpi-label { font-size: 0.9rem !important; }
-            .kpi-value { font-size: 1.25rem !important; font-weight: 700 !important; }
-            .fab { width: 56px !important; height: 56px !important; right: 1rem !important; bottom: 1.2rem !important; }
-            canvas { height: 220px !important; }
-            /* Make the infrequent controls appear as a bottom-sheet on mobile when visible */
-            .infrequent-controls.mobile-visible {
-                position: fixed !important;
-                left: 0.6rem !important;
-                right: 0.6rem !important;
-                bottom: 0.9rem !important;
-                display: flex !important;
-                justify-content: center !important;
-                gap: 0.5rem !important;
-                padding: 0.6rem !important;
-                background: white !important;
-                border-radius: 12px !important;
-                box-shadow: 0 -10px 30px rgba(0,0,0,0.08) !important;
-                z-index: 99999 !important;
-                opacity: 1 !important;
-                pointer-events: auto !important;
-            }
-            label {
-                font-size: 1rem !important;
-            }
-            .modal, dialog, .report-modal {
-                width: 100vw !important;
-                min-width: unset !important;
-                border-radius: 0 !important;
-                padding: 0.5rem !important;
-                left: 0 !important;
-                margin: 0 !important;
-                max-width: 100vw !important;
-            }
-            .modal .absolute.top-2.right-2, dialog .absolute.top-2.right-2 {
-                top: 0.5rem !important;
-                right: 0.5rem !important;
-                font-size: 2rem !important;
-            }
-            .rounded-2xl, .rounded-xl, .rounded-lg {
-                border-radius: 1rem !important;
-            }
-            #feedback-card {
-                margin-top: 0.5rem !important;
-                padding: 1rem !important;
-            }
-            /* Center the month display and make the month-picker popover centered on mobile */
-            .relative { display: block; }
-            #current-month-display { display: inline-block; margin: 0 auto; text-align: center; }
-            #month-picker {
-                position: fixed !important;
-                left: 50% !important;
-                top: 18% !important;
-                transform: translateX(-50%) !important;
-                right: auto !important;
-                width: calc(100% - 2rem) !important;
-                max-width: 360px !important;
-                z-index: 100000 !important;
-            }
-            /* Unified KPI dashboard: stack KPIs inside a single card on mobile */
-            .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4.gap-6 {
-                display: block !important;
-            }
-            .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4.gap-6 > .card {
-                border-radius: 0 !important;
-                border-left: none !important;
-                border-right: none !important;
-                margin: 0 !important;
-                box-shadow: none !important;
-                padding: 0.9rem 1rem !important;
-                border-bottom: 1px solid rgba(0,0,0,0.04) !important;
-                background: white !important;
-            }
-            .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4.gap-6 > .card:first-child { border-top-left-radius: 0.75rem !important; border-top-right-radius: 0.75rem !important; }
-            .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4.gap-6 > .card:last-child { border-bottom-left-radius: 0.75rem !important; border-bottom-right-radius: 0.75rem !important; border-bottom: none !important; }
-            .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4.gap-6 h3 { margin-bottom: 0.15rem !important; }
-            .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4.gap-6 p { margin-top: 0 !important; }
-            canvas {
-                height: 180px !important;
-            }
-            html, body {
-                overflow-x: hidden !important;
-            }
-            /* Hide desktop quick links on small screens */
-            #desktop-quick-links { display: none !important; }
-        }
-        /* Desktop: make the expenses selector column narrow (just big enough for checkbox) */
-        @media (min-width: 640px) {
-            /* header cell that shows the check icon for expenses only */
-            #expenses-table-head th:first-child {
-                width: 36px; /* narrow column */
-                padding-left: 8px;
-                padding-right: 8px;
-                text-align: center;
-            }
-            /* body checkbox cells */
-            .checkbox-cell {
-                width: 36px;
-                padding-left: 8px;
-                padding-right: 8px;
-                text-align: center;
-            }
-            .checkbox-cell input[type="checkbox"] { margin: 0 auto; display: inline-block; }
-        }
-    </style>
-    <style>
-        /* Mobile table-friendly styles: keep transactions as one-line rows, prevent horizontal scrolling, increase touch targets */
-        @media (max-width: 640px) {
-            /* Hide table header on small screens for compact list-like display */
-            .responsive-table thead th { display: none !important; }
-            /* Keep cells single-line and truncate long descriptions */
-            .responsive-table tbody td { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; vertical-align: middle !important; }
-            /* Ensure the table wrapper does not allow horizontal scroll */
-            .overflow-x-auto { overflow-x: hidden !important; }
-            .responsive-table colgroup col { width: auto !important; }
-            /* Make action buttons larger for touch (applies in mobile and desktop when table collapses) */
-            .responsive-table td.actions-cell button, .responsive-table td.actions-cell .edit-btn, .responsive-table td.actions-cell .delete-btn { width:44px; height:44px; padding:8px; display:inline-flex !important; align-items:center; justify-content:center; }
-            /* Add clearer spacing for table rows on mobile */
-            .responsive-table tr { padding: 0.6rem 0 !important; }
-            .responsive-table td { padding: 0.6rem 0.6rem !important; }
-        }
-    </style>
-    <style>
-    /* ===== OTIMIZAí‡í•ES MOBILE - iPhone 15 Pro Max (430x932px) ===== */
-    /* MELHORIAS abrangentes para experiência mobile excepcional */
-    @media (max-width: 639px) {
-        /* ===== CENTRALIZAí‡íƒO DO CONTEÚDO ===== */
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100vw;
-            overflow-x: hidden !important;
-        }
-        
-        html {
-            overflow-x: hidden !important;
-            width: 100vw;
-        }
-        
-        #app,
-        main,
-        #app-content {
-            width: 100%;
-            max-width: 100vw;
-            margin: 0 auto;
-            padding-left: 1rem;
-            padding-right: 1rem;
-            box-sizing: border-box;
-        }
-        
-        /* Centralizar header */
-        header {
-            width: 100%;
-            max-width: 100vw;
-            margin: 0 auto;
-            padding-left: 1rem;
-            padding-right: 1rem;
-            box-sizing: border-box;
-            text-align: center;
-        }
-        
-        /* ===== MELHORIAS NO HEADER E INíCIO ===== */
-        header .flex.items-center.justify-between {
-            flex-direction: column;
-            gap: 0.75rem;
-            align-items: center;
-        }
-        
-        header h1 {
-            font-size: 1.5rem !important;
-            margin: 0;
-            text-align: center;
-        }
-        
-        /* Controles de calendí¡rio centralizados */
-        .card.flex.items-center.gap-1 {
-            justify-content: center;
-            flex-wrap: wrap;
-            width: 100%;
-            padding: 0.5rem !important;
-        }
-        
-        #current-month-display {
-            font-size: 0.875rem !important;
-            padding: 0.5rem !important;
-            text-align: center;
-            min-width: 120px;
-        }
-        
-        /* ===== TABELAS - CORRIGIR SOBREPOSIí‡íƒO ===== */
-        .modern-table,
-        .responsive-table {
-            width: 100%;
-            font-size: 0.75rem !important;
-            table-layout: fixed;
-        }
-        
-        .modern-table th,
-        .modern-table td,
-        .responsive-table th,
-        .responsive-table td {
-            padding: 0.5rem 0.25rem !important;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            vertical-align: middle;
-        }
-        
-        /* Larguras especí­ficas para colunas */
-        .modern-table td:first-child,
-        .responsive-table td:first-child {
-            max-width: 120px;
-        }
-        
-        .modern-table td:nth-child(2),
-        .responsive-table td:nth-child(2) {
-            max-width: 80px;
-            text-align: right;
-        }
-        
-        .modern-table td:last-child,
-        .responsive-table td:last-child {
-            max-width: 70px;
-            text-align: center;
-        }
-        
-        /* DescriçÕES truncadas */
-        .modern-table .desc-text,
-        .responsive-table .desc-text {
-            max-width: 100px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            display: block;
-        }
-        
-        /* Valores com melhor espaçamento */
-        .amount-text {
-            font-size: 0.75rem !important;
-            white-space: nowrap;
-        }
-        
-        /* ===== MODAIS MOBILE - REFORMULAí‡íƒO COMPLETA ===== */
-        dialog {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            max-width: 92vw !important;
-            max-height: 85vh !important;
-            width: 92vw !important;
-            margin: 0 !important;
-            padding: 1rem !important;
-            border-radius: 1rem !important;
-            overflow-y: auto !important;
-            box-sizing: border-box;
-        }
-        
-        /* Header do modal */
-        dialog .modal-title-row,
-        dialog .flex.items-center.justify-between {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            gap: 0.5rem;
-        }
-        
-        dialog h3,
-        dialog .modal-title {
-            font-size: 1.125rem !important;
-            margin: 0;
-            flex: 1;
-            text-align: left;
-        }
-        
-        /* Formulí¡rios em modais */
-        dialog .modal-group,
-        dialog .modern-form-group {
-            margin-bottom: 0.875rem;
-            width: 100%;
-        }
-        
-        dialog label,
-        dialog .modal-label,
-        dialog .modern-form-label {
-            font-size: 0.875rem !important;
-            margin-bottom: 0.375rem !important;
-            display: block;
-            font-weight: 500;
-        }
-        
-        dialog input,
-        dialog select,
-        dialog textarea {
-            width: 100% !important;
-            padding: 0.75rem !important;
-            font-size: 1rem !important;
-            min-height: 44px !important;
-            box-sizing: border-box !important;
-            border-radius: 0.5rem !important;
-        }
-        
-        /* Grids em modais */
-        dialog .grid {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 0.75rem !important;
-        }
-        
-        /* botões de ação do modal */
-        dialog .modal-action-btn,
-        dialog button[type="submit"],
-        dialog .btn-primary {
-            width: 100% !important;
-            padding: 0.875rem !important;
-            font-size: 1rem !important;
-            min-height: 48px !important;
-            margin-top: 0.5rem;
-            border-radius: 0.75rem !important;
-        }
-        
-        /* Footer do modal */
-        dialog .flex.justify-end,
-        dialog .modal-footer {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        
-        dialog .flex.justify-end button,
-        dialog .modal-footer button {
-            width: 100% !important;
-        }
-        
-        /* Modal de transação especí­fico */
-        #transaction-modal {
-            max-height: 90vh !important;
-        }
-        
-        #transaction-modal .transaction-type-selector {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        #transaction-modal .transaction-type-selector button {
-            flex: 1;
-            min-height: 48px;
-        }
-        
-        /* Prevenir zoom indesejado em inputs */
-        input[type="text"],
-        input[type="number"],
-        input[type="date"],
-        input[type="email"],
-        select,
-        textarea {
-            font-size: 16px !important; /* Evita zoom automá¡tico no iOS */
-        }
-        
-        /* Melhorar í¡rea de toque para todos os botões */
-        button,
-        .btn-primary,
-        .tab-button,
-        .kpi-card {
-            min-height: 44px; /* Tamanho má­nimo recomendado pela Apple */
-            touch-action: manipulation; /* Melhora responsividade de toque */
-        }
-        
-        /* KPIs otimizados para mobile */
-        .kpi-card {
-            padding: 1rem !important;
-            margin-bottom: 0.75rem;
-            text-align: center;
-            width: 100%;
-        }
-        
-        .kpi-title {
-            font-size: 0.875rem !important;
-            margin-bottom: 0.5rem !important;
-        }
-        
-        .kpi-value {
-            font-size: 1.75rem !important;
-            font-weight: 700 !important;
-            margin-bottom: 0.25rem !important;
-            word-break: break-word;
-        }
-        
-        .kpi-trend {
-            font-size: 0.75rem !important;
-            justify-content: center;
-        }
-        
-        /* Cards e containers com melhor espaçamento */
-        .card {
-            padding: 1rem !important;
-            margin-bottom: 1rem !important;
-            border-radius: 1rem !important;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        /* Tí­tulos de seçÕES mais compactos e centralizados */
-        h2 {
-            font-size: 1.25rem !important;
-            margin-bottom: 0.75rem !important;
-            text-align: center;
-        }
-        
-        h3 {
-            font-size: 1.125rem !important;
-            text-align: center;
-        }
-        
-        /* Melhorar navegação por tabs */
-        #tabs {
-            width: 100%;
-            max-width: 100%;
-            justify-content: center;
-            padding: 0.5rem !important;
-        }
-        
-        #tabs .tab-button {
-            padding: 0.75rem 0.5rem !important;
-            font-size: 0.7rem !important;
-            min-height: 44px;
-            flex: 1;
-            text-align: center;
-        }
-        
-        /* Otimizar header do calendí¡rio */
-        #current-month-display {
-            font-size: 0.875rem !important;
-            padding: 0.5rem !important;
-        }
-        
-        .p-1\.5 {
-            padding: 0.5rem !important;
-        }
-        
-        /* Melhorar visualização de metas */
-        .goal-item {
-            padding: 1rem !important;
-            margin-bottom: 0.75rem !important;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .goal-item .font-semibold {
-            font-size: 0.95rem !important;
-            max-width: 60%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .goal-item .flex.items-center.gap-2 {
-            flex-wrap: nowrap;
-            gap: 0.25rem !important;
-        }
-        
-        .goal-item .text-sm {
-            font-size: 0.75rem !important;
-        }
-        
-        .progress-bar {
-            height: 10px !important;
-            margin-top: 0.5rem !important;
-        }
-        
-        /* Otimizar tabelas para mobile */
-        .modern-table {
-            font-size: 0.875rem !important;
-            width: 100%;
-            display: table;
-        }
-        
-        .modern-table thead {
-            display: table-header-group;
-        }
-        
-        .modern-table tbody {
-            display: table-row-group;
-        }
-        
-        .modern-table tr {
-            display: table-row;
-        }
-        
-        .modern-table th,
-        .modern-table td {
-            display: table-cell;
-            padding: 0.75rem 0.5rem !important;
-            vertical-align: middle;
-        }
-        
-        .modern-table th:first-child,
-        .modern-table td:first-child {
-            padding-left: 0.25rem !important;
-        }
-        
-        .modern-table th:last-child,
-        .modern-table td:last-child {
-            padding-right: 0.25rem !important;
-            text-align: right;
-        }
-        
-        /* Wrapper de tabelas com scroll controlado */
-        .overflow-x-auto {
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
-            width: 100%;
-        }
-        
-        /* Melhorar visualização de grí¡ficos */
-        canvas {
-            max-height: 250px !important;
-        }
-        
-        /* espaçamento do container principal */
-        #app-content {
-            padding: 0 0.75rem !important;
-        }
-        
-        /* Otimizar grid de KPIs */
-        .grid.grid-cols-1 {
-            gap: 0.75rem !important;
-        }
-        
-        /* Melhorar Botão de adicionar meta/viagem */
-        .btn-primary {
-            padding: 0.75rem 1rem !important;
-            font-size: 0.875rem !important;
-        }
-        
-        .btn-primary .material-symbols-outlined {
-            font-size: 1.25rem !important;
-        }
-        
-
-        
-        /* Melhorar seletores com í­cones */
-        .select-with-icon select {
-            padding-left: 2.5rem !important;
-        }
-        
-        .select-icon {
-            left: 0.75rem !important;
-        }
-        
-        /* Otimizar barra de navegação inferior */
-        #mobile-bottom-nav {
-            padding: 0.5rem 0.75rem !important;
-            bottom: 1rem !important;
-            gap: 0.5rem !important;
-        }
-        
-        .mobile-nav-btn {
-            width: 52px !important;
-            height: 52px !important;
-        }
-        
-        /* Melhorar FAB de adicionar transação */
-        #mobile-add-transaction-fab {
-            width: 56px !important;
-            height: 56px !important;
-            bottom: 5rem !important;
-            right: 1rem !important;
-        }
-        
-        /* Melhorar touch targets para í­cones de ação */
-        .quick-add-goal-btn,
-        .delete-goal-btn,
-        .edit-btn,
-        .delete-btn {
-            min-width: 44px !important;
-            min-height: 44px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-        
-
-        
-        /* Melhorar filtros de despesas */
-        #expenses-filter-popover {
-            left: 0.5rem !important;
-            right: 0.5rem !important;
-            max-width: calc(100vw - 1rem) !important;
-        }
-        
-        /* Month picker otimizado */
-        #month-picker {
-            right: 0 !important;
-            left: auto !important;
-            width: 90vw !important;
-            max-width: 280px !important;
-        }
-        
-        /* Melhorar spacing entre elementos */
-        .space-y-4 > * + * {
-            margin-top: 0.75rem !important;
-        }
-        
-        .space-y-6 > * + * {
-            margin-top: 1rem !important;
-        }
-        
-        .space-y-8 > * + * {
-            margin-top: 1.25rem !important;
-        }
-    }
-    
-    /* OtimizAÇÕES especí­ficas para iPhone 15 Pro Max (430px width) */
-    @media (max-width: 430px) {
-        /* Ajustes finos para tela exata do iPhone 15 Pro Max */
-        .container,
-        main {
-            max-width: 100% !important;
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
-        }
-        
-        /* KPI values ligeiramente menores */
-        .kpi-value {
-            font-size: 1.375rem !important;
-        }
-        
-        /* Tabs ainda mais compactas */
-        #tabs .tab-button {
-            font-size: 0.6875rem !important;
-            padding: 0.625rem 0.375rem !important;
-        }
-        
-        /* Calendí¡rio header compacto */
-        .flex.items-center.gap-1 {
-            gap: 0.25rem !important;
-        }
-    }
-    
-    /* MELHORIAS para landscape em mobile */
-    @media (max-width: 932px) and (orientation: landscape) {
-        /* Ajustar altura de elementos em landscape */
-        dialog {
-            max-height: 85vh !important;
-        }
-        
-        .kpi-card {
-            padding: 0.75rem !important;
-        }
-        
-        #mobile-bottom-nav {
-            padding: 0.375rem 0.5rem !important;
-        }
-        
-        .mobile-nav-btn {
-            width: 44px !important;
-            height: 44px !important;
-        }
-    }
-    </style>
-    <style>
-    /* Mobile-only UI polish: floating action button, larger touch targets, clearer bottom nav spacing */
-    @media (max-width: 639px) {
-        /* Floating Add button for mobile (visible only on small screens) */
-        #mobile-add-transaction-fab {
-            display: inline-flex !important;
-            position: fixed;
-            right: 1rem;
-            bottom: 5.6rem; /* above the mobile bottom nav */
-            width: 64px;
-            height: 64px;
-            border-radius: 9999px;
-            background: linear-gradient(180deg,#0ea5e9,#0369a1);
-            color: white;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(2,6,23,0.18);
-            z-index: 140000;
-            border: none;
-            font-size: 28px;
-        }
-        #mobile-add-transaction-fab:active { transform: translateY(1px); }
-
-        /* Make small header icons and list actions larger for touch */
-        header .material-symbols-outlined, .mobile-nav-btn .material-symbols-outlined { font-size: 22px !important; }
-        .responsive-table td .material-symbols-outlined, .responsive-table td button { padding: 10px !important; }
-
-        /* Improve spacing inside responsive table rows for readability */
-        .responsive-table tr { padding: 0.85rem !important; }
-        .responsive-table td { padding: 0.9rem 0.6rem !important; }
-
-        /* Ensure month-picker and filter bottom-sheets have comfortable margins */
-        #month-picker, #expenses-filter-popover { left: 0.6rem !important; right: 0.6rem !important; bottom: 4.6rem !important; max-height: 52vh !important; }
-    }
-    /* Hidden by default (desktop) - shown only on mobile via media query above */
-    #mobile-add-transaction-fab { display: none; }
-    </style>
-</head>
-<body class="antialiased">
-    <!-- Tela de Login -->
-    <div id="loginScreen">
-        <div class="login-container">
-            <h1 class="login-title">Fluxo Financeiro</h1>
-            <p class="login-subtitle">Entre com suas credenciais Firebase</p>
-            <div class="login-error" id="loginError" style="display: none;">Erro ao fazer login</div>
-            <input 
-                type="email" 
-                id="loginEmail" 
-                class="login-input" 
-                placeholder="Email"
-                autocomplete="email"
-            />
-            <input 
-                type="password" 
-                id="loginPassword" 
-                class="login-input" 
-                placeholder="Senha"
-                autocomplete="current-password"
-            />
-            <button id="loginBtn" class="login-btn">Entrar</button>
-        </div>
-    </div>
-
-    <!-- aplicação Principal -->
-    <div id="mainApp">
-    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        <!-- Cabeçalho (compact) -->
-        <header class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2">
-            <div class="flex items-center gap-1">
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-                    <span>Fluxo Financeiro</span>
-                </h1>
-                <div id="desktop-quick-links" class="inline-flex items-center gap-1 ml-1">
-                    <button id="desktop-dashboard-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Dashboard">
-                        <span class="material-symbols-outlined text-gray-600">dashboard</span>
-                    </button>
-                    <button id="desktop-creditcards-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Cartões">
-                        <span class="material-symbols-outlined text-gray-600">credit_card</span>
-                    </button>
-                    <button id="add-transaction-btn" class="bg-blue-600 p-2 rounded-full shadow-sm hover:bg-blue-700 transition-colors text-white ml-1" title="Nova transação">
-                        <span class="material-symbols-outlined">add</span>
-                    </button>
-                    <button id="logoutBtn" class="bg-red-500 p-2 rounded-full shadow-sm hover:bg-red-600 transition-colors text-white ml-1" title="Sair">
-                        <span class="material-symbols-outlined">logout</span>
-                    </button>
-                </div>
-                <!-- VR KPI moved to right column (below 'Projetado' and above feedback) -->
-            </div>
-          <div class="flex items-center gap-2">
-              <div class="flex items-center gap-2">
-                    <div id="infrequent-controls" class="infrequent-controls flex items-center gap-1">
-                        <button id="import-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Importar dados (JSON)">
-                            <span class="material-symbols-outlined text-gray-600">upload</span>
-                        </button>
-                        <button id="create-backup-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Criar backup completo" aria-label="Criar backup">
-                            <span class="material-symbols-outlined text-gray-600">save</span>
-                        </button>
-                        <button id="restore-backup-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Restaurar backup" aria-label="Restaurar backup">
-                            <span class="material-symbols-outlined text-gray-600">restore_from_trash</span>
-                        </button>
-                        <button id="export-data-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="Exportar dados (JSON)">
-                            <span class="material-symbols-outlined text-gray-600">download</span>
-                        </button>
-                    </div>
-                    <input type="file" id="import-file-input" class="hidden" accept=".json">
-                    <!-- Mobile toggle for import/export (visible on small screens) -->
-                    <button id="mobile-infrequent-toggle" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors hidden sm:inline-flex" title="Mais opçÕES" aria-label="Abrir opçÕES">
-                        <span class="material-symbols-outlined text-gray-600">more_horiz</span>
-                    </button>
-                    <button id="monthly-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="RelaTí³rio Mensal" aria-label="RelaTí³rio Mensal">
-                        <span class="material-symbols-outlined text-gray-600">assessment</span>
-                    </button>
-                     <button id="annual-report-btn" class="bg-white/80 p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors" title="RelaTí³rio Anual" aria-label="RelaTí³rio Anual">
-                        <span class="material-symbols-outlined text-gray-600">calendar_month</span>
-                    </button>
-                    <!-- quick links removed from this position (moved next to title) -->
-                </div>
-                <!-- Backup / Restore Modal (hidden by default) -->
-                <dialog id="backup-restore-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-3xl">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-semibold">Gerenciar Backups</h3>
-                        <button id="close-backup-modal" class="px-2 py-1 rounded bg-gray-100">Fechar</button>
-                    </div>
-                    <div class="flex gap-4">
-                        <div style="flex:1;min-width:260px;max-width:420px;">
-                            <div class="flex items-center justify-between mb-2">
-                                <strong>Backups</strong>
-                                <button id="refresh-backups-btn" class="px-2 py-0.5 rounded bg-gray-100 text-sm">Atualizar</button>
-                            </div>
-                            <div id="backups-list" style="max-height:420px;overflow:auto;border:1px solid rgba(0,0,0,0.04);padding:8px;border-radius:8px;">
-                                <div class="text-sm text-gray-500">Nenhum backup encontrado.</div>
-                            </div>
-                        </div>
-                        <div style="flex:1;min-width:320px;">
-                            <div class="flex items-center justify-between mb-2">
-                                <strong>Preview</strong>
-                                <div>
-                                    <button id="download-preview-btn" class="px-2 py-0.5 rounded bg-gray-100 text-sm">Baixar</button>
-                                    <button id="delete-backup-btn" class="px-2 py-0.5 ml-2 rounded bg-red-100 text-red-700 text-sm hover:bg-red-200" title="Excluir backup permanentemente">Excluir</button>
-                                    <button id="restore-selected-btn" class="px-2 py-0.5 ml-2 rounded bg-red-600 text-white text-sm">Restaurar</button>
-                                </div>
-                            </div>
-                            <div id="backup-preview" style="max-height:420px;overflow:auto;border:1px solid rgba(0,0,0,0.04);padding:8px;border-radius:8px;background:#fff"></div>
-                        </div>
-                    </div>
-                </dialog>
-                <!-- Import JSON Modal -->
-                <dialog id="import-json-modal" class="p-4 rounded-2xl shadow-2xl card w-full max-w-3xl">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-semibold">Importar Dados (.json)</h3>
-                        <button id="close-import-modal" class="px-2 py-1 rounded bg-gray-100">Fechar</button>
-                    </div>
-                    <div class="space-y-3">
-                        <p class="text-sm text-gray-600">Selecione um arquivo <strong>.json</strong> exportado pelo aplicativo. O arquivo pode conter o objeto principal <code>financeAppDB_v10</code> ou diretamente a estrutura de dados da aplicação. O processo irá¡ substituir os dados locais.</p>
-                        <div class="flex gap-4">
-                            <div style="flex:1;min-width:260px;max-width:420px;">
-                                <label class="block text-sm font-medium mb-1">Arquivo (.json)</label>
-                                <input type="file" id="import-file-input-modal" accept=".json,application/json" class="w-full border rounded p-2" />
-                                <div id="import-file-info" class="text-xs text-gray-500 mt-2">Nenhum arquivo selecionado.</div>
-                                <div class="mt-3">
-                                    <button id="parse-import-btn" class="px-3 py-1 rounded bg-blue-600 text-white">Ler e Validar</button>
-                                    <button id="clear-import-btn" class="px-3 py-1 ml-2 rounded bg-gray-100">Limpar</button>
-                                </div>
-                            </div>
-                            <div style="flex:1;min-width:320px;">
-                                <label class="block text-sm font-medium mb-1">Preview / Validação</label>
-                                <div id="import-preview" style="max-height:420px;overflow:auto;border:1px solid rgba(0,0,0,0.04);padding:8px;border-radius:8px;background:#fff;font-family:monospace;font-size:12px;white-space:pre-wrap;">Nenhum preview disponí­vel.</div>
-                            </div>
-                        </div>
-                        <div class="flex justify-end gap-2">
-                            <button id="import-cancel-btn" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
-                            <button id="import-confirm-btn" class="px-3 py-1 rounded bg-red-600 text-white" disabled>Importar e Substituir</button>
-                        </div>
-                    </div>
-                </dialog>
-                <div class="flex items-center gap-1 card !shadow-sm !hover:scale-100 rounded-full p-0.5">
-                    <button id="prev-month-btn" class="p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
-                        <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <div class="relative">
-                        <span id="current-month-display" class="w-36 text-center font-semibold text-gray-700 whitespace-nowrap cursor-pointer text-sm">Setembro 2025</span>
-                        <!-- Month picker popover (hidden by default) -->
-                        <div id="month-picker" class="hidden absolute z-50 mt-2 right-0 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
-                            <div class="space-y-2">
-                                <label class="block text-xs text-gray-500">Mês</label>
-                                <select id="month-picker-month" class="w-full border-gray-200 rounded-md p-1 text-sm">
-                                    <option value="0">Janeiro</option>
-                                    <option value="1">Fevereiro</option>
-                                    <option value="2">Março</option>
-                                    <option value="3">Abril</option>
-                                    <option value="4">Maio</option>
-                                    <option value="5">Junho</option>
-                                    <option value="6">Julho</option>
-                                    <option value="7">Agosto</option>
-                                    <option value="8">Setembro</option>
-                                    <option value="9">Outubro</option>
-                                    <option value="10">Novembro</option>
-                                    <option value="11">Dezembro</option>
-                                </select>
-                                <label class="block text-xs text-gray-500">Ano</label>
-                                <select id="month-picker-year" class="w-full border-gray-200 rounded-md p-1 text-sm"></select>
-                                <div class="flex justify-end gap-2 pt-2">
-                                    <button id="month-picker-cancel" type="button" class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">Cancelar</button>
-                                    <button id="month-picker-apply" type="button" class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700">Ir</button>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Expenses Filter Popover (responsive) -->
-                        <div id="expenses-filter-popover" class="hidden absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-auto max-w-xs md:max-w-md lg:max-w-lg" style="max-width:calc(100vw - 2rem); right:0;">
-                            <h3 class="text-sm font-semibold mb-2">Filtrar Despesas</h3>
-                            <div class="space-y-2 text-sm">
-                                <div class="grid grid-cols-1 gap-3">
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div class="relative select-with-icon">
-                                            <label class="block text-xs text-gray-500">Pagamento</label>
-                                            <span class="material-symbols-outlined select-icon text-gray-400">payment</span>
-                                            <select id="filter-payment-method" class="w-full border-gray-200 rounded-md p-1 text-sm pl-8">
-                                                <option value="">Todos</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs text-gray-500">Essencialidade</label>
-                                            <select id="filter-spending-type" class="w-full border-gray-200 rounded-md p-1 text-sm">
-                                                <option value="">Todos</option>
-                                                <option value="essencial">Essencial</option>
-                                                <option value="nao-essencial">nío Essencial</option>
-                                                <option value="reserva">Reserva</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div class="relative select-with-icon">
-                                            <label class="block text-xs text-gray-500">Categoria</label>
-                                            <span class="material-symbols-outlined select-icon text-gray-400">category</span>
-                                            <select id="filter-category" class="w-full border-gray-200 rounded-md p-1 text-sm pl-8">
-                                                <option value="">Todas</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs text-gray-500">Tipo</label>
-                                            <select id="filter-type" class="w-full border-gray-200 rounded-md p-1 text-sm">
-                                                <option value="">Todos</option>
-                                                <option value="expense">Despesa</option>
-                                                <option value="saving">Reserva</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                        <div class="flex items-center gap-2"><input type="checkbox" id="filter-recurring" /> <label for="filter-recurring" class="text-sm">Recorrente</label></div>
-                                        <div class="flex items-center gap-2"><input type="checkbox" id="filter-installment" /> <label for="filter-installment" class="text-sm">Parcelada / Financiamento</label></div>
-                                    </div>
-                                </div>
-                                <div class="flex justify-end gap-2 pt-2">
-                                    <button id="filter-clear-btn" class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200">Limpar</button>
-                                    <button id="filter-apply-btn" class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700">Aplicar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <button id="next-month-btn" class="p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300">
-                        <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
-                     <button id="today-btn" class="p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300" title="Voltar para o Mês atual">
-                        <span class="material-symbols-outlined">today</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-        
-        <!-- Abas de navegação -->
-        <div class="mb-6">
-            <div id="tabs" class="flex sm:hidden items-center p-0.5 space-x-1 bg-gray-200 rounded-lg max-w-lg mx-auto">
-                 <button data-view="dashboard" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Visío Geral</button>
-                 <button data-view="credit-cards" class="tab-button w-full py-1.5 text-sm font-semibold text-gray-600 rounded-md transition-colors">Faturas</button>
-            </div>
-        </div>
-        
-        <main id="app-content">
-            <!-- Conteúdo da Visío Geral (Dashboard) -->
-            <div id="dashboard-view" class="space-y-8">
-                <!-- KPIs Modernos -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up">
-                    <div class="kpi-card kpi-income">
-                        <div class="kpi-title">Total de Entradas</div>
-                        <div id="kpi-total-income" class="kpi-value">R$ 0,00</div>
-                        <div class="kpi-trend">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">trending_up</span>
-                            <span>Receitas do Mês</span>
-                        </div>
-                    </div>
-                    <div class="kpi-card kpi-expenses">
-                        <div class="kpi-title">Despesas (Pagas)</div>
-                        <div id="kpi-total-expenses" class="kpi-value">R$ 0,00</div>
-                        <div class="kpi-trend">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">trending_down</span>
-                            <span>Gastos realizados</span>
-                        </div>
-                    </div>
-                    <div class="kpi-card kpi-savings">
-                        <div class="kpi-title">Reservado / Investido</div>
-                        <div id="kpi-total-savings" class="kpi-value">R$ 0,00</div>
-                        <div class="kpi-trend">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">savings</span>
-                            <span>Valor poupado</span>
-                        </div>
-                    </div>
-                    <div class="kpi-card kpi-balance">
-                        <div class="kpi-title">Saldo Disponí­vel</div>
-                        <div id="kpi-balance" class="kpi-value">R$ 0,00</div>
-                        <div class="kpi-trend">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">account_balance_wallet</span>
-                            <span>Disponí­vel agora</span>
-                        </div>
-                    </div>
-                </div>
-                <!-- Conteúdo Principal: Tabelas e Grí¡ficos -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Coluna de TransAÇÕES -->
-                    <div class="lg:col-span-2 space-y-8">
-                        <!-- MovimentAÇÕES do Mês header removed; add button moved to header -->
-
-                        <!-- Tabela de Entradas Modernizada -->
-                        <div class="modern-card p-6 animate-fade-in">
-                            <div class="flex items-center justify-between mb-6">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 bg-success-100 rounded-lg">
-                                        <span class="material-symbols-outlined text-success-600">trending_up</span>
-                                    </div>
-                                    <div>
-                                        <h2 class="text-xl font-semibold text-gray-800">Entradas</h2>
-                                        <p class="text-sm text-gray-500">Receitas do perí­odo atual</p>
-                                    </div>
-                                </div>
-                                <div id="vr-badge" class="modern-badge modern-badge-success"></div>
-                            </div>
-                             <div class="overflow-x-auto">
-                                <table id="income-table" class="modern-table" style="table-layout:fixed;">
-                                    <colgroup>
-                                        <col style="width:calc(100% - 266px)"> <!-- Descrição (auto, ocupa o restante) -->
-                                        <col style="width:170px"> <!-- valor (aumentado para mostrar valores completos) -->
-                                        <col style="width:96px"> <!-- AÇÕES (reduced to fit two icons) -->
-                                    </colgroup>
-                                    <thead>
-                                        <tr>
-                                            <th>Descrição</th>
-                                            <th>Valor</th>
-                                            <th style="text-align: right;">AÇÕES</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="income-table-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Tabela de Despesas Modernizada -->
-                        <div class="modern-card p-6 animate-fade-in">
-                             <div class="flex items-center justify-between mb-6">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 bg-error-100 rounded-lg">
-                                        <span class="material-symbols-outlined text-error-600">trending_down</span>
-                                    </div>
-                                    <div>
-                                        <h2 class="text-xl font-semibold text-gray-800">Despesas</h2>
-                                        <p class="text-sm text-gray-500">Gastos do perí­odo atual</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <div class="modern-input-group" style="width: 200px;">
-                                        <span class="modern-input-icon material-symbols-outlined">search</span>
-                                        <input type="search" id="search-description" placeholder="Pesquisar despesas..." class="modern-input">
-                                    </div>
-                                    <button id="expenses-filter-btn" class="modern-btn modern-btn-secondary relative" title="Filtrar despesas">
-                                        <span class="material-symbols-outlined">filter_list</span>
-                                        <span id="expenses-filter-badge" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white bg-red-600 rounded-full">0</span>
-                                    </button>
-                                    <!-- Toggle: Agrupar despesas por Descrição -->
-                                    <button id="toggle-expense-grouped" class="modern-btn modern-btn-secondary" title="Alternar visío agrupada">
-                                        <span class="material-symbols-outlined">view_module</span>
-                                        <span id="toggle-expense-grouped-label">Agrupar</span>
-                                    </button>
-                                </div>
-                             </div>
-                             <div class="overflow-x-auto">
-                                <table class="modern-table" style="table-layout:fixed;">
-                                    <colgroup>
-                                        <col style="width:36px"> <!-- checkbox -->
-                                        <col> <!-- Descrição (auto, ocupa o restante) -->
-                                        <col style="width:120px"> <!-- pagamento -->
-                                        <col style="width:120px"> <!-- categoria -->
-                                        <col style="width:120px"> <!-- valor -->
-                                        <col style="width:80px"> <!-- AÇÕES -->
-                                    </colgroup>
-                                    <thead id="expenses-table-head">
-                                        <tr>
-                                            <th class="sortable-header" data-sort="isPaid" title="Ordenar por pago/não pago" style="cursor:pointer">
-                                                <span class="material-symbols-outlined text-gray-500 text-base">done</span>
-                                            </th>
-                                            <th class="sortable-header" data-sort="description" style="cursor:pointer">
-                                                Descrição <span class="sort-icon material-symbols-outlined"></span>
-                                            </th>
-                                            <th class="sortable-header" data-sort="payment" style="cursor:pointer">
-                                                Pagamento <span class="sort-icon material-symbols-outlined"></span>
-                                            </th>
-                                            <th class="sortable-header" data-sort="category" style="cursor:pointer">
-                                                Categoria <span class="sort-icon material-symbols-outlined"></span>
-                                            </th>
-                                            <th class="sortable-header" data-sort="amount" style="cursor:pointer">
-                                                Valor <span class="sort-icon material-symbols-outlined"></span>
-                                            </th>
-                                            <th style="text-align: right;">AÇÕES</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="expenses-table-body"></tbody>
-                                </table>
-                            </div>
-                            <!-- Grouped view container (hidden by default) -->
-                            <div id="expenses-grouped-container" class="mt-4 hidden">
-                                <div id="expenses-groups" class="expenses-groups"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Tabela de Reservas Modernizada -->
-                        <div class="modern-card p-6 animate-fade-in">
-                            <div class="flex items-center gap-3 mb-6">
-                                <div class="p-2 bg-primary-100 rounded-lg">
-                                    <span class="material-symbols-outlined text-primary-600">savings</span>
-                                </div>
-                                <div>
-                                    <h2 class="text-xl font-semibold text-gray-800">Reservas e Investimentos</h2>
-                                    <p class="text-sm text-gray-500">Valores poupados e investidos</p>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="modern-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Descrição</th>
-                                            <th>Categoria</th>
-                                            <th>Valor</th>
-                                            <th style="text-align: right;">AÇÕES</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="savings-table-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    
-                    </div>
-                     <!-- Coluna de Grí¡ficos e Insights -->
-                    <div class="lg:col-span-1 space-y-8">
-                        <!-- Projeções do Mês -->
-                        <div class="modern-card p-4 animate-scale-in">
-                            <div class="flex items-center gap-2 mb-4">
-                                <span class="material-symbols-outlined text-primary-600">trending_up</span>
-                                <h3 class="font-semibold text-gray-800">Projeções</h3>
-                            </div>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-2 h-2 bg-success-500 rounded-full"></div>
-                                        <span class="text-sm text-gray-600">Saldo Projetado</span>
-                                    </div>
-                                    <span id="kpi-projected-balance" class="text-base font-semibold text-success-600">R$ 0,00</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-2 h-2 bg-error-500 rounded-full"></div>
-                                        <span class="text-sm text-gray-600">Despesas Projetadas</span>
-                                    </div>
-                                    <span id="kpi-projected-expenses" class="text-base font-semibold text-error-600">R$ 0,00</span>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- VR KPI: minimal â€” shows available balance and spent progress -->
-                        <div id="kpi-vr-card" class="card p-2 rounded-xl mb-2">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h4 class="text-xs font-medium text-gray-500">VR - Uso</h4>
-                                </div>
-                                <div class="text-right">
-                                    <!-- Show available balance (credited - used), same value as the VR card in Faturas -->
-                                    <p id="kpi-vr-values" class="text-sm font-semibold text-green-600">R$ 0,00</p>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <div class="w-full bg-gray-200 rounded h-4 overflow-hidden relative">
-                                    <div id="kpi-vr-progress" class="h-4 w-0 flex items-center justify-end pr-1 text-xs text-white" style="transition: width 360ms ease;"></div>
-                                    <div id="kpi-vr-bar-text" class="absolute inset-0 flex items-center justify-center text-xs text-gray-700 pointer-events-none"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- VT KPI: mirror VR immediately below -->
-                        <div id="kpi-vt-card" class="card p-2 rounded-xl mb-2">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h4 class="text-xs font-medium text-gray-500">VT - Uso</h4>
-                                </div>
-                                <div class="text-right">
-                                    <p id="kpi-vt-values" class="text-sm font-semibold text-yellow-600">R$ 0,00</p>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <div class="w-full bg-gray-200 rounded h-4 overflow-hidden relative">
-                                    <div id="kpi-vt-progress" class="h-4 w-0 flex items-center justify-end pr-1 text-xs text-white" style="transition: width 360ms ease;"></div>
-                                    <div id="kpi-vt-bar-text" class="absolute inset-0 flex items-center justify-center text-xs text-gray-700 pointer-events-none"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="feedback-card" class="card p-6 rounded-xl">
-                             <h2 class="text-xl font-semibold mb-2">Feedback do Mês</h2>
-                             <p id="feedback-message" class="text-gray-600 text-sm mb-4">...</p>
-                             <div id="feedback-visual-container" class="space-y-3"></div>
-                        </div>
-                        <!-- Metas de Gastos removed per request -->
-                        <!-- Grí¡ficos Modernizados -->
-                        <div class="modern-chart-container animate-fade-in">
-                            <div class="modern-chart-header">
-                                <div>
-                                    <div class="modern-chart-title">
-                                        <span class="material-symbols-outlined text-warning-600">pie_chart</span>
-                                        Gastos por Categoria
-                                    </div>
-                                    <div class="modern-chart-subtitle">Distribuiçío das despesas por categoria</div>
-                                </div>
-                            </div>
-                            <div class="chart-canvas-wrapper">
-                                <div class="h-56"><canvas id="category-spending-chart"></canvas></div>
-                            </div>
-                        </div>
-                        
-                        <div class="modern-chart-container animate-fade-in">
-                            <div class="modern-chart-header">
-                                <div>
-                                    <div class="modern-chart-title">
-                                        <span class="material-symbols-outlined text-primary-600">payment</span>
-                                        Gastos por Pagamento
-                                    </div>
-                                    <div class="modern-chart-subtitle">Aní¡lise por forma de pagamento</div>
-                                </div>
-                            </div>
-                            <div class="chart-canvas-wrapper">
-                                <div class="h-56"><canvas id="payment-method-chart"></canvas></div>
-                            </div>
-                        </div>
-                        
-                        <div class="modern-chart-container animate-fade-in">
-                            <div class="modern-chart-header">
-                                <div>
-                                    <div class="modern-chart-title">
-                                        <span class="material-symbols-outlined text-success-600">trending_up</span>
-                                        Resumo Anual
-                                    </div>
-                                    <div class="modern-chart-subtitle">Visío geral das finanças do ano</div>
-                                </div>
-                            </div>
-                            <div class="chart-canvas-wrapper">
-                                <div class="h-56"><canvas id="annual-summary-chart"></canvas></div>
-                            </div>
-                        </div>
-                        <!-- KPI Percentual de cada despesa do Mês -->
-                        <div class="card p-4 rounded-lg mb-4 bg-gray-50 border border-gray-200">
-                            <h3 class="text-sm font-medium text-gray-500 mb-2">Percentual de cada despesa do Mês</h3>
-                            <div id="kpi-expense-percentuals" class="space-y-1"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Conteúdo das Faturas de CarTío -->
-            <div id="credit-cards-view" class="hidden">
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="credit-cards-container"></div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Modal de transação Modernizado -->
-    <dialog id="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="transaction-error" class="modern-card p-6 w-full max-w-4xl animate-scale-in" style="max-height:98vh;overflow:auto !important;">
-        <div class="flex items-center justify-between mb-6 modal-title-row">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-primary-100 rounded-lg">
-                    <span class="material-symbols-outlined text-primary-600">receipt_long</span>
-                </div>
-                <div>
-                    <h2 id="modal-title" class="text-2xl font-bold text-gray-800">Nova transação</h2>
-                    <p class="text-sm text-gray-500">Adicione receitas, despesas ou reservas</p>
-                </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px">
-                <span id="modal-type-indicator" class="modern-badge modern-badge-info"></span>
-                <button id="close-transaction-modal" type="button" class="modern-btn modern-btn-secondary" aria-label="Fechar janela de nova transação">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-        </div>
-    <form id="transaction-form" class="space-y-5 text-base mx-auto max-w-3xl">
-            <input type="hidden" id="transaction-id">
-            <div id="transaction-error" role="alert" aria-live="assertive" aria-atomic="true" class="hidden text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">&nbsp;</div>
-            <!-- Seletor de Tipo de transação Modernizado -->
-            <div class="bg-gray-50 p-4 rounded-xl mb-6">
-                <h3 class="text-sm font-semibold text-gray-700 mb-3">Tipo de transação</h3>
-                <div class="grid grid-cols-3 gap-3">
-                    <button type="button" data-type="expenses" class="modal-type-toggle modern-transaction-type flex flex-col items-center p-4 rounded-lg border-2 border-gray-200 bg-white hover:border-error-300 transition-all focus:outline-none group">
-                        <div class="p-2 bg-error-100 rounded-lg mb-2 group-hover:bg-error-200 transition-colors">
-                            <span class="material-symbols-outlined text-xl text-error-600">trending_down</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-700">Despesa</span>
-                        <span class="text-xs text-gray-500">Gastos realizados</span>
-                    </button>
-                    <button type="button" data-type="incomes" class="modal-type-toggle modern-transaction-type flex flex-col items-center p-4 rounded-lg border-2 border-gray-200 bg-white hover:border-success-300 transition-all focus:outline-none group">
-                        <div class="p-2 bg-success-100 rounded-lg mb-2 group-hover:bg-success-200 transition-colors">
-                            <span class="material-symbols-outlined text-xl text-success-600">trending_up</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-700">Entrada</span>
-                        <span class="text-xs text-gray-500">Receitas obtidas</span>
-                    </button>
-                    <button type="button" data-type="savings" class="modal-type-toggle modern-transaction-type flex flex-col items-center p-4 rounded-lg border-2 border-gray-200 bg-white hover:border-primary-300 transition-all focus:outline-none group">
-                        <div class="p-2 bg-primary-100 rounded-lg mb-2 group-hover:bg-primary-200 transition-colors">
-                            <span class="material-symbols-outlined text-xl text-primary-600">savings</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-700">Reserva</span>
-                        <span class="text-xs text-gray-500">Valores poupados</span>
-                    </button>
-                </div>
-            </div>
-        <style>
-        /* Estilos modernos para seletor de tipo de transação */
-        .modern-transaction-type.selected[data-type="expenses"] {
-            border-color: var(--error-500) !important;
-            background: var(--error-50) !important;
-            box-shadow: 0 0 0 3px var(--error-100) !important;
-        }
-        
-        .modern-transaction-type.selected[data-type="incomes"] {
-            border-color: var(--success-500) !important;
-            background: var(--success-50) !important;
-            box-shadow: 0 0 0 3px var(--success-100) !important;
-        }
-        
-        .modern-transaction-type.selected[data-type="savings"] {
-            border-color: var(--primary-500) !important;
-            background: var(--primary-50) !important;
-            box-shadow: 0 0 0 3px var(--primary-100) !important;
-        }
-
-        /* Melhor feedback para campos de formulí¡rio no modal */
-        #transaction-modal .modern-form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        #transaction-modal .modern-form-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--gray-700);
-            margin-bottom: 0.5rem;
-        }
-
-        #transaction-modal .modern-form-description {
-            font-size: 0.75rem;
-            color: var(--gray-500);
-            margin-top: 0.25rem;
-        }
-
-        #transaction-modal .modern-select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-        }
-
-        /* Animação para os campos quando preenchidos */
-        #transaction-modal .modern-input:not(:placeholder-shown),
-        #transaction-modal .modern-select:not([value=""]) {
-            border-color: var(--primary-300);
-            background-color: var(--primary-50);
-        }
-        #modal-type-indicator {
-            min-width: 90px;
-            text-align: center;
-        }
-        </style>
-        <script>
-        // Modal UX: update type indicator and highlight selected type
         function updateModalTypeUI(type) {
-            // normalize various possible type strings into one of: 'expenses','incomes','reserve'
+
             function normalizeType(t) {
                 if (!t) return 'expenses';
                 t = String(t).toLowerCase();
@@ -3643,11 +114,11 @@
             const normType = normalizeType(type);
             const indicator = document.getElementById('modal-type-indicator');
             const btns = document.querySelectorAll('.modal-type-toggle');
-            // use normalized type early so subsequent code can rely on it
+
             const t = normType;
             btns.forEach(btn => {
                 btn.classList.remove('selected');
-                // compare normalized dataset type to normalized input type
+
                 const btnTypeNorm = normalizeType(btn.dataset.type);
                 if (btnTypeNorm === normType) {
                     btn.classList.add('selected');
@@ -3656,16 +127,16 @@
                     indicator.innerHTML = icon + ' ' + label;
                 }
             });
-            // Also set inline styles on the selected toggle to guarantee highlight (override any other rules)
+
             btns.forEach(b => {
-                // reset inline visual styles
+
                 b.style.borderColor = '';
                 b.style.background = '';
                 const iconEl = b.querySelector('.material-symbols-outlined');
                 const textEl = b.querySelector('span.text-sm') || b.querySelector('span:last-child');
                 if (iconEl) iconEl.style.color = '';
                 if (textEl) textEl.style.color = '';
-                // apply to the selected one
+
                 if (b.classList.contains('selected')) {
                     if (t === 'incomes') {
                         b.style.borderColor = '#16a34a';
@@ -3677,7 +148,7 @@
                         b.style.background = '#fee2e2';
                         if (iconEl) iconEl.style.color = '#dc2626';
                         if (textEl) textEl.style.color = '#dc2626';
-                    } else { // reserve/savings
+                    } else { 
                         b.style.borderColor = '#eab308';
                         b.style.background = '#fef9c3';
                         if (iconEl) iconEl.style.color = '#eab308';
@@ -3685,11 +156,10 @@
                     }
                 }
             });
-            // Atualiza classe do Botão de salvar (determiní­stico)
+
             const saveBtn = document.getElementById('modal-save-btn');
             const saveIcon = document.getElementById('modal-save-icon');
-            // remove any tailwind background classes that could override our styles
-            // Keep input text dimmed until user types â€” add/remove .has-value for browsers without :placeholder-shown
+
             function setupValueListeners(container) {
                 var inputs = container.querySelectorAll('input, textarea');
                 inputs.forEach(function (inp) {
@@ -3702,44 +172,42 @@
                         }
                     }
                     inp.addEventListener('input', update);
-                    // initialize
+
                     update();
                 });
             }
-            // Prefer direct element lookup so this function can run before the `ui` map is initialized
+
             const installmentsFieldsEl = document.getElementById('installments-fields');
             const financingFieldsEl = document.getElementById('financing-fields');
             if (installmentsFieldsEl) setupValueListeners(installmentsFieldsEl);
             if (financingFieldsEl) setupValueListeners(financingFieldsEl);
-            saveBtn.classList.remove('bg-blue-600','bg-blue-500','bg-green-600','bg-green-500','bg-yellow-400','bg-yellow-500','bg-red-600','bg-red-500','hover:bg-blue-700','hover:bg-green-700','hover:bg-red-700');
+            saveBtn.classList.remove('bg-blue-600','bg-blue-500','bg-green-600','bg-green-500','bg-yellow-400','bg-yellow-500','bg-red-600','bg-red-500','','','');
             saveBtn.classList.remove('save-type-expenses', 'save-type-incomes', 'save-type-reserve');
             if (t === 'expenses') saveBtn.classList.add('save-type-expenses');
             else if (t === 'incomes') saveBtn.classList.add('save-type-incomes');
             else saveBtn.classList.add('save-type-reserve');
-            // icon color: dark for reserve (yellow background), white otherwise
+
             if (saveBtn.classList.contains('save-type-reserve')) {
                 saveIcon.style.color = '#111827';
             } else {
                 saveIcon.style.color = '#fff';
             }
-            // Build a stable inline style string and set it directly to avoid CSS precedence issues
+
             let color = '#dc2626';
             let border = '#b91c1c';
             let box = '0 2px 10px #dc262644';
             let textCol = '#fff';
             if (t === 'incomes') { color = '#16a34a'; border = '#15803d'; box = '0 2px 10px #16a34a44'; }
             else if (t === 'reserve') { color = '#eab308'; border = '#d6a013'; box = '0 2px 10px #eab30844'; textCol = '#111827'; }
-            const styleString = `background:${color} !important; background-color:${color} !important; background-image:none !important; border:2px solid ${border} !important; box-shadow:${box} !important; color:${textCol} !important; opacity:1 !important; filter:none !important;`;
+            const styleString = `background:${color} !important; background-color:${color} !important; background-image:none !important; border:2px solid ${border} !important; box-shadow: none; color:${textCol} !important; opacity:1 !important; filter:none !important;`;
             try { saveBtn.setAttribute('style', styleString); } catch(e) { /* ignore */ }
 
-            // Adjust advanced options visibility and labels depending on the selected type
             try {
-                // Select labels deterministically by for="..." so we don't depend on DOM nesting
+
                 const installmentLabel = document.querySelector('label[for="is-installment"]');
                 const financingLabel = document.querySelector('label[for="is-financing"]');
                 const salarySection = document.getElementById('salary-section');
-                // Recurrence label stays visible always, no change needed
-                // Use querySelectorAll to handle duplicated labels and set style.display to override other CSS
+
                 const installmentLabels = document.querySelectorAll('label[for="is-installment"]');
                 const financingLabels = document.querySelectorAll('label[for="is-financing"]');
                 function hideLabels(nodelist) {
@@ -3763,36 +231,36 @@
                     });
                 }
                 if (t === 'incomes') {
-                    // Hide financing
+
                     hideLabels(financingLabels);
-                    // Show installment but change text to 'receita'
+
                     showLabels(installmentLabels);
                     installmentLabels.forEach(lbl => {
                         const txt = lbl.querySelector('span.ml-2') || lbl.querySelector('span:last-child');
-                        if (txt) txt.textContent = 'í‰ uma receita parcelada?';
+                        if (txt) txt.textContent = 'ï¿½ uma receita parcelada?';
                     });
                     if (salarySection) salarySection.classList.remove('hidden');
                     if (salarySection) salarySection.style.display = '';
                 } else if (t === 'expenses') {
-                    // Show financing and installment with expense wording
+
                     showLabels(financingLabels);
                     showLabels(installmentLabels);
                     installmentLabels.forEach(lbl => {
                         const txt = lbl.querySelector('span.ml-2') || lbl.querySelector('span:last-child');
-                        if (txt) txt.textContent = 'í‰ uma compra parcelada?';
+                        if (txt) txt.textContent = 'ï¿½ uma compra parcelada?';
                     });
                     if (salarySection) { salarySection.classList.add('hidden'); salarySection.style.display = 'none'; }
-                } else { // reserve
-                    // Hide both
+                } else { 
+
                     hideLabels(financingLabels);
                     hideLabels(installmentLabels);
                     if (salarySection) { salarySection.classList.add('hidden'); salarySection.style.display = 'none'; }
                 }
             } catch (e) {
-                console.error('updateModalTypeUI advanced options adjust error', e);
+
             }
         }
-        // Initial call and event listeners
+
         document.addEventListener('DOMContentLoaded', function() {
             const typeInput = document.getElementById('transaction-type-input');
             updateModalTypeUI(typeInput.value);
@@ -3802,90 +270,86 @@
                     updateModalTypeUI(btn.dataset.type);
                 });
             });
-            // Observa mudanças de habilitação do Botão
+
             const saveBtn = document.getElementById('modal-save-btn');
             const observer = new MutationObserver(() => {
                 updateModalTypeUI(typeInput.value);
             });
             observer.observe(saveBtn, { attributes: true, attributeFilter: ['disabled'] });
         });
-        // Populate select controls with icons and update icon spans
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Expose a global set of icon mappings so renderers across the app can
-            // show an icon whenever a payment method / category / type is rendered.
+
             window.ICON_MAPPINGS = {
-                // Expanded and curated list of payment methods commonly used in a personal finance app
+
                 paymentMethods: [
-                    { value: 'BB (Dí©bito)', label: 'BB (Dí©bito)', icon: 'account_balance' },
-                    { value: 'Inter (Dí©bito)', label: 'Inter (Dí©bito)', icon: 'credit_card' },
+                    { value: 'BB (Dï¿½ï¿½bito)', label: 'BB (Dï¿½ï¿½bito)', icon: 'account_balance' },
+                    { value: 'Inter (Dï¿½ï¿½bito)', label: 'Inter (Dï¿½ï¿½bito)', icon: 'credit_card' },
                     { value: 'Nubank', label: 'Nubank', icon: 'credit_card' },
                     { value: 'Porto', label: 'Porto', icon: 'credit_card' },
                     { value: 'VR', label: 'VR', icon: 'restaurant' },
                     { value: 'VT', label: 'VT', icon: 'directions_bus' },
                     { value: 'Dinheiro', label: 'Dinheiro', icon: 'paid' },
                     { value: 'PIX', label: 'PIX', icon: 'bolt' },
-                    { value: 'Transferíªncia', label: 'Transferíªncia', icon: 'swap_horiz' },
+                    { value: 'Transferï¿½ï¿½ncia', label: 'Transferï¿½ï¿½ncia', icon: 'swap_horiz' },
                     { value: 'Boleto', label: 'Boleto', icon: 'receipt_long' },
                     { value: 'Apple Pay', label: 'Apple Pay', icon: 'smartphone' },
                     { value: 'Outro', label: 'Outro', icon: 'more_horiz' }
                 ],
 
-                // Curated expense categories covering typical household, lifestyle and financial items
                 expenseCategories: [
                     { value: 'Mercado', label: 'Mercado / Supermercado', icon: 'local_grocery_store' },
-                    { value: 'Alimentação', label: 'Alimentação (restaurantes, delivery)', icon: 'restaurant' },
+                    { value: 'Alimentaï¿½ï¿½o', label: 'Alimentaï¿½ï¿½o (restaurantes, delivery)', icon: 'restaurant' },
                     { value: 'Compras', label: 'Compras / Varejo', icon: 'shopping_bag' },
                     { value: 'Assinaturas', label: 'Assinaturas (streaming, software)', icon: 'subscriptions' },
-                    { value: 'Contas', label: 'Contas (í¡gua, luz, internet)', icon: 'receipt' },
-                    { value: 'Moradia', label: 'Moradia (aluguel, condomá­nio)', icon: 'home' },
-                    { value: 'Transporte', label: 'Transporte (combusTí­vel, apps)', icon: 'local_taxi' },
-                    { value: 'Saíºde', label: 'Saíºde (remá©dios, consultas)', icon: 'medical_services' },
-                    { value: 'Educação', label: 'Educação (cursos, livros)', icon: 'school' },
+                    { value: 'Contas', label: 'Contas (ï¿½ï¿½gua, luz, internet)', icon: 'receipt' },
+                    { value: 'Moradia', label: 'Moradia (aluguel, condomï¿½nio)', icon: 'home' },
+                    { value: 'Transporte', label: 'Transporte (combusTï¿½ï¿½vel, apps)', icon: 'local_taxi' },
+                    { value: 'Saï¿½ï¿½de', label: 'Saï¿½ï¿½de (remï¿½dios, consultas)', icon: 'medical_services' },
+                    { value: 'Educaï¿½ï¿½o', label: 'Educaï¿½ï¿½o (cursos, livros)', icon: 'school' },
                     { value: 'Lazer', label: 'Lazer (cinema, bares, viagens curtas)', icon: 'local_play' },
                     { value: 'Viagem', label: 'Viagem / Hospedagem', icon: 'flight' },
-                    { value: 'Vestuí¡rio', label: 'Vestuí¡rio / Moda', icon: 'checkroom' },
-                    { value: 'Casa', label: 'Casa / Manutençío', icon: 'build' },
+                    { value: 'Vestuï¿½ï¿½rio', label: 'Vestuï¿½ï¿½rio / Moda', icon: 'checkroom' },
+                    { value: 'Casa', label: 'Casa / Manutenï¿½ï¿½o', icon: 'build' },
                     { value: 'Pets', label: 'Pets', icon: 'pets' },
-                    { value: 'DoAÇÕES', label: 'DoAÇÕES / Caridade', icon: 'favorite' },
+                    { value: 'DoAï¿½ï¿½ES', label: 'DoAï¿½ï¿½ES / Caridade', icon: 'favorite' },
                     { value: 'Impostos', label: 'Impostos / Taxas', icon: 'paid' },
                     { value: 'Parcelas', label: 'Parcelas / Financiamento', icon: 'payments' },
                     { value: 'Investimentos', label: 'Investimentos (aporte)', icon: 'trending_up' },
                     { value: 'Outros', label: 'Outros', icon: 'category' }
                 ],
 
-                // Expense types to help budgeting and classification
                 expenseTypes: [
                     { value: 'Essenciais', label: 'Essenciais', icon: 'checklist' },
-                    { value: 'nío Essenciais', label: 'nío Essenciais', icon: 'local_offer' },
-                    { value: 'Reserva', label: 'Reserva / Poupança', icon: 'savings' },
+                    { value: 'nï¿½o Essenciais', label: 'nï¿½o Essenciais', icon: 'local_offer' },
+                    { value: 'Reserva', label: 'Reserva / Poupanï¿½a', icon: 'savings' },
                     { value: 'Parcelada', label: 'Parcelada', icon: 'payments' },
                     { value: 'Recorrente', label: 'Recorrente', icon: 'autorenew' },
-                    { value: 'íšnica', label: 'íšnica', icon: 'calendar_today' }
+                    { value: 'ï¿½nica', label: 'ï¿½nica', icon: 'calendar_today' }
                 ],
 
-                // Saving categories that a typical personal finance project would include
                 savingCategories: [
-                    { value: 'Reserva Emergíªncia', label: 'Reserva de Emergíªncia', icon: 'savings' },
-                    { value: 'AÇÕES', label: 'AÇÕES', icon: 'trending_up' },
-                    { value: 'Fundos Imobilií¡rios', label: 'Fundos Imobilií¡rios (FII)', icon: 'apartment' },
+                    { value: 'Reserva Emergï¿½ï¿½ncia', label: 'Reserva de Emergï¿½ï¿½ncia', icon: 'savings' },
+                    { value: 'Aï¿½ï¿½ES', label: 'Aï¿½ï¿½ES', icon: 'trending_up' },
+                    { value: 'Fundos Imobiliï¿½ï¿½rios', label: 'Fundos Imobiliï¿½ï¿½rios (FII)', icon: 'apartment' },
                     { value: 'Criptomoedas', label: 'Criptomoedas', icon: 'currency_bitcoin' },
-                    { value: 'Poupança', label: 'Poupança', icon: 'savings' },
+                    { value: 'Poupanï¿½a', label: 'Poupanï¿½a', icon: 'savings' },
                     { value: 'Tesouro Direto', label: 'Tesouro Direto', icon: 'account_balance' },
-                    { value: 'Previdíªncia', label: 'Previdíªncia Privada', icon: 'shield' },
+                    { value: 'Previdï¿½ï¿½ncia', label: 'Previdï¿½ï¿½ncia Privada', icon: 'shield' },
                     { value: 'Viagem', label: 'Viagem (meta)', icon: 'flight' },
                     { value: 'Reforma', label: 'Reforma / Casa', icon: 'home_repair_service' },
-                    { value: 'Educação', label: 'Educação / Cursos', icon: 'school' },
+                    { value: 'Educaï¿½ï¿½o', label: 'Educaï¿½ï¿½o / Cursos', icon: 'school' },
                     { value: 'Carro', label: 'Carro / Transporte', icon: 'directions_car' },
-                    { value: 'Imóvel', label: 'Imóvel / Entrada', icon: 'house' },
+                    { value: 'Imï¿½vel', label: 'Imï¿½vel / Entrada', icon: 'house' },
                     { value: 'Outros', label: 'Outros', icon: 'more_horiz' }
                 ]
                 ,
-                // Vehicle mappings for VT modal (used to show icons next to vehicle options)
+
                 vehicles: [
                     { value: 'Carro', label: 'Carro', icon: 'directions_car' },
                     { value: 'Moto', label: 'Moto', icon: 'two_wheeler' }
                 ],
-                // Fuel type mappings for VT modal
+
                 fuelTypes: [
                     { value: 'Gasolina', label: 'Gasolina', icon: 'local_gas_station' },
                     { value: 'Gasolina Aditivada', label: 'Gas. Aditivada', icon: 'local_gas_station' },
@@ -3893,17 +357,16 @@
                 ]
             };
 
-            // Helper: return an icon name for a given kind and value
             window.getIconFor = function(kind, value) {
                 try {
                     if (!value && value !== 0) return '';
                     const v = value.toString();
                     const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
                     if (kind === 'payment') {
-                        // prefer configured payment methods (cards) from settings when available
+
                         try {
                             const methods = (state && state.appData && state.appData.settings && state.appData.settings.paymentMethods) || [];
-                            // Methods may be strings or objects { name, type, icon }
+
                             const found = (methods || []).find(m => {
                                 try {
                                     const name = (m && (m.name || m) || '').toString();
@@ -3917,8 +380,7 @@
                         });
                         return (m && m.icon) ? m.icon : '';
                     }
-                // NOTE: rendering of non-credit payment-method cards was previously misplaced inside this helper.
-                // That logic was moved into renderCreditCardView so DOM mutations happen in the proper view renderer.
+
                     if (kind === 'category') {
                         const m = (window.ICON_MAPPINGS.expenseCategories || []).find(m => (m.value || '') === v || m.label === v);
                         if (m && m.icon) return m.icon;
@@ -3934,14 +396,13 @@
                 return '';
             };
 
-            // Helper: return a human-friendly payment label for display (handles objects, settings and ICON_MAPPINGS)
             window.getPaymentLabel = function(value) {
                 try {
                     const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
                     let v = '';
                     if (value && typeof value === 'object') v = (value.name || value.label || value.value || '').toString();
                     else v = (value || '').toString();
-                    // prefer configured settings names when available
+
                     try {
                         const methods = (state && state.appData && state.appData.settings && state.appData.settings.paymentMethods) || [];
                         const found = (methods || []).find(m => {
@@ -3949,7 +410,7 @@
                         });
                         if (found) return (found.name || found.label || found.value || v).toString();
                     } catch(e){}
-                    // fallback to ICON_MAPPINGS labels
+
                     try {
                         const m = (window.ICON_MAPPINGS.paymentMethods || []).find(m => {
                             try { return normalize((m.value||'').toString()) === normalize(v) || normalize((m.label||'').toString()) === normalize(v); } catch(e){ return false; }
@@ -3960,7 +421,6 @@
                 } catch (e) { return (value || '').toString(); }
             };
 
-            // Helper: tolerant match between expense payment value and a configured payment name
             window.paymentMatches = function(a, b) {
                 try {
                     const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -3973,24 +433,22 @@
                     const sb = normalize(extract(b));
                     if (!sa || !sb) return false;
                     if (sa === sb) return true;
-                    // allow substring matches (handles cases where stored value has extra metadata)
+
                     if (sa.indexOf(sb) !== -1) return true;
                     if (sb.indexOf(sa) !== -1) return true;
                     return false;
                 } catch (e) { return false; }
             };
 
-            // Helper: return an HTML fragment for a material-symbol icon (small inline)
             window.iconHtml = function(iconName, extraCls) {
                 if (!iconName) return '';
                 const cls = extraCls ? extraCls : 'text-gray-500';
                 return `<span class="material-symbols-outlined ${cls}" style="font-size:18px;margin-right:6px;vertical-align:middle">${iconName}</span>`;
             };
-
             function populateSelect(selectId, items, iconSpanSelector) {
                 const sel = document.getElementById(selectId);
                 if (!sel) return;
-                // clear
+
                 sel.innerHTML = '';
                 items.forEach(it => {
                     const opt = document.createElement('option');
@@ -4010,25 +468,22 @@
                 sel.addEventListener('change', updateIcon);
                 updateIcon();
             }
-
                 populateSelect('payment-method', window.ICON_MAPPINGS.paymentMethods, '.material-symbols-outlined');
             populateSelect('category-expense', window.ICON_MAPPINGS.expenseCategories, '.material-symbols-outlined');
             populateSelect('expense-type', window.ICON_MAPPINGS.expenseTypes, null);
             populateSelect('category-saving', window.ICON_MAPPINGS.savingCategories, '.material-symbols-outlined');
-            // (goal-selector removed)
-            // Also populate filter selects so they contain the same options (icons stored on option.dataset)
+
             populateSelect('filter-payment-method', window.ICON_MAPPINGS.paymentMethods, '.select-icon');
-            // build a category list for filters that includes expense + saving categories
+
             const combinedCategories = (window.ICON_MAPPINGS.expenseCategories || []).concat(window.ICON_MAPPINGS.savingCategories || []).map(c => ({ value: c.value, label: c.label, icon: c.icon }));
             populateSelect('filter-category', combinedCategories, '.select-icon');
-            // Populate vehicle selects for VT feature (add a 'Todos' option for the filter)
+
             populateSelect('vt-fuel-vehicle', (window.ICON_MAPPINGS.vehicles || []).map(v=>({ value: v.value, label: v.label, icon: v.icon })), '.select-icon');
             populateSelect('vt-filter-vehicle', [{ value: '', label: 'Todos', icon: '' }].concat((window.ICON_MAPPINGS.vehicles || []).map(v=>({ value: v.value, label: v.label, icon: v.icon }))), '.select-icon');
-            // Populate fuel type select for VT and filter
+
             populateSelect('vt-fuel-type', (window.ICON_MAPPINGS.fuelTypes || []).map(f=>({ value: f.value, label: f.label, icon: f.icon })), '.select-icon');
             populateSelect('vt-filter-fuel', [{ value: '', label: 'Todos', icon: '' }].concat((window.ICON_MAPPINGS.fuelTypes || []).map(f=>({ value: f.value, label: f.label, icon: f.icon }))), '.select-icon');
 
-            // Ensure default selections and refresh any visual icon-select overlays created by enhanceSelectWithIcons
             try {
                 const setAndRefresh = (id, defaultValue) => {
                     const el = document.getElementById(id);
@@ -4041,17 +496,17 @@
                         try { el._refreshIconSelect(); } catch (e) { console.error('refresh icon-select', id, e); }
                     }
                 };
-                // Set defaults: Moto for vehicle, Gasolina for fuel when available
+
                 setAndRefresh('vt-fuel-vehicle', 'Moto');
                 setAndRefresh('vt-fuel-type', 'Gasolina');
-                // Refresh filters as well so their placeholders/icons appear
+
                 setAndRefresh('vt-filter-vehicle');
                 setAndRefresh('vt-filter-fuel');
             } catch (e) { console.error('vt selects default/refresh error', e); }
         });
-        // Enhancer: replace visual select with icon-enabled custom dropdown while keeping native select for data
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Small helper to toggle the payment recipient field from other UI entry points
+
             window.toggleRecipientForPayment = function(rawValue) {
                 try {
                     const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -4078,15 +533,14 @@
             function enhanceSelectWithIcons(selectId, placeholder) {
                 const sel = document.getElementById(selectId);
                 if (!sel) return null;
-                // small helper to rebuild the visual list from current native select options
-                // detect kind to allow getIconFor fallback (payment vs category)
+
                 const kind = (selectId && selectId.indexOf('payment') !== -1) ? 'payment' : ((selectId && selectId.indexOf('category') !== -1) ? 'category' : null);
                 const rebuildList = (wrapper, iconSpan, labelSpan, list) => {
                     list.innerHTML = '';
                     Array.from(sel.options).forEach(opt => {
                         const item = document.createElement('div'); item.className = 'icon-select-item';
                         const i = document.createElement('span'); i.className = 'material-symbols-outlined';
-                        // compute icon: prefer dataset.icon, fallback to getIconFor(kind, value)
+
                         let iconName = opt.dataset.icon || '';
                         if ((!iconName || iconName === '') && typeof getIconFor === 'function' && kind) {
                             try { iconName = getIconFor(kind, opt.value || opt.textContent || ''); } catch(e) { iconName = '';} 
@@ -4095,34 +549,34 @@
                         const t = document.createElement('span'); t.textContent = opt.textContent || opt.value;
                         item.appendChild(i); item.appendChild(t);
                         item.addEventListener('click', () => {
-                            sel.value = opt.value; // keep native select in sync
-                            // update visible button (use same resolution logic)
+                            sel.value = opt.value; 
+
                             let selIcon = opt.dataset.icon || '';
                             if ((!selIcon || selIcon === '') && typeof getIconFor === 'function' && kind) {
                                 try { selIcon = getIconFor(kind, opt.value || opt.textContent || ''); } catch(e) { selIcon = ''; }
                             }
                             iconSpan.textContent = selIcon || '';
                             labelSpan.textContent = opt.textContent || opt.value;
-                            // close
+
                             list.classList.add('hidden'); caret.textContent = 'arrow_drop_down';
-                            // dispatch change and also call toggle helper so visual overlay selections update recipient reliably
+
                             sel.dispatchEvent(new Event('change', { bubbles: true }));
                             try { if (window.toggleRecipientForPayment) window.toggleRecipientForPayment(opt.value); } catch(_){}}
                         );
                         list.appendChild(item);
                     });
                 };
-                // build wrapper
+
                 const wrapper = document.createElement('div');
                 wrapper.className = 'icon-select';
-                // copy computed classes for width if needed
+
                 sel.parentElement.insertBefore(wrapper, sel);
-                // hide native select visually but keep it for form
-                sel.style.position = 'absolute'; sel.style.opacity = 0; sel.style.pointerEvents = 'none'; sel.style.height = '1px'; sel.style.width = '1px';
-                // create button
+
+                sel.style.position = 'absolute'; sel.style.display = 'none'; sel.style.pointerEvents = 'none'; sel.style.height = '1px'; sel.style.width = '1px';
+
                 const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'icon-select-button';
                 const iconSpan = document.createElement('span'); iconSpan.className = 'material-symbols-outlined';
-                // determine initial icon for selected option (prefer dataset, fallback to getIconFor)
+
                 let initialIcon = '';
                 if (sel.selectedOptions && sel.selectedOptions[0]) initialIcon = sel.selectedOptions[0].dataset.icon || '';
                 if ((!initialIcon || initialIcon === '') && typeof getIconFor === 'function' && kind && sel.selectedOptions && sel.selectedOptions[0]) {
@@ -4132,688 +586,57 @@
                 const labelSpan = document.createElement('span'); labelSpan.textContent = sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : (placeholder || sel.getAttribute('placeholder') || '');
                 const caret = document.createElement('span'); caret.className = 'material-symbols-outlined'; caret.textContent = 'arrow_drop_down'; caret.style.marginLeft = 'auto';
                 btn.appendChild(iconSpan); btn.appendChild(labelSpan); btn.appendChild(caret);
-                // build list
+
                 const list = document.createElement('div'); list.className = 'icon-select-list hidden';
-                // initial build
+
                 rebuildList(wrapper, iconSpan, labelSpan, list);
                 wrapper.appendChild(btn);
                 wrapper.appendChild(list);
-                // move native select inside wrapper (keeps form semantics/labels)
+
                 wrapper.appendChild(sel);
-                // toggle
+
                 btn.addEventListener('click', (ev) => { ev.stopPropagation(); list.classList.toggle('hidden'); caret.textContent = list.classList.contains('hidden') ? 'arrow_drop_down' : 'arrow_drop_up'; });
-                // close on outside
+
                 document.addEventListener('click', () => { if (!list.classList.contains('hidden')) { list.classList.add('hidden'); caret.textContent = 'arrow_drop_down'; } });
-                // Expose a small refresh hook so callers that replace native select options can rebuild the visual list
+
                 try { sel._refreshIconSelect = () => rebuildList(wrapper, iconSpan, labelSpan, list); } catch(e){}
                 return { wrapper, btn, list };
             }
 
-            // (vehicle selects populated earlier where populateSelect is defined)
-
-            // Enhance the main modal selects and filters where we want prefixed icons
             ['payment-method','category-expense','category-saving','filter-payment-method','filter-category','vt-fuel-vehicle','vt-filter-vehicle','vt-fuel-type','vt-filter-fuel','tp-transport-type','tp-activity-type'].forEach(id => {
                 try { enhanceSelectWithIcons(id); } catch(e) { console.error('enhanceSelectWithIcons', id, e); }
             });
         });
-        </script>
-            <input type="hidden" id="transaction-type-input" value="expenses">
-            <!-- Campos bá¡sicos Modernizados -->
-            <div class="bg-white p-6 rounded-xl border-2 border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary-600">info</span>
-                    InformAÇÕES bá¡sicas
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="modern-form-group">
-                        <label for="description" class="modern-form-label flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary-600">edit_note</span>
-                            Descrição
-                        </label>
-                        <div class="modern-input-group">
-                            <input type="text" id="description" required class="modern-input" placeholder="Ex: Supermercado, Salí¡rio..." list="description-suggestions">
-                            <datalist id="description-suggestions"></datalist>
-                        </div>
-                        <p class="modern-form-description">Descreva brevemente a transação</p>
-                        <p id="description-hint" class="text-xs text-gray-500 mt-1 hidden" aria-hidden="true">&nbsp;</p>
-                    </div>
-                    <div class="modern-form-group">
-                        <label for="amount" class="modern-form-label flex items-center gap-2">
-                            <span class="material-symbols-outlined text-success-600">attach_money</span>
-                            Valor (R$)
-                        </label>
-                        <div class="modern-input-group">
-                            <span class="modern-input-icon">R$</span>
-                            <input type="number" id="amount" step="0.01" required class="modern-input" placeholder="0,00">
-                        </div>
-                        <p class="modern-form-description">Valor da transação em reais</p>
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- Campos de Despesas Modernizados -->
-            <div id="expense-fields" class="bg-white p-6 rounded-xl border-2 border-error-100">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-error-600">trending_down</span>
-                    Detalhes da Despesa
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="modern-form-group">
-                        <label for="payment-method" class="modern-form-label flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary-600">credit_card</span>
-                            Forma de Pagamento
-                        </label>
-                        <div class="modern-input-group">
-                            <span class="modern-input-icon material-symbols-outlined">credit_card</span>
-                            <select id="payment-method" class="modern-input modern-select">
-                            </select>
-                        </div>
-                        <p class="modern-form-description">Como foi paga a despesa?</p>
-                        
-                        <!-- DestinaTí¡rio (obrigaTí³rio para PIX / Transferíªncia) -->
-                        <div id="payment-recipient-wrapper" class="mt-4 hidden">
-                            <label for="payment-recipient" class="modern-form-label flex items-center gap-2">
-                                <span class="material-symbols-outlined text-gray-500">person</span>
-                                DestinaTí¡rio
-                            </label>
-                            <div class="modern-input-group">
-                                <span class="modern-input-icon material-symbols-outlined">person</span>
-                                <input type="text" id="payment-recipient" class="modern-input" placeholder="Nome do destinaTí¡rio">
-                            </div>
-                            <p id="payment-recipient-hint" class="modern-form-description text-warning-600 hidden">ObrigaTí³rio para PIX e Transferíªncia</p>
-                        </div>
-                    </div>
-                    <div class="modern-form-group">
-                        <label for="category-expense" class="modern-form-label flex items-center gap-2">
-                            <span class="material-symbols-outlined text-warning-600">category</span>
-                            Categoria
-                        </label>
-                        <div class="modern-input-group">
-                            <span class="modern-input-icon material-symbols-outlined">category</span>
-                            <select id="category-expense" class="modern-input modern-select"></select>
-                        </div>
-                        <p class="modern-form-description">Classifique sua despesa para melhor controle</p>
-                        <p id="category-hint" class="text-xs text-gray-500 mt-1 hidden" aria-hidden="true">&nbsp;</p>
-                    </div>
-                </div>
-                <div>
-                    <label for="expense-type" class="block text-base font-semibold text-gray-700 flex items-center gap-2 modal-tooltip" data-tooltip="Tipo de despesa">
-                        <span class="material-symbols-outlined text-blue-400">tune</span>
-                        Tipo
-                    </label>
-                    <select id="expense-type" class="mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-3 py-2 text-base appearance-none">
-                        <option value="Essenciais">Essencial</option>
-                        <option value="nío Essenciais">nío Essencial</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="saving-fields" class="hidden modal-group space-y-2 bg-gray-50 rounded-xl p-3 shadow-md">
-                <div>
-                    <label for="category-saving" class="block text-base font-semibold text-gray-700 flex items-center gap-2 modal-tooltip" data-tooltip="Classifique sua reserva">
-                        <span class="material-symbols-outlined text-orange-400">category</span>
-                        Categoria da Reserva
-                    </label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none">category</span>
-                        <select id="category-saving" class="pl-8 mt-1 block w-full border-2 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 px-3 py-2 text-base appearance-none"></select>
-                    </div>
-                </div>
-                <!-- goal-selector removed: not functional -->
-            </div>
-
-            <!-- opçÕES Avançadas -->
-            <div id="advanced-options" class="modal-group border-t pt-2 mt-2 space-y-2 bg-gray-50 rounded-xl p-3 shadow-md">
-                <div class="option-row">
-                    <label class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque para repetir mensalmente">
-                        <input type="checkbox" id="is-recurring" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="material-symbols-outlined text-blue-400">autorenew</span>
-                        <span class="ml-2 text-base text-gray-700">Tornar esta transação recorrente? (mensal)</span>
-                    </label>
-                </div>
-                <div class="flex flex-col gap-2 text-base">
-                    <!-- opçío 'aplicar tambá©m í s futuras' removida -->
-                    <div class="option-row">
-                        <label for="is-installment" class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for uma compra parcelada">
-                            <input type="checkbox" id="is-installment" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="material-symbols-outlined text-indigo-400">payments</span>
-                            <span class="ml-2 text-base text-gray-700">í‰ uma compra parcelada?</span>
-                        </label>
-                    </div>
-                    <div id="installment-fields" class="hidden ml-8 space-y-2 bg-indigo-50 rounded-lg p-3">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label for="installment-count" class="block text-sm text-gray-700">número de parcelas</label>
-                                <input type="number" id="installment-count" min="2" max="48" value="12" class="w-full border rounded px-2 py-1 text-sm" />
-                            </div>
-                            <div>
-                                <label for="installment-start" class="block text-sm text-gray-700">Parcela inicial</label>
-                                <input type="number" id="installment-start" min="1" value="1" class="w-full border rounded px-2 py-1 text-sm" />
-                            </div>
-                        </div>
-                        <div class="text-xs text-gray-600">
-                            O valor total serí¡ dividido automaticamente em <span id="installment-preview-count">12</span> parcelas de <span id="installment-preview-value" class="font-medium">R$ 0,00</span>
-                        </div>
-                    </div>
-                    <div class="option-row">
-                        <label for="is-financing" class="flex items-center cursor-pointer gap-2 modal-tooltip" data-tooltip="Marque se for um financiamento">
-                            <input type="checkbox" id="is-financing" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="material-symbols-outlined text-amber-400">account_balance</span>
-                            <span class="ml-2 text-base text-gray-700">í‰ um financiamento?</span>
-                        </label>
-                    </div>
-                </div>
-                <!-- Campos especí­ficos para Entrada: Salí¡rio (posicionados abaixo da opçío recorrente) -->
-                <div id="salary-section" class="hidden mt-2 space-y-1 modal-group bg-gray-50 rounded-xl p-3 shadow-md">
-                    <label class="flex items-center gap-2 modal-tooltip" data-tooltip="Marque se for salí¡rio">
-                        <input type="checkbox" id="is-salary" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="material-symbols-outlined text-green-400">work</span>
-                        <span class="ml-2 text-base text-gray-700">í‰ salí¡rio?</span>
-                    </label>
-                    <div id="salary-fields" class="hidden">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            <div>
-                                <label for="salary-base" class="sr-only">Valor bruto do salí¡rio</label>
-                                <input type="number" id="salary-base" step="0.01" placeholder="Valor bruto do salí¡rio" title="Valor bruto do salí¡rio" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
-                            </div>
-                            <div>
-                                <label for="salary-periculosidade" class="sr-only">Percentual de periculosidade</label>
-                                <input type="number" id="salary-periculosidade" step="0.1" placeholder="% Periculosidade" title="Percentual de periculosidade" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
-                            </div>
-                            <div>
-                                <label for="salary-outros-proventos" class="sr-only">Outros valores recebidos</label>
-                                <input type="number" id="salary-outros-proventos" step="0.01" placeholder="Outros proventos" title="Outros valores recebidos" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
-                            </div>
-                            <div>
-                                <label for="salary-dependentes" class="sr-only">número de dependentes</label>
-                                <input type="number" id="salary-dependentes" placeholder="Dependentes" title="número de dependentes" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
-                            </div>
-                            <div>
-                                <label for="salary-desjejum-dia" class="sr-only">Valor dií¡rio de desjejum</label>
-                                <input type="number" id="salary-desjejum-dia" step="0.01" placeholder="Desjejum (R$/dia)" title="Valor dií¡rio de desjejum" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
-                            </div>
-                            <div>
-                                <label for="salary-transporte-dia" class="sr-only">Valor dií¡rio de transporte</label>
-                                <input type="number" id="salary-transporte-dia" step="0.01" placeholder="Transporte (R$/dia)" title="Valor dií¡rio de transporte" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1">
-                            </div>
-                        </div>
-
-                        <details class="mt-2">
-                            <summary class="cursor-pointer text-sm text-gray-700">Mais opçÕES do salí¡rio</summary>
-                            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1">
-                                <div>
-                                    <label for="salary-dias-trabalhados" class="sr-only">Dias Trabalhados</label>
-                                    <input type="number" id="salary-dias-trabalhados" placeholder="Dias Trabalhados" title="Dias Trabalhados" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
-                                </div>
-                                <div>
-                                    <label for="salary-h-extra-sab" class="sr-only">HE Sí¡b (h)</label>
-                                    <input type="number" id="salary-h-extra-sab" step="0.1" placeholder="HE Sí¡b (h)" title="Horas extras sí¡bado (h)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
-                                </div>
-                                <div>
-                                    <label for="salary-h-extra-dom" class="sr-only">HE Dom (h)</label>
-                                    <input type="number" id="salary-h-extra-dom" step="0.1" placeholder="HE Dom (h)" title="Horas extras domingo (h)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" min="0">
-                                </div>
-                                <div>
-                                    <label for="salary-jornada-horas" class="sr-only">Jornada (h/Mês)</label>
-                                    <input type="number" id="salary-jornada-horas" step="1" placeholder="Jornada (h/Mês)" title="Jornada (h/Mês)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" value="220">
-                                </div>
-                                <div>
-                                    <label for="salary-horas-trabalhadas" class="sr-only">Horas trabalhadas (h)</label>
-                                    <input type="text" id="salary-horas-trabalhadas" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-1" placeholder="Horas trabalhadas (Ex: 117:20)" title="Horas trabalhadas (Ex: 117:20 h:mm)">
-                                </div>
-                            </div>
-                        </details>
-                    </div>
-                </div>
-                <div id="installments-section" class="hidden">
-                    <!-- Compact visual for installments & financing (preserve fields/IDs for JS) -->
-                    <div class="mt-3">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div id="installments-fields" class="bg-white border border-gray-200 rounded-lg p-3 flex items-start gap-3">
-                                <span class="material-symbols-outlined text-indigo-500" style="font-size:28px; margin-top:4px">payments</span>
-                                <div class="flex-1">
-                                    <div class="text-sm font-semibold text-gray-700">Parcelamento</div>
-                                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-                                        <div>
-                                            <label for="installments-count" class="block text-xs text-gray-500 mb-1">Total</label>
-                                            <input type="number" id="installments-count" min="2" max="48" class="block w-full sm:w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Total" title="número de parcelas">
-                                        </div>
-                                        <div>
-                                            <label for="installments-current" class="block text-xs text-gray-500 mb-1">Atual</label>
-                                            <input type="number" id="installments-current" min="1" max="48" class="block w-full sm:w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Atual" title="Parcela atual (se em andamento)">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="financing-fields" class="bg-white border border-gray-200 rounded-lg p-3 flex items-start gap-3">
-                                <span class="material-symbols-outlined text-amber-500" style="font-size:28px; margin-top:4px">account_balance</span>
-                                <div class="flex-1">
-                                    <div class="text-sm font-semibold text-gray-700">Financiamento</div>
-                                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-                                        <div>
-                                            <label for="financing-total" class="block text-xs text-gray-500 mb-1">Total</label>
-                                            <input type="number" id="financing-total" min="2" max="120" class="block w-full sm:w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Total" title="Total de parcelas (financiamento)">
-                                        </div>
-                                        <div>
-                                            <label for="financing-current" class="block text-xs text-gray-500 mb-1">Atual</label>
-                                            <input type="number" id="financing-current" min="1" max="120" class="block w-full sm:w-28 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Atual" title="Parcela atual (financiamento)">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer Modernizado -->
-            <div class="flex justify-end mt-8 modal-footer bg-gray-50 -mx-6 -mb-6 p-6 rounded-b-xl border-t border-gray-200">
-                <button type="submit" class="modern-btn modern-btn-success px-8 py-3 text-base" id="modal-save-btn">
-                    <span class="material-symbols-outlined" id="modal-save-icon">check_circle</span>
-                    <span>Salvar transação</span>
-                </button>
-            </div>
-        
-        </form>
-    </dialog>
-
-     <dialog id="goal-modal" class="p-8 rounded-2xl shadow-2xl card w-full max-w-lg">
-        <h2 id="goal-modal-title" class="text-2xl font-bold mb-6">Nova Meta</h2>
-        <form id="goal-form" class="space-y-4">
-            <input type="hidden" id="goal-id">
-            <div>
-                <label for="goal-name" class="block text-sm font-medium text-gray-700">Nome da Meta</label>
-                <input type="text" id="goal-name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Viagem para o Japío">
-            </div>
-            <div>
-                <label for="goal-amount" class="block text-sm font-medium text-gray-700">Valor Total (R$)</label>
-                <input type="number" id="goal-amount" step="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 15000">
-            </div>
-             <div class="flex justify-end gap-4 pt-4">
-                <button type="button" id="close-goal-modal-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium py-2 px-5 rounded-lg transition-colors">Cancelar</button>
-                <button type="submit" class="btn-primary font-medium py-2 px-5 rounded-lg transition-transform active:scale-95">Salvar Meta</button>
-            </div>
-        </form>
-    </dialog>
-
-    <dialog id="monthly-report-modal" class="report-modal p-8 rounded-2xl shadow-2xl card w-full max-w-4xl overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">RelaTí³rio Mensal - <span id="monthly-report-title"></span></h2>
-            <button type="button" id="close-monthly-report-btn" class="p-2 rounded-full hover:bg-gray-200">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <div class="space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="card p-4 rounded-lg text-center !hover:scale-100">
-                    <h3 class="text-sm font-medium text-gray-500">Total Entradas</h3>
-                    <p id="mr-total-income" class="text-xl font-semibold text-green-600 mt-1"></p>
-                </div>
-                 <div class="card p-4 rounded-lg text-center !hover:scale-100">
-                    <h3 class="text-sm font-medium text-gray-500">Total Saí­das</h3>
-                    <p id="mr-total-outcome" class="text-xl font-semibold text-red-600 mt-1"></p>
-                </div>
-                 <div class="card p-4 rounded-lg text-center !hover:scale-100">
-                    <h3 class="text-sm font-medium text-gray-500">Saldo Final</h3>
-                    <p id="mr-final-balance" class="text-xl font-semibold mt-1"></p>
-                </div>
-            </div>
-             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="card p-6 rounded-xl !hover:scale-100">
-                    <h3 class="text-lg font-semibold mb-4">Onde seu dinheiro foi parar?</h3>
-                    <div class="h-64"><canvas id="mr-category-breakdown-chart"></canvas></div>
-                </div>
-                <div class="card p-6 rounded-xl !hover:scale-100">
-                    <h3 class="text-lg font-semibold mb-4">Maiores Despesas do Mês</h3>
-                    <ul id="mr-top-expenses-list" class="space-y-2 text-sm"></ul>
-                </div>
-            </div>
-        </div>
-    </dialog>
-
-    <dialog id="annual-report-modal" class="report-modal p-8 rounded-2xl shadow-2xl card w-full max-w-4xl overflow-y-auto">
-         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">RelaTí³rio Anual - <span id="annual-report-title"></span></h2>
-            <button type="button" id="close-annual-report-btn" class="p-2 rounded-full hover:bg-gray-200">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-         <div class="space-y-8">
-             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="card p-4 rounded-lg text-center !hover:scale-100">
-                    <h3 class="text-sm font-medium text-gray-500">Total Entradas no Ano</h3>
-                    <p id="ar-total-income" class="text-xl font-semibold text-green-600 mt-1"></p>
-                </div>
-                 <div class="card p-4 rounded-lg text-center !hover:scale-100">
-                    <h3 class="text-sm font-medium text-gray-500">Total Saí­das no Ano</h3>
-                    <p id="ar-total-outcome" class="text-xl font-semibold text-red-600 mt-1"></p>
-                </div>
-                 <div class="card p-4 rounded-lg text-center !hover:scale-100">
-                    <h3 class="text-sm font-medium text-gray-500">Balanço Final do Ano</h3>
-                    <p id="ar-final-balance" class="text-xl font-semibold mt-1"></p>
-                </div>
-            </div>
-             <div class="card p-6 rounded-xl !hover:scale-100">
-                <h3 class="text-lg font-semibold mb-4">Evoluçío do Saldo Mensal</h3>
-                <div class="h-80"><canvas id="ar-balance-evolution-chart"></canvas></div>
-            </div>
-             <div class="card p-6 rounded-xl !hover:scale-100">
-                <h3 class="text-lg font-semibold mb-4">má©dia de Gastos Mensais por Categoria</h3>
-                <div class="h-80"><canvas id="ar-avg-category-spending-chart"></canvas></div>
-            </div>
-        </div>
-    </dialog>
-
-    <!-- VR Ledger Modal -->
-    <dialog id="vr-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">Gerenciar VR</h2>
-        <form id="vr-entry-form" class="space-y-3">
-            <input type="hidden" id="vr-entry-id">
-            <div>
-                <label class="block text-sm text-gray-700">Descrição</label>
-                <input id="vr-entry-desc" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
-            </div>
-            <div>
-                <label class="block text-sm text-gray-700">Valor (R$)</label>
-                <input id="vr-entry-amount" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button id="vr-entry-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
-                <button id="vr-entry-save" type="submit" class="btn-primary px-3 py-1 rounded">Salvar</button>
-            </div>
-        </form>
-        <button id="close-vr-modal" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
-    </dialog>
-    
-    <!-- VR Usage Edit Modal -->
-    <dialog id="vr-usage-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">Editar Compra (VR)</h2>
-        <form id="vr-usage-form" class="space-y-3">
-            <input type="hidden" id="vr-usage-id">
-            <div>
-                <label class="block text-sm text-gray-700">Descrição</label>
-                <input id="vr-usage-desc" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
-            </div>
-            <div>
-                <label class="block text-sm text-gray-700">Valor (R$)</label>
-                <input id="vr-usage-amount" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button id="vr-usage-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
-                <button id="vr-usage-save" type="submit" class="btn-primary px-3 py-1 rounded">Salvar</button>
-            </div>
-        </form>
-        <button id="vr-usage-close" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
-    </dialog>
-    
-    <!-- VT Ledger Modal -->
-    <dialog id="vt-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">Gerenciar VT</h2>
-        <form id="vt-entry-form" class="space-y-3">
-            <input type="hidden" id="vt-entry-id">
-            <div>
-                <label class="block text-sm text-gray-700">Descrição</label>
-                <input id="vt-entry-desc" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
-            </div>
-            <div>
-                <label class="block text-sm text-gray-700">Valor (R$)</label>
-                <input id="vt-entry-amount" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button id="vt-entry-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
-                <button id="vt-entry-save" type="submit" class="btn-primary px-3 py-1 rounded">Salvar</button>
-            </div>
-        </form>
-        <button id="close-vt-modal" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
-    </dialog>
-
-    <!-- Salary breakdown modal (step-by-step ilustrative calculation) -->
-    <dialog id="salary-breakdown-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-2xl">
-        <div class="modal-body">
-            <div class="flex justify-between items-start mb-4">
-                <h3 id="salary-breakdown-title" class="text-lg font-semibold">Detalhamento do Salí¡rio</h3>
-                <button id="close-salary-breakdown" class="text-gray-500 hover:text-gray-700">Fechar âœ•</button>
-            </div>
-            <div id="salary-breakdown-content" class="space-y-3 text-sm text-gray-700">
-                <!-- dynamic content injected by JS -->
-            </div>
-        </div>
-    </dialog>
-    
-    <!-- VT Usage Edit Modal -->
-    <dialog id="vt-usage-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">Editar Compra (VT)</h2>
-        <form id="vt-usage-form" class="space-y-3">
-            <input type="hidden" id="vt-usage-id">
-            <div>
-                <label class="block text-sm text-gray-700">Descrição</label>
-                <input id="vt-usage-desc" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
-            </div>
-            <div>
-                <label class="block text-sm text-gray-700">Valor (R$)</label>
-                <input id="vt-usage-amount" type="number" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md p-2" />
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button id="vt-usage-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
-                <button id="vt-usage-save" type="submit" class="btn-primary px-3 py-1 rounded">Salvar</button>
-            </div>
-        </form>
-        <button id="vt-usage-close" class="absolute top-3 right-3 p-1"> <span class="material-symbols-outlined">close</span></button>
-    </dialog>
-    
-    <!-- VT Fuel Detail Modal (Registrar + Histórico) -->
-    <dialog id="vt-fuel-modal" class="p-6 rounded-2xl shadow-2xl card w-full max-w-4xl" style="max-height:92vh;overflow:auto;max-width:900px;">
-        <div class="flex items-start justify-between mb-4">
-            <h2 class="text-xl font-bold">VT â€” Abastecimentos</h2>
-            <div class="flex items-center gap-2">
-                <button id="vt-fuel-close" class="p-2 rounded-full hover:bg-gray-100" aria-label="Fechar modal"><span class="material-symbols-outlined">close</span></button>
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <div class="flex gap-2">
-                <button id="vt-tab-register" class="px-3 py-1 rounded bg-gray-100 font-semibold">Registrar</button>
-                <button id="vt-tab-history" class="px-3 py-1 rounded bg-white font-semibold">Histórico</button>
-            </div>
-        </div>
-
-        <div id="vt-tab-content">
-            <!-- Registrar -->
-            <div id="vt-register" class="space-y-3">
-                <form id="vt-fuel-form" class="space-y-3">
-                    <input type="hidden" id="vt-fuel-id">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Veí­culo</label>
-                            <div class="relative select-with-icon">
-                                <span class="select-icon material-symbols-outlined">directions_car</span>
-                                <select id="vt-fuel-vehicle" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2">
-                                    <option value="Carro">Carro</option>
-                                    <option value="Moto" selected>Moto</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Data do abastecimento</label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">calendar_today</span>
-                                <input id="vt-fuel-date" type="date" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Odí´metro (km)</label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">speed</span>
-                                <input id="vt-fuel-odometer" type="number" step="1" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 12345" />
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">CombusTí­vel</label>
-                            <div class="relative select-with-icon">
-                                <span class="select-icon material-symbols-outlined">local_gas_station</span>
-                                <select id="vt-fuel-type" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2">
-                                    <option value="Gasolina">Gasolina</option>
-                                    <option value="Gasolina Aditivada">Gas. Aditivada</option>
-                                    <option value="Etanol">Etanol</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Preço / L (R$)</label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">attach_money</span>
-                                <input id="vt-fuel-price" type="text" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 5,49" />
-                            </div>
-                            <p id="vt-error-price" class="text-xs text-red-600 hidden"></p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Litros (L)</label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">opacity</span>
-                                <input id="vt-fuel-liters" type="text" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 30,0" />
-                            </div>
-                            <p id="vt-error-liters" class="text-xs text-red-600 hidden"></p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">Valor total (R$)</label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">payments</span>
-                                <input id="vt-fuel-total" type="text" class="pl-8 mt-1 block w-full border-gray-300 rounded-md p-2" placeholder="Ex: 164,70" />
-                            </div>
-                            <p id="vt-error-total" class="text-xs text-red-600 hidden"></p>
-                        </div>
-                    </div>
-
-                    <p id="vt-fuel-hint" class="text-xs text-gray-500">Estes dados serío usados para relaTí³rios de consumo, autonomia e Histórico de preços.</p>
-
-                    <div class="flex justify-end gap-2 pt-2">
-                        <button id="vt-fuel-cancel" type="button" class="bg-gray-100 px-3 py-1 rounded">Cancelar</button>
-                        <button id="vt-fuel-save" type="submit" class="btn-primary px-3 py-1 rounded" disabled>Salvar Abastecimento</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Histórico (hidden por padrío, mostrado pela aba) -->
-            <div id="vt-history" class="hidden">
-                <div class="flex flex-col md:flex-row md:items-center md:gap-4 mb-3">
-                    <div class="flex gap-2 items-center flex-1">
-                        <label class="text-sm text-gray-600">Veí­culo</label>
-                        <div class="relative select-with-icon">
-                            <span class="select-icon material-symbols-outlined">directions_car</span>
-                            <select id="vt-filter-vehicle" class="pl-8 border-gray-200 rounded p-1"></select>
-                        </div>
-                        <label class="text-sm text-gray-600 ml-3">CombusTí­vel</label>
-                        <div class="relative select-with-icon">
-                            <span class="select-icon material-symbols-outlined">local_gas_station</span>
-                            <select id="vt-filter-fuel" class="pl-8 border-gray-200 rounded p-1">
-                                <option value="">Todos</option>
-                                <option value="Gasolina">Gasolina</option>
-                                <option value="Gasolina Aditivada">Gas. Aditivada</option>
-                                <option value="Etanol">Etanol</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 mt-2 md:mt-0">
-                        <div class="relative">
-                            <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">search</span>
-                            <input id="vt-filter-search" class="pl-8 border-gray-200 rounded p-1" placeholder="Pesquisar Descrição..." />
-                        </div>
-                        <button id="vt-filter-clear" class="bg-gray-100 px-2 py-1 rounded">Limpar</button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-                    <div class="p-3 rounded bg-white border">
-                        <div class="text-sm text-gray-500">Total Gasto</div>
-                        <div id="vt-stat-total" class="text-lg font-semibold">R$ 0,00</div>
-                    </div>
-                    <div class="p-3 rounded bg-white border">
-                        <div class="text-sm text-gray-500">Total Litros</div>
-                        <div id="vt-stat-liters" class="text-lg font-semibold">0.00 L</div>
-                    </div>
-                    <div class="p-3 rounded bg-white border">
-                        <div class="text-sm text-gray-500">má©dia Preço/L</div>
-                        <div id="vt-stat-avgprice" class="text-lg font-semibold">R$ 0,00</div>
-                    </div>
-                </div>
-
-                <div class="p-3 rounded bg-white border mb-3">
-                    <div class="text-sm text-gray-500">Autonomia (má©dia km/L calculada a partir de odí´metros)</div>
-                    <div id="vt-stat-autonomy" class="text-lg font-semibold">â€”</div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-3">
-                    <div class="p-3 rounded bg-white border">
-                        <div class="text-sm text-gray-500 mb-2">Histórico de Preço / L</div>
-                        <canvas id="vt-chart-price" height="160"></canvas>
-                    </div>
-                    <div class="p-3 rounded bg-white border">
-                        <div class="text-sm text-gray-500 mb-2">Autonomia por intervalo (km/L)</div>
-                        <canvas id="vt-chart-autonomy" height="160"></canvas>
-                    </div>
-                </div>
-
-                <div class="overflow-auto max-h-64 rounded border bg-white p-2">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="text-left text-xs text-gray-500">
-                                <th class="px-2 py-1">Data</th>
-                                <th class="px-2 py-1">Descrição</th>
-                                <th class="px-2 py-1">Veí­culo</th>
-                                <th class="px-2 py-1">Km</th>
-                                <th class="px-2 py-1">L</th>
-                                <th class="px-2 py-1">R$ / L</th>
-                                <th class="px-2 py-1">Total</th>
-                                <th class="px-2 py-1 text-right">&nbsp;</th>
-                            </tr>
-                        </thead>
-                        <tbody id="vt-history-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </dialog>
-    </div> <!-- Fim do mainApp -->
-
-    <script>
     (function(){
         window._pendingVtTransaction = null;
-        // helpers
-        function q(id){ return document.getElementById(id); }
 
+        function q(id){ return document.getElementById(id); }
         function openVtFuelModal(pendingTransaction){
             window._pendingVtTransaction = pendingTransaction || null;
             const modal = q('vt-fuel-modal'); if (!modal) return;
-            // show register tab
+
             activateVtTab('register');
-            // prefill total if present (format to pt-BR style)
+
             try {
                 const tot = (pendingTransaction && pendingTransaction.amount) ? Number(pendingTransaction.amount) : '';
                 if (tot !== '') q('vt-fuel-total').value = (Number(tot) || 0).toFixed(2).replace('.', ',');
                 else q('vt-fuel-total').value = '';
-                // pref-fill date to today if available
+
                 try { const d = new Date(); q('vt-fuel-date').value = d.toISOString().slice(0,10); } catch(e){}
-                // Prefill other fields from last recorded VT entry for convenience
+
                 try {
                     const all = (typeof collectAllVtUsage === 'function') ? collectAllVtUsage() : [];
                     const last = (all && all.length) ? all[0] : null;
                     if (last) {
-                        // vehicle and fuel type defaults
+
                         try {
                             if (q('vt-fuel-vehicle') && (!q('vt-fuel-vehicle').value || q('vt-fuel-vehicle').value === '')) q('vt-fuel-vehicle').value = last.vehicle || q('vt-fuel-vehicle').value;
-                            // if the enhanced icon-select overlay exists, refresh its button/label
+
                             try { const sel = q('vt-fuel-vehicle'); if (sel && typeof sel._refreshIconSelect === 'function') sel._refreshIconSelect(); } catch(e){}
                         } catch(e){}
                         try { if (q('vt-fuel-type') && (!q('vt-fuel-type').value || q('vt-fuel-type').value === '')) q('vt-fuel-type').value = last.fuelType || q('vt-fuel-type').value; } catch(e){}
                         try { const t = q('vt-fuel-type'); if (t && typeof t._refreshIconSelect === 'function') t._refreshIconSelect(); } catch(e){}
-                        // placeholders for numeric fields so user sees last values
+
                         try { if (q('vt-fuel-price') && (!q('vt-fuel-price').value)) q('vt-fuel-price').placeholder = (last.pricePerLiter!=null ? Number(last.pricePerLiter).toFixed(2).replace('.', ',') : q('vt-fuel-price').placeholder); } catch(e){}
                         try { if (q('vt-fuel-liters') && (!q('vt-fuel-liters').value)) q('vt-fuel-liters').placeholder = (last.liters!=null ? Number(last.liters).toFixed(3).replace('.', ',') : q('vt-fuel-liters').placeholder); } catch(e){}
                         try { if (q('vt-fuel-odometer') && (!q('vt-fuel-odometer').value)) q('vt-fuel-odometer').placeholder = (last.odometer!=null ? String(last.odometer) : q('vt-fuel-odometer').placeholder); } catch(e){}
@@ -4822,93 +645,86 @@
                     }
                 } catch(e) { /* ignore prefill errors */ }
             } catch(e){}
-            // ensure the dialog is visible and on top. Some environments may not support showModal
+
             try {
                 modal.style.zIndex = '200000';
                 modal.style.display = 'block';
                 if (typeof modal.showModal === 'function') modal.showModal();
                 else modal.setAttribute('open','');
             } catch(e){
-                console.warn('openVtFuelModal: showModal failed, applying fallback open attribute and styles', e);
+
                 try { modal.setAttribute('open',''); } catch(err){}
                 try { modal.style.display = 'block'; } catch(_){}
             }
-            // If total prefilled, enable save button
+
             try { const pre = parseLocaleNumber(q('vt-fuel-total').value) || 0; if (pre > 0) { try { q('vt-fuel-save').removeAttribute('disabled'); } catch(e){} } } catch(e){}
             renderVtHistory();
         }
 
-        // Open VT modal and switch to the history tab
         function openVtFuelHistory(){
             const modal = q('vt-fuel-modal'); if (!modal) return;
-            // Clear any pending transaction context
+
             window._pendingVtTransaction = null;
             activateVtTab('history');
             try { modal.style.zIndex = '200000'; modal.style.display = 'block'; if (typeof modal.showModal === 'function') modal.showModal(); else modal.setAttribute('open',''); } catch(e) { try { modal.setAttribute('open',''); modal.style.display = 'block'; } catch(_){} }
             renderVtHistory();
         }
-
         function closeVtFuelModal(){
             const modal = q('vt-fuel-modal'); if(!modal) return;
             try{
                 if (typeof modal.close === 'function') modal.close();
                 else modal.removeAttribute('open');
             }catch(e){
-                console.warn('closeVtFuelModal: modal.close failed, removing open attribute', e);
+
                 try { modal.removeAttribute('open'); } catch(_){}
             }
-            // hide and reset styles as an extra fallback
+
             try { modal.style.display = 'none'; modal.style.zIndex = ''; } catch(_){}
             window._pendingVtTransaction = null;
         }
 
-        // Tab handling
         function activateVtTab(name){
             const reg = q('vt-register'); const hist = q('vt-history'); const btnReg = q('vt-tab-register'); const btnHist = q('vt-tab-history');
             if(name === 'register'){ reg.classList.remove('hidden'); hist.classList.add('hidden'); btnReg.classList.add('bg-gray-100'); btnHist.classList.remove('bg-gray-100'); }
             else { reg.classList.add('hidden'); hist.classList.remove('hidden'); btnHist.classList.add('bg-gray-100'); btnReg.classList.remove('bg-gray-100'); renderVtHistory(); }
         }
 
-        // collect all vtUsage entries across appData
         function collectAllVtUsage(){
             try{
                 const out = [];
-                // Be defensive: prefer internal `state`, fallback to `window.state`, otherwise empty
+
                 const data = (typeof state !== 'undefined' && state.appData && state.appData.data) ? state.appData.data : ((window.state && window.state.appData && window.state.appData.data) ? window.state.appData.data : {});
                 Object.keys(data).forEach(y => { Object.keys(data[y] || {}).forEach(m => { const md = data[y][m] || {}; (md.vtUsage || []).forEach(u => out.push(u)); }); });
-                // sort desc by date
+
                 out.sort((a,b) => new Date(b.date) - new Date(a.date));
                 return out;
             }catch(e){ return []; }
         }
 
-        // render history table and stats (with filters and charts)
         let vtPriceChart = null, vtAutonomyChart = null;
-        // ResizeObservers for charts so we can control size manually and avoid Chart.js resize feedback loops
+
         let vtPriceResizeObserver = null, vtAutonomyResizeObserver = null;
 
-        // Compute chart height based on breakpoint (desktop larger)
         function getChartHeightForViewport() {
             try {
                 return (window.innerWidth >= 1024) ? 220 : 160;
             } catch (e) { return 160; }
         }
 
-        // Attach a ResizeObserver to keep the chart sized correctly. Returns a disconnect function.
         function attachChartResizeObserver(canvas, chartInstance, parent) {
             if (!canvas || !chartInstance) return function(){};
             const resizeFn = () => {
                 try {
                     const h = getChartHeightForViewport();
-                    // set CSS height and request chart resize
+
                     canvas.style.height = h + 'px';
-                    // let Chart.js recalculate with current CSS size
+
                     try { chartInstance.resize(); } catch(e) { /* ignore */ }
                 } catch (e) { console.error('chart resizeFn error', e); }
             };
-            // Call once to set initial size
+
             resizeFn();
-            // Observe parent size changes; fallback to window resize if ResizeObserver not available
+
             if (typeof ResizeObserver !== 'undefined') {
                 const ro = new ResizeObserver(() => resizeFn());
                 try { ro.observe(parent || canvas.parentElement || document.body); } catch(e){}
@@ -4921,7 +737,7 @@
         }
         function renderVtHistory(){
             const all = collectAllVtUsage();
-            // If there are no records in memory, attempt a one-time reload from persistent storage
+
             try {
                 if ((!(all && all.length) || all.length === 0) && !window._vtHistoryReloadAttempted) {
                     window._vtHistoryReloadAttempted = true;
@@ -4933,7 +749,7 @@
                     }
                 }
             } catch (e) { /* ignore reload errors */ }
-            // apply filters (defensive DOM access)
+
             const vfEl = q('vt-filter-vehicle');
             const ffEl = q('vt-filter-fuel');
             const searchEl = q('vt-filter-search');
@@ -4949,29 +765,26 @@
                 }
                 return true;
             });
-
             const tb = q('vt-history-tbody'); if(!tb) return; tb.innerHTML = '';
             let total = 0; let liters = 0; let priceSum = 0; let priceCount = 0; const byVehicle = {};
-            // prepare series for charts (use chronological order)
+
             const priceSeries = []; const priceLabels = [];
             const autonomyIntervals = [];
 
-            // Use a chronological copy for charts/metrics
             const rowsForCharts = (rows || []).slice().sort((a,b) => new Date(a.date) - new Date(b.date));
-
             rows.forEach(r => {
                 const d = new Date(r.date || '');
                 const tr = document.createElement('tr');
-                // create editable cells (click to edit). We'll use data-id attr to identify the entry
+
                 function mkCell(content, field, formatter) {
                     const td = document.createElement('td'); td.className = 'px-2 py-1';
                     const span = document.createElement('span'); span.className = 'vt-cell'; span.textContent = formatter ? formatter(content) : (content==null? '' : String(content));
                     span.style.cursor = 'pointer';
                     span.title = 'Clique para editar';
                     span.addEventListener('click', function () {
-                        // prevent multiple inputs
+
                         if (td.querySelector('input') || td.querySelector('textarea') || td.querySelector('select')) return;
-                        // create appropriate editor based on field
+
                         let inputEl;
                         if (field === 'date') {
                             inputEl = document.createElement('input'); inputEl.type = 'date'; inputEl.value = (content ? new Date(content).toISOString().slice(0,10) : '');
@@ -4991,7 +804,7 @@
                         inputEl.className = 'w-full border rounded p-1';
                         td.innerHTML = ''; td.appendChild(inputEl);
                         inputEl.focus();
-                        // save on blur or Enter
+
                         const saveFn = async () => {
                             try {
                                 let val = inputEl.value;
@@ -5004,11 +817,11 @@
                                 else if (field === 'vehicle') updated.vehicle = val;
                                 else if (field === 'fuelType') updated.fuelType = val;
                                 else if (field === 'description') updated.description = val;
-                                // call appApi.updateVtEntry if available
+
                                 if (window.appApi && typeof window.appApi.updateVtEntry === 'function') {
                                     await window.appApi.updateVtEntry(updated);
                                 } else {
-                                    // fallback: modify window.state directly
+
                                     try {
                                         const data = window.state && window.state.appData && window.state.appData.data ? window.state.appData.data : null;
                                         if (data) {
@@ -5018,9 +831,9 @@
                                     } catch(e){ console.error('fallback update inline', e); }
                                 }
                                 showToast('Abastecimento atualizado', 'bg-green-600');
-                                // refresh UI
+
                                 renderVtHistory(); if (window.appApi && typeof window.appApi.render === 'function') window.appApi.render();
-                            } catch (err) { console.error('inline edit save error', err); showToast('Falha ao salvar alteração', 'bg-red-600'); renderVtHistory(); }
+                            } catch (err) { console.error('inline edit save error', err); showToast('Falha ao salvar alteraï¿½ï¿½o', 'bg-red-600'); renderVtHistory(); }
                         };
                         inputEl.addEventListener('blur', saveFn);
                         inputEl.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); inputEl.blur(); } else if (ev.key === 'Escape') { renderVtHistory(); } });
@@ -5028,7 +841,6 @@
                     td.appendChild(span);
                     return td;
                 }
-
                 tr.dataset.vtId = r.id || '';
                 tr.appendChild(mkCell(r.date, 'date', c => { try { return c ? new Date(c).toLocaleDateString() : ''; } catch(e){ return ''; } }));
                 tr.appendChild(mkCell(r.description || 'Abastecimento', 'description'));
@@ -5037,26 +849,25 @@
                 tr.appendChild(mkCell(r.liters!=null? Number(r.liters).toFixed(3) : '', 'liters'));
                 tr.appendChild(mkCell(r.pricePerLiter!=null? r.pricePerLiter : '', 'pricePerLiter', v => v ? formatCurrency(v) : ''));
                 tr.appendChild(mkCell(r.amount!=null? r.amount : 0, 'amount', v => formatCurrency(v||0)));
-                // Actions cell: delete button (appears on row hover)
+
                 const actionsTd = document.createElement('td'); actionsTd.className = 'px-2 py-1 actions-cell text-right';
                 const delBtn = document.createElement('button');
                 delBtn.type = 'button';
                 delBtn.className = 'vt-delete-btn';
                 delBtn.title = 'Excluir abastecimento';
-                delBtn.style.opacity = '0';
-                delBtn.style.transition = 'opacity 160ms ease';
+                delBtn.style.display = 'none';
                 delBtn.style.background = 'transparent';
                 delBtn.style.border = 'none';
                 delBtn.style.cursor = 'pointer';
                 delBtn.innerHTML = '<span class="material-symbols-outlined text-red-500">delete</span>';
-                // show/hide on hover
-                tr.addEventListener('mouseenter', () => { try{ delBtn.style.opacity = '1'; } catch(e){} });
-                tr.addEventListener('mouseleave', () => { try{ delBtn.style.opacity = '0'; } catch(e){} });
-                // deletion handler
+
+                tr.addEventListener('mouseenter', () => { try{ delBtn.style.display = 'inline-block'; } catch(e){} });
+                tr.addEventListener('mouseleave', () => { try{ delBtn.style.display = 'none'; } catch(e){} });
+
                 delBtn.addEventListener('click', async (ev) => {
                     try {
                         ev.stopPropagation();
-                        try { const ok = await confirmAsync('Excluir este abastecimento?', 'Confirmar exclusío'); if (!ok) return; } catch(e) { return; }
+                        try { const ok = await confirmAsync('Excluir este abastecimento?', 'Confirmar exclusï¿½o'); if (!ok) return; } catch(e) { return; }
                         const idToDelete = r.id;
                         let found = false;
                         try {
@@ -5064,12 +875,12 @@
                             Object.keys(data).forEach(y => { Object.keys(data[y] || {}).forEach(m => { const md = data[y][m] || {}; if (Array.isArray(md.vtUsage)) { const idx = md.vtUsage.findIndex(it => it && it.id === idToDelete); if (idx !== -1) { md.vtUsage.splice(idx,1); found = true; } } }); });
                             if (found) {
                                 try { await storage.saveData(window.state.appData); } catch(e){ console.error('saveData after vt delete', e); }
-                                showToast('Abastecimento excluí­do', 'bg-green-600');
+                                showToast('Abastecimento excluï¿½ï¿½do', 'bg-green-600');
                             } else {
-                                showToast('Abastecimento nío encontrado', 'bg-yellow-600');
+                                showToast('Abastecimento nï¿½o encontrado', 'bg-yellow-600');
                             }
                         } catch (e) { console.error('delete vt inline error', e); showToast('Erro ao excluir abastecimento', 'bg-red-600'); }
-                        // refresh UI
+
                         try { renderVtHistory(); } catch(e){}
                         try { if (window.appApi && typeof window.appApi.render === 'function') window.appApi.render(); } catch(e){}
                     } catch (err) { console.error('vt delete handler', err); showToast('Falha ao excluir', 'bg-red-600'); }
@@ -5083,7 +894,6 @@
                 const v = r.vehicle || 'unknown'; if(!byVehicle[v]) byVehicle[v] = []; byVehicle[v].push(r);
             });
 
-            // Build chart series from chronological data, skipping invalid values
             rowsForCharts.forEach(r => {
                 const d = new Date(r.date || '');
                 const price = Number(r.pricePerLiter || 0);
@@ -5093,16 +903,13 @@
                 }
             });
 
-            // If there are no rows, show a friendly empty message in the table
             if (!rows || rows.length === 0) {
                 if (tb) tb.innerHTML = '<tr><td colspan="7" class="p-6 text-sm text-gray-500">Nenhum abastecimento encontrado para os filtros selecionados.</td></tr>';
             }
-
             q('vt-stat-total').textContent = formatCurrency(total);
             q('vt-stat-liters').textContent = `${liters.toFixed(3)} L`;
             q('vt-stat-avgprice').textContent = priceCount ? formatCurrency(priceSum / priceCount) : formatCurrency(0);
 
-            // compute autonomy intervals per vehicle using chronological order
             Object.keys(byVehicle).forEach(v => {
                 const arr = (byVehicle[v]||[]).slice().filter(it => it.odometer!=null).sort((a,b)=> new Date(a.date)-new Date(b.date));
                 for(let i=1;i<arr.length;i++){
@@ -5110,33 +917,31 @@
                     const prevOdo = Number(prev.odometer || 0);
                     const curOdo = Number(cur.odometer || 0);
                     const km = curOdo - prevOdo;
-                    // liters consumed between prev and cur is generally the liters recorded in cur
+
                     const litersUsed = Number(cur.liters || 0);
                     if (km > 0 && litersUsed > 0) {
                         autonomyIntervals.push({ vehicle: v, km: km, liters: litersUsed, ratio: km / litersUsed, date: cur.date });
                     }
                 }
             });
-            q('vt-stat-autonomy').textContent = autonomyIntervals.length ? `${(autonomyIntervals.reduce((s,i)=>s+i.ratio,0)/autonomyIntervals.length).toFixed(3)} km/L` : 'Insuficiente (sem pares de odí´metro)';
+            q('vt-stat-autonomy').textContent = autonomyIntervals.length ? `${(autonomyIntervals.reduce((s,i)=>s+i.ratio,0)/autonomyIntervals.length).toFixed(3)} km/L` : 'Insuficiente (sem pares de odï¿½ï¿½metro)';
 
-            // Add a small informative tooltip/icon next to the autonomy stat to explain 'Insuficiente'
             try {
                 const autonomyEl = q('vt-stat-autonomy');
                 if (autonomyEl) {
-                    autonomyEl.setAttribute('title', 'A autonomia má©dia í© calculada a partir de pares de odí´metro registrados entre dois abastecimentos. Preencha odí´metro em dois abastecimentos para calcular.');
-                    // append a subtle info icon if not present
+                    autonomyEl.setAttribute('title', 'A autonomia mï¿½dia ï¿½ï¿½ calculada a partir de pares de odï¿½ï¿½metro registrados entre dois abastecimentos. Preencha odï¿½ï¿½metro em dois abastecimentos para calcular.');
+
                     if (!autonomyEl.querySelector('.vt-autonomy-info')) {
                         const info = document.createElement('span');
                         info.className = 'vt-autonomy-info material-symbols-outlined text-xs ml-2 text-gray-400';
                         info.style.verticalAlign = 'middle';
-                        info.title = 'A autonomia má©dia í© calculada a partir de pares de odí´metro registrados entre dois abastecimentos.';
+                        info.title = 'A autonomia mï¿½dia ï¿½ï¿½ calculada a partir de pares de odï¿½ï¿½metro registrados entre dois abastecimentos.';
                         info.textContent = 'info';
                         autonomyEl.appendChild(info);
                     }
                 }
             } catch (e) { /* ignore tooltip failures */ }
 
-            // populate vehicle filter options
             const vehicles = Array.from(new Set(collectAllVtUsage().map(u => u.vehicle || '').filter(Boolean))).map(v => ({ value: v, label: v, icon: ((window.ICON_MAPPINGS && window.ICON_MAPPINGS.vehicles) || []).find(x=>x.value===v)?.icon || '' }));
             const vfEl2 = q('vt-filter-vehicle'); if (vfEl2) {
                 if (vehicles && vehicles.length) populateSelect('vt-filter-vehicle', [{ value: '', label: 'Todos', icon: '' }].concat(vehicles), '.select-icon');
@@ -5144,39 +949,38 @@
                 try { if (typeof vfEl2._refreshIconSelect === 'function') vfEl2._refreshIconSelect(); } catch(e) { /* ignore */ }
             }
 
-            // Draw charts using Chart.js (if available). Guard canvas lookup to avoid exceptions.
             try{
                 const priceCanvas = document.getElementById('vt-chart-price');
-                // Friendly empty-state overlay handling for charts
+
                 try {
                     const priceEmptyId = 'vt-chart-price-empty';
                     if (priceCanvas) {
                         const priceParent = priceCanvas.parentElement;
-                        // Prevent Chart.js from growing the canvas by enforcing a min-height on the parent
+
                         try { if (priceParent) priceParent.style.minHeight = priceSeries && priceSeries.length ? '160px' : ''; } catch(e){}
-                        // show/hide canvas based on data
+
                         if (!priceSeries || priceSeries.length === 0) {
                             priceCanvas.style.display = 'none';
                             if (priceParent && !priceParent.querySelector('#' + priceEmptyId)) {
-                                const d = document.createElement('div'); d.id = priceEmptyId; d.className = 'p-6 text-sm text-gray-500'; d.textContent = 'Sem Histórico de preço por litro.'; if (priceParent) priceParent.appendChild(d);
+                                const d = document.createElement('div'); d.id = priceEmptyId; d.className = 'p-6 text-sm text-gray-500'; d.textContent = 'Sem Histï¿½rico de preï¿½o por litro.'; if (priceParent) priceParent.appendChild(d);
                             }
                         } else {
-                            // ensure canvas has an explicit height so Chart.js doesn't compute a problematic size
+
                             try { priceCanvas.style.display = ''; priceCanvas.style.height = '160px'; } catch(e){}
                             const existing = priceParent ? priceParent.querySelector('#' + priceEmptyId) : null; if (existing) existing.remove();
                         }
                     }
                 } catch(e){}
                 if (priceCanvas && priceCanvas.getContext) {
-                    // If there's no data, ensure any existing chart is destroyed and canvas hidden
+
                     if (!priceSeries || priceSeries.length === 0) {
                         try { if (vtPriceChart) { vtPriceChart.destroy(); vtPriceChart = null; } } catch(e){}
                     }
-                    // Prepare the canvas for a stable rendering: set drawing buffer height and CSS height
+
                     try { priceCanvas.height = 160; priceCanvas.style.height = '160px'; } catch(e){}
                     const priceCtx = priceCanvas.getContext('2d');
                     try {
-                        // Always recreate chart to avoid stale/responsive resize loops; destroy first if exists
+
                         if (vtPriceChart) { try { vtPriceChart.destroy(); } catch(e){} vtPriceChart = null; }
                         if (vtPriceResizeObserver) { try { vtPriceResizeObserver(); } catch(e){} vtPriceResizeObserver = null; }
                         if (priceSeries && priceSeries.length) {
@@ -5184,19 +988,18 @@
                                 type: 'line',
                                 data: { labels: priceLabels, datasets: [{ label: 'R$/L', data: priceSeries, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)', fill: true }] },
                                 options: {
-                                    // we manage resizing externally via ResizeObserver to avoid feedback loops
+
                                     responsive: false,
                                     maintainAspectRatio: false,
                                     scales: { x: { display: true }, y: { display: true } }
                                 }
                             });
-                            // attach observer to resize chart when parent changes
+
                             vtPriceResizeObserver = attachChartResizeObserver(priceCanvas, vtPriceChart, priceCanvas.parentElement);
                         }
                     } catch (e) { console.error('vtPriceChart render error', e); }
                 }
 
-                // autonomy chart: show each interval ratio in chronological order
                 const autonomyLabels = autonomyIntervals.map(i => new Date(i.date).toLocaleDateString());
                 const autonomyData = autonomyIntervals.map(i => Number(i.ratio.toFixed(3)));
                 const autoCanvas = document.getElementById('vt-chart-autonomy');
@@ -5207,7 +1010,7 @@
                         if (!autonomyIntervals || autonomyIntervals.length === 0) {
                             autoCanvas.style.display = 'none';
                             if (autoParent && !autoParent.querySelector('#' + autoEmptyId)) {
-                                const d = document.createElement('div'); d.id = autoEmptyId; d.className = 'p-6 text-sm text-gray-500'; d.textContent = 'Autonomia insuficiente para gerar grí¡fico.'; if (autoParent) autoParent.appendChild(d);
+                                const d = document.createElement('div'); d.id = autoEmptyId; d.className = 'p-6 text-sm text-gray-500'; d.textContent = 'Autonomia insuficiente para gerar grï¿½ï¿½fico.'; if (autoParent) autoParent.appendChild(d);
                             }
                         } else {
                             autoCanvas.style.display = '';
@@ -5217,15 +1020,15 @@
                 } catch(e){}
                 if (autoCanvas && autoCanvas.getContext) {
                     const autoParent = autoCanvas.parentElement;
-                    // If no data, destroy any existing chart and hide canvas
+
                     if (!autonomyIntervals || autonomyIntervals.length === 0) {
                         try { if (vtAutonomyChart) { vtAutonomyChart.destroy(); vtAutonomyChart = null; } } catch(e){}
                     }
-                    // enforce a stable drawing buffer height and CSS height
+
                     try { autoCanvas.height = 160; autoCanvas.style.height = '160px'; if (autoParent) autoParent.style.minHeight = autonomyIntervals && autonomyIntervals.length ? '160px' : ''; } catch(e){}
                     const autoCtx = autoCanvas.getContext('2d');
                     try {
-                        // Recreate chart freshly to avoid responsive resize feedback problems
+
                         if (vtAutonomyChart) { try { vtAutonomyChart.destroy(); } catch(e){} vtAutonomyChart = null; }
                         if (vtAutonomyResizeObserver) { try { vtAutonomyResizeObserver(); } catch(e){} vtAutonomyResizeObserver = null; }
                         if (autonomyIntervals && autonomyIntervals.length) {
@@ -5245,57 +1048,46 @@
             }catch(e){ /* Chart.js not available or canvas not ready */ }
         }
 
-        // helpers: formatting & escape
         function formatCurrency(v){ try{ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v)||0); }catch(e){ return String(v); } }
         function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-            // Parse numbers entered in pt-BR style (e.g. "1.234,56", "R$ 1.234,56", or "59,52") into JS numbers
             function parseLocaleNumber(s) {
                 try {
                     if (s === undefined || s === null) return NaN;
                     if (typeof s === 'number') return s;
                     let str = String(s).trim();
                     if (str === '') return NaN;
-                    
-                    // Remove currency symbols and spaces
+
                     str = str.replace(/[R$\s\u00A0]/g, '');
-                    
-                    // Protect minus: allow only leading minus
+
                     str = str.replace(/(?!^)-/g, '');
                     if (str === '' || str === '-') return NaN;
-                    
-                    // Detect format: if there's a comma followed by 1-2 digits at the end, it's BR format (123.456,78)
-                    // Otherwise, if there's a dot followed by 1-2 digits at the end, it's US format (123,456.78)
-                    const hasBRDecimal = /,\d{1,2}$/.test(str); // ends with ,XX or ,X
-                    const hasUSDecimal = /\.\d{1,2}$/.test(str); // ends with .XX or .X
-                    
+
+                    const hasBRDecimal = /,\d{1,2}$/.test(str); 
+                    const hasUSDecimal = /\.\d{1,2}$/.test(str); 
                     if (hasBRDecimal) {
-                        // Brazilian format: 1.234.567,89 -> remove dots, replace comma with dot
+
                         str = str.replace(/\./g, '').replace(',', '.');
                     } else if (hasUSDecimal) {
-                        // US format: 1,234,567.89 -> remove commas, keep dot
+
                         str = str.replace(/,/g, '');
                     } else {
-                        // No clear decimal separator, or integer - just remove all separators
+
                         str = str.replace(/[.,]/g, '');
                     }
-                    
-                    // Remove any remaining non-numeric characters except dot and minus
+
                     str = str.replace(/[^0-9.\-]/g, '');
-                    
                     const v = parseFloat(str);
                     return isNaN(v) ? NaN : v;
                 } catch (e) { return NaN; }
             }
 
-            // Safe id generator: prefer global generateUUID if available, otherwise fallback
             function safeGenerateId() {
                 try { if (typeof generateUUID === 'function') return generateUUID(); } catch(e) {}
-                // fallback simple id
+
                 return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
             }
 
-        // auto-calculation and validation wiring
         document.addEventListener('DOMContentLoaded', function(){
             const modal = q('vt-fuel-modal'); if(!modal) return;
             const btnReg = q('vt-tab-register'); const btnHist = q('vt-tab-history');
@@ -5303,16 +1095,13 @@
             const saveBtn = q('vt-fuel-save');
             const inpPrice = q('vt-fuel-price'); const inpLiters = q('vt-fuel-liters'); const inpTotal = q('vt-fuel-total');
             const inpVehicle = q('vt-fuel-vehicle'); const inpOdo = q('vt-fuel-odometer'); const inpType = q('vt-fuel-type');
-
             let programmatic = false;
-
             function validateAndToggle(){
                 const total = parseLocaleNumber(inpTotal.value) || 0;
                 if (total > 0) { try{ saveBtn.removeAttribute('disabled'); }catch(e){} q('vt-error-total').classList.add('hidden'); }
                 else { try{ saveBtn.setAttribute('disabled',''); }catch(e){} q('vt-error-total').classList.remove('hidden'); q('vt-error-total').textContent = 'Informe o valor total.'; }
             }
 
-            // Unified recalculation: works regardless of which field the user edits first.
             function recalcFields(trigger){
                 if (programmatic) return;
                 programmatic = true;
@@ -5321,35 +1110,32 @@
                     const liters = parseLocaleNumber(inpLiters.value) || 0;
                     const total = parseLocaleNumber(inpTotal.value) || 0;
 
-                    // Priority: when we have price and liters => total
                     if (price > 0 && liters > 0) {
                         const calcTotal = Math.round((price * liters + Number.EPSILON) * 100) / 100;
                         inpTotal.value = calcTotal.toFixed(2).replace('.', ',');
                     }
-                    // If not enough for above, but have price and total => liters
+
                     else if (price > 0 && total > 0) {
                         const calcLiters = total / price;
                         inpLiters.value = calcLiters.toFixed(3).replace('.', ',');
                     }
-                    // If not above, but have liters and total => price (2 decimals)
+
                     else if (liters > 0 && total > 0) {
                         const calcPrice = total / liters;
                         inpPrice.value = calcPrice.toFixed(2).replace('.', ',');
                     }
-                    // If user cleared fields, leave inputs as-is
+
                 } catch (e) {
-                    console.error('recalcFields error', e);
+
                 } finally {
                     programmatic = false;
                     validateAndToggle();
                 }
             }
-
             inpPrice.addEventListener('input', () => recalcFields('price'));
             inpLiters.addEventListener('input', () => recalcFields('liters'));
             inpTotal.addEventListener('input', () => recalcFields('total'));
 
-            // Format values on blur (local pt-BR style)
             inpPrice.addEventListener('blur', () => {
                 try {
                     const v = parseLocaleNumber(inpPrice.value);
@@ -5371,25 +1157,22 @@
                     recalcFields('total');
                 } catch(e){}
             });
-
             btnReg.addEventListener('click', () => activateVtTab('register'));
             btnHist.addEventListener('click', () => activateVtTab('history'));
             btnClose.addEventListener('click', () => closeVtFuelModal());
             btnCancel.addEventListener('click', () => closeVtFuelModal());
 
-            // Save handler
             q('vt-fuel-form').addEventListener('submit', function(e){
                 e.preventDefault();
                 const vehicle = inpVehicle.value; const odometer = inpOdo.value ? Number(inpOdo.value) : null; const fuelType = inpType.value;
                 const price = isNaN(parseLocaleNumber(inpPrice.value)) ? null : parseLocaleNumber(inpPrice.value);
                 const liters = isNaN(parseLocaleNumber(inpLiters.value)) ? null : parseLocaleNumber(inpLiters.value);
                 const total = isNaN(parseLocaleNumber(inpTotal.value)) ? null : parseLocaleNumber(inpTotal.value);
-                if (!total || total <= 0) { q('vt-error-total').classList.remove('hidden'); q('vt-error-total').textContent = 'Valor total inví¡lido.'; return; }
+                if (!total || total <= 0) { q('vt-error-total').classList.remove('hidden'); q('vt-error-total').textContent = 'Valor total invï¿½ï¿½lido.'; return; }
                 const base = window._pendingVtTransaction || {};
                     const dateValue = (q('vt-fuel-date') && q('vt-fuel-date').value) ? new Date(q('vt-fuel-date').value).toISOString() : new Date().toISOString();
                     const entry = { id: (typeof safeGenerateId === 'function' ? safeGenerateId() : (typeof generateUUID === 'function' ? generateUUID() : ('id-' + Math.random().toString(36).slice(2,8)))), description: base.description || 'Abastecimento', amount: Number(total)||0, date: dateValue, vehicle: vehicle, odometer: odometer, fuelType: fuelType, pricePerLiter: price, liters: liters };
 
-                // Prefer App API save wrapper when available (clean dependency on internal state)
                 const saveViaAppApi = (window.appApi && typeof window.appApi.saveVtEntry === 'function');
                 if (saveViaAppApi) {
                     window.appApi.saveVtEntry(entry).then(()=>{
@@ -5399,7 +1182,6 @@
                     return;
                 }
 
-                // Fallback: replicate previous best-effort save behavior if App API not present
                 let md = null; let winState;
                 try {
                     if (typeof getCurrentMonthData === 'function') md = getCurrentMonthData();
@@ -5428,16 +1210,14 @@
                 }).catch(err=>{ console.error('save vt fuel', err); showToast('Falha ao salvar abastecimento VT.', 'bg-red-600'); });
             });
 
-            // Filters wiring
             const filterVehicle = q('vt-filter-vehicle'); const filterFuel = q('vt-filter-fuel'); const filterSearch = q('vt-filter-search'); const filterClear = q('vt-filter-clear');
             if(filterVehicle) filterVehicle.addEventListener('change', () => renderVtHistory());
             if(filterFuel) filterFuel.addEventListener('change', () => renderVtHistory());
             if(filterSearch) filterSearch.addEventListener('input', () => renderVtHistory());
             if(filterClear) filterClear.addEventListener('click', () => { if(filterSearch) filterSearch.value = ''; if(filterVehicle) filterVehicle.value = ''; if(filterFuel) filterFuel.value = ''; renderVtHistory(); });
 
-            // expose helpers
             window.openVtFuelModal = openVtFuelModal; window.closeVtFuelModal = closeVtFuelModal; window.renderVtHistory = renderVtHistory; window.openVtFuelHistory = openVtFuelHistory;
-            // Test helper: seed two VT fuel entries (useful to reproduce charts/autonomy)
+
             window.seedVtTestData = async function(){
                 const entries = [
                     { description: 'Abastecimento 1', vehicle: 'Moto', odometer: 17875, fuelType: 'Gasolina', pricePerLiter: 5.79, liters: 9.51, amount: 55.06, date: new Date().toISOString()},
@@ -5447,7 +1227,7 @@
                     if (window.appApi && typeof window.appApi.saveVtEntry === 'function') {
                         for (const e of entries) await window.appApi.saveVtEntry(e);
                     } else {
-                        // fallback: directly push to window.state if present
+
                         const date = (window.state && window.state.currentDate) ? window.state.currentDate : new Date();
                         const y = String(date.getFullYear()); const m = String(String(date.getMonth()+1).padStart(2,'0'));
                         window.state = window.state || { currentDate: date, appData: { data: {} } };
@@ -5465,49 +1245,38 @@
                 } catch (err) { console.error('seedVtTestData', err); showToast('Falha ao inserir dados de teste.', 'bg-red-600'); }
             };
         });
-        // VT KPI card click handler intentionally removed to avoid multiple access points to the VT modal.
-        // Access to the VT â€” Abastecimentos modal is restricted to the '+' button inside the VT card on the
-        // credit-cards (Faturas) view to prevent conflicts.
+
     })();
-    // Async confirm helper used across the app; uses modal when available
+
     function confirmAsync(message, title) {
         if (window.showConfirm) return window.showConfirm(message, title);
         return Promise.resolve(window.confirm(message));
     }
-    </script>
-    
-    <script>
-    // Global toast helper para feedback visual (disponí­vel antes do init)
+
     function showToast(message, color = 'bg-blue-600') {
         let toast = document.getElementById('toast');
         if (!toast) {
-            // console.debug('[toast]', message);
+
             return;
         }
         toast.textContent = message;
         toast.className = `${color} text-white px-4 py-2 rounded shadow-lg`;
-        
-        // SEMPRE manter o toast no body
+
         if (toast.parentNode !== document.body) {
             document.body.appendChild(toast);
         }
 
-        // Configurar posicionamento com z-index máXIMO para ficar acima de TUDO
-        // incluindo dialogs e seus backdrops
         toast.style.position = 'fixed';
         toast.style.bottom = '1rem';
         toast.style.left = '50%';
         toast.style.transform = 'translateX(-50%)';
-        toast.style.zIndex = '2147483647'; // má¡ximo z-index possí­vel (32-bit integer max)
-        
+        toast.style.zIndex = '2147483647'; 
         toast.style.display = 'block';
-        toast.style.opacity = '1';
         toast.style.pointerEvents = 'auto';
         if (window.__toastTimeout) clearTimeout(window.__toastTimeout);
         window.__toastTimeout = setTimeout(() => { try { toast.style.display = 'none'; } catch(e){} }, 2500);
     }
 
-    // Transaction modal inline error helpers
     function setTransactionError(msg) {
         try {
             const el = document.getElementById('transaction-error');
@@ -5525,7 +1294,6 @@
         } catch (e) { console.error('clearTransactionError', e); }
     }
 
-    // Loading overlay helpers (blocks UI during long operations like sanitization/save)
     function ensureLoadingOverlay() {
         if (document.getElementById('global-loading-overlay')) return;
         const overlay = document.createElement('div');
@@ -5540,20 +1308,12 @@
         overlay.style.alignItems = 'center';
         overlay.style.justifyContent = 'center';
         overlay.style.zIndex = '120000';
-    overlay.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;"><div class="loader" style="width:56px;height:56px;border-radius:50%;border:6px solid rgba(255,255,255,0.15);border-top-color:white;animation: spin 1s linear infinite"></div><div style="color:white;font-weight:600">Salvando...</div></div>`;
+    overlay.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;background:white;padding:24px;border-radius:8px;"><div style="font-size:18px;font-weight:600;color:#1d1d1f;">Salvando...</div></div>`;
         document.body.appendChild(overlay);
-        // inject spin keyframes if not present
-        if (!document.getElementById('global-loading-style')) {
-            const s = document.createElement('style');
-            s.id = 'global-loading-style';
-            s.textContent = `@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;
-            document.head.appendChild(s);
-        }
     }
     function showLoading() { try { ensureLoadingOverlay(); const o = document.getElementById('global-loading-overlay'); if (o) o.style.display = 'flex'; } catch(e) { console.error('showLoading', e); } }
     function hideLoading() { try { const o = document.getElementById('global-loading-overlay'); if (o) o.style.display = 'none'; } catch(e) { console.error('hideLoading', e); } }
 
-    // File-based JSON import flow (opens modal, parse, preview, validate, import)
     (function(){
         const importBtn = document.getElementById('import-data-btn');
         const importModal = document.getElementById('import-json-modal');
@@ -5565,31 +1325,28 @@
         const importConfirmBtn = document.getElementById('import-confirm-btn');
         const importCancelBtn = document.getElementById('import-cancel-btn');
         const closeImportModal = document.getElementById('close-import-modal');
-
         let parsedData = null;
-
         function resetImportModal() {
             parsedData = null;
             importFileInputModal.value = '';
             importFileInfo.textContent = 'Nenhum arquivo selecionado.';
-            importPreview.textContent = 'Nenhum preview disponí­vel.';
+            importPreview.textContent = 'Nenhum preview disponï¿½ï¿½vel.';
             importConfirmBtn.disabled = true;
         }
-
         async function parseSelectedFile(file) {
             try {
                 const text = await file.text();
                 let json = null;
-                try { json = JSON.parse(text); } catch (e) { throw new Error('Arquivo JSON inví¡lido: ' + e.message); }
-                // Accept either { financeAppDB_v10: {...} } or the direct payload
+                try { json = JSON.parse(text); } catch (e) { throw new Error('Arquivo JSON invï¿½ï¿½lido: ' + e.message); }
+
                 const payload = json.financeAppDB_v10 ? json.financeAppDB_v10 : json;
-                // Basic validation: expect an object with keys (accounts, transactions or similar)
-                if (!payload || typeof payload !== 'object') throw new Error('Estrutura inví¡lida no JSON. Esperado objeto principal.');
-                // store parsed
+
+                if (!payload || typeof payload !== 'object') throw new Error('Estrutura invï¿½ï¿½lida no JSON. Esperado objeto principal.');
+
                 parsedData = payload;
-                // show preview (first 2000 chars)
+
                 const pretty = JSON.stringify(payload, null, 2);
-                importPreview.textContent = pretty.length > 20000 ? pretty.slice(0,20000) + '\n\n...Conteúdo truncado...' : pretty;
+                importPreview.textContent = pretty.length > 20000 ? pretty.slice(0,20000) + '\n\n...Conteï¿½do truncado...' : pretty;
                 importFileInfo.textContent = `${file.name} â€” ${Math.round(file.size/1024)} KB`;
                 importConfirmBtn.disabled = false;
                 showToast('Arquivo validado com sucesso. Revise o preview e confirme.', 'bg-green-600');
@@ -5600,7 +1357,6 @@
                 showToast('Erro ao ler arquivo: ' + err.message, 'bg-red-600');
             }
         }
-
         if (importBtn) {
             importBtn.addEventListener('click', () => {
                 if (!importModal) return;
@@ -5608,57 +1364,49 @@
                 resetImportModal();
             });
         }
-
         if (closeImportModal) closeImportModal.addEventListener('click', resetImportModal);
         if (importCancelBtn) importCancelBtn.addEventListener('click', () => { if (!importModal) return; try { importModal.close(); } catch(e){ importModal.removeAttribute('open'); } resetImportModal(); });
         if (clearImportBtn) clearImportBtn.addEventListener('click', resetImportModal);
-
         if (importFileInputModal) {
             importFileInputModal.addEventListener('change', (e) => {
                 const f = e.target.files && e.target.files[0];
                 if (!f) return resetImportModal();
                 importFileInfo.textContent = `Arquivo: ${f.name} â€” ${Math.round(f.size/1024)} KB`;
-                // do not auto-parse until user clicks 'Ler e Validar'
+
                 importPreview.textContent = 'Arquivo selecionado. Clique em "Ler e Validar" para ver o preview.';
                 importConfirmBtn.disabled = true;
                 parsedData = null;
             });
         }
-
         if (parseImportBtn) parseImportBtn.addEventListener('click', async () => {
             const f = importFileInputModal.files && importFileInputModal.files[0];
             if (!f) { showToast('Selecione um arquivo .json primeiro.', 'bg-yellow-600'); return; }
             await parseSelectedFile(f);
         });
-
         if (importConfirmBtn) importConfirmBtn.addEventListener('click', async () => {
-            if (!parsedData) { showToast('Nenhum dado ví¡lido para importar.', 'bg-yellow-600'); return; }
+            if (!parsedData) { showToast('Nenhum dado vï¿½ï¿½lido para importar.', 'bg-yellow-600'); return; }
             try {
                 showLoading();
-                // Persist using existing storage API
+
                 await storage.saveData(parsedData);
                 hideLoading();
-                showToast('Dados importados com sucesso! Aplicando alterAÇÕES...', 'bg-green-600');
-                setTimeout(() => location.reload(), 1100);
+                showToast('Dados importados com sucesso!', 'bg-green-600');
+                location.reload();
             } catch (err) {
                 hideLoading();
                 showToast('Erro ao importar dados: ' + (err.message || err), 'bg-red-600');
             }
         });
-
     })();
-
     document.addEventListener('DOMContentLoaded', () => {
-        // Legacy import button is wired to open the import modal (handled above)
+
     });
 
-    // Transaction modal open/close + accessibility helpers
     (function(){
         const modal = document.getElementById('transaction-modal');
         const openBtn = document.getElementById('add-transaction-btn') || document.getElementById('mobile-add-transaction-fab');
         const closeBtn = document.getElementById('close-transaction-modal');
         let lastFocused = null;
-
         function trapFocus(e) {
             if (!modal || !modal.open) return;
             const focusable = modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
@@ -5675,46 +1423,40 @@
                 e.preventDefault(); closeModal();
             }
         }
-
         function openModal() {
             if (!modal) return;
             try { lastFocused = document.activeElement; } catch(e) { lastFocused = null; }
             try { modal.showModal(); } catch(e) { modal.setAttribute('open',''); }
             modal.classList.add('modal-expanded');
-            // focus first input for quick entry
+
             const firstInput = modal.querySelector('input, select, textarea, button');
             if (firstInput) try { firstInput.focus(); } catch(e) {}
             document.addEventListener('keydown', trapFocus);
         }
-
         function closeModal() {
             if (!modal) return;
             try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
             modal.classList.remove('modal-expanded');
             document.removeEventListener('keydown', trapFocus);
-            // restore focus
+
             try { if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus(); } catch(e) {}
         }
-
         if (openBtn) openBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
         if (closeBtn) closeBtn.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
-        // close tappable backdrop or programmatic close if a cancel/close button inside form is used
-        // close on dialog close event to cleanup
+
         if (modal) modal.addEventListener('close', () => { document.removeEventListener('keydown', trapFocus); });
-        // Also expose helpers globally if needed by other modules
+
         window.openTransactionModal = openModal;
         window.closeTransactionModal = closeModal;
     })();
-    
-    // ===== FUNCIONALIDADE DE DUPLO CLIQUE PARA FECHAR MODAIS =====
+
     (function(){
-        // funçío para adicionar comportamento de duplo clique em um modal
+
         function addDoubleClickToClose(dialog) {
             if (!dialog || dialog._doubleClickAdded) return;
             dialog._doubleClickAdded = true;
-            
             dialog.addEventListener('dblclick', function(e) {
-                // Verifica se o clique foi no backdrop (fora do Conteúdo do modal)
+
                 const rect = dialog.getBoundingClientRect();
                 const isInDialog = (
                     e.clientX >= rect.left &&
@@ -5722,8 +1464,7 @@
                     e.clientY >= rect.top &&
                     e.clientY <= rect.bottom
                 );
-                
-                // Se o clique foi no backdrop (dialog::backdrop)
+
                 if (e.target === dialog) {
                     try {
                         dialog.close();
@@ -5734,21 +1475,18 @@
                 }
             });
         }
-        
-        // Adiciona duplo clique a todos os modais existentes
+
         function initDoubleClickForAllModals() {
             const modals = document.querySelectorAll('dialog');
             modals.forEach(modal => addDoubleClickToClose(modal));
         }
-        
-        // Inicializa quando o DOM estiver pronto
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initDoubleClickForAllModals);
         } else {
             initDoubleClickForAllModals();
         }
-        
-        // Observa novos modais adicionados dinamicamente
+
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 mutation.addedNodes.forEach(function(node) {
@@ -5758,50 +1496,40 @@
                 });
             });
         });
-        
         observer.observe(document.body, { childList: true, subtree: true });
-        
-        // Expõe globalmente para uso manual se necessí¡rio
+
         window.addDoubleClickToCloseModal = addDoubleClickToClose;
     })();
-    // ===== FIM DA FUNCIONALIDADE DE DUPLO CLIQUE =====
-    
-    // ETAPA 2: COLE A CONFIGURAí‡íƒO DO SEU FIREBASE AQUI
-    // Substitua o Conteúdo abaixo pelas credenciais do seu projeto Firebase.
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
 const firebaseConfig = {
   apiKey: "AIzaSyBRce273SxZo3EMFAoTQ5I0j82eDyIrYC4",
   authDomain: "fluxofinanceiro-marc35.firebaseapp.com",
-  databaseURL: "https://fluxofinanceiro-marc35-default-rtdb.firebaseio.com",
+  databaseURL: "https:
   projectId: "fluxofinanceiro-marc35",
-  storageBucket: "fluxofinanceiro-marc35.appspot.com", // CORRIGIDO
+  storageBucket: "fluxofinanceiro-marc35.appspot.com", 
   messagingSenderId: "855674664271",
   appId: "1:855674664271:web:85ad6887626ece0dc8813a",
   measurementId: "G-NKKNQFLP00"
 };
 
-
-    // Inicializa o Firebase (apenas se ainda nío foi inicializado)
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     const database = firebase.database();
-
     const storage = {
         DB_KEY: 'financeAppDB_v10',
         loadData: async function() {
-            // Ensure we have the default structure available (outside try for catch access)
+
             const initialData = this.getInitialData();
             try {
-                // console.debug('storage.loadData: fetching data from Firebase...');
+
                 const snapshot = await database.ref(this.DB_KEY).get();
                 if (!snapshot.exists()) {
-                    // console.debug("Firebase esTí¡ vazio. Inicializando com dados padrío e salvando no banco.");
+
                     await this.saveData(initialData);
                     return initialData;
                 }
 
-                // --- Client-side XLSX/CSV import modal and logic ---
                 (function(){
                     if (document.getElementById('import-spreadsheet-modal')) return;
                     const modal = document.createElement('dialog');
@@ -5809,23 +1537,21 @@ const firebaseConfig = {
                     modal.className = 'p-6 rounded-2xl shadow-2xl card w-full max-w-2xl';
                     modal.innerHTML = `
                         <h3 class="text-lg font-semibold mb-3">Importar Planilha (.xlsx / .csv)</h3>
-                        <p class="text-sm text-gray-600 mb-3">Use o modelo simples: <strong>Data, Descrição, Valor, FormaPagamento, Categoria, Pago</strong></p>
+                        <p class="text-sm text-gray-600 mb-3">Use o modelo simples: <strong>Data, Descriï¿½ï¿½o, Valor, FormaPagamento, Categoria, Pago</strong></p>
                         <div class="space-y-3">
                             <input type="file" id="import-spreadsheet-input" accept=".xlsx,.xls,.csv" />
                             <div id="import-preview" style="max-height:300px;overflow:auto;border:1px solid rgba(0,0,0,0.04);padding:8px;border-radius:8px;display:none;"></div>
                             <div class="flex justify-end gap-2 mt-3">
                                 <button id="import-preview-cancel" class="bg-gray-100 px-3 py-1 rounded">Fechar</button>
-                                <button id="import-preview-run" class="bg-blue-600 text-white px-3 py-1 rounded" disabled>Importar para o Mês selecionado</button>
+                                <button id="import-preview-run" class="bg-blue-600 text-white px-3 py-1 rounded" disabled>Importar para o Mï¿½s selecionado</button>
                             </div>
                         </div>
                     `;
                     document.body.appendChild(modal);
-
                     const fileInput = modal.querySelector('#import-spreadsheet-input');
                     const previewEl = modal.querySelector('#import-preview');
                     const runBtn = modal.querySelector('#import-preview-run');
                     const closeBtn = modal.querySelector('#import-preview-cancel');
-
                     function normalizeHeader(h) { return String(h||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
                     function findHeaderMap(headers) {
                         const map = {};
@@ -5846,7 +1572,6 @@ const firebaseConfig = {
                         }
                         return map;
                     }
-
                     fileInput.addEventListener('change', async (ev) => {
                         const f = ev.target.files && ev.target.files[0];
                         if (!f) return;
@@ -5864,19 +1589,19 @@ const firebaseConfig = {
                             const sheetName = wb.SheetNames[0];
                             const sheet = wb.Sheets[sheetName];
                             const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-                            if (!rows || rows.length === 0) { previewEl.innerHTML = '<div class="text-sm text-red-600">Planilha vazia ou inví¡lida.</div>'; previewEl.style.display = 'block'; return; }
+                            if (!rows || rows.length === 0) { previewEl.innerHTML = '<div class="text-sm text-red-600">Planilha vazia ou invï¿½ï¿½lida.</div>'; previewEl.style.display = 'block'; return; }
                             const headers = Object.keys(rows[0]);
                             const map = findHeaderMap(headers);
                             const tbl = document.createElement('table'); tbl.style.width='100%'; tbl.style.borderCollapse='collapse';
                             const thead = document.createElement('thead'); const trh = document.createElement('tr');
-                            ['Data','Descrição','Valor','FormaPagamento','Categoria','Pago'].forEach(h => { const th = document.createElement('th'); th.textContent = h; th.style.textAlign='left'; th.style.padding='6px'; trh.appendChild(th); });
+                            ['Data','Descriï¿½ï¿½o','Valor','FormaPagamento','Categoria','Pago'].forEach(h => { const th = document.createElement('th'); th.textContent = h; th.style.textAlign='left'; th.style.padding='6px'; trh.appendChild(th); });
                             thead.appendChild(trh); tbl.appendChild(thead);
                             const tb = document.createElement('tbody');
                             const mappedRows = [];
                             for (const r of rows) {
                                 const dr = {};
                                 dr.date = map.date ? r[map.date] : r['Date'] || r['Data'] || '';
-                                dr.description = map.desc ? r[map.desc] : r['Description'] || r['Descrição'] || r['Historico'] || '';
+                                dr.description = map.desc ? r[map.desc] : r['Description'] || r['Descriï¿½ï¿½o'] || r['Historico'] || '';
                                 dr.amount = map.amount ? r[map.amount] : r['Amount'] || r['Valor'] || '';
                                 dr.payment = map.payment ? r[map.payment] : r['Payment'] || r['FormaPagamento'] || '';
                                 dr.category = map.category ? r[map.category] : r['Category'] || r['Categoria'] || '';
@@ -5891,22 +1616,19 @@ const firebaseConfig = {
                             previewEl.style.display = 'block';
                             runBtn.disabled = false;
 
-                            // Instead of saving immediately, show a confirmation step with counts and backup
                             runBtn.onclick = async () => {
                                 try {
-                                    // compute target year/month and target array
+
                                     let targetYear = null; let targetMonth = null;
                                     for (const rr of mappedRows) {
                                         const dv = new Date(rr.date);
                                         if (!isNaN(dv)) { targetYear = dv.getFullYear(); targetMonth = dv.getMonth()+1; break; }
                                     }
                                     if (!targetYear) { targetYear = (new Date()).getFullYear(); targetMonth = (new Date()).getMonth()+1; }
-
                                     let positives=0, negatives=0;
                                     for (const rr of mappedRows) { const n = parseFloat(String(rr.amount).replace(/[^0-9-,.]/g,'').replace(',','.')) || 0; if (n>0) positives++; if (n<0) negatives++; }
                                     const targetArray = (negatives > positives) ? 'expenses' : 'incomes';
 
-                                    // Build a summary and show confirmation UI
                                     const totalRows = mappedRows.length;
                                     const sum = mappedRows.reduce((acc, rr) => { const v = parseFloat(String(rr.amount).replace(/[^0-9-,.]/g,'').replace(',','.')) || 0; return acc + v; }, 0);
                                     previewEl.innerHTML = '';
@@ -5916,21 +1638,18 @@ const firebaseConfig = {
                                         <div class="mb-3 text-sm text-gray-700">Resumo antes de importar:</div>
                                         <ul class="text-sm text-gray-800" style="padding-left:16px;">
                                             <li><strong>Linhas detectadas:</strong> ${totalRows}</li>
-                                            <li><strong>Direçío inferida:</strong> ${targetArray}</li>
-                                            <li><strong>Mês / Ano alvo:</strong> ${targetMonth}/${targetYear}</li>
+                                            <li><strong>Direï¿½ï¿½o inferida:</strong> ${targetArray}</li>
+                                            <li><strong>Mï¿½s / Ano alvo:</strong> ${targetMonth}/${targetYear}</li>
                                             <li><strong>Soma (considerando sinais):</strong> ${formatCurrency(sum)}</li>
                                         </ul>
                                     `;
                                     const actions = document.createElement('div'); actions.className = 'flex justify-end gap-2 mt-4';
-
-                                    const backupBtn = document.createElement('button'); backupBtn.className = 'bg-gray-100 px-3 py-1 rounded text-sm'; backupBtn.textContent = 'Baixar backup do Mês atual';
+                                    const backupBtn = document.createElement('button'); backupBtn.className = 'bg-gray-100 px-3 py-1 rounded text-sm'; backupBtn.textContent = 'Baixar backup do Mï¿½s atual';
                                     const backBtn = document.createElement('button'); backBtn.className = 'bg-white border px-3 py-1 rounded text-sm'; backBtn.textContent = 'Voltar';
-                                    const confirmBtn = document.createElement('button'); confirmBtn.className = 'bg-green-600 text-white px-3 py-1 rounded text-sm'; confirmBtn.textContent = 'Confirmar importação';
-
+                                    const confirmBtn = document.createElement('button'); confirmBtn.className = 'bg-green-600 text-white px-3 py-1 rounded text-sm'; confirmBtn.textContent = 'Confirmar importaï¿½ï¿½o';
                                     actions.appendChild(backupBtn); actions.appendChild(backBtn); actions.appendChild(confirmBtn);
                                     previewEl.appendChild(summary); previewEl.appendChild(actions);
 
-                                    // backup function: download current month data as JSON
                                     backupBtn.addEventListener('click', () => {
                                         try {
                                             const existing = (state && state.appData && state.appData.data && state.appData.data[targetYear] && state.appData.data[targetYear][targetMonth]) || { incomes:[], expenses:[], savings:[] };
@@ -5939,13 +1658,11 @@ const firebaseConfig = {
                                             const a = document.createElement('a'); a.href = url; a.download = `backup-${targetYear}-${String(targetMonth).padStart(2,'0')}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
                                         } catch (e) { showToast('Falha ao gerar backup: ' + (e.message||e), 'bg-red-600'); }
                                     });
-
                                     backBtn.addEventListener('click', () => { previewEl.innerHTML = ''; previewEl.appendChild(tbl); previewEl.appendChild(runBtn); runBtn.disabled = false; });
-
                                     confirmBtn.addEventListener('click', async () => {
                                         try {
                                             confirmBtn.disabled = true; backupBtn.disabled = true; backBtn.disabled = true; showLoading();
-                                            // Build payload items
+
                                             const items = [];
                                             for (const rr of mappedRows) {
                                                 const amt = Math.abs(parseFloat(String(rr.amount).replace(/[^0-9-,.]/g,'').replace(',','.') || 0));
@@ -5960,55 +1677,48 @@ const firebaseConfig = {
                                                 items.push(item);
                                             }
 
-                                            // Merge into existing app data safely
                                             const saveTarget = JSON.parse(JSON.stringify(state.appData || {}));
                                             saveTarget.data = saveTarget.data || {};
                                             saveTarget.data[targetYear] = saveTarget.data[targetYear] || {};
                                             saveTarget.data[targetYear][targetMonth] = saveTarget.data[targetYear][targetMonth] || { incomes: [], expenses: [], savings: [] };
                                             saveTarget.data[targetYear][targetMonth][targetArray] = (saveTarget.data[targetYear][targetMonth][targetArray] || []).concat(items);
                                             await storage.saveData(saveTarget);
-                                            hideLoading(); showToast('Importação concluí­da com sucesso!', 'bg-green-600');
+                                            hideLoading(); showToast('ImportaÃ§Ã£o concluÃ­da com sucesso!', 'bg-green-600');
                                             try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
-                                            setTimeout(() => location.reload(), 900);
+                                            location.reload();
                                         } catch (err) {
                                             hideLoading(); showToast('Falha ao salvar: ' + (err && err.message ? err.message : String(err)), 'bg-red-600');
                                             confirmBtn.disabled = false; backupBtn.disabled = false; backBtn.disabled = false;
                                         }
                                     });
 
-                                    // disable main runBtn while confirmation is visible
                                     runBtn.disabled = true;
-
-                                } catch (e) { hideLoading(); showToast('Erro durante preparação da importação: '+ (e && e.message ? e.message : e), 'bg-red-600'); }
+                                } catch (e) { hideLoading(); showToast('Erro durante preparaï¿½ï¿½o da importaï¿½ï¿½o: '+ (e && e.message ? e.message : e), 'bg-red-600'); }
                             };
-
                         } catch (err) {
                             previewEl.innerHTML = '<div class="text-sm text-red-600">Erro ao ler o arquivo: ' + (err && err.message ? err.message : err) + '</div>';
                             previewEl.style.display = 'block';
                         }
                     });
-
                     closeBtn.addEventListener('click', () => { try { modal.close(); } catch(e){ modal.removeAttribute('open'); } });
                 })();
                 const firebaseData = snapshot.val();
-                // Garante que a estrutura base (settings, data) exista, mesclando com o padrío.
-                // Isso previne erros se os dados no Firebase estiverem incompletos.
+
                 const mergedData = {
                     settings: { ...initialData.settings, ...(firebaseData.settings || {}) },
                     data: firebaseData.data || initialData.data
                 };
-                // Garante que sub-propriedades crí­ticas de settings existam
+
                 mergedData.settings.goals = mergedData.settings.goals || [];
                 mergedData.settings.paymentMethods = mergedData.settings.paymentMethods || [];
-                
-                // console.debug("Dados do Firebase carregados e validados com sucesso.");
+
                 return mergedData;
             } catch (err) {
-                console.error("Erro crí­tico ao carregar dados do Firebase. Usando estrutura de dados inicial.", err);
-                return initialData; // Retorna a estrutura padrío em caso de qualquer erro de conexío/leitura.
+
+                return initialData; 
             }
         },
-        // Ensure data is safe for Firebase Realtime Database (no functions, no Dates, no circular refs)
+
         sanitizeForFirebase: function(obj) {
             const seen = new WeakSet();
             function sanitize(value) {
@@ -6018,41 +1728,40 @@ const firebaseConfig = {
                 if (value instanceof Date) return value.toISOString();
                 if (Array.isArray(value)) return value.map(v => sanitize(v));
                 if (t === 'object') {
-                    if (seen.has(value)) return null; // break cycles
+                    if (seen.has(value)) return null; 
                     seen.add(value);
                     const out = {};
                     Object.keys(value).forEach(k => {
-                        // Firebase keys cannot contain . # $ [ ]
-                        if (/[.#$\[\]]/.test(k)) return; // skip invalid key
+
+                        if (/[.#$\[\]]/.test(k)) return; 
                         const v = value[k];
                         const sv = sanitize(v);
-                        // Skip undefined and functions
+
                         if (typeof sv !== 'undefined') out[k] = sv;
                     });
                     return out;
                 }
-                // functions, symbols, undefined -> skip
+
                 return undefined;
             }
             return sanitize(obj);
         },
-
         saveData: function(data) {
             try {
-                // console.debug("Sanitizing data before saving to Firebase...");
+
                 showLoading();
                 const safe = this.sanitizeForFirebase(data);
-                // Persist without verbose logging of the entire object
+
                 return database.ref(this.DB_KEY).set(safe)
                     .then(() => { /* saved successfully */ hideLoading(); return Promise.resolve(); })
                     .catch(e => {
-                        console.error("Erro ao salvar no Firebase:", e);
+
                         hideLoading();
                         showToast('Erro ao salvar dados no Firebase: ' + (e && e.message ? e.message : e), 'bg-red-600');
                         return Promise.reject(e);
                     });
             } catch (err) {
-                console.error('Erro ao sanitizar dados antes de salvar:', err);
+
                 hideLoading();
                 showToast('Erro interno ao preparar dados para salvar.', 'bg-red-600');
                 return Promise.reject(err);
@@ -6062,62 +1771,62 @@ const firebaseConfig = {
             return {
                 settings: {
                     goals: [],
-                    spendingGoals: [{ type: 'Essenciais', goal: 0.50 }, { type: 'nío Essenciais', goal: 0.30 }, { type: 'Reserva', goal: 0.20 }],
+                    spendingGoals: [{ type: 'Essenciais', goal: 0.50 }, { type: 'nï¿½o Essenciais', goal: 0.30 }, { type: 'Reserva', goal: 0.20 }],
                     expenseCategories: [
                         "Mercado",
-                        "Alimentação",
+                        "Alimentaï¿½ï¿½o",
                         "Compras",
                         "Assinaturas",
                         "Contas",
                         "Moradia",
                         "Transporte",
-                        "Saíºde",
-                        "Educação",
+                        "Saï¿½ï¿½de",
+                        "Educaï¿½ï¿½o",
                         "Lazer",
                         "Viagem",
-                        "Vestuí¡rio",
+                        "Vestuï¿½ï¿½rio",
                         "Casa",
                         "Pets",
-                        "DoAÇÕES",
+                        "DoAï¿½ï¿½ES",
                         "Impostos",
                         "Parcelas",
                         "Investimentos",
                         "Outros"
                     ],
                     savingCategories: [
-                        "Reserva Emergíªncia",
-                        "AÇÕES",
-                        "Fundos Imobilií¡rios",
+                        "Reserva Emergï¿½ï¿½ncia",
+                        "Aï¿½ï¿½ES",
+                        "Fundos Imobiliï¿½ï¿½rios",
                         "Criptomoedas",
-                        "Poupança",
+                        "Poupanï¿½a",
                         "Tesouro Direto",
-                        "Previdíªncia",
+                        "Previdï¿½ï¿½ncia",
                         "Viagem",
                         "Reforma",
-                        "Educação",
+                        "Educaï¿½ï¿½o",
                         "Carro",
-                        "Imóvel",
+                        "Imï¿½vel",
                         "Outros"
                     ],
                     paymentMethods: [
-                        { name: "BB (Dí©bito)", type: "debit" },
-                        { name: "Inter (Dí©bito)", type: "debit" },
+                        { name: "BB (Dï¿½ï¿½bito)", type: "debit" },
+                        { name: "Inter (Dï¿½ï¿½bito)", type: "debit" },
                         { name: "Nubank", type: "credit_card", closeDay: 3, dueDay: 10 },
                         { name: "Porto", type: "credit_card", closeDay: 31, dueDay: 11 },
                         { name: "Dinheiro", type: "cash" },
                         { name: "PIX", type: "pix" },
-                        { name: "Transferíªncia", type: "transfer" },
+                        { name: "Transferï¿½ï¿½ncia", type: "transfer" },
                         { name: "Boleto", type: "boleto" },
                         { name: "Apple Pay", type: "wallet" },
                         { name: "Outro", type: "other" }
                     ],
                     feedbackMessages: [
-                        { id: 'A', text: "í“timo trabalho! você superou sua meta de reserva este Mês!" },
-                        { id: 'B', text: "Missío cumprida! Suas finanças esTío alinhadas com as metas." },
-                        { id: 'C', text: "Atençío com os gastos nío essenciais. Eles esTío um pouco acima da meta." },
+                        { id: 'A', text: "ï¿½timo trabalho! vocï¿½ superou sua meta de reserva este Mï¿½s!" },
+                        { id: 'B', text: "Missï¿½o cumprida! Suas finanï¿½as esTï¿½o alinhadas com as metas." },
+                        { id: 'C', text: "Atenï¿½ï¿½o com os gastos nï¿½o essenciais. Eles esTï¿½o um pouco acima da meta." },
                         { id: 'D', text: "Os gastos essenciais superaram a meta. Vale a pena revisar." },
-                        { id: 'E', text: "Sua reserva este Mês foi menor que o esperado. Foco em economizar!" },
-                        { id: 'F', text: "O saldo deste Mês ficou negativo. Vamos repensar a estraTí©gia." }
+                        { id: 'E', text: "Sua reserva este Mï¿½s foi menor que o esperado. Foco em economizar!" },
+                        { id: 'F', text: "O saldo deste Mï¿½s ficou negativo. Vamos repensar a estraTï¿½ï¿½gia." }
                     ]
                 },
                 data: {}
@@ -6125,93 +1834,76 @@ const firebaseConfig = {
         },
         propagateInitialInstallments(initialData) {}
     };
-    
     const App = (function() {
-    // showToast is defined globally above so it can be used before App.init()
-        // STATE & UI (Private variables)
+
         const state = {
             currentDate: new Date(),
             appData: null,
             currentView: 'dashboard',
             sort: { key: 'description', order: 'asc' },
             filters: { searchTerm: '' },
-            // UX: control whether Despesas are shown grouped by Descrição
+
             showGroupedExpenses: false,
-            // Per-card grouping state for credit card invoices
+
             cardGrouped: {}
         };
 
-    // Expose the internal state globally so legacy/global handlers can access it safely
     try { window.state = state; } catch (e) { /* ignore if env prevents assignment */ }
-
         const ui = {
             charts: {}
         };
-        // in-memory session defaults for the transaction modal (do not persist)
+
         ui.lastTransactionDefaults = null;
 
-        // --- HELPERS ---
         function generateUUID() {
-            // Simple UUID v4 generator for local IDs
+
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
         }
 
-            // Parse numbers entered in pt-BR style (e.g. "1.234,56" or "59,52") into JS numbers
             function parseLocaleNumber(s) {
                 try {
                     if (s === undefined || s === null) return NaN;
                     if (typeof s === 'number') return s;
                     let str = String(s).trim();
                     if (str === '') return NaN;
-                    
-                    // Remove currency symbols and spaces
+
                     str = str.replace(/[R$\s\u00A0]/g, '');
-                    
-                    // Protect minus: allow only leading minus
+
                     str = str.replace(/(?!^)-/g, '');
                     if (str === '' || str === '-') return NaN;
-                    
-                    // Detect format: if there's a comma followed by 1-2 digits at the end, it's BR format (123.456,78)
-                    // Otherwise, if there's a dot followed by 1-2 digits at the end, it's US format (123,456.78)
-                    const hasBRDecimal = /,\d{1,2}$/.test(str); // ends with ,XX or ,X
-                    const hasUSDecimal = /\.\d{1,2}$/.test(str); // ends with .XX or .X
-                    
+
+                    const hasBRDecimal = /,\d{1,2}$/.test(str); 
+                    const hasUSDecimal = /\.\d{1,2}$/.test(str); 
                     if (hasBRDecimal) {
-                        // Brazilian format: 1.234.567,89 -> remove dots, replace comma with dot
+
                         str = str.replace(/\./g, '').replace(',', '.');
                     } else if (hasUSDecimal) {
-                        // US format: 1,234,567.89 -> remove commas, keep dot
+
                         str = str.replace(/,/g, '');
                     } else {
-                        // No clear decimal separator, or integer - just remove all separators
+
                         str = str.replace(/[.,]/g, '');
                     }
-                    
-                    // Remove any remaining non-numeric characters except dot and minus
+
                     str = str.replace(/[^0-9.\-]/g, '');
-                    
                     const v = parseFloat(str);
                     return isNaN(v) ? NaN : v;
                 } catch (e) { return NaN; }
             }
 
-            // Safe id generator: prefer global generateUUID if available, otherwise fallback
             function safeGenerateId() {
                 try { if (typeof generateUUID === 'function') return generateUUID(); } catch(e) {}
-                // fallback simple id
+
                 return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
             }
 
-        // Public API: save a VT fuel entry using App's internal state and storage.
-        // This avoids callers needing direct access to `state` or to replicate
-        // month/data lookup logic. Returns a Promise.
         async function saveVtEntry(entry) {
             try {
                 if (!entry) throw new Error('empty entry');
-                // Normalize state.appData structure
+
                 if (!state.appData) state.appData = { data: {} };
                 if (!state.appData.data) state.appData.data = {};
                 const date = state.currentDate || new Date();
@@ -6221,24 +1913,23 @@ const firebaseConfig = {
                 if (!state.appData.data[year][month]) state.appData.data[year][month] = { incomes: [], expenses: [], savings: [], vtUsage: [] };
                 const md = state.appData.data[year][month];
                 if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
-                // Ensure id and normalized fields
+
                 entry.id = entry.id || generateUUID();
                 entry.date = entry.date || new Date().toISOString();
-                // push and persist
+
                 md.vtUsage.push(entry);
                 await storage.saveData(state.appData);
                 return { success: true };
             } catch (e) {
-                console.error('saveVtEntry error', e);
+
                 throw e;
             }
         }
-
         async function updateVtEntry(updated) {
             try {
                 if (!updated || !updated.id) throw new Error('invalid update');
                 if (!state.appData || !state.appData.data) throw new Error('no app data');
-                // find entry by id across months
+
                 let found = false;
                 Object.keys(state.appData.data).forEach(y => {
                     Object.keys(state.appData.data[y] || {}).forEach(m => {
@@ -6247,7 +1938,7 @@ const firebaseConfig = {
                         for (let i = 0; i < md.vtUsage.length; i++) {
                             const it = md.vtUsage[i];
                             if (it && it.id === updated.id) {
-                                // merge changes
+
                                 md.vtUsage[i] = Object.assign({}, it, updated);
                                 found = true;
                                 break;
@@ -6261,21 +1952,16 @@ const firebaseConfig = {
             } catch (e) { console.error('updateVtEntry error', e); throw e; }
         }
 
-        // Expose a small app API so isolated UI modules can call saving without
-        // relying on window.state or internal helpers. This is intentionally
-        // minimal and keeps the implementation inside App.
     try { window.appApi = window.appApi || {}; window.appApi.saveVtEntry = saveVtEntry; window.appApi.updateVtEntry = updateVtEntry; window.appApi.render = function(){ try { if (typeof render === 'function') return render(); } catch(e){ console.error('appApi.render wrapper error', e); } }; } catch(e) { /* ignore env failures */ }
-
         function formatCurrency(value) {
             if (typeof value !== 'number') value = parseFloat(value) || 0;
             return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
-
         function propagateRecurringTransactions() {
-            // Ensure recurring transactions exist for months and propagate future recurrences for expenses and savings
+
             try {
                 const today = new Date();
-                // Ensure arrays exist for each month
+
                 Object.keys(state.appData.data).forEach(year => {
                     Object.keys(state.appData.data[year]).forEach(month => {
                         const monthData = state.appData.data[year][month];
@@ -6285,8 +1971,7 @@ const firebaseConfig = {
                     });
                 });
 
-                // Collect recurring templates from existing months (only for expenses and savings)
-                const templates = {}; // recurringId -> { type, template }
+                const templates = {}; 
                 Object.keys(state.appData.data).forEach(year => {
                     Object.keys(state.appData.data[year]).forEach(month => {
                         const monthData = state.appData.data[year][month];
@@ -6295,9 +1980,9 @@ const firebaseConfig = {
                                 try {
                                     if (item && item.isRecurring && item.recurringId) {
                                         if (!templates[item.recurringId]) {
-                                            // create a minimal template
+
                                             const tpl = Object.assign({}, item);
-                                            // remove id/date to avoid duplicates
+
                                             delete tpl.id;
                                             if (tpl.date) delete tpl.date;
                                             templates[item.recurringId] = { type, template: tpl };
@@ -6309,7 +1994,6 @@ const firebaseConfig = {
                     });
                 });
 
-                // Propagate each template into the next 12 months (including current month)
                 const monthsToCreate = 12;
                 const added = [];
                 Object.keys(templates).forEach(rid => {
@@ -6321,17 +2005,17 @@ const firebaseConfig = {
                         if (!state.appData.data[y]) state.appData.data[y] = {};
                         if (!state.appData.data[y][m]) state.appData.data[y][m] = { incomes: [], expenses: [], savings: [] };
                         const md = state.appData.data[y][m];
-                        // Ensure the array exists
+
                         if (!Array.isArray(md[info.type])) md[info.type] = [];
-                        // If an entry with same recurringId already exists in that month, skip
+
                         const exists = (md[info.type] || []).some(it => it && it.recurringId === rid);
                         if (!exists) {
                             const clone = Object.assign({}, info.template);
                             clone.id = generateUUID();
                             clone.recurringId = rid;
-                            // prefer to set a normalized date on the transaction (first day of month)
+
                             clone.date = new Date(target.getFullYear(), target.getMonth(), 1).toISOString();
-                            // default isPaid to false for future months
+
                             clone.isPaid = !!clone.isPaid && i === 0 ? clone.isPaid : false;
                             md[info.type].push(clone);
                             added.push({ y, m, type: info.type, id: clone.id });
@@ -6343,7 +2027,6 @@ const firebaseConfig = {
                 }
             } catch (e) { console.error('propagateRecurringTransactions', e); }
         }
-
         /**
          * Propagate a changed amount for subscription/recurring expenses to future months.
          * expense: the expense object in the current month that was edited
@@ -6355,8 +2038,8 @@ const firebaseConfig = {
                 const recurringId = expense.recurringId || null;
                 const signature = `${(expense.description||'').toString().trim().toLowerCase()}||${(expense.category||'').toString().trim().toLowerCase()}||${(expense.payment||'').toString().trim().toLowerCase()}`;
                 const now = new Date(state.currentDate || new Date());
-                // update future months (including next month onward)
-                const monthsToUpdate = 24; // reasonable window
+
+                const monthsToUpdate = 24; 
                 const updated = [];
                 for (let i = 1; i <= monthsToUpdate; i++) {
                     const target = new Date(now.getFullYear(), now.getMonth() + i, 1);
@@ -6370,7 +2053,7 @@ const firebaseConfig = {
                             if (!e) return;
                             let match = false;
                             if (recurringId && e.recurringId && e.recurringId === recurringId) match = true;
-                            // fallback: match by signature if recurringId not available
+
                             if (!match) {
                                 const sig2 = `${(e.description||'').toString().trim().toLowerCase()}||${(e.category||'').toString().trim().toLowerCase()}||${(e.payment||'').toString().trim().toLowerCase()}`;
                                 if (sig2 === signature) match = true;
@@ -6389,22 +2072,15 @@ const firebaseConfig = {
             } catch(e) { console.error('propagateSubscriptionAmountChange error', e); return []; }
         }
 
-        // --- CORE FUNCTIONS ---
-
         async function init() {
-            // console.debug("App.init() iniciado.");
-            // A nova funçío `loadData` í© robusta e sempre retorna um objeto de estado ví¡lido.
-            // O `await` garante que o código abaixo só execute apí³s o carregamento completo.
+
             state.appData = await storage.loadData();
-            
-            // Definir data atual ANTES de qualquer renderização
+
             state.currentDate = new Date();
-            
-            // MIGRATE: Update credit cards with closeDay and dueDay if missing
+
             try {
                 if (!state.appData.settings) state.appData.settings = {};
                 if (!Array.isArray(state.appData.settings.paymentMethods)) state.appData.settings.paymentMethods = [];
-                
                 state.appData.settings.paymentMethods.forEach(pm => {
                     if (pm.type === 'credit_card') {
                         if (pm.name === 'Nubank' && !pm.closeDay) {
@@ -6417,16 +2093,14 @@ const firebaseConfig = {
                     }
                 });
             } catch(e) { console.error('credit card migration', e); }
-            
-            // Limpa todos os filtros ao iniciar
+
             state.filters = { searchTerm: '' };
             state.filters.expenseFilters = {};
             if (!state.appData) {
-                console.error("Falha crí­tica: nío foi possí­vel carregar ou criar os dados da aplicação.");
-                // Idealmente, exibir uma mensagem de erro visí­vel para o usuá¡rio aqui.
+
                 return;
             }
-            // Normalize settings lists (alphabetical) to keep UX consistent
+
             try {
                 const s = state.appData.settings || {};
                 if (Array.isArray(s.expenseCategories)) s.expenseCategories = sortStrings(s.expenseCategories);
@@ -6434,13 +2108,13 @@ const firebaseConfig = {
                 if (Array.isArray(s.goals)) s.goals = (s.goals || []).slice().sort((a,b) => ((a.name||'').toLowerCase() < (b.name||'').toLowerCase() ? -1 : 1));
                 if (Array.isArray(s.paymentMethods)) s.paymentMethods = (s.paymentMethods || []).slice().sort((a,b)=> ((a.name||'').toLowerCase() < (b.name||'').toLowerCase() ? -1 : 1));
                 state.appData.settings = s;
-                // Persist normalized settings in background
+
                 storage.saveData(state.appData).catch(() => {});
             } catch(e) { /* non-fatal */ }
-            // console.debug("Dados prontos para uso na aplicação:", state.appData);
+
             mapUI();
             bindEvents();
-            // Migrate any existing VR income items into a dedicated vrLedger per month
+
             try {
                 Object.keys(state.appData.data).forEach(year => {
                     Object.keys(state.appData.data[year]).forEach(month => {
@@ -6448,7 +2122,7 @@ const firebaseConfig = {
                         if (!md) return;
                         if (!Array.isArray(md.incomes)) md.incomes = [];
                         if (!Array.isArray(md.vrLedger)) md.vrLedger = [];
-                        // Ensure VT ledger exists
+
                         if (!Array.isArray(md.vtLedger)) md.vtLedger = [];
                         if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
                         if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
@@ -6459,7 +2133,7 @@ const firebaseConfig = {
                             } else preserved.push(i);
                         });
                         md.incomes = preserved;
-                        // Deduplicate vrLedger entries by salaryMeta+amount to avoid legacy duplicates
+
                         try {
                             if (Array.isArray(md.vrLedger) && md.vrLedger.length > 1) {
                                 const seen = new Map();
@@ -6476,7 +2150,7 @@ const firebaseConfig = {
                     });
                 });
             } catch(e){ console.error('VR migration', e); }
-            // Migrate any existing VT income items into vtLedger and legacy VT expenses into vtUsage
+
             try {
                 Object.keys(state.appData.data).forEach(year => {
                     Object.keys(state.appData.data[year]).forEach(month => {
@@ -6492,7 +2166,7 @@ const firebaseConfig = {
                             } else preserved.push(i);
                         });
                         md.incomes = preserved;
-                        // Deduplicate vtLedger entries by salaryMeta+amount to avoid legacy duplicates
+
                         try {
                             if (Array.isArray(md.vtLedger) && md.vtLedger.length > 1) {
                                 const seen2 = new Map();
@@ -6506,7 +2180,7 @@ const firebaseConfig = {
                                 }).reverse();
                             }
                         } catch(e){ /* non-fatal */ }
-                        // move legacy expenses paid with VT into vtUsage
+
                         const remainingExpenses = [];
                         md.expenses = md.expenses || [];
                         md.expenses.forEach(exp => {
@@ -6522,7 +2196,7 @@ const firebaseConfig = {
                     });
                 });
             } catch(e) { console.error('VT migration', e); }
-            // Additionally migrate any legacy expenses that used payment === 'VR' into the vrUsage ledger
+
             try {
                 let migratedCount = 0;
                 Object.keys(state.appData.data).forEach(year => {
@@ -6531,12 +2205,12 @@ const firebaseConfig = {
                         if (!md) return;
                         if (!Array.isArray(md.expenses)) md.expenses = [];
                         if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
-                        // Find expenses paid with VR and move them to vrUsage
+
                         const remainingExpenses = [];
                         md.expenses.forEach(exp => {
                             try {
                                 if (exp && (exp.payment || '').toString() === 'VR') {
-                                    // preserve id if present
+
                                     md.vrUsage.push({ id: exp.id || generateUUID(), amount: Number(exp.amount) || 0, description: exp.description || '', date: exp.date || new Date().toISOString() });
                                     migratedCount++;
                                 } else {
@@ -6548,26 +2222,62 @@ const firebaseConfig = {
                     });
                 });
                 if (migratedCount > 0) {
-                    // console.debug('[VR MIGRATION] moved', migratedCount, 'expenses -> vrUsage across months. Persisting migration to Firebase.');
-                    // Persist state so the migration is saved
+
                     try { await storage.saveData(state.appData); } catch(e) { console.error('Failed to persist VR migration', e); }
                 }
             } catch (e) { console.error('VR expenses migration', e); }
-            
+
+            try {
+                let incomesUpdated = 0;
+                Object.keys(state.appData.data).forEach(year => {
+                    Object.keys(state.appData.data[year]).forEach(month => {
+                        const md = state.appData.data[year][month];
+                        if (!md) return;
+
+                        if (Array.isArray(md.incomes)) {
+                            md.incomes.forEach(income => {
+                                if (income && typeof income.isPaid === 'undefined') {
+                                    income.isPaid = false;
+                                    incomesUpdated++;
+                                }
+                            });
+                        }
+
+                        if (Array.isArray(md.vrLedger)) {
+                            md.vrLedger.forEach(entry => {
+                                if (entry && typeof entry.isPaid === 'undefined') {
+                                    entry.isPaid = false;
+                                    incomesUpdated++;
+                                }
+                            });
+                        }
+
+                        if (Array.isArray(md.vtLedger)) {
+                            md.vtLedger.forEach(entry => {
+                                if (entry && typeof entry.isPaid === 'undefined') {
+                                    entry.isPaid = false;
+                                    incomesUpdated++;
+                                }
+                            });
+                        }
+                    });
+                });
+                if (incomesUpdated > 0) {
+
+                    try { await storage.saveData(state.appData); } catch(e) { console.error('Failed to persist income isPaid migration', e); }
+                }
+            } catch (e) { console.error('Income isPaid migration', e); }
             goToDate(new Date());
             renderDashboard();
-            
-            // Restore last active view from localStorage
+
             try {
                 const lastView = localStorage.getItem('lastActiveView');
                 if (lastView && ['dashboard', 'credit-cards'].includes(lastView)) {
                     changeView(lastView);
                 }
             } catch(e) { console.error('Error restoring lastActiveView', e); }
-            
-            // console.debug("App.init() finalizado.");
-        }
 
+        }
         function mapUI() {
             const ids = [
                 'current-month-display', 'prev-month-btn', 'next-month-btn', 'today-btn', 'month-picker', 'month-picker-month', 'month-picker-year', 'month-picker-apply', 'month-picker-cancel', 
@@ -6590,28 +2300,25 @@ const firebaseConfig = {
             ids.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
-                    // Mapeia para camelCase, mas garante nomes exatos para os campos crí­ticos
+
                     if (id === 'installments-section') ui.installmentsSection = element;
                     else if (id === 'financing-section') ui.financingSection = element;
                     else ui[id.replace(/-./g, m => m[1].toUpperCase())] = element;
                 }
             });
-            // Attach click handlers for desktop quick links if available
-                // map new modal controls if present
+
                 ui.applyToFuture = document.getElementById('apply-to-future');
                 ui.previewFutureBtn = document.getElementById('preview-future-btn');
             ui.modalTypeToggles = document.querySelectorAll('.modal-type-toggle');
-            // Map mobile bottom nav
+
             ui.mobileBottomNav = document.getElementById('mobile-bottom-nav');
-            
-            // Parcelamento - Toggle dos novos campos simplificados
+
             const installmentCheckbox = document.getElementById('is-installment');
             const installmentFields = document.getElementById('installment-fields');
             const installmentCount = document.getElementById('installment-count');
             const amountField = document.getElementById('amount');
             const previewCount = document.getElementById('installment-preview-count');
             const previewValue = document.getElementById('installment-preview-value');
-            
             if (installmentCheckbox && installmentFields) {
                 installmentCheckbox.addEventListener('change', function() {
                     if (this.checked) {
@@ -6621,33 +2328,29 @@ const firebaseConfig = {
                         installmentFields.classList.add('hidden');
                     }
                 });
-                
-                // Atualizar preview quando mudar valor ou parcelas
+
                 if (installmentCount && amountField && previewCount && previewValue) {
                     const updateInstallmentPreview = () => {
                         const count = parseInt(installmentCount.value) || 12;
                         const amount = parseLocaleNumber(amountField.value) || 0;
                         const installmentValue = count > 0 ? amount / count : 0;
-                        
                         previewCount.textContent = count;
                         previewValue.textContent = formatCurrency(installmentValue);
                     };
-                    
                     installmentCount.addEventListener('input', updateInstallmentPreview);
                     amountField.addEventListener('input', updateInstallmentPreview);
                 }
             }
         }
-
         function bindEvents() {
             if (ui.prevMonthBtn) ui.prevMonthBtn.addEventListener('click', () => changeMonth(-1));
             if (ui.nextMonthBtn) ui.nextMonthBtn.addEventListener('click', () => changeMonth(1));
             if (ui.todayBtn) ui.todayBtn.addEventListener('click', () => goToDate(new Date()));
-            // Month picker interactions
+
             if (ui.currentMonthDisplay) ui.currentMonthDisplay.addEventListener('click', (e) => { e.stopPropagation(); openMonthPicker(); });
             if (ui.monthPickerCancel) ui.monthPickerCancel.addEventListener('click', closeMonthPicker);
             if (ui.monthPickerApply) ui.monthPickerApply.addEventListener('click', applyMonthPicker);
-            // Close picker on outside click
+
             document.addEventListener('click', (e) => {
                 const picker = ui.monthPicker;
                 if (!picker) return;
@@ -6655,20 +2358,20 @@ const firebaseConfig = {
                 if (!picker.contains(e.target) && e.target !== ui.currentMonthDisplay) closeMonthPicker();
             });
             if (ui.addTransactionBtn) ui.addTransactionBtn.addEventListener('click', () => {
-                // Always open the standard transaction modal from the global '+' button.
+
                 openModal('expenses');
             });
             if (ui.closeTransactionModalBtn) ui.closeTransactionModalBtn.addEventListener('click', () => closeModal('transaction-modal'));
-            // Require double-click on modal backdrop to avoid accidental closure
+
             const attachBackdropDoubleClickToClose = (modalEl, modalId, timeoutMs = 2000) => {
                 if (!modalEl) return;
                 let clickCount = 0;
                 let timer = null;
                 modalEl.addEventListener('click', (e) => {
-                    if (e.target !== modalEl) return; // only backdrop clicks
+                    if (e.target !== modalEl) return; 
                     clickCount++;
                     if (clickCount === 1) {
-                        // first click - show subtle hint (optional) and start/reset timer
+
                         try { showToast('Clique novamente no fundo para fechar o modal', 'bg-gray-700'); } catch(e){}
                         timer = setTimeout(() => { clickCount = 0; timer = null; }, timeoutMs);
                         return;
@@ -6684,20 +2387,20 @@ const firebaseConfig = {
             if (ui.goalModal) attachBackdropDoubleClickToClose(ui.goalModal, 'goal-modal');
             if (ui.monthlyReportModal) attachBackdropDoubleClickToClose(ui.monthlyReportModal, 'monthly-report-modal');
             if (ui.annualReportModal) attachBackdropDoubleClickToClose(ui.annualReportModal, 'annual-report-modal');
-            // Salary breakdown modal wiring (ensure backdrop double-click closes it)
+
             const salaryModalEl = document.getElementById('salary-breakdown-modal');
             if (salaryModalEl) {
                 attachBackdropDoubleClickToClose(salaryModalEl, 'salary-breakdown-modal');
                 const salaryCloseBtn = document.getElementById('close-salary-breakdown'); if (salaryCloseBtn) salaryCloseBtn.addEventListener('click', () => closeSalaryBreakdown());
             }
             if (ui.transactionForm) ui.transactionForm.addEventListener('submit', (e) => handleFormSubmit(e));
-            // Mostrar/ocultar seçío Salí¡rio quando em Entradas
+
             const isSalaryCheckbox = document.getElementById('is-salary');
             const salaryFields = document.getElementById('salary-fields');
-            // track if we auto-checked the salary box from the description field
+
             let autoCheckedSalary = false;
                 if (isSalaryCheckbox) {
-                // two-way sync handlers
+
                 const amountInput = document.getElementById('amount');
                 const salaryBaseInput = document.getElementById('salary-base');
                 let amtToSalaryHandler = null;
@@ -6719,13 +2422,12 @@ const firebaseConfig = {
                         amtToSalaryHandler = null; salaryToAmtHandler = null;
                     } catch (e) { console.error('detachSync error', e); }
                 };
-
                 isSalaryCheckbox.addEventListener('change', function() {
                     if (salaryFields) salaryFields.classList.toggle('hidden', !this.checked);
-                    // expand modal when salary details are visible
+
                     try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.toggle('modal-expanded', this.checked); } catch(e){}
                     if (this.checked) {
-                        // ensure both fields reflect same value (prefer amount if salary-base empty)
+
                         try {
                             const a = parseFloat((amountInput || { value: '' }).value) || 0;
                             const s = parseFloat((salaryBaseInput || { value: '' }).value) || 0;
@@ -6733,19 +2435,18 @@ const firebaseConfig = {
                             else if (a === 0 && s > 0) amountInput.value = salaryBaseInput.value;
                         } catch(e){}
                         attachSync();
-                        // If the user checked 'í‰ salí¡rio?', also mark transaction as recurring by default
+
                         const recurringCheckbox = document.getElementById('is-recurring');
                         if (recurringCheckbox) recurringCheckbox.checked = true;
                     } else {
                         detachSync();
-                        // if user manually toggles off, clear auto flag
+
                         autoCheckedSalary = false;
                         try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.remove('modal-expanded'); } catch(e){}
                     }
                 });
             }
 
-            // Auto-open salary options when description contains 'salí¡rio' (with or without accent)
             const descInput = document.getElementById('description');
             if (descInput) {
                 const amountInput = document.getElementById('amount');
@@ -6755,17 +2456,15 @@ const firebaseConfig = {
                     try {
                         const raw = (this.value || '');
                         const v = raw.toLowerCase();
-                        // Normalize to remove diacritics for exact-match checks
+
                         const normalized = raw.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-                        // contain 'salari' to be flexible with accent/case
+
                         const hasSalaryWord = v.indexOf('salari') !== -1;
                         const isExactSalary = /^\s*salario?s?\s*$/i.test(normalized);
 
-                        // Detect 'Serviço' prefix to reveal financing options for incomes
                         const isServicoPrefix = /^\s*servi\w*/i.test(normalized);
-
                         if (hasSalaryWord) {
-                            // Ensure modal is in 'incomes' type so salary-section is visible
+
                             if (ui.transactionTypeInput && ui.transactionTypeInput.value !== 'incomes') {
                                 toggleTransactionType('incomes');
                             }
@@ -6773,14 +2472,14 @@ const firebaseConfig = {
                                 isSalaryCheckbox.checked = true;
                                 if (salaryFields) salaryFields.classList.remove('hidden');
                                 autoCheckedSalary = true;
-                                // ensure recurring is checked too
+
                                 const recurringCheckbox = document.getElementById('is-recurring');
                                 if (recurringCheckbox) recurringCheckbox.checked = true;
-                                // attach two-way sync if not already attached
+
                                 try { isSalaryCheckbox.dispatchEvent(new Event('change')); } catch(e){}
                             }
                         } else {
-                            // If we auto-checked earlier and the keyword was removed, revert
+
                             if (autoCheckedSalary && isSalaryCheckbox) {
                                 isSalaryCheckbox.checked = false;
                                 if (salaryFields) salaryFields.classList.add('hidden');
@@ -6788,7 +2487,6 @@ const firebaseConfig = {
                             }
                         }
 
-                        // If description is exactly 'Salí¡rio' (allow accents), force both salary and recurring and sync amount -> salary-base
                         const salaryBaseInput = document.getElementById('salary-base');
                         if (isExactSalary) {
                             const recurringCheckbox = document.getElementById('is-recurring');
@@ -6800,20 +2498,20 @@ const firebaseConfig = {
                             }
                             if (recurringCheckbox) recurringCheckbox.checked = true;
                         }
-                        // If description starts with 'Serviço', ensure modal is in 'incomes' and show financing options
+
                         if (isServicoPrefix) {
                             if (ui.transactionTypeInput && ui.transactionTypeInput.value !== 'incomes') {
                                 toggleTransactionType('incomes');
                             }
-                            // Reveal installments option for 'Serviço' incomes (do not auto-check)
+
                             try {
                                 const instSection = document.getElementById('installments-section'); if (instSection) instSection.classList.remove('hidden');
                             } catch(e){}
                         }
                         if (isExactSalary && amountInput) {
-                            // copy current amount value immediately
+
                             if (salaryBaseInput) salaryBaseInput.value = amountInput.value || '';
-                            // attach sync handler if not attached
+
                             if (!amountSyncAttached) {
                                 amountSyncHandler = function() {
                                     try { if (salaryBaseInput) salaryBaseInput.value = this.value || ''; } catch(e){}
@@ -6822,28 +2520,24 @@ const firebaseConfig = {
                                 amountSyncAttached = true;
                             }
                         } else {
-                            // remove sync if previously attached
+
                             if (amountSyncAttached && amountInput && amountSyncHandler) {
                                 amountInput.removeEventListener('input', amountSyncHandler);
                                 amountSyncAttached = false;
                                 amountSyncHandler = null;
                             }
                         }
-
                     } catch (e) { console.error('description auto-salary detect error', e); }
                 });
             }
             ui.modalTypeToggles.forEach(btn => btn.addEventListener('click', (e) => toggleTransactionType(e.currentTarget.dataset.type)));
-            
             ui.incomeTableBody.addEventListener('click', (e) => handleTableClick(e, 'incomes'));
             ui.expensesTableBody.addEventListener('click', (e) => handleTableClick(e, 'expenses'));
             ui.savingsTableBody.addEventListener('click', (e) => handleTableClick(e, 'savings'));
-
             ui.importDataBtn.addEventListener('click', () => ui.importFileInput.click());
             ui.importFileInput.addEventListener('change', handleImport);
             ui.exportDataBtn.addEventListener('click', handleExport);
 
-            // Backup / Restore handlers
             try {
                 const createBackupBtn = document.getElementById('create-backup-btn');
                 const restoreBackupBtn = document.getElementById('restore-backup-btn');
@@ -6855,9 +2549,7 @@ const firebaseConfig = {
                 const restoreSelectedBtn = document.getElementById('restore-selected-btn');
                 const downloadPreviewBtn = document.getElementById('download-preview-btn');
                 const deleteBackupBtn = document.getElementById('delete-backup-btn');
-                
-                let currentBackupId = null; // Armazena o ID do backup atualmente visualizado
-
+                let currentBackupId = null; 
                 function formatTS(d) {
                     try {
                         const pad = (n,len=2) => String(n).padStart(len,'0');
@@ -6866,17 +2558,16 @@ const firebaseConfig = {
                         return `${y}${m}${day}_${hh}${mm}${ss}`;
                     } catch(e){ return String(Date.now()); }
                 }
-
                 async function createBackup() {
                     try {
                         showLoading();
                         const payload = JSON.parse(JSON.stringify(state.appData || {}));
                         const createdAt = Date.now();
-                        // Build name: projeto-data
+
                         const project = (firebaseConfig && firebaseConfig.projectId) ? firebaseConfig.projectId : 'manual';
                         const name = `${project}-${formatTS(new Date(createdAt))}`;
                         const record = { name, createdAt, data: payload };
-                        // Save under /backups using push() so we have stable ids
+
                         const ref = database.ref('/backups').push();
                         await ref.set(record);
                         hideLoading();
@@ -6888,33 +2579,31 @@ const firebaseConfig = {
                         throw err;
                     }
                 }
-
                 async function listBackups() {
                     try {
-                        // Try server-side ordered query first (fast when index exists)
+
                         try {
                             const snapshot = await database.ref('/backups').orderByChild('createdAt').get();
                             const arr = [];
                             snapshot.forEach(s => { arr.push({ id: s.key, ...(s.val()||{}) }); });
-                            // sort desc by createdAt
+
                             arr.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
                             return arr;
                         } catch (innerErr) {
-                            // If the error is about missing index, fallback to client-side sort
+
                             if (innerErr && innerErr.message && innerErr.message.indexOf && innerErr.message.indexOf('Index not defined') !== -1) {
-                                // Friendly log + UI hint in Portuguese for maintainers
-                                console.info('listBackups: í­ndice ausente em "/backups.createdAt" â€” ordenação serí¡ feita localmente como fallback.');
-                                try { showToast('Aviso: í­ndice ausente em /backups.createdAt â€” listagem usando ordenação local. Para melhor performance adicione ".indexOn": ["createdAt"] nas regras do Realtime Database.', 'bg-yellow-600'); } catch(e){}
+
+                                try { showToast('Aviso: ï¿½ï¿½ndice ausente em /backups.createdAt â€” listagem usando ordenaï¿½ï¿½o local. Para melhor performance adicione ".indexOn": ["createdAt"] nas regras do Realtime Database.', 'bg-yellow-600'); } catch(e){}
                             } else if (innerErr && innerErr.code && innerErr.code === 'permission-denied') {
-                                // Permission issues should still be surfaced
+
                                 throw innerErr;
                             } else if (innerErr && innerErr.message && innerErr.message.indexOf && innerErr.message.indexOf('.indexOn') !== -1) {
-                                console.info('listBackups: í­ndice ausente em "/backups.createdAt" â€” ordenação serí¡ feita localmente como fallback.');
+
                             } else {
-                                // Other errors: rethrow
+
                                 throw innerErr;
                             }
-                            // fallback: read all backups and sort locally
+
                             const snapshot = await database.ref('/backups').once('value');
                             const arr = [];
                             snapshot.forEach(s => { arr.push({ id: s.key, ...(s.val()||{}) }); });
@@ -6923,7 +2612,6 @@ const firebaseConfig = {
                         }
                     } catch (e) { console.error('listBackups', e); return []; }
                 }
-
                 function renderBackupsList(list) {
                     if (!backupsListEl) return;
                     backupsListEl.innerHTML = '';
@@ -6933,7 +2621,7 @@ const firebaseConfig = {
                     }
                     list.forEach(item => {
                         const btn = document.createElement('button');
-                        btn.className = 'w-full text-left p-2 rounded hover:bg-gray-50 flex justify-between items-center';
+                        btn.className = 'w-full text-left p-2 rounded  flex justify-between items-center';
                         btn.dataset.backupid = item.id;
                         const left = document.createElement('div');
                         left.innerHTML = `<div style="font-weight:600">${escapeHtml(item.name||'Sem nome')}</div><div class="text-xs text-gray-500">${new Date(item.createdAt||0).toLocaleString()}</div>`;
@@ -6941,7 +2629,7 @@ const firebaseConfig = {
                         right.innerHTML = '<span class="material-symbols-outlined text-gray-500">chevron_right</span>';
                         btn.appendChild(left); btn.appendChild(right);
                         btn.addEventListener('click', async () => {
-                            // load preview
+
                             try {
                                 showLoading();
                                 const snap = await database.ref('/backups/' + item.id).get();
@@ -6953,37 +2641,35 @@ const firebaseConfig = {
                         backupsListEl.appendChild(btn);
                     });
                 }
-
                 function showBackupPreview(val, id) {
                     if (!backupPreviewEl) return;
-                    currentBackupId = id; // Armazenar o ID do backup atual
+                    currentBackupId = id; 
                     if (!val) { backupPreviewEl.innerHTML = '<div class="text-sm text-gray-500">Sem dados de backup.</div>'; return; }
                     const meta = `<div class="text-sm text-gray-600 mb-2">Nome: <strong>${escapeHtml(val.name||'')}</strong> â€” Criado: ${new Date(val.createdAt||0).toLocaleString()}</div>`;
-                    // render a small summary: years count and totals
+
                     let summary = '';
                     try {
                         const years = Object.keys(val.data && val.data.data ? val.data.data : (val.data || {}).data || {});
-                        // Fallback when data stored directly in data property
+
                         const topData = val.data || {};
                         const countYears = topData.data ? Object.keys(topData.data).length : Object.keys(topData).length;
                         summary += `<div class="text-sm text-gray-700 mb-2">Anos: <strong>${countYears}</strong></div>`;
-                    } catch(e) { summary += '<div class="text-sm text-gray-500">Resumo indisponí­vel.</div>'; }
-                    // Build preview area with a 'Preview' action that renders JSON as cards
+                    } catch(e) { summary += '<div class="text-sm text-gray-500">Resumo indisponï¿½ï¿½vel.</div>'; }
+
                     backupPreviewEl.innerHTML = meta + summary + `
                         <div class="flex items-center gap-2 mb-2">
                             <button id="render-backup-cards-btn" class="px-3 py-1 rounded bg-blue-50 border text-sm text-blue-600">Preview</button>
-                            <span class="text-xs text-gray-400">Visualizar Conteúdo do backup como cards para comparação</span>
+                            <span class="text-xs text-gray-400">Visualizar Conteï¿½do do backup como cards para comparaï¿½ï¿½o</span>
                         </div>
                         <div id="backup-cards-container" style="margin-bottom:8px"></div>
                         <pre id="backup-raw-json" style="white-space:pre-wrap;word-break:break-word;max-height:200px;overflow:auto;border-top:1px solid rgba(0,0,0,0.04);padding-top:8px">${escapeHtml(JSON.stringify(val.data || val, null, 2))}</pre>`;
-                    // attach download/restore handlers
-                    // attach preview button handler
+
                     const renderBtn = document.getElementById('render-backup-cards-btn');
                     const cardsContainer = document.getElementById('backup-cards-container');
                     if (renderBtn) {
                         renderBtn.addEventListener('click', function () {
                             try {
-                                // try to get the payload that contains the app data
+
                                 const payload = val.data || val;
                                 renderBackupDataCards(payload, cardsContainer);
                             } catch (err) {
@@ -7001,32 +2687,31 @@ const firebaseConfig = {
                     };
                     restoreSelectedBtn.onclick = async () => {
                         try {
-                            try { const ok = await confirmAsync('Deseja restaurar este backup? Isso substituirá¡ os dados atuais.', 'Restaurar backup'); if (!ok) return; } catch(e){ return; }
+                            try { const ok = await confirmAsync('Deseja restaurar este backup? Isso substituirï¿½ os dados atuais.', 'Restaurar backup'); if (!ok) return; } catch(e){ return; }
                             showLoading();
                             const payload = val.data || val;
-                            // Overwrite current state and persist
+
                             state.appData = JSON.parse(JSON.stringify(payload));
                             await storage.saveData(state.appData);
                             hideLoading();
-                            showToast('Restauração concluí­da. Recarregando...', 'bg-green-600');
-                            setTimeout(() => location.reload(), 800);
+                            showToast('RestauraÃ§Ã£o concluÃ­da. Recarregando...', 'bg-green-600');
+                            location.reload();
                         } catch (err) { hideLoading(); showToast('Falha ao restaurar: ' + (err && err.message ? err.message : err), 'bg-red-600'); }
                     };
                 }
 
-                // Render backup data into simple comparison cards
                 function renderBackupDataCards(payload, container) {
                     if (!container) return;
                     container.innerHTML = '';
-                    // normalize payload to ensure payload.data exists in expected shape
+
                     const normalized = normalizeBackupPayload(payload);
                     if (!normalized || !normalized.data) {
-                        container.innerHTML = '<div class="text-sm text-gray-500">Formato inesperado: Conteúdo nío conTí©m propriedade "data" apí³s normalização.</div>';
+                        container.innerHTML = '<div class="text-sm text-gray-500">Formato inesperado: Conteï¿½do nï¿½o conTï¿½ï¿½m propriedade "data" apï¿½ï¿½s normalizaï¿½ï¿½o.</div>';
                         return;
                     }
-                    // payload.data is expected as { year: { month: { incomes:[], expenses:[], savings:[] }}}
+
                     const years = Object.keys(normalized.data).sort((a,b) => b - a);
-                    // render a quick diff comparing backup vs current state
+
                     const diffEl = document.createElement('div'); diffEl.className = 'mb-3';
                     diffEl.innerHTML = renderBackupVsCurrentSummary(normalized.data, state.appData && state.appData.data ? state.appData.data : {});
                     container.appendChild(diffEl);
@@ -7045,7 +2730,7 @@ const firebaseConfig = {
                             card.innerHTML = `
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="text-sm font-semibold">${escapeHtml(year)} / ${escapeHtml(month)}</div>
-                                    <div class="text-xs text-gray-500">Lançamentos: ${incomes.length + expenses.length + savings.length}</div>
+                                    <div class="text-xs text-gray-500">Lanï¿½amentos: ${incomes.length + expenses.length + savings.length}</div>
                                 </div>
                                 <div class="grid grid-cols-3 gap-2 text-sm mb-2">
                                     <div class="p-2 rounded bg-green-50">Entradas<br><strong>${formatCurrency(sum(incomes))}</strong></div>
@@ -7067,19 +2752,18 @@ const firebaseConfig = {
                     });
                 }
 
-                // Try to normalize common backup payload shapes into { data: { year: { month: {...} }}}
                 function normalizeBackupPayload(p) {
                     if (!p) return null;
-                    // if wrapped as { financeAppDB_v10: { data: ... } }
+
                     if (p.financeAppDB_v10 && p.financeAppDB_v10.data) return { data: p.financeAppDB_v10.data };
-                    // if already { data: ... }
+
                     if (p.data && typeof p.data === 'object') return { data: p.data };
-                    // if payload directly contains years (top-level years keys)
+
                     const maybeYears = Object.keys(p).filter(k => /^\d{4}$/.test(k));
                     if (maybeYears.length > 0) return { data: p };
-                    // some backups might nest under data.data
+
                     if (p.data && p.data.data) return { data: p.data.data };
-                    // fallback: try to find first prop that looks like years
+
                     for (const k in p) {
                         if (p[k] && typeof p[k] === 'object') {
                             const subKeys = Object.keys(p[k]);
@@ -7091,9 +2775,8 @@ const firebaseConfig = {
                     return null;
                 }
 
-                // Render a compact comparison summary between backupData and currentData
                 function renderBackupVsCurrentSummary(backupData, currentData) {
-                    // collect union of years and months
+
                     const years = Array.from(new Set([].concat(Object.keys(backupData||{}), Object.keys(currentData||{})))).sort((a,b) => b - a);
                     if (years.length === 0) return '<div class="text-sm text-gray-500">Sem dados para comparar.</div>';
                     let html = '<div class="text-sm font-medium mb-2">Resumo (Backup vs Atual)</div>';
@@ -7119,78 +2802,63 @@ const firebaseConfig = {
                     html += '</div>';
                     return html;
                 }
-
                 function renderSampleList(arr, label) {
                     if (!Array.isArray(arr) || arr.length === 0) return '';
                     const items = arr.slice(0,3).map(it => `<div class="truncate">${escapeHtml(label + ': ' + (it.description || it.desc || it.label || 'â€”') + ' â€” ' + (formatCurrency(Number(it.amount)||0)))}</div>`).join('');
                     return `<div class="mt-1 text-xs">${items}</div>`;
                 }
-
                 function formatCurrency(v) {
                     try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v)||0); } catch(e) { return String(v); }
                 }
-
                 function escapeHtml(s) { return String(s||'').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-                // open modal and list backups
                 async function openBackupModal() {
                     if (!backupModal) return;
                     try { backupModal.showModal(); } catch(e) { backupModal.setAttribute('open',''); }
                     backupModal.classList.add('modal-expanded');
                     try { const list = await listBackups(); renderBackupsList(list); } catch(e) { renderBackupsList([]); }
                 }
-                
-                // funçío para excluir backup
+
                 async function deleteBackup(backupId, backupName) {
                     if (!backupId) {
-                        showToast('Nenhum backup selecionado para exclusío', 'bg-yellow-600');
+                        showToast('Nenhum backup selecionado para exclusï¿½o', 'bg-yellow-600');
                         return;
                     }
-                    
                     try {
-                        // Confirmar exclusío
-                        const confirmed = confirm(`Tem certeza que deseja excluir permanentemente o backup "${backupName || 'sem nome'}"?\n\nEsta ação nío pode ser desfeita.`);
+
+                        const confirmed = confirm(`Tem certeza que deseja excluir permanentemente o backup "${backupName || 'sem nome'}"?\n\nEsta aï¿½ï¿½o nï¿½o pode ser desfeita.`);
                         if (!confirmed) return;
-                        
                         showLoading();
-                        
-                        // Excluir do Firebase
+
                         await database.ref('/backups/' + backupId).remove();
-                        
                         hideLoading();
-                        showToast('Backup excluí­do com sucesso!', 'bg-green-600');
-                        
-                        // Limpar preview
+                        showToast('Backup excluï¿½ï¿½do com sucesso!', 'bg-green-600');
+
                         if (backupPreviewEl) {
                             backupPreviewEl.innerHTML = '<div class="text-sm text-gray-500">Selecione um backup para visualizar.</div>';
                         }
                         currentBackupId = null;
-                        
-                        // Recarregar lista de backups
+
                         const list = await listBackups();
                         renderBackupsList(list);
-                        
                     } catch (err) {
                         hideLoading();
                         showToast('Falha ao excluir backup: ' + (err && err.message ? err.message : String(err)), 'bg-red-600');
-                        console.error('deleteBackup error:', err);
+
                     }
                 }
-
                 if (createBackupBtn) createBackupBtn.addEventListener('click', async () => { try { await createBackup(); } catch(e){} });
                 if (restoreBackupBtn) restoreBackupBtn.addEventListener('click', () => openBackupModal());
                 if (refreshBackupsBtn) refreshBackupsBtn.addEventListener('click', async () => { try { const list = await listBackups(); renderBackupsList(list); } catch(e){} });
                 if (closeBackupModalBtn) closeBackupModalBtn.addEventListener('click', () => { try { backupModal.close(); } catch(e){ backupModal.removeAttribute('open'); } });
-                
-                // Event listener para o Botão de exclusío
+
                 if (deleteBackupBtn) {
                     deleteBackupBtn.addEventListener('click', async () => {
                         if (!currentBackupId) {
                             showToast('Nenhum backup selecionado', 'bg-yellow-600');
                             return;
                         }
-                        
-                        // Buscar nome do backup atual
+
                         try {
                             const snap = await database.ref('/backups/' + currentBackupId).get();
                             const val = snap.val();
@@ -7201,13 +2869,14 @@ const firebaseConfig = {
                         }
                     });
                 }
-
             } catch(e) { console.error('attach backup handlers', e); }
+            if (ui.expensesTableHead) {
 
-            ui.expensesTableHead.addEventListener('click', (e) => {
+                ui.expensesTableHead.addEventListener('click', (e) => {
+
                     const header = e.target.closest('.sortable-header');
                     if(header) {
-                        // Toggle sort order if clicking same column
+
                         if (state.sort.key === header.dataset.sort) {
                             state.sort.order = state.sort.order === 'asc' ? 'desc' : 'asc';
                         } else {
@@ -7216,10 +2885,12 @@ const firebaseConfig = {
                         }
                         renderExpenseTable();
                     }
-            });
+                });
+            } else {
+
+            }
             document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
-            // 'more' swipe handlers removed to keep rows as standard table rows with inline action buttons
-            // Mobile bottom nav interactions
+
             if (ui.mobileBottomNav) {
                 const buttons = ui.mobileBottomNav.querySelectorAll('.mobile-nav-btn');
                 function updateMobileNavVisibility() {
@@ -7233,14 +2904,13 @@ const firebaseConfig = {
                 window.addEventListener('resize', updateMobileNavVisibility);
                 buttons.forEach(btn => btn.addEventListener('click', (e) => changeView(e.currentTarget.dataset.view)));
             }
-            // Independent handler: installment checkbox only controls installments card
+
             ui.isInstallment.addEventListener('change', () => {
                 try {
                     ui.installmentsFields.classList.toggle('active', ui.isInstallment.checked);
                 } catch (e) { console.error('isInstallment change handler', e); }
             });
 
-            // Independent handler: financing checkbox only controls financing card
             try {
                 const financingCheckbox = document.getElementById('is-financing');
                 if (financingCheckbox) {
@@ -7252,7 +2922,7 @@ const firebaseConfig = {
                     });
                 }
             } catch (e) { console.error('bindEvents attach financing handler', e); }
-            // Dashboard grouping controls removed: grouping is only available on the credit-cards (faturas) page.
+
             try {
                 if (ui['toggleExpenseGrouped']) {
                     ui['toggleExpenseGrouped'].style.display = 'none';
@@ -7261,11 +2931,10 @@ const firebaseConfig = {
                     ui.groupExpensesBtn.style.display = 'none';
                 }
                 const wrapped = document.getElementById('expenses-grouped-container'); if (wrapped) wrapped.classList.add('hidden');
-                // ensure state.showGroupedExpenses is not used on dashboard
+
                 state.showGroupedExpenses = false;
             } catch(e) { /* silent */ }
 
-                // Delegated handler: if any card's group-toggle is clicked, toggle grouping for ALL cards
                 try {
                     if (ui.creditCardsContainer) {
                         ui.creditCardsContainer.addEventListener('click', (ev) => {
@@ -7273,11 +2942,11 @@ const firebaseConfig = {
                             if (!toggle) return;
                             ev.preventDefault();
                             const name = toggle.dataset.cardName;
-                            // Determine new state as inverse of current state of clicked card
+
                             const newState = !state.cardGrouped[name];
-                            // Apply only to this specific card
+
                             state.cardGrouped[name] = newState;
-                            // Update icon for this card only
+
                             const container = document.getElementById('credit-cards-container');
                             if (!container) return;
                             const cardRoot = container.querySelector(`[data-card-root="${name}"]`);
@@ -7286,7 +2955,7 @@ const firebaseConfig = {
                                 const iconEl = cardRoot.querySelector('.card-group-toggle .material-symbols-outlined'); 
                                 if (iconEl) iconEl.textContent = newState ? 'vertical_split' : 'merge_type'; 
                             } catch(e){}
-                            // Repopulate only this card
+
                             try { 
                                 const exps = (getCurrentMonthData().expenses || []).filter(e => paymentMatches(e.payment || '', name)); 
                                 populateCardExpenses(name, exps); 
@@ -7294,11 +2963,9 @@ const firebaseConfig = {
                         });
                     }
                 } catch(e) { console.error('attach delegated card-group-toggle', e); }
-
-            
             if (ui.paymentMethod) ui.paymentMethod.addEventListener('change', (e) => {
                 toggleInstallmentSection(e.target.value);
-                // Show recipient field for PIX and Transferíªncia (tolerant matching)
+
                 try {
                     const raw = (e.target.value || '').toString();
                     const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -7307,7 +2974,7 @@ const firebaseConfig = {
                     const recipientInput = document.getElementById('payment-recipient');
                     const recipientHint = document.getElementById('payment-recipient-hint');
                     if (recipientWrapper && recipientInput) {
-                        // match 'pix' exactly and any token containing 'transfer' for Transferíªncia variants
+
                         const mustShow = (nv === 'pix' || nv.indexOf('transfer') !== -1 || nv === 'transferencia');
                         if (mustShow) {
                             recipientWrapper.classList.remove('hidden');
@@ -7332,11 +2999,9 @@ const firebaseConfig = {
                     const descHint = document.getElementById('description-hint');
                     const catHint = document.getElementById('category-hint');
 
-                    // clear hints by default
                     if (descHint) { descHint.textContent = ''; descHint.classList.add('hidden'); descHint.setAttribute('aria-hidden', 'true'); }
                     if (catHint) { catHint.textContent = ''; catHint.classList.add('hidden'); catHint.setAttribute('aria-hidden', 'true'); }
 
-                    // VR enforcement: Alimentação / Essenciais
                     if (pm === 'VR') {
                         const foundAlim = expenseCategories.find(c => normalize(c).includes('aliment'));
                         if (foundAlim && ui.categoryExpense) {
@@ -7344,14 +3009,13 @@ const firebaseConfig = {
                             try { ui.categoryExpense.disabled = true; } catch(e){}
                         }
                         if (ui.expenseType) ui.expenseType.value = 'Essenciais';
-                        // ensure description is editable for VR cases
+
                         try { if (descEl) descEl.disabled = false; } catch(e){}
-                        // show hint explaining why category is locked
-                        if (catHint) { catHint.textContent = 'Categoria padronizada para VR (Alimentação). você pode alterar apí³s salvar no gerenciamento de VR.'; catHint.classList.remove('hidden'); catHint.setAttribute('aria-hidden', 'false'); }
-                        showToast('Pagamento via VR: categoria e tipo ajustados para Alimentação / Essencial.', 'bg-yellow-600');
+
+                        if (catHint) { catHint.textContent = 'Categoria padronizada para VR (Alimentaï¿½ï¿½o). vocï¿½ pode alterar apï¿½ï¿½s salvar no gerenciamento de VR.'; catHint.classList.remove('hidden'); catHint.setAttribute('aria-hidden', 'false'); }
+                        showToast('Pagamento via VR: categoria e tipo ajustados para Alimentaï¿½ï¿½o / Essencial.', 'bg-yellow-600');
                     }
 
-                    // VT enforcement: Transporte (categoria obrigaTí³ria) + description forced to 'Abastecimento'
                     else if (pm === 'VT') {
                         const foundTransp = expenseCategories.find(c => normalize(c).includes('transport')) || expenseCategories.find(c => normalize(c).includes('transp')) || expenseCategories.find(c => normalize(c).includes('transporte'));
                         if (foundTransp && ui.categoryExpense) {
@@ -7359,37 +3023,34 @@ const firebaseConfig = {
                             try { ui.categoryExpense.disabled = true; } catch(e){}
                         }
                         if (ui.expenseType) ui.expenseType.value = 'Essenciais';
-                        // Force description to 'Abastecimento' and make it readonly/disabled so it's mandatory
+
                         try { if (descEl) { descEl.value = 'Abastecimento'; descEl.disabled = true; } } catch(e){}
-                        // show hint explaining why description and category are locked for VT
-                        if (descHint) { descHint.textContent = 'Descrição obrigaTí³ria para VT: "Abastecimento". Caso precise outra Descrição, registre como dí©bito comum.'; descHint.classList.remove('hidden'); descHint.setAttribute('aria-hidden', 'false'); }
-                        if (catHint) { catHint.textContent = 'Categoria padronizada para VT (Transporte). Para outras categorias, use má©todo de pagamento diferente.'; catHint.classList.remove('hidden'); catHint.setAttribute('aria-hidden', 'false'); }
-                        showToast('Pagamento via VT: categoria definida para Transporte e Descrição definida para "Abastecimento".', 'bg-yellow-600');
+
+                        if (descHint) { descHint.textContent = 'Descriï¿½ï¿½o obrigaTï¿½ï¿½ria para VT: "Abastecimento". Caso precise outra Descriï¿½ï¿½o, registre como dï¿½ï¿½bito comum.'; descHint.classList.remove('hidden'); descHint.setAttribute('aria-hidden', 'false'); }
+                        if (catHint) { catHint.textContent = 'Categoria padronizada para VT (Transporte). Para outras categorias, use mï¿½todo de pagamento diferente.'; catHint.classList.remove('hidden'); catHint.setAttribute('aria-hidden', 'false'); }
+                        showToast('Pagamento via VT: categoria definida para Transporte e Descriï¿½ï¿½o definida para "Abastecimento".', 'bg-yellow-600');
                     }
 
-                    // Otherwise, if changing away from VR/VT, re-enable category select and description
                     else {
                         try { if (ui.categoryExpense) ui.categoryExpense.disabled = false; } catch(e){}
                         try { if (descEl) descEl.disabled = false; } catch(e){}
-                        // clear hints when normal payment selected
+
                         if (descHint) { descHint.textContent = ''; descHint.classList.add('hidden'); descHint.setAttribute('aria-hidden', 'true'); }
                         if (catHint) { catHint.textContent = ''; catHint.classList.add('hidden'); catHint.setAttribute('aria-hidden', 'true'); }
                     }
                 } catch (err) { console.error('paymentMethod change enforcement error', err); }
             });
-
             if (ui.monthlyReportBtn) ui.monthlyReportBtn.addEventListener('click', () => openMonthlyReport());
-            // Desktop quick links: mirror mobile/nav tabs behavior
+
             if (ui.desktopDashboardBtn) ui.desktopDashboardBtn.addEventListener('click', () => changeView('dashboard'));
             if (ui.desktopCreditcardsBtn) ui.desktopCreditcardsBtn.addEventListener('click', () => changeView('credit-cards'));
-            // Make VR KPI clickable: open Faturas (credit-cards) when clicked
+
             try {
                 const kpiVr = document.getElementById('kpi-vr-card');
                 if (kpiVr) {
                     kpiVr.style.cursor = 'pointer';
                     kpiVr.addEventListener('click', () => {
-                        // Navigate to the credit-cards (faturas) view.
-                        // NOTE: do NOT modify state.filters here to avoid applying filters automatically.
+
                         changeView('credit-cards');
                     });
                 }
@@ -7399,39 +3060,37 @@ const firebaseConfig = {
                 if (kpiVt) {
                     kpiVt.style.cursor = 'pointer';
                     kpiVt.addEventListener('click', () => {
-                        // Navigate to the credit-cards (faturas) view.
-                        // NOTE: do NOT modify state.filters here to avoid applying filters automatically.
+
                         changeView('credit-cards');
                     });
                 }
             } catch (e) { console.error('attach kpi-vt click handler', e); }
-            // Show import/export when hovering the monthly report icon/area
+
             const infrequent = document.getElementById('infrequent-controls');
             if (infrequent && ui.monthlyReportBtn) {
-                let _hideTimer = null;
-                ui.monthlyReportBtn.addEventListener('mouseenter', () => { clearTimeout(_hideTimer); infrequent.classList.add('visible'); });
-                ui.monthlyReportBtn.addEventListener('mouseleave', () => { _hideTimer = setTimeout(() => infrequent.classList.remove('visible'), 250); });
-                // Also keep visible when hovering the controls themselves
-                infrequent.addEventListener('mouseenter', () => { clearTimeout(_hideTimer); infrequent.classList.add('visible'); });
-                infrequent.addEventListener('mouseleave', () => { _hideTimer = setTimeout(() => infrequent.classList.remove('visible'), 250); });
+                ui.monthlyReportBtn.addEventListener('mouseenter', () => { infrequent.classList.add('visible'); });
+                ui.monthlyReportBtn.addEventListener('mouseleave', () => { infrequent.classList.remove('visible'); });
+
+                infrequent.addEventListener('mouseenter', () => { infrequent.classList.add('visible'); });
+                infrequent.addEventListener('mouseleave', () => { infrequent.classList.remove('visible'); });
             }
-            // Mobile: toggle infrequent controls with a button (touch-friendly)
+
             const mobileToggle = document.getElementById('mobile-infrequent-toggle');
             if (mobileToggle && infrequent) {
-                // Ensure the button is visible only on small screens
+
                 mobileToggle.style.display = window.innerWidth <= 639 ? 'inline-flex' : 'none';
                 mobileToggle.addEventListener('click', () => {
                     const isVisible = infrequent.classList.toggle('mobile-visible');
-                    // Ensure we remove desktop hover-visible if toggling manually
+
                     if (isVisible) infrequent.classList.remove('visible');
                 });
-                // React to resize to show/hide the button appropriately
+
                 window.addEventListener('resize', () => {
                     mobileToggle.style.display = window.innerWidth <= 639 ? 'inline-flex' : 'none';
                     if (window.innerWidth > 639) infrequent.classList.remove('mobile-visible');
                 });
             }
-                // Ensure charts resize on orientation change / resize
+
                 window.addEventListener('resize', () => {
                     if (ui && ui.charts) {
                         Object.values(ui.charts).forEach(c => { try { if (c && typeof c.resize === 'function') c.resize(); } catch(e){} });
@@ -7448,18 +3107,19 @@ const firebaseConfig = {
                 renderExpenseTable();
             });
 
-            // Expenses filter popover handlers
             if (ui.expensesFilterBtn && ui.expensesFilterPopover) {
+
                 ui.expensesFilterBtn.addEventListener('click', (e) => {
+
                     e.stopPropagation();
-                    // populate selects from settings
+
                     const payments = state.appData.settings.paymentMethods || [];
                     const paymentsSorted = sortStrings((payments || []).map(p => p.name || ''));
-                    ui.filterPaymentMethod.innerHTML = '<option value="">Todos</option>' + paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
+                    ui.filterPaymentMethod.innerHTML = '<option value="">Todos os mï¿½todos</option>' + paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
                     const cats = state.appData.settings.expenseCategories || [];
                     const catsSorted = sortStrings(cats);
-                    ui.filterCategory.innerHTML = '<option value="">Todas</option>' + catsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
-                    // Pre-select current filters so the UI reflects programmatic filters
+                    ui.filterCategory.innerHTML = '<option value="">Todas as categorias</option>' + catsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
+
                     try {
                         const ef = state.filters.expenseFilters || {};
                         ui.filterPaymentMethod.value = ef.payment || '';
@@ -7468,99 +3128,58 @@ const firebaseConfig = {
                         ui.filterType.value = ef.type || '';
                         ui.filterRecurring.checked = !!ef.recurring;
                         ui.filterInstallment.checked = !!ef.installment;
-                    } catch(e) { /* ignore */ }
-
-                    // On small screens, show as mobile bottom-sheet using mobile-visible
-                    if (window.innerWidth <= 639) {
-                        ui.expensesFilterPopover.classList.remove('hidden');
-                        ui.expensesFilterPopover.classList.add('mobile-visible');
-                        ui.expensesFilterPopover.style.position = 'fixed';
-                        ui.expensesFilterPopover.style.left = '0.6rem';
-                        ui.expensesFilterPopover.style.right = '0.6rem';
-                        ui.expensesFilterPopover.style.bottom = '4.5rem';
-                        ui.expensesFilterPopover.style.top = 'auto';
-                        ui.expensesFilterPopover.style.maxHeight = '40vh';
-                        ui.expensesFilterPopover.style.overflow = 'auto';
-                    } else {
-                        // For desktop we temporarily move the popover to document.body so it won't cause scroll/layout shifts
-                        try {
-                            const rect = ui.expensesFilterBtn.getBoundingClientRect();
-                            // Save original parent/next so we can restore later
-                            if (!ui.expensesFilterPopover._origParent) {
-                                ui.expensesFilterPopover._origParent = ui.expensesFilterPopover.parentNode;
-                                ui.expensesFilterPopover._origNext = ui.expensesFilterPopover.nextSibling;
-                            }
-                            document.body.appendChild(ui.expensesFilterPopover);
-                            ui.expensesFilterPopover.style.position = 'absolute';
-                            ui.expensesFilterPopover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
-                            let left = (rect.left + window.scrollX - 160);
-                            left = Math.max(8, Math.min(left, window.innerWidth - 280));
-                            ui.expensesFilterPopover.style.left = left + 'px';
-                            ui.expensesFilterPopover.style.right = '';
-                            ui.expensesFilterPopover.classList.remove('hidden');
-                            ui.expensesFilterPopover.classList.remove('mobile-visible');
-                            ui.expensesFilterPopover.style.maxHeight = '';
-                            ui.expensesFilterPopover.style.overflow = '';
-                        } catch(e){ console.error('filter popover open error', e) }
-                    }
-                });
-
-                // Close when clicking outside
-                document.addEventListener('click', (ev) => {
-                    if (!ui.expensesFilterPopover) return;
-                    if (ui.expensesFilterPopover.classList.contains('hidden')) return;
-                    if (ev.target === ui.expensesFilterBtn || ui.expensesFilterPopover.contains(ev.target)) return;
-                    // hide and restore if detached
-                    ui.expensesFilterPopover.classList.add('hidden');
-                    ui.expensesFilterPopover.classList.remove('mobile-visible');
-                    if (ui.expensesFilterPopover._origParent) {
-                        try {
-                            if (ui.expensesFilterPopover._origNext && ui.expensesFilterPopover._origNext.parentNode === ui.expensesFilterPopover._origParent) {
-                                ui.expensesFilterPopover._origParent.insertBefore(ui.expensesFilterPopover, ui.expensesFilterPopover._origNext);
-                            } else {
-                                ui.expensesFilterPopover._origParent.appendChild(ui.expensesFilterPopover);
-                            }
-                        } catch(e) { console.error('restore popover error', e); }
-                        ui.expensesFilterPopover._origParent = null; ui.expensesFilterPopover._origNext = null;
-                    }
-                });
-
-                // Make expenses filter popover act as bottom-sheet on narrow screens
-                function openExpensesFilterAsNeeded() {
-                    try {
-                        const rect = ui.expensesFilterBtn.getBoundingClientRect();
-                        if (window.innerWidth <= 640) {
-                            ui.expensesFilterPopover.classList.add('mobile-visible');
-                            ui.expensesFilterPopover.classList.remove('hidden');
-                        } else {
-                            // existing positioning handled elsewhere
-                        }
-                    } catch(e) {}
-                }
-
-                // Update filter badge count
-                function updateFilterBadge() {
-                    try {
-                        const badge = document.getElementById('expenses-filter-badge');
-                        if (!badge) return;
-                        const ef = state.filters.expenseFilters || {};
-                        let count = 0;
-                        if (ef.payment) count++;
-                        if (ef.spendingType) count++;
-                        if (ef.category) count++;
-                        if (ef.type) count++;
-                        if (ef.recurring) count++;
-                        if (ef.installment) count++;
-                        badge.textContent = String(count);
-                        badge.style.display = count > 0 ? 'inline-flex' : 'none';
                     } catch(e) { }
+
+                    const backdrop = document.getElementById('filter-backdrop');
+                    if (backdrop) backdrop.classList.remove('hidden');
+                    ui.expensesFilterPopover.classList.remove('hidden');
+                });
+
+                const closeFilterModal = () => {
+                    const backdrop = document.getElementById('filter-backdrop');
+                    if (backdrop) backdrop.classList.add('hidden');
+                    ui.expensesFilterPopover.classList.add('hidden');
+                };
+
+                const closeBtn = document.getElementById('filter-close-btn');
+                if (closeBtn) {
+
+                    closeBtn.addEventListener('click', closeFilterModal);
+                } else {
+
                 }
 
-                // ensure badge is correct on load
-                try { updateFilterBadge(); } catch(e) {}
+                const backdrop = document.getElementById('filter-backdrop');
+                if (backdrop) {
 
+                    backdrop.addEventListener('click', closeFilterModal);
+                } else {
+
+                }
+            } else {
+
+            }
+
+            function updateFilterBadge() {
+                try {
+                    const badge = document.getElementById('expenses-filter-badge');
+                    if (!badge) return;
+                    const ef = state.filters.expenseFilters || {};
+                    let count = 0;
+                    if (ef.payment) count++;
+                    if (ef.spendingType) count++;
+                    if (ef.category) count++;
+                    if (ef.type) count++;
+                    if (ef.recurring) count++;
+                    if (ef.installment) count++;
+                    badge.textContent = String(count);
+                    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+                } catch(e) { }
+            }
+
+            try { updateFilterBadge(); } catch(e) {}
+            if (ui.filterApplyBtn) {
                 ui.filterApplyBtn.addEventListener('click', () => {
-                    // Build filter object
                     state.filters.expenseFilters = state.filters.expenseFilters || {};
                     state.filters.expenseFilters.payment = ui.filterPaymentMethod.value || '';
                     state.filters.expenseFilters.spendingType = ui.filterSpendingType.value || '';
@@ -7568,22 +3187,14 @@ const firebaseConfig = {
                     state.filters.expenseFilters.type = ui.filterType.value || '';
                     state.filters.expenseFilters.recurring = ui.filterRecurring.checked;
                     state.filters.expenseFilters.installment = ui.filterInstallment.checked;
-                    ui.expensesFilterPopover.classList.add('hidden');
-                    ui.expensesFilterPopover.classList.remove('mobile-visible');
-                    if (ui.expensesFilterPopover._origParent) {
-                        try {
-                            if (ui.expensesFilterPopover._origNext && ui.expensesFilterPopover._origNext.parentNode === ui.expensesFilterPopover._origParent) {
-                                ui.expensesFilterPopover._origParent.insertBefore(ui.expensesFilterPopover, ui.expensesFilterPopover._origNext);
-                            } else {
-                                ui.expensesFilterPopover._origParent.appendChild(ui.expensesFilterPopover);
-                            }
-                        } catch(e){}
-                        ui.expensesFilterPopover._origParent = null; ui.expensesFilterPopover._origNext = null;
-                    }
+                    const backdrop = document.getElementById('filter-backdrop');
+                    if (backdrop) backdrop.classList.add('hidden');
+                    if (ui.expensesFilterPopover) ui.expensesFilterPopover.classList.add('hidden');
                     renderExpenseTable();
                     updateFilterBadge();
                 });
-
+            }
+            if (ui.filterClearBtn) {
                 ui.filterClearBtn.addEventListener('click', () => {
                     ui.filterPaymentMethod.value = '';
                     ui.filterCategory.value = '';
@@ -7592,41 +3203,31 @@ const firebaseConfig = {
                     ui.filterRecurring.checked = false;
                     ui.filterInstallment.checked = false;
                     state.filters.expenseFilters = {};
-                    ui.expensesFilterPopover.classList.add('hidden');
-                    ui.expensesFilterPopover.classList.remove('mobile-visible');
-                    if (ui.expensesFilterPopover._origParent) {
-                        try {
-                            if (ui.expensesFilterPopover._origNext && ui.expensesFilterPopover._origNext.parentNode === ui.expensesFilterPopover._origParent) {
-                                ui.expensesFilterPopover._origParent.insertBefore(ui.expensesFilterPopover, ui.expensesFilterPopover._origNext);
-                            } else {
-                                ui.expensesFilterPopover._origParent.appendChild(ui.expensesFilterPopover);
-                            }
-                        } catch(e){}
-                        ui.expensesFilterPopover._origParent = null; ui.expensesFilterPopover._origNext = null;
-                    }
+                    const backdrop = document.getElementById('filter-backdrop');
+                    if (backdrop) backdrop.classList.add('hidden');
+                    if (ui.expensesFilterPopover) ui.expensesFilterPopover.classList.add('hidden');
                     renderExpenseTable();
                     updateFilterBadge();
                 });
-                // Preview future changes button (shows compact list of affected months/values)
-                if (ui.previewFutureBtn) {
-                    ui.previewFutureBtn.addEventListener('click', () => {
-                        try {
-                            const id = document.getElementById('transaction-id').value;
-                            if (!id) return showToast('Abra uma transação existente para ver previsÕES.', 'bg-gray-600');
-                            const type = ui.transactionTypeInput.value;
-                            previewFutureChanges(id, type);
-                        } catch(e) { console.error('previewFutureBtn click', e); }
-                    });
-                }
             }
 
-            // Automação: se selecionar uma meta como categoria da reserva, preenche Descrição automaticamente
+            if (ui.previewFutureBtn) {
+                ui.previewFutureBtn.addEventListener('click', () => {
+                    try {
+                        const id = document.getElementById('transaction-id').value;
+                        if (!id) return showToast('Abra uma transaÃ§Ã£o existente para ver previsÃ•ES.', 'bg-gray-600');
+                        const type = ui.transactionTypeInput.value;
+                        previewFutureChanges(id, type);
+                    } catch(e) { console.error('previewFutureBtn click', e); }
+                });
+            }
+
             if (ui.categorySaving) {
                 ui.categorySaving.addEventListener('change', function() {
                     const selected = this.value;
-                    // Se for uma meta (exatamente igual ao nome de uma meta), preenche Descrição
+
                     const goals = (state.appData.settings.goals || []).map(g => g.name);
-                    // Se o valor selecionado for igual ao nome de uma meta, ou terminar com ' (Meta)', preenche
+
                     let metaName = null;
                     if (goals.includes(selected)) {
                         metaName = selected;
@@ -7639,17 +3240,14 @@ const firebaseConfig = {
                 });
             }
         }
-
         function handleExport() {
             if (!state.appData) {
-                alert("nío hí¡ dados para exportar.");
+                alert("nï¿½o hï¿½ï¿½ dados para exportar.");
                 return;
             }
 
-            // 1. Criar uma cí³pia profunda para nío modificar o estado atual
             const appDataCopy = JSON.parse(JSON.stringify(state.appData));
 
-            // 2. Transformar a estrutura de dados
             const transformedData = {};
             for (const year in appDataCopy.data) {
                 if (Object.prototype.hasOwnProperty.call(appDataCopy.data, year)) {
@@ -7663,41 +3261,34 @@ const firebaseConfig = {
             }
             appDataCopy.data = transformedData;
 
-            // 3. Montar o objeto final para exportação
             const exportObject = {
                 financeAppDB_v10: appDataCopy
             };
 
-            // 4. Criar e baixar o arquivo JSON
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObject, null, 2));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
             downloadAnchorNode.setAttribute("download", "import.json");
-            document.body.appendChild(downloadAnchorNode); // required for firefox
+            document.body.appendChild(downloadAnchorNode); 
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
-            
             showToast("Dados exportados com sucesso!", 'bg-green-600');
         }
-
         function handleImport() {
             const fileInput = ui.importFileInput;
             const file = fileInput.files[0];
             if (!file) {
-                return; // User cancelled file selection
+                return; 
             }
-
             const reader = new FileReader();
             reader.onload = async (event) => {
                 try {
                     const json = JSON.parse(event.target.result);
                     const dataToSave = json.financeAppDB_v10;
-
                     if (!dataToSave || !dataToSave.data) {
-                        throw new Error('Estrutura do JSON inví¡lida. Chave "financeAppDB_v10" ou "data" nío encontrada.');
+                        throw new Error('Estrutura do JSON invï¿½ï¿½lida. Chave "financeAppDB_v10" ou "data" nï¿½o encontrada.');
                     }
 
-                    // Transform data structure from {"YYYY-MM":...} to {YYYY:{MM:...}}
                     const transformedData = {};
                     for (const key in dataToSave.data) {
                         if (Object.prototype.hasOwnProperty.call(dataToSave.data, key) && key.match(/^\d{4}-\d{2}$/)) {
@@ -7709,45 +3300,38 @@ const firebaseConfig = {
                         }
                     }
                     dataToSave.data = transformedData;
-
                     await storage.saveData(dataToSave);
                     alert('Dados importados com sucesso!');
                     location.reload();
                 } catch (e) {
                     alert('Erro ao importar dados: ' + e.message);
-                    console.error(e);
+
                 } finally {
-                    fileInput.value = ''; // Reset input
+                    fileInput.value = ''; 
                 }
             };
             reader.readAsText(file);
         }
 
-        // --- RENDER FUNCTIONS ---
-
         function render() {
-            // A verificação de `appData` no iní­cio da renderização í© uma boa prí¡tica final.
+
             if (!state.appData) {
-                console.error("Renderização abortada: state.appData nío esTí¡ disponí­vel.");
+
                 return;
             }
             propagateRecurringTransactions();
             renderMonthDisplay();
-            
             switch (state.currentView) {
                 case 'dashboard': renderDashboard(); break;
                 case 'credit-cards': renderCreditCardView(); break;
             }
         }
-
         function changeView(view) {
             state.currentView = view;
-            
-            // Save current view to localStorage for persistence
+
             try {
                 localStorage.setItem('lastActiveView', view);
             } catch(e) { console.error('Error saving lastActiveView', e); }
-            
             ['dashboard', 'credit-cards'].forEach(v => {
                 const el = document.getElementById(`${v}-view`);
                 if (el) el.classList.toggle('hidden', view !== v);
@@ -7755,38 +3339,36 @@ const firebaseConfig = {
                 if (tabBtn) tabBtn.classList.toggle('tab-active', view === v);
             });
             const activeView = document.getElementById(`${view}-view`);
-            activeView.classList.remove('animate-fade-in');
+            activeView
             void activeView.offsetWidth;
-            activeView.classList.add('animate-fade-in');
+            activeView
             render();
         }
-
         function renderDashboard() {
             updateKPIs();
             renderAllTables();
             renderCharts();
         }
-
         function renderCreditCardView() {
             const container = ui.creditCardsContainer;
             container.innerHTML = '';
             const currentMonthData = getCurrentMonthData();
             const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
-            // Render real credit cards
+
             const creditCards = ((state.appData.settings.paymentMethods || []).filter(p => p.type === 'credit_card')).slice().sort((a,b) => {
                 const A = (a && a.name || '').toLowerCase(); const B = (b && b.name || '').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0;
             });
-            // Default: start with all cards ungrouped and sorted by value descending
+
             creditCards.forEach(c => { 
                 if (state.cardGrouped[c.name] === undefined) state.cardGrouped[c.name] = false; 
             });
             creditCards.forEach(card => {
                 let cardExpenses = (currentMonthData.expenses || []).filter(e => normalize((typeof getPaymentLabel === 'function' ? getPaymentLabel(e.payment || '') : (e.payment || ''))) === normalize(card.name || ''));
-                // choose sort mode per-card: default value descending
+
                 ui.cardSorts = ui.cardSorts || {};
                 if (ui.cardSorts[card.name] === undefined) ui.cardSorts[card.name] = 'value-desc';
                 const sortMode = ui.cardSorts[card.name];
-                // If grouped display is active for this card, defer ordering to populateCardExpenses
+
                 if (!state.cardGrouped[card.name]) {
                     if (sortMode === 'alf') {
                         cardExpenses = cardExpenses.slice().sort((a,b) => { const A=(a.description||'').toLowerCase(); const B=(b.description||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
@@ -7797,29 +3379,24 @@ const firebaseConfig = {
                     }
                 }
                 const totalBeforeAnticipation = cardExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
-                // anticipation value (amount paid/anticipated to bank) stored per-month under cardAnticipations
+
                 const y = String(state.currentDate.getFullYear()); const m = String(String(state.currentDate.getMonth()+1).padStart(2,'0'));
                 if (!state.appData.data[y]) state.appData.data[y] = {};
                 if (!state.appData.data[y][m]) state.appData.data[y][m] = { incomes: [], expenses: [], savings: [] };
                 const cardAnticipations = state.appData.data[y][m].cardAnticipations || {};
                 const anticipated = Number(cardAnticipations[card.name] || 0);
                 const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
-                
-                // Calculate closing and due dates
+
                 const closeDate = new Date(state.currentDate);
                 const dueDate = new Date(state.currentDate);
-                
-                // Get closing and due days from card configuration
+
                 const closeDay = card.closeDay || 1;
                 const cardDueDay = card.dueDay || 1;
-                
-                // Set closing date
+
                 closeDate.setDate(closeDay);
-                
-                // Set due date - if due day is early in month, it's for next month
+
                 if (cardDueDay < 15) dueDate.setMonth(dueDate.getMonth() + 1);
                 dueDate.setDate(cardDueDay);
-                
                 container.innerHTML += `
                     <div class="card p-6 rounded-2xl shadow-sm flex flex-col" data-card-root="${card.name}">
                         <div class="flex-grow">
@@ -7852,27 +3429,26 @@ const firebaseConfig = {
                                 ${(() => {
                                     const allPaid = cardExpenses.length > 0 && cardExpenses.every(e => e.isPaid);
                                     const btnText = allPaid ? 'Reaver Fatura' : 'Pagar Fatura';
-                                    const btnClass = allPaid ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'bg-green-500 text-white hover:bg-green-600';
-                                    return `<button data-card-name="${card.name}" class="pay-invoice-btn flex-grow ${btnClass} font-semibold py-2 px-4 rounded-lg transition-colors">${btnText}</button>`;
+                                    const btnClass = allPaid ? 'bg-gray-200 text-gray-800 ' : 'bg-green-500 text-white ';
+                                    return `<button data-card-name="${card.name}" class="pay-invoice-btn flex-grow ${btnClass} font-semibold py-2 px-4 rounded-lg ">${btnText}</button>`;
                                 })()}
-                                <button data-card-name="${card.name}" title="Adicionar despesa neste carTío" class="add-card-expense-btn flex-shrink-0 w-12 bg-blue-500 text-white font-semibold py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"> <span class="material-symbols-outlined" style="font-size:20px; line-height:1;">add</span></button>
+                                <button data-card-name="${card.name}" title="Adicionar despesa neste carTï¿½o" class="add-card-expense-btn flex-shrink-0 w-12 bg-blue-500 text-white font-semibold py-2 rounded-lg   flex items-center justify-center"> <span class="material-symbols-outlined" style="font-size:20px; line-height:1;">add</span></button>
                             </div>
                         </div>
                     </div>`;
-                // After inserting the card HTML, populate the card items area (grouped or normal depending on state)
+
                 try {
                     populateCardExpenses(card.name, cardExpenses);
                 } catch(e) { console.error('populateCardExpenses error', e); }
             });
 
-                // --- Render non-credit payment-method cards (e.g., Debito, Dinheiro, PIX, Transferíªncia, Boleto, Apple Pay, Outro)
                 try {
                     const currentMonthData = getCurrentMonthData();
                     const paymentsSettings = (state.appData.settings.paymentMethods || []);
-                    // normalization helper to compare stored expense.payment with configured names
+
                     const normalize = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
                     const nonCardPayments = (paymentsSettings || []).filter(p => ((p && p.type) || '').toString() !== 'credit_card');
-                    // Default: start with all payment cards ungrouped and sorted by value descending
+
                     nonCardPayments.forEach(pm => {
                         const pmName = (typeof getPaymentLabel === 'function') ? getPaymentLabel(pm) : ((typeof pm === 'string') ? pm : (pm.name || pm.label || pm.value || ''));
                         if (!pmName) return;
@@ -7883,9 +3459,8 @@ const firebaseConfig = {
                         if (!pmName) return;
                         const pmNorm = normalize(pmName);
                         let pmExpenses = (currentMonthData.expenses || []).filter(e => normalize((typeof getPaymentLabel === 'function' ? getPaymentLabel(e.payment || '') : (e.payment || ''))) === pmNorm);
-                        if (!pmExpenses || pmExpenses.length === 0) return; // only show if there's at least one expense with this payment
-                        
-                        // Apply sorting per-card: default value descending
+                        if (!pmExpenses || pmExpenses.length === 0) return; 
+
                         ui.cardSorts = ui.cardSorts || {};
                         if (ui.cardSorts[pmName] === undefined) ui.cardSorts[pmName] = 'value-desc';
                         const sortMode = ui.cardSorts[pmName];
@@ -7898,7 +3473,6 @@ const firebaseConfig = {
                                 pmExpenses = pmExpenses.slice().sort((a,b) => (Number(a.amount)||0) - (Number(b.amount)||0));
                             }
                         }
-                        
                         const totalPM = pmExpenses.reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
                         container.innerHTML += `
                             <div class="card p-6 rounded-2xl shadow-sm flex flex-col" data-card-root="${pmName}" data-payment-method="${pmName}">
@@ -7924,13 +3498,12 @@ const firebaseConfig = {
                                     </div>
                                 </div>
                             </div>`;
-                        // Populate the card items area (grouped or normal depending on state)
+
                         try {
                             populateCardExpenses(pmName, pmExpenses);
                         } catch(e) { console.error('populateCardExpenses error for payment method', e); }
                     });
 
-                    // Attach handlers for the payment-method cards (same as previous behavior)
                     container.querySelectorAll('.view-payment-expenses-btn').forEach(btn => btn.addEventListener('click', (e) => {
                         const p = e.currentTarget.dataset.payment || e.target.dataset.payment;
                         state.filters.expenseFilters = state.filters.expenseFilters || {};
@@ -7939,7 +3512,6 @@ const firebaseConfig = {
                         try { updateFilterBadge(); } catch(e){}
                         try { renderExpenseTable(); } catch(e){}
                     }));
-
                     container.querySelectorAll('.add-payment-expense-btn').forEach(btn => btn.addEventListener('click', (e) => {
                         const p = e.currentTarget.dataset.payment || e.target.dataset.payment;
                         const prefill = { payment: p, focusDescription: true };
@@ -7948,39 +3520,36 @@ const firebaseConfig = {
                     }));
                 } catch (pmErr) { console.error('render non-credit payment-method cards error', pmErr); }
 
-                // If there's VR ledger balance or VR activity, render VR as a card-like payment instrument
                 const vrAmount = getMonthVRBalance(currentMonthData);
-            // Show VR card if there's any VR ledger entry or usage for the month,
-            // even if the current available balance (credited - used) is zero.
+
             const hasLedger = Array.isArray(currentMonthData.vrLedger) && currentMonthData.vrLedger.length > 0;
             const hasUsage = Array.isArray(currentMonthData.vrUsage) && currentMonthData.vrUsage.length > 0;
             if (vrAmount > 0 || hasLedger || hasUsage) {
-                // Derive totals: credited (sum of vrLedger) and usage (sum of vrUsage)
-                // Ensure numeric conversion for safety (some entries may be strings)
+
                 const creditedTotal = (currentMonthData.vrLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
-                // Compute usage from vrUsage ledger entries
+
                 let usageTotal = (currentMonthData.vrUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
-                // Also include any expenses in the same month that were paid via VR but not recorded in vrUsage (migration edge-cases)
+
                 try {
                     const expensesVR = (currentMonthData.expenses || []).filter(e => paymentMatches(e.payment || '', 'VR'));
                     const expensesVRSum = expensesVR.reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
                     if (expensesVRSum > 0) usageTotal = Math.round((usageTotal + expensesVRSum) * 100) / 100;
                 } catch (e) { console.error('compute expenses vr usage', e); }
-                // If there are no vrUsage entries and no VR expenses but usageTotal is still > 0, this indicates a data/parsing anomaly.
+
                 if ((!Array.isArray(currentMonthData.vrUsage) || currentMonthData.vrUsage.length === 0) && (!Array.isArray(currentMonthData.expenses) || !(currentMonthData.expenses || []).some(ex => (ex.payment || '') === 'VR')) && usageTotal > 0) {
-                    console.warn('[VR WARNING] usageTotal > 0 but no vrUsage or VR expenses found. Forcing usageTotal=0. Details:', { usageTotal, vrLedger: currentMonthData.vrLedger, vrUsage: currentMonthData.vrUsage, expenses: currentMonthData.expenses });
+
                     usageTotal = 0;
                 }
-                // Debug: log ledger and usage arrays when displayAmount is zero despite credited > 0
+
                 try { /* VR debug disabled in cleanup pass */ } catch(e) {}
-                // displayAmount is credited minus expenses already charged to VR
+
                 const displayAmount = Math.max(0, Math.round((creditedTotal - usageTotal) * 100) / 100);
-                // Derive a friendly limit from latest vrLedger salaryMeta if available (kept for auxiliary info)
+
                 let vrLimit = vrAmount;
                 try {
                     const latestLedger = (currentMonthData.vrLedger || []).slice().reverse().find(l => l && l.salaryMeta);
                     if (latestLedger && latestLedger.salaryMeta && latestLedger.salaryMeta.valorDesjejumDia) {
-                        // compute monthly desjejum limit as desjejumDia * diasUteis
+
                         const desjejumDia = Number(latestLedger.salaryMeta.valorDesjejumDia) || 0;
                         const y = state.currentDate.getFullYear();
                         const m = state.currentDate.getMonth() + 1;
@@ -7989,31 +3558,28 @@ const firebaseConfig = {
                     }
                 } catch(e) { console.error('derive vr limit', e); }
 
-                // compute last day of the PREVIOUS month relative to the currently displayed month
-                // e.g. if viewing Outubro, show last day of Setembro (30/09)
                 const displayYear = state.currentDate.getFullYear();
-                // Use JS Date trick: day 0 of the displayed month -> last day of previous month
+
                 const prevMonthLastDate = new Date(displayYear, state.currentDate.getMonth(), 0);
                 const lastDay = prevMonthLastDate.getDate();
-                const prevMonthNumber = prevMonthLastDate.getMonth() + 1; // 1-12
+                const prevMonthNumber = prevMonthLastDate.getMonth() + 1; 
                 const lastDayStr = String(lastDay).padStart(2,'0') + '/' + String(prevMonthNumber).padStart(2,'0');
-
                 container.innerHTML += `
                     <div class="card p-6 rounded-2xl shadow-sm flex flex-col bg-gradient-to-br from-green-50 to-white border border-green-200">
                         <div class="flex-grow">
                             <div class="flex justify-between items-start mb-2">
                                 <h3 class="text-xl font-semibold">VR</h3>
-                                <!-- Badge shows: Crí©d. + íšltimo dia do Mês exibido (dd/MM) -->
-                                <span class="text-xs font-medium bg-green-100 text-green-800 px-2 py-1 rounded-full">Crí©d. ${lastDayStr}</span>
+                                <!-- Badge shows: Crï¿½ï¿½d. + ï¿½ltimo dia do Mï¿½s exibido (dd/MM) -->
+                                <span class="text-xs font-medium bg-green-100 text-green-800 px-2 py-1 rounded-full">Crï¿½ï¿½d. ${lastDayStr}</span>
                             </div>
                             <div class="vr-value-group" title="Usado: ${formatCurrency(usageTotal)}" style="position:relative; display:inline-block;">
                                 <p class="text-3xl font-bold text-green-600 mb-4" style="margin:0;">${formatCurrency(displayAmount)}</p>
-                                <p class="text-sm text-gray-500 vr-used" style="margin:0; opacity:0; transition: opacity 160ms ease;">Usado: ${formatCurrency(usageTotal)}</p>
+                                <p class="text-sm text-gray-500 vr-used" style="margin:0; opacity:0; ">Usado: ${formatCurrency(usageTotal)}</p>
                             </div>
                             <div class="mt-3 text-sm text-gray-600">
                                 <h4 class="font-semibold text-sm text-gray-700 flex items-center gap-2">
                                     <span>Compras</span>
-                                    <button id="add-vr-usage-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" title="Adicionar compra VR">
+                                    <button id="add-vr-usage-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 " title="Adicionar compra VR">
                                         <span class="material-symbols-outlined" style="font-size:18px;">add</span>
                                     </button>
                                 </h4>
@@ -8023,10 +3589,10 @@ const firebaseConfig = {
                                 })() : '<div class="text-sm text-gray-500 mt-1">Nenhuma compra registrada.</div>'}
                             </div>
                         </div>
-                                <!-- Gerenciar VR button removed per UX: VR works as dí©bito somente -->
+                                <!-- Gerenciar VR button removed per UX: VR works as dï¿½ï¿½bito somente -->
                     </div>`;
             }
-                    // VT: mirror VR card rendering if there is VT activity
+
                     const vtAmount = getMonthVTBalance(currentMonthData);
                     const hasVtLedger = Array.isArray(currentMonthData.vtLedger) && currentMonthData.vtLedger.length > 0;
                     const hasVtUsage = Array.isArray(currentMonthData.vtUsage) && currentMonthData.vtUsage.length > 0;
@@ -8039,46 +3605,45 @@ const firebaseConfig = {
                             if (expensesVTSum > 0) vtUsageTotal = Math.round((vtUsageTotal + expensesVTSum) * 100) / 100;
                         } catch (e) { console.error('compute expenses vt usage', e); }
                         if ((!Array.isArray(currentMonthData.vtUsage) || currentMonthData.vtUsage.length === 0) && (!Array.isArray(currentMonthData.expenses) || !(currentMonthData.expenses || []).some(ex => (ex.payment || '') === 'VT')) && vtUsageTotal > 0) {
-                            console.warn('[VT WARNING] usageTotal > 0 but no vtUsage or VT expenses found. Forcing vtUsageTotal=0.');
+
                             vtUsageTotal = 0;
                         }
                         const vtDisplayAmount = Math.max(0, Math.round((vtCreditedTotal - vtUsageTotal) * 100) / 100);
                         const latestVtLedger = (currentMonthData.vtLedger || []).slice().reverse().find(l => l && l.salaryMeta);
-                        // For VT, display the 5th business day of the currently viewed month (not the previous month)
+
                         const vtYear = state.currentDate.getFullYear();
-                        const vtMonthIndex = state.currentDate.getMonth(); // 0-based
+                        const vtMonthIndex = state.currentDate.getMonth(); 
                         const daysInMonth = new Date(vtYear, vtMonthIndex + 1, 0).getDate();
                         let businessCount = 0;
                         let vtDay = 1;
                         for (; vtDay <= daysInMonth; vtDay++) {
                             const d = new Date(vtYear, vtMonthIndex, vtDay);
-                            const wd = d.getDay(); // 0 = Sun, 6 = Sat
+                            const wd = d.getDay(); 
                             if (wd !== 0 && wd !== 6) businessCount++;
                             if (businessCount >= 5) break;
                         }
-                        // If month has fewer than 5 business days (very unlikely), vtDay will be last available business day
-                        const lastDayVT = vtDay;
-                        const prevMonthNumberVT = vtMonthIndex + 1; // display month number for the viewed month
-                        const lastDayStrVT = String(lastDayVT).padStart(2,'0') + '/' + String(prevMonthNumberVT).padStart(2,'0');
 
+                        const lastDayVT = vtDay;
+                        const prevMonthNumberVT = vtMonthIndex + 1; 
+                        const lastDayStrVT = String(lastDayVT).padStart(2,'0') + '/' + String(prevMonthNumberVT).padStart(2,'0');
                         container.innerHTML += `
                             <div class="card p-6 rounded-2xl shadow-sm flex flex-col bg-gradient-to-br from-yellow-50 to-white border border-yellow-200">
                                 <div class="flex-grow">
                                     <div class="flex justify-between items-start mb-2">
                                         <h3 class="text-xl font-semibold">VT</h3>
-                                        <span class="text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Crí©d. ${lastDayStrVT}</span>
+                                        <span class="text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Crï¿½ï¿½d. ${lastDayStrVT}</span>
                                     </div>
                                     <div class="vr-value-group" title="Usado: ${formatCurrency(vtUsageTotal)}" style="position:relative; display:inline-block;">
                                         <p class="text-3xl font-bold text-yellow-600 mb-4" style="margin:0;">${formatCurrency(vtDisplayAmount)}</p>
-                                        <p class="text-sm text-gray-500 vr-used" style="margin:0; opacity:0; transition: opacity 160ms ease;">Usado: ${formatCurrency(vtUsageTotal)}</p>
+                                        <p class="text-sm text-gray-500 vr-used" style="margin:0; opacity:0; ">Usado: ${formatCurrency(vtUsageTotal)}</p>
                                     </div>
                                     <div class="mt-3 text-sm text-gray-600">
                                         <h4 class="font-semibold text-sm text-gray-700 flex items-center gap-2">
                                             <span>Compras</span>
-                                                <button id="open-vt-history-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 mr-1" title="Abrir Histórico VT">
+                                                <button id="open-vt-history-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700  mr-1" title="Abrir Histï¿½rico VT">
                                                     <span class="material-symbols-outlined" style="font-size:18px;">history</span>
                                                 </button>
-                                                <button id="add-vt-usage-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" title="Adicionar compra VT">
+                                                <button id="add-vt-usage-btn" type="button" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 " title="Adicionar compra VT">
                                                     <span class="material-symbols-outlined" style="font-size:18px;">add</span>
                                                 </button>
                                         </h4>
@@ -8090,16 +3655,16 @@ const firebaseConfig = {
                                 </div>
                             </div>`;
                     }
-            // Attach handler to add VR usage from the VR card (open transaction modal with payment=VR)
+
                 try {
                     const addVrBtn = container.querySelector('#add-vr-usage-btn');
                     if (addVrBtn) addVrBtn.addEventListener('click', (ev) => {
-                        // Open transaction modal for expense and deterministically prefill payment=VR and focus description
+
                         openModal('expenses', null, { payment: 'VR', focusDescription: true });
                     });
                 } catch(e) { console.error('attach add-vr-usage handler', e); }
             container.querySelectorAll('.pay-invoice-btn').forEach(btn => btn.addEventListener('click', (e) => payCardInvoice(e.target.dataset.cardName)));
-            // Attach '+' handlers: open transaction modal prefilled with card payment and last used category (if any)
+
             container.querySelectorAll('.add-card-expense-btn').forEach(btn => btn.addEventListener('click', (e) => {
                 const cardName = e.currentTarget.dataset.cardName || e.target.dataset.cardName;
                 const prefill = { payment: cardName, focusDescription: true };
@@ -8109,7 +3674,7 @@ const firebaseConfig = {
                 showToast(`Criando despesa para ${cardName}...`, 'bg-blue-600');
                 openModal('expenses', null, prefill);
             }));
-            // attach handlers for editing anticipation amounts
+
             container.querySelectorAll('.edit-anticipation-btn').forEach(btn => btn.addEventListener('click', (ev) => {
                 ev.stopPropagation();
                 const cardName = ev.currentTarget.dataset.cardName || ev.target.dataset.cardName;
@@ -8120,56 +3685,55 @@ const firebaseConfig = {
                 md.cardAnticipations = md.cardAnticipations || {};
                 const currentVal = Number(md.cardAnticipations[cardName] || 0);
                 const input = prompt(`Valor antecipado para ${cardName} (R$):`, currentVal || '0');
-                if (input === null) return; // cancelled
+                if (input === null) return; 
                 const v = parseFloat(String(input).replace(',', '.')) || 0;
                 if (v <= 0) delete md.cardAnticipations[cardName]; else md.cardAnticipations[cardName] = Math.round((v + Number.EPSILON) * 100) / 100;
-                try { storage.saveData(state.appData); showToast('Valor antecipado atualizado.', 'bg-green-600'); } catch(e) { console.error('save anticipation', e); showToast('Falha ao salvar antecipação.', 'bg-red-600'); }
+                try { storage.saveData(state.appData); showToast('Valor antecipado atualizado.', 'bg-green-600'); } catch(e) { console.error('save anticipation', e); showToast('Falha ao salvar antecipaï¿½ï¿½o.', 'bg-red-600'); }
                 render();
             }));
-            // Attach per-item delete and edit buttons for VR usages
+
                 try {
                     container.querySelectorAll('.delete-vr-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
                     const id = ev.currentTarget.getAttribute('data-vr-usage-id');
                     if (!id) return;
-                    try { const ok = await confirmAsync('Excluir este uso de VR?', 'Confirmar exclusío'); if (!ok) return; } catch(e){ return; }
+                    try { const ok = await confirmAsync('Excluir este uso de VR?', 'Confirmar exclusï¿½o'); if (!ok) return; } catch(e){ return; }
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
                     const idx = md.vrUsage.findIndex(u => u.id === id);
                     if (idx > -1) md.vrUsage.splice(idx, 1);
-                    try { await storage.saveData(state.appData); showToast('Uso de VR excluí­do.', 'bg-green-600'); } catch(e) { console.error('delete vr usage save', e); showToast('Falha ao salvar exclusío.', 'bg-red-600'); }
+                    try { await storage.saveData(state.appData); showToast('Uso de VR excluï¿½ï¿½do.', 'bg-green-600'); } catch(e) { console.error('delete vr usage save', e); showToast('Falha ao salvar exclusï¿½o.', 'bg-red-600'); }
                     render();
                 }));
-                // VT handlers: add, edit, delete
+
                     try {
                         const addVtBtn = container.querySelector('#add-vt-usage-btn');
                         const openVtHistBtn = container.querySelector('#open-vt-history-btn');
                         if (openVtHistBtn) openVtHistBtn.addEventListener('click', (ev) => {
-                            // Prefer the dedicated VT history/modal when available. If not available or it errors,
-                            // show a friendly toast instead of opening the generic transaction modal unexpectedly.
+
                             if (typeof window.openVtFuelHistory === 'function') {
                                 try { window.openVtFuelHistory(); return; } catch(e) { console.error('openVtFuelHistory failed', e); }
                             }
                             if (typeof window.openVtFuelModal === 'function') {
                                 try { window.openVtFuelModal(null); return; } catch(e) { console.error('openVtFuelModal failed', e); }
                             }
-                            showToast('Modal de VT indisponí­vel no momento.', 'bg-yellow-600');
+                            showToast('Modal de VT indisponï¿½ï¿½vel no momento.', 'bg-yellow-600');
                         });
                         if (addVtBtn) addVtBtn.addEventListener('click', (ev) => {
-                            // Open the dedicated VT fuel modal when available. If it's missing or errors, show a toast instead
+
                             if (typeof window.openVtFuelModal === 'function') {
                                 try { window.openVtFuelModal(null); return; } catch(e) { console.error('openVtFuelModal failed', e); }
                             }
-                            showToast('Modal de VT indisponí­vel no momento.', 'bg-yellow-600');
+                            showToast('Modal de VT indisponï¿½ï¿½vel no momento.', 'bg-yellow-600');
                         });
                         container.querySelectorAll('.delete-vt-usage-btn').forEach(btn => btn.addEventListener('click', async (ev) => {
                         const id = ev.currentTarget.getAttribute('data-vt-usage-id');
                         if (!id) return;
-                        try { const ok = await confirmAsync('Excluir este uso de VT?', 'Confirmar exclusío'); if (!ok) return; } catch(e) { return; }
+                        try { const ok = await confirmAsync('Excluir este uso de VT?', 'Confirmar exclusï¿½o'); if (!ok) return; } catch(e) { return; }
                         const md = getCurrentMonthData();
                         if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
                         const idx = md.vtUsage.findIndex(u => u.id === id);
                         if (idx > -1) md.vtUsage.splice(idx, 1);
-                        try { await storage.saveData(state.appData); showToast('Uso de VT excluí­do.', 'bg-green-600'); } catch(e) { console.error('delete vt usage save', e); showToast('Falha ao salvar exclusío.', 'bg-red-600'); }
+                        try { await storage.saveData(state.appData); showToast('Uso de VT excluï¿½ï¿½do.', 'bg-green-600'); } catch(e) { console.error('delete vt usage save', e); showToast('Falha ao salvar exclusï¿½o.', 'bg-red-600'); }
                         render();
                     }));
                     container.querySelectorAll('.edit-vt-usage-btn, .edit-vt-usage-trigger').forEach(el => el.addEventListener('click', (ev) => {
@@ -8178,19 +3742,18 @@ const firebaseConfig = {
                         openVTUsageEdit(id);
                     }));
                 } catch(e) { console.error('attach vt usage item handlers', e); }
-                // Edit triggers (icon and description clickable)
+
                 container.querySelectorAll('.edit-vr-usage-btn, .edit-vr-usage-trigger').forEach(el => el.addEventListener('click', (ev) => {
                     const id = ev.currentTarget.getAttribute('data-vr-usage-edit-id') || ev.currentTarget.closest('[data-vr-usage-edit-id]')?.getAttribute('data-vr-usage-edit-id');
                     if (!id) return;
                     openVRUsageEdit(id);
                 }));
             } catch(e) { console.error('attach vr usage item handlers', e); }
-                // VR inline-edit bindings on card amounts
+
             try {
                 container.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => (typeof startInlineVREdit === 'function') ? startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId) : null));
             } catch(e) { /* ignore if nothing to bind */ }
 
-                // Clicking the amount opens the transaction modal for editing (centralized flow)
             try {
                 container.querySelectorAll('.card-exp-amount').forEach(span => span.addEventListener('click', (ev) => {
                     ev.stopPropagation();
@@ -8200,18 +3763,16 @@ const firebaseConfig = {
                 }));
             } catch(e) { console.error('attach card-exp-amount handlers', e); }
 
-            // Attach handlers to last-installment spans inside card lists
             container.querySelectorAll('.last-installment-btn').forEach(el => el.addEventListener('click', (ev) => {
                 const financingId = el.dataset.financingId || null;
                 const installmentId = el.dataset.installmentId || null;
                 goToLastInstallment({ financingId, installmentId });
             }));
 
-            // Attach handlers for card sort via title click (toggle alphabetical) and arrow buttons (value asc/desc)
             container.querySelectorAll('.card-title-sortable').forEach(el => el.addEventListener('click', (ev) => {
                 const cardName = ev.currentTarget.dataset.cardName;
                 ui.cardSorts = ui.cardSorts || {};
-                // toggle between alphabetical and value-desc when clicking title
+
                 const current = ui.cardSorts[cardName] || 'alf';
                 ui.cardSorts[cardName] = current === 'alf' ? 'value-desc' : 'alf';
                 renderCreditCardView();
@@ -8224,7 +3785,7 @@ const firebaseConfig = {
                 ui.cardSorts[cardName] = sort;
                 renderCreditCardView();
             }));
-            // attach handlers for editing anticipation amounts by clicking the amount
+
             container.querySelectorAll('.anticipation-amount').forEach(el => el.addEventListener('click', (ev) => {
                 ev.stopPropagation();
                 const cardName = ev.currentTarget.dataset.cardName || ev.target.dataset.cardName;
@@ -8235,14 +3796,13 @@ const firebaseConfig = {
                 md.cardAnticipations = md.cardAnticipations || {};
                 const currentVal = Number(md.cardAnticipations[cardName] || 0);
                 const input = prompt(`Valor antecipado para ${cardName} (R$):`, currentVal || '0');
-                if (input === null) return; // cancelled
+                if (input === null) return; 
                 const v = parseFloat(String(input).replace(',', '.')) || 0;
                 if (v <= 0) delete md.cardAnticipations[cardName]; else md.cardAnticipations[cardName] = Math.round((v + Number.EPSILON) * 100) / 100;
-                try { storage.saveData(state.appData); showToast('Valor antecipado atualizado.', 'bg-green-600'); } catch(e) { console.error('save anticipation', e); showToast('Falha ao salvar antecipação.', 'bg-red-600'); }
+                try { storage.saveData(state.appData); showToast('Valor antecipado atualizado.', 'bg-green-600'); } catch(e) { console.error('save anticipation', e); showToast('Falha ao salvar antecipaï¿½ï¿½o.', 'bg-red-600'); }
                 render();
             }));
 
-            // attach handlers for collapsing/expanding grouped expense headers
             container.querySelectorAll('.group-header').forEach(h => h.addEventListener('click', (ev) => {
                 const cardName = h.dataset.cardName;
                 const desc = decodeURIComponent(h.dataset.descEnc || '');
@@ -8250,7 +3810,7 @@ const firebaseConfig = {
                 ui.cardGroups[cardName] = ui.cardGroups[cardName] || {};
                 const current = ui.cardGroups[cardName][desc] || false;
                 ui.cardGroups[cardName][desc] = !current;
-                // simple DOM toggle for smoother UX (don't rerender entire view)
+
                 const root = h.closest('.expense-group');
                 if (root) {
                     const items = root.querySelector('.group-items');
@@ -8260,7 +3820,6 @@ const firebaseConfig = {
                 }
             }));
 
-            // Show edit icon and remaining total on hover for card expense descriptions
             try {
                 container.querySelectorAll('.desc-wrap').forEach(wrap => {
                     wrap.addEventListener('mouseenter', (ev) => {
@@ -8277,18 +3836,16 @@ const firebaseConfig = {
                     });
                 });
 
-                // Open transaction modal when clicking pencil: centralized editing flow
                 container.querySelectorAll('.edit-cat-btn').forEach(btn => btn.addEventListener('click', (ev) => {
                     ev.stopPropagation();
                     const expId = btn.dataset.expId;
                     if (!expId) return;
-                    // Reuse the main transaction modal to edit this expense
+
                     openModal('expenses', expId);
                 }));
             } catch(e) { console.error('attach card desc hover/edit handlers', e); }
         }
 
-        // Helper: populate the expenses area for a credit-card card either grouped or as full list
         function populateCardExpenses(cardName, cardExpenses) {
             try {
                 const root = document.querySelector(`#credit-cards-container [data-card-root="${cardName}"]`);
@@ -8296,10 +3853,10 @@ const firebaseConfig = {
                 const listEl = root.querySelector(`.card-items-list[data-card-name="${cardName}"]`);
                 if (!listEl) return;
                 listEl.innerHTML = '';
-                // Build groups by description
+
                 const groups = {};
                 cardExpenses.forEach(exp => {
-                    const key = (exp.description || '').trim() || (exp.category || 'Sem Descrição');
+                    const key = (exp.description || '').trim() || (exp.category || 'Sem Descriï¿½ï¿½o');
                     groups[key] = groups[key] || [];
                     groups[key].push(exp);
                 });
@@ -8309,23 +3866,19 @@ const firebaseConfig = {
                     if (groups[k].length > 1) groupedKeys.push(k);
                     else singleExpenses.push(groups[k][0]);
                 });
-
                 const isGrouped = !!state.cardGrouped[cardName];
-                // Update header toggle icon
+
                 try {
                     const btn = root.querySelector('.card-group-toggle .material-symbols-outlined');
                     if (btn) btn.textContent = isGrouped ? 'vertical_split' : 'merge_type';
                 } catch(e){}
-
                 if (isGrouped) {
-                    // Render group summaries
+
                     if (groupedKeys.length === 0) {
-                        // No groups to aggregate; show a small message and render singles
-                        listEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum grupo com mais de 1 lançamento.</p>';
+
+                        listEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum grupo com mais de 1 lanï¿½amento.</p>';
                     } else {
-                        // Sort groups according to current sort settings:
-                        // - for cards: ui.cardSorts[cardName] can be 'alf', 'value-desc', 'value-asc'
-                        // - for safety fallback to alphabetical
+
                         try {
                             const cardSortMode = (ui.cardSorts && ui.cardSorts[cardName]) || 'alf';
                             if (cardSortMode === 'alf') groupedKeys.sort((a,b) => a.localeCompare(b));
@@ -8342,7 +3895,7 @@ const firebaseConfig = {
                         } catch(e) {
                             groupedKeys.sort((a,b) => a.localeCompare(b));
                         }
-                        // Build unified list and render interleaved compact rows
+
                         const unified = [];
                         groupedKeys.forEach(k => {
                             const items = groups[k];
@@ -8350,7 +3903,6 @@ const firebaseConfig = {
                             unified.push({ type: 'group', key: k, items: items, total: total, count: items.length });
                         });
                         singleExpenses.forEach(exp => unified.push({ type: 'single', expense: exp, total: Number(exp.amount) || 0 }));
-
                         const cardSortMode = (ui.cardSorts && ui.cardSorts[cardName]) || 'alf';
                         if (cardSortMode === 'value-desc') unified.sort((a,b) => (Number(b.total)||0) - (Number(a.total)||0));
                         else if (cardSortMode === 'value-asc') unified.sort((a,b) => (Number(a.total)||0) - (Number(b.total)||0));
@@ -8359,7 +3911,6 @@ const firebaseConfig = {
                             const bLabel = b.type === 'group' ? (b.key||'') : (b.expense && b.expense.description ? b.expense.description : '');
                             return aLabel.toString().toLowerCase().localeCompare(bLabel.toString().toLowerCase());
                         });
-
                         unified.forEach(item => {
                             if (item.type === 'group') {
                                 const items = item.items;
@@ -8372,7 +3923,7 @@ const firebaseConfig = {
                                 row.title = items.map(it => `${formatCurrency(it.amount)} â€” ${escapeHtml(it.description || '')}`).join('\n');
                                 row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-group-key="${encodeURIComponent(key)}" style="gap:6px;"><span class="desc-text truncate">${escapeHtml(key)} <span class="text-xs text-gray-500">(${count} â€¢ ${formatCurrency(sum)})</span></span><button class="group-info-btn invisible ml-2" data-group-key="${encodeURIComponent(key)}" title="Detalhes do grupo"><span class="material-symbols-outlined" style="font-size:16px;">info</span></button></div><span class="card-exp-amount font-medium flex-shrink-0">${formatCurrency(sum)}</span>`;
                                 row.addEventListener('click', () => { try { const lines = items.map(it => `${formatCurrency(it.amount)} â€” ${escapeHtml(it.description || '')}`); showModalList(`Detalhes: ${key}`, lines.join('\n')); } catch(e){console.error('group click', e);} });
-                                // attach tooltip behavior to small info button synchronously to preserve ordering
+
                                 const btn = row.querySelector('.group-info-btn');
                                 if (btn) {
                                     let tt = null;
@@ -8380,7 +3931,7 @@ const firebaseConfig = {
                                         if (tt) return;
                                         tt = document.createElement('div');
                                         tt.className = 'expense-tooltip';
-                                        // build content safely without nested template braces
+
                                         const linesArr = items.map(it => `${formatCurrency(it.amount)} â€” ${escapeHtml(it.description || '')}`);
                                         const totalVal = items.reduce((s,i)=>s+(Number(i.amount)||0),0);
                                         tt.innerHTML = linesArr.join('<br>') + '<br><hr style="opacity:.12;margin:6px 0">' + '<strong>Total: ' + formatCurrency(totalVal) + '</strong>';
@@ -8410,9 +3961,9 @@ const firebaseConfig = {
                         });
                     }
                 } else {
-                    // Render full list (no grouping)
+
                     if (cardExpenses.length === 0) {
-                        listEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum gasto este Mês.</p>';
+                        listEl.innerHTML = '<p class="text-sm text-gray-500">Nenhum gasto este Mï¿½s.</p>';
                     } else {
                         cardExpenses.forEach(exp => {
                             const inst = exp.totalInstallments ? `<span class="text-xs text-gray-500">(${exp.currentInstallment}/<span class="last-installment-btn" data-installment-id="${exp.installmentId}" data-total="${exp.totalInstallments}">${exp.totalInstallments}</span>)</span>` : '';
@@ -8430,7 +3981,6 @@ const firebaseConfig = {
                     }
                 }
 
-                // Attach hover handlers for edit button visibility and remaining-total toggles
                 try {
                     listEl.querySelectorAll('.desc-wrap').forEach(wrap => {
                         wrap.addEventListener('mouseenter', (ev) => {
@@ -8448,7 +3998,6 @@ const firebaseConfig = {
                     });
                 } catch(e) { console.error('attach desc hover handlers for card', e); }
 
-                // Hook last-installment and edit buttons
                 try {
                     listEl.querySelectorAll('.last-installment-btn').forEach(btn => btn.addEventListener('click', (ev) => {
                         const financingId = btn.dataset.financingId || null;
@@ -8457,11 +4006,11 @@ const firebaseConfig = {
                     }));
                     listEl.querySelectorAll('.edit-cat-btn').forEach(btn => btn.addEventListener('click', (ev) => {
                         ev.stopPropagation();
-                        // If this button is attached to a grouped row, it will have data-group-key
+
                         const groupKeyEnc = btn.dataset.groupKey;
                         if (groupKeyEnc) {
                             const key = decodeURIComponent(groupKeyEnc);
-                            // Prefer items stored on the nearest row, fallback to groups map
+
                             let row = btn.closest('.group-item');
                             let items = row && row._items;
                             if (!items) items = groups && groups[key] ? groups[key] : [];
@@ -8479,73 +4028,58 @@ const firebaseConfig = {
                     }));
                 } catch(e) { console.error('attach card action handlers', e); }
 
-                // Attach toggle click for this card (if not already attached)
                 try {
                     const toggle = root.querySelector('.card-group-toggle');
                     if (toggle && !toggle._attached) {
-                        // Note: actual grouping toggle is handled via delegation on the credit-cards container
-                        // keep a marker to avoid duplicate wiring
-                        // (delegated handler will toggle all cards when any .card-group-toggle is clicked)
+
                         toggle._attached = true;
                     }
                 } catch(e) { console.error('attach card toggle handler', e); }
-
             } catch(e) { console.error('populateCardExpenses', e); }
         }
 
-
-
-
-
-        // small helper: escape text for innerHTML usage
         function escapeHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-        // --- Goal <-> Savings synchronization helpers ---
         function sumSavingsForGoal(goalId) {
             try {
                 const allSavings = Object.values(state.appData.data).flatMap(y => Object.values(y)).flatMap(m => m.savings || []);
                 return allSavings.filter(s => s.goalId === goalId).reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
             } catch (e) { return 0; }
         }
-
         function auditSync(action, details) {
             try {
                 state.appData.metaSyncLog = state.appData.metaSyncLog || [];
                 state.appData.metaSyncLog.push({ id: generateUUID(), ts: new Date().toISOString(), action: action, details });
             } catch (e) { console.error('auditSync error', e); }
         }
-
         async function applySavedToSavings(goalId, targetAmount) {
             try {
                 const current = sumSavingsForGoal(goalId);
                 const diff = Math.round((Number(targetAmount) || 0) * 100) / 100 - Math.round((current) * 100) / 100;
                 if (Math.abs(diff) < 0.01) return { created:0, removed:0, adjusted:0 };
-
                 if (diff > 0) {
-                    // create additional saving in current month
+
                     const md = getCurrentMonthData(); if (!Array.isArray(md.savings)) md.savings = [];
                     const amt = Math.round(diff * 100) / 100;
                     const entry = { id: generateUUID(), description: `Aporte p/ meta`, category: (state.appData.settings.goals.find(g=>g.id===goalId)||{}).name || '', amount: amt, date: new Date().toISOString(), goalId };
                     md.savings.push(entry);
                     auditSync('create_saving', { goalId, amount: amt, entryId: entry.id });
 
-                    // create undo token and push to global undo stack
                     window.__autoCreateUndoStack = window.__autoCreateUndoStack || [];
                     const undoItem = { createdEntries: [{ entryId: entry.id, year: state.currentDate.getFullYear(), month: (state.currentDate.getMonth()+1) }], ts: new Date().toISOString() };
                     window.__autoCreateUndoStack.push(undoItem);
 
-                    // show toast with Undo action
                     if (typeof showToast === 'function') {
-                        // build a temporary interactive toast: overwrite showToast behavior by adding a click handler to undo
-                        const message = `Aporte automá¡tico de ${formatCurrency(amt)} criado para a meta. `;
+
+                        const message = `Aporte automï¿½tico de ${formatCurrency(amt)} criado para a meta. `;
                         showToast(message + 'Clique para desfazer.', 'bg-green-600');
                         try {
                             const toast = document.getElementById('toast');
                             if (toast) {
-                                // make it clickable for undo
+
                                 const clickHandler = async function(){
                                     try {
-                                        // perform undo: remove created entries
+
                                         for (const e of undoItem.createdEntries) {
                                             const y = String(e.year);
                                             const m = String(e.month).padStart(2,'0');
@@ -8562,16 +4096,16 @@ const firebaseConfig = {
                                     } catch(err) { console.error('undo auto-create', err); }
                                 };
                                 toast.addEventListener('click', clickHandler, { once:true });
-                                // auto-dismiss after 7s (leave existing toast timeout behavior too)
+
                                 setTimeout(() => { try { toast.removeEventListener('click', clickHandler); } catch(e){} }, 7000);
                             }
                         } catch(e) { /* ignore toast wiring errors */ }
                     }
                     return { created:1, removed:0, adjusted:0 };
                 } else {
-                    // plan to remove/decrement entries: show confirm to the user
+
                     let remainingToRemove = Math.abs(diff);
-                    // collect entries sorted by date descending
+
                     const entries = [];
                     Object.keys(state.appData.data).forEach(year => {
                         Object.keys(state.appData.data[year]).forEach(month => {
@@ -8583,7 +4117,6 @@ const firebaseConfig = {
                     });
                     entries.sort((a,b) => { const da = new Date(a.entry.date || 0); const db = new Date(b.entry.date || 0); return db - da; });
 
-                    // prepare a preview of intended removals
                     const plan = [];
                     let tempRem = remainingToRemove;
                     for (const item of entries) {
@@ -8597,18 +4130,16 @@ const firebaseConfig = {
                             tempRem = 0;
                         }
                     }
-
                     const summary = plan.map(p => p.type === 'remove' ? `Remover ${formatCurrency(p.amount)} (${p.date||'â€”'})` : `Reduzir ${formatCurrency(p.from)} â†’ ${formatCurrency(p.to)} (${p.date||'â€”'})`).join('\n');
                     try {
-                        const ok = await confirmAsync(`A meta esTí¡ maior do que os aportes registrados. Aplicar ajustes automá¡ticos?\n\n${summary}`, 'Ajustar aportes');
+                        const ok = await confirmAsync(`A meta esTï¿½ï¿½ maior do que os aportes registrados. Aplicar ajustes automï¿½ticos?\n\n${summary}`, 'Ajustar aportes');
                         if (!ok) return { created:0, removed:0, adjusted:0 };
                     } catch(e) { return { created:0, removed:0, adjusted:0 }; }
 
-                    // apply the plan
                     let removed = 0, adjusted = 0;
                     for (const p of plan) {
                         if (p.type === 'remove') {
-                            // find and remove
+
                             for (const year of Object.keys(state.appData.data)) {
                                 for (const month of Object.keys(state.appData.data[year])) {
                                     const md = state.appData.data[year][month];
@@ -8629,16 +4160,11 @@ const firebaseConfig = {
                         }
                     }
                     auditSync('adjust_savings', { goalId, removed, adjusted, plan });
-                    if (typeof showToast === 'function') showToast(`Ajustes automá¡ticos aplicados: removidos ${removed}, ajustados ${adjusted}.`, 'bg-yellow-600');
+                    if (typeof showToast === 'function') showToast(`Ajustes automï¿½ticos aplicados: removidos ${removed}, ajustados ${adjusted}.`, 'bg-yellow-600');
                     return { created:0, removed, adjusted };
                 }
             } catch (e) { console.error('applySavedToSavings error', e); return { created:0, removed:0, adjusted:0 }; }
         }
-
-
-
-
-
         function showFieldError(fieldId, msg) {
             try {
                 const errEl = document.getElementById(fieldId + '-error');
@@ -8648,7 +4174,6 @@ const firebaseConfig = {
             } catch (e) { /* ignore */ }
         }
 
-        // Attach handlers to currency fields to format on blur and unformat on focus
         function attachCurrencyHandlers() {
             try {
                 const curIds = ['tp-cost','tp-saved'];
@@ -8657,47 +4182,46 @@ const firebaseConfig = {
                     if (!el || el._currencyAttached) return;
                     el._currencyAttached = true;
                     el.addEventListener('focus', function() {
-                        // unformat to plain number for easier editing; keep empty if value is zero to avoid showing '0'
+
                         const n = parseLocaleNumber(this.value);
                         if (Number.isFinite(n) && !isNaN(n) && n !== 0) this.value = (n % 1 === 0 ? String(n) : String(n)); else this.value = '';
                     });
-                    // realtime input handler: keep only digits, comma and dot; format thousands as user types
+
                     el.addEventListener('input', function(e) {
                         const pos = this.selectionStart;
                         let v = this.value || '';
-                        // replace NBSP
+
                         v = v.replace(/\u00A0/g, ' ');
-                        // remove everything except digits, comma, dot and minus
+
                         v = v.replace(/[^0-9,\.\-]/g, '');
-                        // if both comma and dot present, assume dot is thousand and comma decimal -> normalize
+
                         if (v.indexOf('.') !== -1 && v.indexOf(',') !== -1) {
                             v = v.replace(/\./g, '').replace(/,/g, '.');
                         }
-                        // split decimals
+
                         const parts = v.split(/[,\.]/);
                         let intPart = parts[0] || '';
                         let decPart = parts.length > 1 ? parts.slice(1).join('') : '';
-                        // remove leading zeros
+
                         intPart = intPart.replace(/^0+(?=\d)/, '') || '0';
-                        // insert thousands separator for display (dot)
+
                         intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                        // rebuild value with comma as decimal separator (if decimals exist)
+
                         this.value = decPart ? (intPart + ',' + decPart.slice(0,2)) : intPart;
-                        // try to restore caret (approximate)
+
                         try { this.selectionStart = this.selectionEnd = this.value.length; } catch(e) {}
                     });
                     el.addEventListener('blur', function() {
                         const n = parseLocaleNumber(this.value);
                         if (Number.isFinite(n) && !isNaN(n)) this.value = formatCurrency(n); else this.value = '';
                     });
-                    // initial format if there's a value
+
                     const init = parseLocaleNumber(el.value);
                     if (Number.isFinite(init) && !isNaN(init)) el.value = formatCurrency(init);
                 });
             } catch (e) { console.error('attachCurrencyHandlers', e); }
         }
 
-        // Simple handler for paying a card invoice (placeholder)
         async function payCardInvoice(cardName) {
             try {
                 if (!cardName) return;
@@ -8705,61 +4229,56 @@ const firebaseConfig = {
                 const cardExpenses = (monthData.expenses || []).filter(exp => exp.payment === cardName);
                 if (cardExpenses.length === 0) return;
                 const allPaid = cardExpenses.every(exp => exp.isPaid);
-                // Toggle: if all paid -> revert (unmark), else mark all as paid
+
                 cardExpenses.forEach(exp => { exp.isPaid = !allPaid; });
                 try {
                     await storage.saveData(state.appData);
                     if (allPaid) showToast(`Fatura ${cardName} revertida (desmarcada).`, 'bg-gray-600');
-                    else showToast(`Fatura ${cardName} marcada como paga neste Mês.`, 'bg-green-600');
+                    else showToast(`Fatura ${cardName} marcada como paga neste Mï¿½s.`, 'bg-green-600');
                 } catch (e) {
-                    console.error('Erro ao salvar status da fatura:', e);
+
                     showToast('Falha ao salvar status da fatura no Firebase.', 'bg-red-600');
                 }
                 render();
             } catch (e) { console.error('payCardInvoice', e); }
         }
-
         async function deleteGoal(id) {
             if (!id) return;
-            try { const ok = await confirmAsync('Tem certeza que deseja excluir esta meta?', 'Confirmar exclusío'); if (!ok) return; } catch(e){ return; }
+            try { const ok = await confirmAsync('Tem certeza que deseja excluir esta meta?', 'Confirmar exclusï¿½o'); if (!ok) return; } catch(e){ return; }
             const idx = (state.appData.settings.goals || []).findIndex(g => g.id === id);
             if (idx > -1) {
                 state.appData.settings.goals.splice(idx, 1);
                 try {
                     await storage.saveData(state.appData);
-                    showToast('Meta excluí­da', 'bg-red-600');
+                    showToast('Meta excluï¿½ï¿½da', 'bg-red-600');
                 } catch (e) {
-                    console.error('Erro ao excluir meta:', e);
+
                     showToast('Falha ao excluir meta no Firebase.', 'bg-red-600');
                 }
             }
         }
-
-
-
         /**
-         * Retorna o número de dias íºteis (segunda a sexta) de um Mês especí­fico.
+         * Retorna o nï¿½mero de dias ï¿½ï¿½teis (segunda a sexta) de um Mï¿½s especï¿½ï¿½fico.
          * year - ano (ex: 2025)
-         * month - Mês 1-12
+         * month - Mï¿½s 1-12
          */
         function diasUteisNoMes(year, month) {
-            // month 1-12
+
             const m = month - 1;
             const primeiro = new Date(year, m, 1);
             const ultimo = new Date(year, m + 1, 0);
             let diasUteis = 0;
             for (let d = 1; d <= ultimo.getDate(); d++) {
                 const dt = new Date(year, m, d);
-                const dia = dt.getDay(); // 0 domingo, 6 sabado
+                const dia = dt.getDay(); 
                 if (dia !== 0 && dia !== 6) diasUteis++;
             }
             return diasUteis;
         }
-
         /**
          * calcularSalarioLiquido(params)
-         * Calcula salí¡rio lí­quido e detalhamento conforme regras fornecidas (INSS/IRRF 2025).
-         * Parí¢metro params (obj):
+         * Calcula salï¿½ï¿½rio lï¿½ï¿½quido e detalhamento conforme regras fornecidas (INSS/IRRF 2025).
+         * Parï¿½ï¿½metro params (obj):
          *  - salarioBase (number)
          *  - percentualPericulosidade (number) - ex: 30
          *  - outrosProventosTributaveis (number) - default 0
@@ -8771,8 +4290,8 @@ const firebaseConfig = {
          *  - horasExtrasDomingo (number horas) - default 0
          *  - jornadaMensalHoras (number) - default 220
          *  - hourlyRate (number) - valor por hora, opcional
-         *  - hoursWorked (number) - horas trabalhadas no Mês, opcional
-         *  - year, month (opcionais) para calcular dias íºteis automaticamente
+         *  - hoursWorked (number) - horas trabalhadas no Mï¿½s, opcional
+         *  - year, month (opcionais) para calcular dias ï¿½ï¿½teis automaticamente
          * Retorna objeto JSON com resumo e detalhamento.
          */
         function calcularSalarioLiquido(params = {}) {
@@ -8787,41 +4306,38 @@ const firebaseConfig = {
                 horasExtrasSabado: 0,
                 horasExtrasDomingo: 0,
                 jornadaMensalHoras: 220,
-                // hourlyRate/hoursWorked removed - valorHora will be derived from salarioBase / jornadaMensalHoras or salary-horas-trabalhadas input
+
                 year: undefined,
                 month: undefined
             }, params);
 
-            // If hoursWorked provided explicitly, use it; otherwise default to jornadaMensalHoras
             if (!p.hoursTrabalhadas || p.hoursTrabalhadas === 0) {
-                // allow external callers to pass hoursTrabalhadas into params; default to jornadaMensalHoras
+
                 p.hoursTrabalhadas = p.jornadaMensalHoras;
             }
-            // Dias trabalhados padrío: dias íºteis do Mês (quando year/month fornecidos).
-            // Se o usuá¡rio forneceu 'hoursTrabalhadas', derivamos dias trabalhados a partir da jornada mensal e dias íºteis.
+
             const baseDiasUteis = (p.year && p.month) ? diasUteisNoMes(p.year, p.month) : 22;
             if ((typeof p.diasTrabalhados === 'undefined' || p.diasTrabalhados === null) && p.hoursTrabalhadas && p.hoursTrabalhadas > 0) {
-                // hora por dia = jornadaMensalHoras / baseDiasUteis
+
                 const horasPorDia = p.jornadaMensalHoras > 0 ? (p.jornadaMensalHoras / baseDiasUteis) : 8;
-                // derive diasTrabalhados as fractional value (do not round) so we can compute prorata correctly from hours
+
                 p.diasTrabalhados = p.hoursTrabalhadas / horasPorDia;
-                // keep a rounded copy for display in the modal where an integer day count is shown
+
                 p._diasTrabalhadosRoundedForDisplay = Math.round(p.diasTrabalhados);
             }
             if ((typeof p.diasTrabalhados === 'undefined' || p.diasTrabalhados === null) && p.year && p.month) {
                 p.diasTrabalhados = baseDiasUteis;
             }
-            // Fallback padrío
+
             if (typeof p.diasTrabalhados === 'undefined' || p.diasTrabalhados === null) p.diasTrabalhados = 22;
 
-            // Constantes 2025
             const INSS_BRACKETS = [
                 { upTo: 1518.00, rate: 0.075 },
                 { upTo: 2793.88, rate: 0.09 },
                 { upTo: 4190.83, rate: 0.12 },
                 { upTo: 8157.41, rate: 0.14 }
             ];
-            // IRRF 2025 (mensal) â€” conforme tabela fornecida
+
             const IRRF_BRACKETS = [
                 { upTo: 2259.20, rate: 0.0, deduction: 0.00 },
                 { upTo: 2826.65, rate: 0.075, deduction: 169.44 },
@@ -8831,33 +4347,25 @@ const firebaseConfig = {
             ];
             const DEPENDENT_DEDUCTION = 189.59;
 
-            // 1) Salí¡rio bruto tribuTí¡vel
-            // If the employee worked fewer days/hours than the full month, prorate salí¡rioBase and periculosidade
             const fullMonthDias = (p.year && p.month) ? diasUteisNoMes(p.year, p.month) : 22;
             const diasWorked = (typeof p.diasTrabalhados !== 'undefined' && p.diasTrabalhados !== null) ? p.diasTrabalhados : fullMonthDias;
             const proporcao = (fullMonthDias > 0) ? Math.min(1, diasWorked / fullMonthDias) : 1;
-            // Also consider horas trabalhadas if provided: derive proportion from hours.
-            // When hoursTrabalhadas is explicitly provided, prefer the hours-based proportion to match payroll (holerite) behavior.
+
             let proporcaoHoras = 1;
             if (p.hoursTrabalhadas && p.hoursTrabalhadas > 0) {
                 proporcaoHoras = Math.min(1, p.hoursTrabalhadas / p.jornadaMensalHoras);
             }
-            // If hours were provided, use hours proportion; otherwise use days proportion
-            const finalProporcao = (p.hoursTrabalhadas && p.hoursTrabalhadas > 0) ? proporcaoHoras : proporcao;
 
+            const finalProporcao = (p.hoursTrabalhadas && p.hoursTrabalhadas > 0) ? proporcaoHoras : proporcao;
             const salarioBaseProrata = p.salarioBase * finalProporcao;
             const adicionalPericulosidade = (salarioBaseProrata * (p.percentualPericulosidade || 0)) / 100;
             const brutoTributavelSemExtras = salarioBaseProrata + adicionalPericulosidade + (p.outrosProventosTributaveis || 0);
 
-            // 2) Horas extras: calcular valor hora com base no salí¡rio base já¡ pro-rata (para que horas extras reflitam efetivamente o que foi ganho)
-            // valorHora = salarioBaseProrata / jornadaMensalHoras (se jornadaMensalHoras > 0). Isso garante que, se o funcioní¡rio trabalhou menos horas, o valor/hora fique proporcional.
             const valorHora = (p.jornadaMensalHoras > 0) ? (salarioBaseProrata / p.jornadaMensalHoras) : ((p.hoursTrabalhadas && p.hoursTrabalhadas > 0) ? (salarioBaseProrata / p.hoursTrabalhadas) : 0);
-            // Sí¡bado 50% (ou seja, 1.5 * hora normal), Domingo 100% (2.0 * hora normal)
-            const valorHorasExtras = (p.horasExtrasSabado || 0) * (valorHora * 1.5) + (p.horasExtrasDomingo || 0) * (valorHora * 2.0);
 
+            const valorHorasExtras = (p.horasExtrasSabado || 0) * (valorHora * 1.5) + (p.horasExtrasDomingo || 0) * (valorHora * 2.0);
             const salarioBrutoTributavel = brutoTributavelSemExtras + valorHorasExtras;
 
-            // 3) Cí¡lculo do INSS progressivo
             let remaining = salarioBrutoTributavel;
             let inssTotal = 0;
             const inssPorFaixa = [];
@@ -8875,11 +4383,9 @@ const firebaseConfig = {
             }
             inssTotal = round(inssTotal);
 
-            // 4) Base de cí¡lculo IRRF
             const totalDependenteDeduction = (p.numeroDependentes || 0) * DEPENDENT_DEDUCTION;
             const baseIRRF = Math.max(0, salarioBrutoTributavel - inssTotal - totalDependenteDeduction);
 
-            // 5) Cí¡lculo IRRF
             let irrfRate = 0, irrfDeduction = 0, irrfValue = 0;
             for (let i = 0; i < IRRF_BRACKETS.length; i++) {
                 const b = IRRF_BRACKETS[i];
@@ -8891,29 +4397,22 @@ const firebaseConfig = {
             }
             irrfValue = round(Math.max(0, baseIRRF * irrfRate - irrfDeduction));
 
-            // 6) Salí¡rio lí­quido
             const totalDescontos = round(inssTotal + irrfValue);
             const salarioLiquido = round(salarioBrutoTributavel - totalDescontos);
 
-            // 7) Benefí­cios nío tribuTí¡veis
-            // Base para benefí­cios: quando year/month fornecidos, usar dias íºteis do Mês + 1 (regras do produto);
-            // caso contrí¡rio, cair back para diasTrabalhados (prí³-rata) ou fullMonthDias.
             const beneficiosDiasBase = (p.year && p.month) ? (diasUteisNoMes(p.year, p.month) + 1) : (p.diasTrabalhados || fullMonthDias);
-            // Calcular separadamente VR (desjejum) e VT (transporte)
+
             const beneficiosVR = round((p.valorDesjejumDia || 0) * (beneficiosDiasBase || 0));
             const beneficiosVT = round((p.valorTransporteDia || 0) * (beneficiosDiasBase || 0));
-            // Para o resumo (lado esquerdo), apenas o VT deve ser considerado (VT í© pago junto com o salí¡rio)
+
             const beneficiosTotaisResumo = beneficiosVT;
-            // Total combinado (VR + VT) mantido no detalhe para o uso no card direito
+
             const beneficiosTotaisCombined = round(beneficiosVR + beneficiosVT);
 
-            // 8) Remuneração total mensal: Salí¡rio lí­quido + VT (apenas VT í© pago junto com o salí¡rio)
             const remuneracaoTotal = round(salarioLiquido + beneficiosVT);
 
-            // 9) FGTS (8% sobre o bruto tribuTí¡vel) - encargo do empregador
             const fgts = round(0.08 * salarioBrutoTributavel);
 
-            // Monta retorno detalhado
             const result = {
                 resumo: {
                     salarioBase: formatNumber(salarioBaseProrata),
@@ -8955,89 +4454,81 @@ const firebaseConfig = {
                     }
                 }
             };
-
             return result;
 
-            // helpers
             function round(v) { return Math.round((v + Number.EPSILON) * 100) / 100; }
             function formatNumber(v) { return (typeof v === 'number') ? v.toFixed(2) : Number(v || 0).toFixed(2); }
         }
-
         function renderAllTables() {
             renderIncomeTable();
             renderExpenseTable();
             renderSavingsTable();
-            // Attach salary tooltip handlers after tables render
+
             try { attachSalaryTooltipHandlers(); } catch(e) { /* ignore */ }
         }
 
-        // Salary tooltip: builds a floating card showing bruto tribuTí¡vel, INSS, IRRF, descontos totais and remuneração total
         (function(){
             let salaryTooltipEl = null;
             function ensureTooltip() {
                 if (salaryTooltipEl) return salaryTooltipEl;
                 salaryTooltipEl = document.createElement('div');
                 salaryTooltipEl.className = 'salary-tooltip';
-                salaryTooltipEl.innerHTML = `<h4>Resumo do Salí¡rio</h4>
-                    <div class="row"><div class="label">Bruto tribuTí¡vel</div><div class="value" data-key="bruto">R$ 0,00</div></div>
+                salaryTooltipEl.innerHTML = `<h4>Resumo do Salï¿½ï¿½rio</h4>
+                    <div class="row"><div class="label">Bruto tribuTï¿½ï¿½vel</div><div class="value" data-key="bruto">R$ 0,00</div></div>
                     <div class="row"><div class="label">INSS</div><div class="value negative" data-key="inss">R$ 0,00</div></div>
                     <div class="row"><div class="label">IRRF</div><div class="value negative" data-key="irrf">R$ 0,00</div></div>
                     <div class="divider"></div>
                     <div class="row"><div class="label">Total de descontos</div><div class="value negative" data-key="descontos">R$ 0,00</div></div>
                     <div class="divider"></div>
-                    <div class="row summary"><div class="label">Remuneração total</div><div class="value positive" data-key="remuneracao">R$ 0,00</div></div>`;
+                    <div class="row summary"><div class="label">Remuneraï¿½ï¿½o total</div><div class="value positive" data-key="remuneracao">R$ 0,00</div></div>`;
                 document.body.appendChild(salaryTooltipEl);
                 return salaryTooltipEl;
             }
 
-            // position tooltip near element (to the top-right of the hovered element when possible)
             function positionTooltip(target, el) {
                 const rect = target.getBoundingClientRect();
                 const tooltipRect = el.getBoundingClientRect();
-                // default position: above the element, right-aligned
+
                 let top = window.scrollY + rect.top - tooltipRect.height - 8;
                 let left = window.scrollX + rect.right - tooltipRect.width;
-                // if not enough space above, place below
+
                 if (top < window.scrollY + 8) top = window.scrollY + rect.bottom + 8;
-                // keep inside viewport horizontally
+
                 left = Math.max(window.scrollX + 8, Math.min(left, window.scrollX + document.documentElement.clientWidth - tooltipRect.width - 8));
                 el.style.top = top + 'px';
                 el.style.left = left + 'px';
             }
-
             window.attachSalaryTooltipHandlers = function attachSalaryTooltipHandlers() {
                 const el = ensureTooltip();
-                // Remove any previous listeners by cloning the node list
+
                 const items = Array.from(document.querySelectorAll('.salary-breakdown-hidden'));
                 items.forEach(item => {
-                    // clear existing handlers to avoid duplication
+
                     item.onmouseenter = null; item.onmouseleave = null; item.onmousemove = null;
                     item.addEventListener('mouseenter', (ev) => {
                         try {
                             const id = item.dataset.id;
-                            // try to find the income object by id in current month
+
                             const md = getCurrentMonthData();
                             let income = null;
                             if (md && Array.isArray(md.incomes)) income = md.incomes.find(i => i.id === id) || null;
 
-                            // Build a cache key that includes month and year so results are month-specific
                             const y = (state.currentDate && state.currentDate.getFullYear()) ? state.currentDate.getFullYear() : (new Date()).getFullYear();
                             const m = (state.currentDate && typeof state.currentDate.getMonth === 'function') ? (state.currentDate.getMonth() + 1) : ((new Date()).getMonth() + 1);
                             const cacheKey = id ? `${id}@${y}-${m}` : null;
-                            // Prefer cached calc (user may already have opened the breakdown modal for this month)
+
                             let calc = (window.salaryCalcCache && cacheKey && window.salaryCalcCache[cacheKey]) ? window.salaryCalcCache[cacheKey] : null;
 
-                            // If not cached, build params from income.salaryMeta (or fallback to amount) and compute
                             if (!calc) {
                                 let params = null;
                                 if (income && income.salaryMeta) params = Object.assign({}, income.salaryMeta);
                                 else if (income && income.amount) params = { salarioBase: income.amount };
-                                // Ensure month/year are provided so dias íºteis and benefí­cios use correct month
+
                                 if (params) {
                                     params.year = y;
                                     params.month = m;
                                 }
-                                // Normalize possible hours fields and parse HH:MM strings
+
                                 const parseHours = (v) => {
                                     if (v === undefined || v === null || v === '') return undefined;
                                     if (typeof v === 'number') return v;
@@ -9054,29 +4545,26 @@ const firebaseConfig = {
                                     return isNaN(fv) ? undefined : fv;
                                 };
                                 if (params) {
-                                    // Try multiple property names that might exist in salaryMeta
+
                                     const rawHours = params.hoursTrabalhadas || params.horasTrabalhadas || params.hoursWorked || params.hours || params.horasTrabalhadasRaw || '';
                                     const ph = parseHours(rawHours);
                                     if (typeof ph !== 'undefined') params.hoursTrabalhadas = ph;
-                                    // ensure jornadaMensalHoras fallback
+
                                     if (typeof params.jornadaMensalHoras === 'undefined' || params.jornadaMensalHoras === null) params.jornadaMensalHoras = 220;
                                 }
                                 if (params && typeof calcularSalarioLiquido === 'function') {
                                     calc = calcularSalarioLiquido(params);
-                                    // store in cache per month-year
+
                                     try { window.salaryCalcCache = window.salaryCalcCache || {}; if (cacheKey) window.salaryCalcCache[cacheKey] = calc; } catch(e){}
                                 }
                             }
-
                             if (!calc) return;
 
-                            // Extract canonical values: bruto tribuTí¡vel, INSS total, IRRF value, total descontos and remuneracao total
                             const brutoVal = Number((calc.resumo && (calc.resumo.salarioBrutoTributavel || calc.resumo.salarioBruto)) || 0);
                             const inssVal = Number((calc.detalhe && calc.detalhe.descontos && (Number(calc.detalhe.descontos.inssTotal) || 0)) || (Number(calc.resumo && calc.resumo.inssTotal) || 0));
                             const irrfVal = Number((calc.detalhe && calc.detalhe.descontos && (Number(calc.detalhe.descontos.irrfValue) || 0)) || (Number(calc.resumo && calc.resumo.irrfValue) || 0));
                             const descontosVal = Number((calc.resumo && (Number(calc.resumo.totalDescontos) || 0)) || (inssVal + irrfVal));
                             const remuneracaoVal = Number((calc.resumo && (Number(calc.resumo.remuneracaoTotal) || Number(calc.resumo.remuneracao) || 0)) || 0);
-
                             const map = { bruto: brutoVal, inss: inssVal, irrf: irrfVal, descontos: descontosVal, remuneracao: remuneracaoVal };
                             Object.keys(map).forEach(k => {
                                 const node = el.querySelector(`[data-key="${k}"]`);
@@ -9091,9 +4579,8 @@ const firebaseConfig = {
                 });
             };
         })();
-
         function renderIncomeTable() {
-            // Inicializa array de entradas para evitar erro
+
             const monthData = getCurrentMonthData();
             if (!Array.isArray(monthData.incomes)) monthData.incomes = [];
             if (!Array.isArray(monthData.vrLedger)) monthData.vrLedger = [];
@@ -9101,12 +4588,12 @@ const firebaseConfig = {
             const incomes = monthData.incomes;
             ui.incomeTableBody.innerHTML = '';
             if (incomes.length > 0) {
-                // Exclude benefit entries (VR/VT) from the standard incomes list; they are shown as ledger rows below
+
                 incomes.filter(i => (i.source || '').toString() !== 'benefit-vr' && (i.source || '').toString() !== 'benefit-vt').forEach(income => renderIncomeRow(income));
             } else {
-                ui.incomeTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Nenhuma entrada registrada.</td></tr>';
+                ui.incomeTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Nenhuma entrada registrada.</td></tr>';
             }
-            // Render benefit ledgers (VR and VT) in a generic way so Entradas shows them consistently
+
             try {
                 function renderBenefitLedgerRows(type) {
                     const md = monthData;
@@ -9114,26 +4601,28 @@ const firebaseConfig = {
                     const ledger = Array.isArray(md[keyLedger]) ? md[keyLedger] : [];
                     ledger.forEach(l => {
                         const r = ui.incomeTableBody.insertRow();
+                        r.dataset.id = l.id || '';
                         r.dataset[`${type}Id`] = l.id || '';
-                        // colorize row by type: VR = green, VT = yellow
+
                         const baseClass = (type === 'vt') ? 'border-b border-gray-100 bg-yellow-50 text-yellow-700' : 'border-b border-gray-100 bg-green-50 text-green-700';
-                        r.className = baseClass + ' animate-fade-in';
-                        const descDefault = (type === 'vt') ? 'Benefí­cio - VT' : 'Benefí­cio - VR';
+                        r.className = baseClass + '';
+                        const descDefault = (type === 'vt') ? 'Benefï¿½ï¿½cio - VT' : 'Benefï¿½ï¿½cio - VR';
                         const recurringIcon = l.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : '';
                         const amountSpan = (type === 'vt') ? `<span class="vt-amount" data-vt-id="${l.id}">${formatCurrency(l.amount || 0)}</span>` : `<span class="vr-amount" data-vr-id="${l.id}">${formatCurrency(l.amount || 0)}</span>`;
-                        const editBtn = (type === 'vt') ? `<button class="edit-vt-btn text-gray-500 hover:text-blue-600" data-vt-id="${l.id}"><span class="material-symbols-outlined text-xl">edit</span></button>` : `<button class="edit-vr-btn text-gray-500 hover:text-blue-600" data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">edit</span></button>`;
-                        const deleteBtn = (type === 'vt') ? `<button class="delete-vt-btn text-gray-500 hover:text-red-600" data-vt-id="${l.id}"><span class="material-symbols-outlined text-xl">delete</span></button>` : `<button class="delete-vr-btn text-gray-500 hover:text-red-600" data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">delete</span></button>`;
+                        const editBtn = (type === 'vt') ? `<button class="edit-vt-btn text-gray-500 " data-vt-id="${l.id}"><span class="material-symbols-outlined text-xl">edit</span></button>` : `<button class="edit-vr-btn text-gray-500 " data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">edit</span></button>`;
+                        const deleteBtn = (type === 'vt') ? `<button class="delete-vt-btn text-gray-500 " data-vt-id="${l.id}"><span class="material-symbols-outlined text-xl">delete</span></button>` : `<button class="delete-vr-btn text-gray-500 " data-vr-id="${l.id}"><span class="material-symbols-outlined text-xl">delete</span></button>`;
+                        const checkboxHtml = `<input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer" ${l.isPaid ? 'checked' : ''}>`;
                         r.innerHTML = `
-                            <td class="py-2 px-3">${l.description || descDefault} ${recurringIcon}</td>
-                            <td class="py-2 px-3 font-medium">${amountSpan}</td>
-                            <td class="py-2 px-3 text-right actions-cell">${editBtn}${deleteBtn}</td>`;
+                            <td class="py-3 text-center checkbox-cell" style="padding-left: 12px; padding-right: 12px;">${checkboxHtml}</td>
+                            <td class="py-3 text-left" style="padding-left: 12px; padding-right: 12px;">${l.description || descDefault} ${recurringIcon}</td>
+                            <td class="py-3 text-right font-medium" style="padding-left: 12px; padding-right: 12px;">${amountSpan}</td>
+                            <td class="py-3 text-center actions-cell" style="padding-left: 12px; padding-right: 12px;">${editBtn}${deleteBtn}</td>`;
                     });
                 }
-                // Render VR and VT ledger rows
+
                 renderBenefitLedgerRows('vr');
                 renderBenefitLedgerRows('vt');
 
-                // attach inline edit handlers for amounts and edit/delete actions for VR and VT
                 ui.incomeTableBody.querySelectorAll('.vr-amount').forEach(el => el.addEventListener('click', (e) => (typeof startInlineVREdit === 'function') ? startInlineVREdit(e.currentTarget, e.currentTarget.dataset.vrId) : null));
                 ui.incomeTableBody.querySelectorAll('.edit-vr-btn').forEach(b => b.addEventListener('click', (e) => { const id = e.currentTarget.dataset.vrId; openVREdit(id); }));
                 ui.incomeTableBody.querySelectorAll('.delete-vr-btn').forEach(b => b.addEventListener('click', async (e) => {
@@ -9144,19 +4633,19 @@ const firebaseConfig = {
                     if (!entry) return;
                     try {
                         if (entry.isRecurring && entry.recurringId) {
-                            const delAll = await confirmAsync('Este benefí­cio í© recorrente. Deseja excluir este e todas as recorríªncias futuras?', 'Confirmar exclusío');
+                            const delAll = await confirmAsync('Este benefï¿½ï¿½cio ï¿½ï¿½ recorrente. Deseja excluir este e todas as recorrï¿½ï¿½ncias futuras?', 'Confirmar exclusï¿½o');
                             if (!delAll) return;
                             await deleteVRLedgerEntry(id);
                             render();
                         } else {
-                            const ok = await confirmAsync('Excluir lançamento de VR?', 'Confirmar exclusío');
+                            const ok = await confirmAsync('Excluir lanï¿½amento de VR?', 'Confirmar exclusï¿½o');
                             if (!ok) return;
                             await deleteVRLedgerEntry(id);
                             render();
                         }
                     } catch (e) { return; }
                 }));
-                // VT handlers
+
                 ui.incomeTableBody.querySelectorAll('.vt-amount').forEach(el => el.addEventListener('click', (e) => (typeof startInlineVTEdit === 'function') ? startInlineVTEdit(e.currentTarget, e.currentTarget.dataset.vtId) : null));
                 ui.incomeTableBody.querySelectorAll('.edit-vt-btn').forEach(b => b.addEventListener('click', (e) => { const id = e.currentTarget.dataset.vtId; openVTEdit(id); }));
                 ui.incomeTableBody.querySelectorAll('.delete-vt-btn').forEach(b => b.addEventListener('click', async (e) => {
@@ -9167,12 +4656,12 @@ const firebaseConfig = {
                     if (!entry) return;
                     try {
                         if (entry.isRecurring && entry.recurringId) {
-                            const delAll = await confirmAsync('Este benefí­cio í© recorrente. Deseja excluir este e todas as recorríªncias futuras?', 'Confirmar exclusío');
+                            const delAll = await confirmAsync('Este benefï¿½ï¿½cio ï¿½ï¿½ recorrente. Deseja excluir este e todas as recorrï¿½ï¿½ncias futuras?', 'Confirmar exclusï¿½o');
                             if (!delAll) return;
                             await deleteVTLedgerEntry(id);
                             render();
                         } else {
-                            const ok = await confirmAsync('Excluir lançamento de VT?', 'Confirmar exclusío');
+                            const ok = await confirmAsync('Excluir lanï¿½amento de VT?', 'Confirmar exclusï¿½o');
                             if (!ok) return;
                             await deleteVTLedgerEntry(id);
                             render();
@@ -9181,20 +4670,18 @@ const firebaseConfig = {
                 }));
             } catch(e) { console.error('renderIncomeTable benefit rows', e); }
         }
-
         function getMonthVRBalance(monthData) {
             if (!monthData) monthData = getCurrentMonthData();
             const ledger = Array.isArray(monthData.vrLedger) ? monthData.vrLedger : [];
             const usage = Array.isArray(monthData.vrUsage) ? monthData.vrUsage : [];
-            // Ensure numeric conversion (some entries may contain strings)
+
             const sumLedger = ledger.reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
             const sumUsage = usage.reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
-            // Round to 2 decimals
+
             const bal = Math.round((sumLedger - sumUsage + Number.EPSILON) * 100) / 100;
             return Math.max(0, bal);
         }
 
-        // VT balance helper (mirror VR)
         function getMonthVTBalance(monthData) {
             if (!monthData) monthData = getCurrentMonthData();
             const ledger = Array.isArray(monthData.vtLedger) ? monthData.vtLedger : [];
@@ -9205,7 +4692,6 @@ const firebaseConfig = {
             return Math.max(0, bal);
         }
 
-        // Utility: sort array of strings alphabetically (case-insensitive)
         function sortStrings(arr) {
             if (!Array.isArray(arr)) return [];
             return arr.slice().sort((a,b) => {
@@ -9214,58 +4700,54 @@ const firebaseConfig = {
                 return sa < sb ? -1 : sa > sb ? 1 : 0;
             });
         }
-
         function renderExpenseTable() {
-            // Inicializa array de despesas para evitar erro
+
             let expenses = Array.isArray(getCurrentMonthData().expenses) ? [...getCurrentMonthData().expenses] : [];
             if (state.filters.searchTerm) {
                 expenses = expenses.filter(exp => exp.description.toLowerCase().includes(state.filters.searchTerm.toLowerCase()));
             }
-            // Apply advanced expense filters if present
+
             const ef = state.filters.expenseFilters || {};
             if (ef) {
-                // helper normalizer
+
                 const norm = s => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
                 if (ef.payment) {
                     const want = norm(ef.payment);
-                    // allow tolerant match (some payments may include extra labels)
+
                     expenses = expenses.filter(exp => (norm(exp.payment) || '').includes(want));
                 }
                 if (ef.category) {
                     const wantCat = norm(ef.category);
-                    // tolerant: match when category contains selected value (handles appended meta labels)
+
                     expenses = expenses.filter(exp => (norm(exp.category) || '').includes(wantCat));
                 }
                 if (ef.type) {
-                    // type filter: 'expense' (regular expense) or 'saving' (reservas stored as savings entries or flagged)
+
                     if (ef.type === 'expense') expenses = expenses.filter(exp => !exp.isSaving && (exp.source || '') !== 'saving');
                     if (ef.type === 'saving') expenses = expenses.filter(exp => !!exp.isSaving || (state.appData && state.appData.settings && Array.isArray(state.appData.settings.savingCategories) && state.appData.settings.savingCategories.map(c=>norm(c)).includes(norm(exp.category))));
                 }
                 if (ef.recurring) expenses = expenses.filter(exp => !!exp.isRecurring);
                 if (ef.installment) expenses = expenses.filter(exp => !!exp.installmentId || !!exp.financingId || !!exp.totalInstallments || !!exp.totalFinancing || !!exp.isInstallment);
-                // Spending type filter: essencial / nao-essencial / reserva
+
                 if (ef.spendingType) {
                     const settings = state.appData && state.appData.settings ? state.appData.settings : {};
                     const groups = settings.categoryGroups || {};
                     let essencials = groups.essencial || groups.essenciais || [];
                     let reservas = groups.reserva || groups.reservas || [];
                     if (!essencials || essencials.length === 0) {
-                        essencials = ['Contas','Mercado','Saíºde','Transporte','Assinaturas'];
+                        essencials = ['Contas','Mercado','Saï¿½ï¿½de','Transporte','Assinaturas'];
                     }
                     if (!reservas || reservas.length === 0) {
-                        reservas = settings.savingCategories || ['Reserva de Emergíªncia','Poupança'];
+                        reservas = settings.savingCategories || ['Reserva de Emergï¿½ï¿½ncia','Poupanï¿½a'];
                     }
-                    // Prefer explicit expense.type when present (edited inline), otherwise fall back to category-group mapping
-                    // normalize the group lists
+
                     const normArr = arr => (Array.isArray(arr) ? arr.map(x => (x||'').toString().trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')) : []);
                     essencials = normArr(essencials);
                     reservas = normArr(reservas);
-
                     const expTypeCheck = (exp) => {
                         if (exp && exp.type && typeof exp.type === 'string') return norm(exp.type);
                         return null;
                     };
-
                     if (ef.spendingType === 'essencial') {
                         expenses = expenses.filter(exp => {
                             const t = expTypeCheck(exp);
@@ -9297,14 +4779,14 @@ const firebaseConfig = {
                 const order = state.sort.order === 'asc' ? 1 : -1;
                 if (key === 'amount') return (a.amount - b.amount) * order;
                 if (key === 'isPaid') {
-                    // true > false (pagas primeiro se asc, nío pagas primeiro se desc)
+
                     return ((!!a.isPaid) - (!!b.isPaid)) * order;
                 }
                 const valA = a[key] || '';
                 const valB = b[key] || '';
                 return valA.localeCompare(valB) * order;
             });
-            // Dashboard: grouping is intentionally disabled here (grouping only applies to invoice cards)
+
             ui.expensesTableBody.innerHTML = '';
             if (expenses.length > 0) {
                 expenses.forEach(expense => renderExpenseRow(expense));
@@ -9314,32 +4796,30 @@ const firebaseConfig = {
             updateSortHeaders();
         }
 
-        // Render expenses grouped by description (or category if description empty)
         function renderExpenseGroupedView(expenses) {
-            // Ensure grouped container is available
+
             const groupsEl = document.getElementById('expenses-groups');
             const wrapper = document.getElementById('expenses-grouped-container');
             if (!groupsEl || !wrapper) return;
-            // Prepare table wrapper reference
+
             const tableWrapper = ui.expensesTableBody ? ui.expensesTableBody.closest('.overflow-x-auto') : null;
             groupsEl.innerHTML = '';
             if (!expenses || expenses.length === 0) {
                 groupsEl.innerHTML = '<div class="text-sm text-gray-500">Nenhuma despesa registrada.</div>';
-                // ensure table hidden
+
                 if (tableWrapper) tableWrapper.style.display = 'none';
                 wrapper.classList.toggle('hidden', !state.showGroupedExpenses);
                 return;
             }
-            // Group by normalized description (fallback to category)
+
             const normalize = v => (v || '').toString().trim();
             const byDesc = {};
             expenses.forEach(exp => {
-                const key = normalize(exp.description) || normalize(exp.category) || 'Sem Descrição';
+                const key = normalize(exp.description) || normalize(exp.category) || 'Sem Descriï¿½ï¿½o';
                 if (!byDesc[key]) byDesc[key] = [];
                 byDesc[key].push(exp);
             });
 
-            // Separate into groups (count>1) and singles
             const groupedKeys = [];
             const singleExpenses = [];
             Object.keys(byDesc).forEach(k => {
@@ -9347,7 +4827,6 @@ const firebaseConfig = {
                 else singleExpenses.push(byDesc[k][0]);
             });
 
-            // Build a unified list of groups and single expenses so they can be sorted together
             const unified = [];
             groupedKeys.forEach(k => {
                 const items = byDesc[k];
@@ -9356,13 +4835,12 @@ const firebaseConfig = {
             });
             singleExpenses.forEach(exp => unified.push({ type: 'single', expense: exp, total: Number(exp.amount) || 0 }));
 
-            // Sort unified list according to current state.sort
             try {
                 if (state.sort && state.sort.key === 'amount') {
                     if (state.sort.order === 'asc') unified.sort((a,b) => (Number(a.total)||0) - (Number(b.total)||0));
                     else unified.sort((a,b) => (Number(b.total)||0) - (Number(a.total)||0));
                 } else {
-                    // alphabetical by label (group key or expense description)
+
                     unified.sort((a,b) => {
                         const aLabel = a.type === 'group' ? (a.key||'') : (a.expense && a.expense.description ? a.expense.description : '');
                         const bLabel = b.type === 'group' ? (b.key||'') : (b.expense && b.expense.description ? b.expense.description : '');
@@ -9371,7 +4849,7 @@ const firebaseConfig = {
                     });
                 }
             } catch(e) {
-                // fallback alphabetical
+
                 unified.sort((a,b) => {
                     const al = a.type === 'group' ? (a.key||'') : (a.expense && a.expense.description ? a.expense.description : '');
                     const bl = b.type === 'group' ? (b.key||'') : (b.expense && b.expense.description ? b.expense.description : '');
@@ -9379,26 +4857,25 @@ const firebaseConfig = {
                 });
             }
 
-            // Render unified list inside the grouped container so groups and singles are interleaved visually
             groupsEl.innerHTML = '';
-            // We'll render single items as compact rows inside the same container (instead of the table) to allow interleaving
+
             unified.forEach(item => {
                 if (item.type === 'group') {
                     const items = item.items;
                     const total = item.total;
                     const count = item.count;
                     const key = item.key;
-                    // compact grouped row
+
                     const row = document.createElement('div');
                     row.className = 'flex w-full justify-between text-sm items-center group-item py-0.5 grouped-row';
                     row._items = items;
                     const breakdown = items.map(it => `${formatCurrency(it.amount)} â€” ${escapeHtml(it.description || '')}`).join('\n');
-                    row.title = breakdown; // small native tooltip on hover
+                    row.title = breakdown; 
                     const groupIcon = (typeof getIconFor === 'function') ? getIconFor('category', key) : '';
                     const groupLabel = (groupIcon && typeof iconHtml === 'function') ? iconHtml(groupIcon, 'text-sm text-gray-500') + `<span class="desc-text truncate">${escapeHtml(key)} <span class="text-xs text-gray-500">(${count} â€¢ ${formatCurrency(total)})</span></span>` : `<span class="desc-text truncate">${escapeHtml(key)} <span class="text-xs text-gray-500">(${count} â€¢ ${formatCurrency(total)})</span></span>`;
                     row.innerHTML = `<div class="desc-wrap flex items-center truncate pr-2" data-group-key="${encodeURIComponent(key)}" style="gap:6px;">${groupLabel}<button class="group-info-btn invisible ml-2" data-group-key="${encodeURIComponent(key)}" title="Detalhes do grupo"><span class="material-symbols-outlined" style="font-size:16px;">info</span></button></div><span class="card-exp-amount font-medium flex-shrink-0">${formatCurrency(total)}</span>`;
                     row.addEventListener('click', () => { try { const lines = items.map(it => `${formatCurrency(it.amount)} â€” ${escapeHtml(it.description || '')} (${escapeHtml(it.payment || it.category || '')})`); showModalList(`Detalhes: ${key}`, lines.join('\n')); } catch(e) { console.error('group click', e); } });
-                    // add hover tooltip on the small info button
+
                     setTimeout(() => {
                         const infoBtn = row.querySelector('.group-info-btn');
                         if (!infoBtn) { groupsEl.appendChild(row); return; }
@@ -9438,11 +4915,9 @@ const firebaseConfig = {
                 }
             });
 
-            // Since singles are rendered inside the grouped container now, hide the traditional table wrapper
             if (tableWrapper) tableWrapper.style.display = 'none';
             wrapper.classList.toggle('hidden', !state.showGroupedExpenses);
 
-            // Attach hover handlers and action buttons for the single rows inside groupsEl
             try {
                 groupsEl.querySelectorAll('.desc-wrap').forEach(wrap => {
                     wrap.addEventListener('mouseenter', (ev) => {
@@ -9487,17 +4962,15 @@ const firebaseConfig = {
             } catch(e) { console.error('attach grouped view handlers', e); }
         }
 
-        // Simple helper to escape HTML for text insertion
         function escapeHtml(str) {
             return (str || '').toString().replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]; });
         }
 
-        // Small modal-list helper (reuses transaction modal if present, otherwise falls back to alert)
         function showModalList(title, content) {
             try {
                 const modal = document.getElementById('transaction-modal');
                 if (!modal) { alert(title + '\n\n' + content); return; }
-                // Populate a simple container inside modal (create if missing)
+
                 let container = modal.querySelector('.group-modal-content');
                 if (!container) {
                     container = document.createElement('div');
@@ -9511,9 +4984,8 @@ const firebaseConfig = {
                 openModal();
             } catch(e) { alert(title + '\n\n' + content); }
         }
-
         function renderSavingsTable() {
-            // Inicializa array de reservas para evitar erro
+
             const savings = Array.isArray(getCurrentMonthData().savings) ? getCurrentMonthData().savings : [];
             ui.savingsTableBody.innerHTML = '';
             if(savings.length > 0) {
@@ -9522,30 +4994,28 @@ const firebaseConfig = {
                 ui.savingsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Nenhuma reserva registrada.</td></tr>';
             }
         }
-
         function renderIncomeRow(income) {
             const row = ui.incomeTableBody.insertRow();
             row.dataset.id = income.id;
-            row.className = 'border-b border-gray-200 hover:bg-gray-50 animate-fade-in';
-            // If this income looks like a salary (explicit flag, salaryMeta or description contains 'salari'), attach a hidden click access
+            row.className = `border-b border-gray-200  ${income.isPaid ? 'opacity-60' : ''}`;
+
             const isSalary = !!income.isSalary || !!income.salaryMeta || /salari/i.test(String(income.description || ''));
-            // Keep the exact same visual as before: span with same typography (no underline). Access is 'hidden' but clickable.
+
             const amountHtml = `<span class="amount salary-breakdown-hidden text-green-600 font-medium" data-id="${income.id}">${formatCurrency(income.amount)}</span>`;
             const payIcon = (typeof getIconFor === 'function') ? getIconFor('payment', income.payment || '') : '';
             const descLabel = (payIcon && typeof iconHtml === 'function') ? iconHtml(payIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(income.description || '')}</span>` : escapeHtml(income.description || '');
 
-            // Render standard table cells (desktop-style). Keep same structure on all sizes so each transaction is a normal table row.
             {
                 row.innerHTML = `
-                    <td class="py-3 px-3 description-cell" data-label="Descrição" title="${escapeHtml(income.description)}">${descLabel} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
-                    <td class="py-3 px-3" data-label="Valor">${amountHtml}</td>
-                    <td class="py-3 px-3 text-right actions-cell">
-                        <button class="edit-btn text-gray-500 hover:text-blue-600" title="Editar" aria-label="Editar transação"><span class="material-symbols-outlined text-xl">edit</span></button>
-                        <button class="delete-btn text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                    <td class="py-3 text-center checkbox-cell" style="padding-left: 12px; padding-right: 12px;" data-label="Confirmado"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer" ${income.isPaid ? 'checked' : ''}></td>
+                    <td class="py-3 text-left description-cell" style="padding-left: 12px; padding-right: 12px;" data-label="Descriï¿½ï¿½o" title="${escapeHtml(income.description)}">${descLabel} ${income.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
+                    <td class="py-3 text-right font-medium text-green-600" style="padding-left: 12px; padding-right: 12px;" data-label="Valor">${amountHtml}</td>
+                    <td class="py-3 text-center actions-cell" style="padding-left: 12px; padding-right: 12px;">
+                        <button class="edit-btn text-gray-500 " title="Editar" aria-label="Editar transaï¿½ï¿½o"><span class="material-symbols-outlined text-xl">edit</span></button>
+                        <button class="delete-btn text-gray-500 " title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                     </td>`;
             }
 
-            // Attach click handler to the hidden span if this is a salary entry
             if (isSalary) {
                 try {
                     const span = row.querySelector('.salary-breakdown-hidden');
@@ -9553,39 +5023,33 @@ const firebaseConfig = {
                 } catch (e) { console.error('attach salary breakdown click', e); }
             }
         }
-
         function renderExpenseRow(expense) {
             const row = ui.expensesTableBody.insertRow();
             row.dataset.id = expense.id;
-            row.className = `border-b border-gray-200 hover:bg-gray-50 animate-fade-in ${expense.isPaid ? 'opacity-60' : ''}`;
-            // Build the installments/financing display with a clickable total that jumps to last installment
-            // Use a plain span for the clickable area so it inherits all typography and spacing
+            row.className = `border-b border-gray-200  ${expense.isPaid ? 'opacity-60' : ''}`;
+
             const installmentHtml = expense.totalInstallments ? `<span class="text-xs text-gray-500">(${expense.currentInstallment}/<span class="last-installment-btn" data-installment-id="${expense.installmentId}" data-total="${expense.totalInstallments}">${expense.totalInstallments}</span>)</span>` : '';
             const financingHtml = (expense.financingId && expense.totalFinancing) ? `<span class="text-xs text-gray-500">(${expense.currentFinancing}/<span class="last-installment-btn" data-financing-id="${expense.financingId}" data-total="${expense.totalFinancing}">${expense.totalFinancing}</span>)</span>` : '';
 
-            // Render payment and category with icons when possible. Use tolerant label lookup so stored values show nicely.
             const displayPaymentLabel = (typeof getPaymentLabel === 'function') ? getPaymentLabel(expense.payment || '') : (expense.payment || '');
             const paymentIcon = (typeof getIconFor === 'function') ? getIconFor('payment', displayPaymentLabel || expense.payment || '') : '';
             const categoryIcon = (typeof getIconFor === 'function') ? getIconFor('category', expense.category || '') : '';
             const paymentHtml = (typeof iconHtml === 'function' && paymentIcon) ? iconHtml(paymentIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(displayPaymentLabel || expense.payment || '')}</span>` : escapeHtml(displayPaymentLabel || expense.payment || '');
             const categoryHtml = (typeof iconHtml === 'function' && categoryIcon) ? iconHtml(categoryIcon, 'text-sm text-gray-500') + `<span>${escapeHtml(expense.category || '')}</span>` : escapeHtml(expense.category || '');
 
-            // Render standard table cells so each expense is one normal table row (works on all sizes)
             {
                 row.innerHTML = `
-                    <td class="py-3 px-3 checkbox-cell" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
-                    <td class="py-3 px-3 description-cell" data-label="Descrição" title="${escapeHtml(expense.description)}">${escapeHtml(expense.description)} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${installmentHtml} ${financingHtml}</td>
-
-                    <td class="py-3 px-3 text-gray-600" data-label="Pagamento">${paymentHtml}</td>
-                    <td class="py-3 px-3 text-gray-600" data-label="Categoria">${categoryHtml}</td>
-                    <td class="py-3 px-3 text-red-600 font-medium" data-label="Valor">${formatCurrency(expense.amount)}</td>
-                    <td class="py-3 px-3 text-right actions-cell align-middle">
-                        <button class="edit-btn text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" aria-label="Editar despesa" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
-                        <button class="delete-btn text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                    <td class="py-3 text-center checkbox-cell" style="padding-left: 12px; padding-right: 12px;" data-label="Pago"><input type="checkbox" class="paid-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${expense.isPaid ? 'checked' : ''}></td>
+                    <td class="py-3 text-left description-cell" style="padding-left: 12px; padding-right: 12px;" data-label="Descriï¿½ï¿½o" title="${escapeHtml(expense.description)}">${escapeHtml(expense.description)} ${expense.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''} ${installmentHtml} ${financingHtml}</td>
+                    <td class="py-3 text-left text-gray-600" style="padding-left: 12px; padding-right: 12px;" data-label="Pagamento">${paymentHtml}</td>
+                    <td class="py-3 text-left text-gray-600" style="padding-left: 12px; padding-right: 12px;" data-label="Categoria">${categoryHtml}</td>
+                    <td class="py-3 text-right text-red-600 font-medium" style="padding-right: 12px;" data-label="Valor">${formatCurrency(expense.amount)}</td>
+                    <td class="py-3 text-center actions-cell align-middle" style="padding-left: 12px; padding-right: 12px;">
+                        <button class="edit-btn text-gray-500  disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" aria-label="Editar despesa" ${expense.installmentId ? 'disabled' : ''}><span class="material-symbols-outlined text-xl">${expense.installmentId ? 'lock' : 'edit'}</span></button>
+                        <button class="delete-btn text-gray-500 " title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                     </td>`;
             }
 
-            // Attach click handler to jump to last installment when present (span will be visually identical)
             const lastBtn = row.querySelector('.last-installment-btn');
             if (lastBtn) {
                 lastBtn.addEventListener('click', (ev) => {
@@ -9595,41 +5059,36 @@ const firebaseConfig = {
                 });
             }
         }
-
         function renderSavingRow(saving) {
             const row = ui.savingsTableBody.insertRow();
             row.dataset.id = saving.id;
-            row.className = 'border-b border-gray-200 hover:bg-gray-50 animate-fade-in';
+            row.className = 'border-b border-gray-200 ';
             const catIcon = (typeof getIconFor === 'function') ? getIconFor('category', saving.category || '') : '';
             const catLabel = (state.appData.settings.goals||[]).some(g=>g.name===saving.category) ? 'Meta' : escapeHtml(saving.category || '');
             const catHtml = (catIcon && typeof iconHtml === 'function') ? iconHtml(catIcon, 'text-sm text-gray-500') + `<span>${catLabel}</span>` : catLabel;
             row.innerHTML = `
-                <td class="py-3 px-3" data-label="Descrição">${escapeHtml(saving.description)} ${saving.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
+                <td class="py-3 px-3" data-label="Descriï¿½ï¿½o">${escapeHtml(saving.description)} ${saving.isRecurring ? '<span class="material-symbols-outlined text-xs text-gray-400" title="Recorrente">autorenew</span>' : ''}</td>
                 <td class="py-3 px-3 text-gray-600" data-label="Categoria">${catHtml}</td>
                 <td class="py-3 px-3 font-medium text-indigo-600" data-label="Valor">${formatCurrency(saving.amount)}</td>
                 <td class="py-3 px-3 text-right actions-cell align-middle">
-                    <button class="edit-btn text-gray-500 hover:text-blue-600" title="Editar" aria-label="Editar transação"><span class="material-symbols-outlined text-xl">edit</span></button>
-                    <button class="delete-btn text-gray-500 hover:text-red-600" title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
+                    <button class="edit-btn text-gray-500 " title="Editar" aria-label="Editar transaï¿½ï¿½o"><span class="material-symbols-outlined text-xl">edit</span></button>
+                    <button class="delete-btn text-gray-500 " title="Excluir"><span class="material-symbols-outlined text-xl">delete</span></button>
                 </td>`;
         }
-
         function renderGoals() {
             const container = ui.goalsContainer;
             const goals = (state.appData.settings.goals || []).slice().sort((a,b) => { const A=(a.name||'').toLowerCase(); const B=(b.name||'').toLowerCase(); return A < B ? -1 : A > B ? 1 : 0; });
             const allSavings = Object.values(state.appData.data).flatMap(y => Object.values(y)).flatMap(m => m.savings || []);
 
-            // Removido o subTí­tulo "Metas" conforme solicitação
             container.innerHTML = ``;
-
             if (goals.length === 0) container.innerHTML += '<p class="text-center text-gray-500">Nenhuma meta definida.</p>';
-
             goals.forEach(goal => {
-                // sum of savings items that target this goal (category == goal.name OR explicit goalId link)
+
                 const totalSavedForGoal = allSavings.filter(s => ((s.category === goal.name) || (s.goalId && s.goalId === goal.id))).reduce((sum, s) => sum + s.amount, 0);
                 const percentage = Math.min((totalSavedForGoal / goal.amount) * 100, 100);
                 const isCompleted = percentage >= 100;
                 if (isCompleted) {
-                    showToast(`Meta atingida: ${goal.name}! Parabá©ns!`, 'bg-green-600');
+                    showToast(`Meta atingida: ${goal.name}! Parabï¿½ns!`, 'bg-green-600');
                     if (window.confetti) window.confetti();
                 }
                 container.innerHTML += `
@@ -9638,10 +5097,10 @@ const firebaseConfig = {
                             <span class="font-semibold">${goal.name} ${isCompleted ? 'ðŸŽ‰' : ''}</span>
                             <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600">${formatCurrency(totalSavedForGoal)} / ${formatCurrency(goal.amount)}</span>
-                                <button data-id="${goal.id}" class="quick-add-goal-btn p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors" title="Adicionar valor">
+                                <button data-id="${goal.id}" class="quick-add-goal-btn p-1.5 text-green-600   rounded " title="Adicionar valor">
                                     <span class="material-symbols-outlined text-lg">add_circle</span>
                                 </button>
-                                <button data-id="${goal.id}" class="delete-goal-btn p-1 text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-lg">delete</span></button>
+                                <button data-id="${goal.id}" class="delete-goal-btn p-1 text-gray-400 "><span class="material-symbols-outlined text-lg">delete</span></button>
                             </div>
                         </div>
                         <div class="progress-bar">
@@ -9650,98 +5109,85 @@ const firebaseConfig = {
                     </div>`;
             });
             container.querySelectorAll('.delete-goal-btn').forEach(btn => btn.addEventListener('click', (e) => deleteGoal(e.currentTarget.dataset.id)));
-            
-            // Adicionar event listener para o Botão de adiçío rí¡pida - abre modal de transação
+
             container.querySelectorAll('.quick-add-goal-btn').forEach(btn => btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const goalId = e.currentTarget.dataset.id;
                 const goal = (state.appData.settings.goals || []).find(g => g.id === goalId);
                 if (!goal) return;
-                
-                // Abrir modal de transação em modo Reserva com categoria prí©-selecionada
+
                 try {
                     const modal = document.getElementById('transaction-modal');
                     if (!modal) return;
-                    
-                    // Resetar o formulí¡rio
+
                     if (typeof resetTransactionForm === 'function') resetTransactionForm();
-                    
-                    // Abrir o modal primeiro
+
                     if (typeof modal.showModal === 'function') {
                         modal.showModal();
                     } else {
                         modal.setAttribute('open', '');
                     }
-                    
-                    // Aguardar o modal abrir e enTío configurar
+
                     setTimeout(() => {
-                        // Selecionar tipo "Reserva"
+
                         const savingsTypeBtn = document.querySelector('[data-type="savings"]');
                         if (savingsTypeBtn) {
                             savingsTypeBtn.click();
-                            
-                            // Aguardar o updateModalTypeUI popular os selects
+
                             setTimeout(() => {
                                 const categorySelect = document.getElementById('category-saving');
                                 if (categorySelect) {
-                                    // Procurar pela opçío que corresponde í  meta
+
                                     let found = false;
                                     for (let i = 0; i < categorySelect.options.length; i++) {
                                         const optionValue = categorySelect.options[i].value;
                                         const optionText = categorySelect.options[i].text;
-                                        
-                                        // Comparação mais robusta
+
                                         if (optionValue === goal.name || 
                                             optionText === goal.name ||
                                             optionText.includes(goal.name) ||
                                             optionValue.includes(goal.name)) {
                                             categorySelect.selectedIndex = i;
                                             categorySelect.value = optionValue;
-                                            // Disparar evento change para atualizar í­cones se houver
+
                                             categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
                                             found = true;
                                             break;
                                         }
                                     }
-                                    
                                     if (!found) {
-                                        console.warn('Meta nío encontrada no select:', goal.name);
+
                                     }
                                 } else {
-                                    console.error('Select category-saving nío encontrado!');
+
                                 }
-                                
-                                // Preencher Descrição automaticamente
+
                                 const descInput = document.getElementById('description');
                                 if (descInput && !descInput.value) {
                                     descInput.value = `Reserva para ${goal.name}`;
                                 }
-                                
-                                // Focar no campo de valor
+
                                 const amountInput = document.getElementById('amount');
                                 if (amountInput) {
                                     amountInput.focus();
                                     amountInput.select();
                                 }
-                            }, 200); // Delay maior para garantir população do select
+                            }, 200); 
                         }
-                    }, 50); // Pequeno delay inicial para modal abrir
-                    
+                    }, 50); 
                 } catch(error) {
-                    console.error('Erro ao abrir modal de transação:', error);
-                    showToast('Erro ao abrir formulí¡rio de reserva', 'bg-red-600');
+
+                    showToast('Erro ao abrir formulï¿½ï¿½rio de reserva', 'bg-red-600');
                 }
             }));
 
-            // audit log feature removed
         }
 
-        // --- KPIs, Feedback and Charts ---
     function updateKPIs() {
             try {
                 const monthData = getCurrentMonthData();
                 const totalIncome = (monthData.incomes || []).reduce((s, t) => s + (t.amount || 0), 0);
-                // Compute total paid expenses but treat full-paid credit-card invoices as (sum of card expenses - anticipated)
+
                 const expensesAll = monthData.expenses || [];
                 const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
                 const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
@@ -9749,17 +5195,17 @@ const firebaseConfig = {
                 const byPayment = expensesAll.reduce((acc, e) => { const k = (typeof getPaymentLabel === 'function') ? getPaymentLabel(e.payment || '') : (e.payment || '_none_'); (acc[k] = acc[k] || []).push(e); return acc; }, {});
                 let totalExpenses = 0;
                 for (const [payment, group] of Object.entries(byPayment)) {
-                    // payment here is a display label (getPaymentLabel). Check tolerant match against cardMethods
+
                     const isCardPayment = cardMethods.some(c => paymentMatches(payment || '', c.name));
                     if (isCardPayment) {
                         const paidCount = group.filter(g => g.isPaid).length;
                         if (group.length > 0 && paidCount === group.length) {
-                            // full invoice paid: count invoice total (sum - antecipado)
+
                             const sumAll = group.reduce((s, x) => s + (Number(x.amount) || 0), 0);
                             const anticipatedForCard = Number(cardAnticipations[payment] || 0);
                             totalExpenses += Math.round((sumAll - anticipatedForCard + Number.EPSILON) * 100) / 100;
                         } else {
-                            // partial payments: count only paid items
+
                             totalExpenses += group.filter(g => g.isPaid).reduce((s, x) => s + (Number(x.amount) || 0), 0);
                         }
                     } else {
@@ -9769,24 +5215,21 @@ const firebaseConfig = {
                 const totalSavings = (monthData.savings || []).reduce((s, t) => s + (t.amount || 0), 0);
                 const balance = totalIncome - totalExpenses - totalSavings;
 
-        // Update DOM with animated numbers
         animateKPINumber('kpi-total-income', totalIncome);
         animateKPINumber('kpi-total-expenses', totalExpenses);
         animateKPINumber('kpi-total-savings', totalSavings);
         animateKPINumber('kpi-balance', balance);
 
-                // Projected balance (consider all expenses but subtract card anticipations so invoice totals are used)
                 const totalProjectedExpenses = (monthData.expenses || []).reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
-                // Sum anticipations stored per-card for this month (new: monthData.cardAnticipations = { cardName: amount })
+
                 const totalAnticipations = Object.values(monthData.cardAnticipations || {}).reduce((s, a) => s + (Number(a) || 0), 0);
-                // Adjust projected expenses by subtracting anticipations so the KPI reflects invoice totals (sum - antecipado)
+
                 const adjustedProjectedExpenses = totalProjectedExpenses - totalAnticipations;
                 const projectedBalance = totalIncome - adjustedProjectedExpenses - totalSavings;
                 const projEl = document.getElementById('kpi-projected-balance'); if (projEl) { animateKPINumber('kpi-projected-balance', projectedBalance); projEl.classList.toggle('text-red-600', projectedBalance < 0); projEl.classList.toggle('text-green-600', projectedBalance >= 0); }
-                // Populate Despesas Projetadas KPI (shows total of all expenses minus anticipations so invoice totals are used)
+
                 const projExpEl = document.getElementById('kpi-projected-expenses'); if (projExpEl) animateKPINumber('kpi-projected-expenses', adjustedProjectedExpenses);
 
-                // Percentual de cada despesa do Mês (agrupado por Descrição, soma valores e conta ocorríªncias)
                 const expenses = monthData.expenses || [];
                 const totalMonthExpenses = expenses.reduce((s, exp) => s + (Number(exp.amount) || 0), 0);
                 const container = document.getElementById('kpi-expense-percentuals');
@@ -9795,10 +5238,10 @@ const firebaseConfig = {
                     if (!expenses || expenses.length === 0 || totalMonthExpenses === 0) {
                         container.innerHTML = '<span class="text-gray-400 text-xs">Nenhuma despesa registrada.</span>';
                     } else {
-                        // Group by normalized description (fall back to category or 'Sem Descrição')
+
                         const groupsMap = new Map();
                         expenses.forEach(exp => {
-                            const rawDesc = (exp.description || exp.category || 'Sem Descrição').toString().trim();
+                            const rawDesc = (exp.description || exp.category || 'Sem Descriï¿½ï¿½o').toString().trim();
                             const key = rawDesc.toLowerCase();
                             const amount = Number(exp.amount) || 0;
                             if (!groupsMap.has(key)) groupsMap.set(key, { description: rawDesc, amount: 0, count: 0 });
@@ -9807,7 +5250,6 @@ const firebaseConfig = {
                             g.count += 1;
                         });
 
-                        // Turn into array and compute percent
                         const grouped = Array.from(groupsMap.values()).map(g => ({
                             description: g.description,
                             amount: g.amount,
@@ -9815,10 +5257,8 @@ const firebaseConfig = {
                             percent: totalMonthExpenses > 0 ? (g.amount / totalMonthExpenses) * 100 : 0
                         }));
 
-                        // Sort descending by percent (largest contributors first)
                         grouped.sort((a,b) => b.percent - a.percent);
 
-                        // Render each group: Description (count)  â€” percent%  â€¢ formatted currency
                         grouped.forEach(g => {
                             const percentStr = g.percent.toFixed(1);
                             const countStr = g.count > 1 ? ` <span class="text-gray-400">(${g.count})</span>` : '';
@@ -9828,18 +5268,16 @@ const firebaseConfig = {
                         });
                     }
                 }
-
                 getFeedback(totalIncome, totalExpenses, totalSavings);
 
-                // VR KPI: compute credited and used totals for current month
                 try {
                     const creditedTotal = (monthData.vrLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
                     let usedTotal = (monthData.vrUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
-                    // include legacy expenses paid with VR (edge-cases)
+
                     try { const expensesVR = (monthData.expenses || []).filter(e => paymentMatches(e.payment || '', 'VR')); usedTotal += expensesVR.reduce((s, e) => s + (Number(e && e.amount) || 0), 0); } catch(e) {}
                     const usedRounded = Math.round((usedTotal + Number.EPSILON) * 100) / 100;
                     const creditRounded = Math.round((creditedTotal + Number.EPSILON) * 100) / 100;
-                    // displayAmount = available (credited - used) â€” same shown in Faturas card
+
                     const displayAmount = Math.max(0, Math.round((creditRounded - usedRounded) * 100) / 100);
                     const valuesEl = document.getElementById('kpi-vr-values'); if (valuesEl) valuesEl.textContent = formatCurrency(displayAmount);
                     const progressEl = document.getElementById('kpi-vr-progress');
@@ -9848,21 +5286,21 @@ const firebaseConfig = {
                         const pctRaw = creditRounded > 0 ? (usedRounded / creditRounded) : 0;
                         const pct = Math.min(1, Math.max(0, pctRaw));
                         progressEl.style.width = `${Math.round(pct * 100)}%`;
-                        // Color thresholds: green <75%, yellow 75-99%, red >=100%
+
                         progressEl.classList.remove('bg-green-500','bg-yellow-400','bg-red-500');
                         if (pctRaw >= 1) progressEl.classList.add('bg-red-500');
                         else if (pctRaw >= 0.75) progressEl.classList.add('bg-yellow-400');
                         else progressEl.classList.add('bg-green-500');
-                        // tooltip with percent
+
                         try { progressEl.title = `${Math.round((pctRaw)*100)}% utilizado (${formatCurrency(usedRounded)} de ${formatCurrency(creditRounded)})`; } catch(e){}
                     }
                     if (barTextEl) {
-                        // show spent amount centered over the bar with percentage used
+
                         const pctDisplay = Math.round((creditRounded > 0 ? (usedRounded / creditRounded) : 0) * 100);
                         barTextEl.textContent = `${formatCurrency(usedRounded)} (${pctDisplay}% gasto)`;
                     }
                 } catch(e) { console.error('updateKPIs vr kpi', e); }
-                // VT KPI: mirror VR logic for VT
+
                 try {
                     const vtCredited = (monthData.vtLedger || []).reduce((s, l) => s + (Number(l && l.amount) || 0), 0);
                     let vtUsed = (monthData.vtUsage || []).reduce((s, u) => s + (Number(u && u.amount) || 0), 0);
@@ -9889,35 +5327,30 @@ const firebaseConfig = {
                     }
                 } catch(e) { console.error('updateKPIs vt kpi', e); }
             } catch (e) {
-                console.error('updateKPIs error', e);
+
             }
         }
-
         function getFeedback(income, expenses, savings) {
             try {
                 const settings = state.appData && state.appData.settings ? state.appData.settings : {};
                 const feedbackMessages = settings.feedbackMessages || [];
                 const spendingGoals = settings.spendingGoals || [];
-                let feedbackId = 'B'; // default
-
+                let feedbackId = 'B'; 
                 if (income > 0) {
                     const savingGoal = (spendingGoals.find(g => g.type === 'Reserva') || {}).goal || 0;
-                    const nonEssentialGoal = (spendingGoals.find(g => g.type === 'nío Essenciais') || {}).goal || 0;
+                    const nonEssentialGoal = (spendingGoals.find(g => g.type === 'nï¿½o Essenciais') || {}).goal || 0;
                     const essentialGoal = (spendingGoals.find(g => g.type === 'Essenciais') || {}).goal || 0;
-
                     if ((income - expenses - savings) < 0) feedbackId = 'F';
                     else if (savings < income * savingGoal) feedbackId = 'E';
                     else if (expenses > income * (nonEssentialGoal + essentialGoal)) feedbackId = 'C';
                     else feedbackId = 'B';
                 }
-
                 const msg = (feedbackMessages.find(m => m.id === feedbackId) || {}).text || '';
                 if (ui.feedbackMessage) ui.feedbackMessage.textContent = msg;
             } catch (e) {
-                console.error('getFeedback error', e);
+
             }
         }
-
         function animateKPINumber(id, newValue) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -9928,7 +5361,6 @@ const firebaseConfig = {
             let step = 0;
             const diff = newValue - last;
 
-            // Add animation class
             if (diff > 0) {
                 el.classList.add('kpi-animate-up');
             } else if (diff < 0) {
@@ -9936,7 +5368,6 @@ const firebaseConfig = {
             } else {
                 el.classList.add('kpi-animate');
             }
-
             const animate = () => {
                 step++;
                 const val = last + diff * (step / steps);
@@ -9953,24 +5384,20 @@ const firebaseConfig = {
             };
             animate();
         }
-
         function destroyChart(chartId) {
             if (ui.charts && ui.charts[chartId]) {
                 try { ui.charts[chartId].destroy(); } catch(e) { /* ignore */ }
                 delete ui.charts[chartId];
             }
         }
-
         function renderCharts() {
-            // Defensive: if Chart is not available, skip rendering charts
+
             if (typeof Chart === 'undefined') return;
-            // renderSpendingGoalsChart(); // removed (Metas de Gastos removed)
+
             renderCategorySpendingChart();
             renderPaymentMethodChart();
             renderAnnualSummaryChart();
         }
-
-        // renderSpendingGoalsChart removed (Metas de Gastos KPI no longer used)
 
         function renderCategorySpendingChart() {
             try {
@@ -9982,7 +5409,6 @@ const firebaseConfig = {
                 ui.charts['category-spending-chart'] = new Chart(ctx.getContext('2d'), { type:'pie', data:{ labels:Object.keys(categorySpending), datasets:[{ data:Object.values(categorySpending), backgroundColor:['#EF4444','#F97316','#84CC16','#22C55E','#14B8A6','#06B6D4','#6366F1','#D946EF'] }] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} });
             } catch(e){console.error('renderCategorySpendingChart', e)}
         }
-
         function renderPaymentMethodChart() {
             try {
                 destroyChart('payment-method-chart');
@@ -9994,14 +5420,13 @@ const firebaseConfig = {
             } catch(e){console.error('renderPaymentMethodChart', e)}
         }
 
-        // helper: compute month outcome using card invoice totals (to keep annual totals consistent with faturas)
         function invoiceAwareOutcomeForMonth(year, month, monthData) {
             try {
                 const expenses = (monthData && monthData.expenses) || [];
                 const savingsSum = (monthData && monthData.savings || []).reduce((s,t)=>s+(t.amount||0),0);
                 const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
                 const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
-                // non-card expenses: any expense that does not match a configured card (tolerant match)
+
                 const nonCardExpensesSum = expenses.filter(e => !cardMethods.some(c => paymentMatches(e.payment || '', c.name))).reduce((s,t)=>s+(t.amount||0),0);
                 const cardAnticipations = (state.appData.data[year] && state.appData.data[year][month] && state.appData.data[year][month].cardAnticipations) || {};
                 let totalInvoices = 0;
@@ -10015,7 +5440,6 @@ const firebaseConfig = {
                 return nonCardExpensesSum + totalInvoices + savingsSum;
             } catch(e) { console.error('invoiceAwareOutcomeForMonth', e); return ((monthData.expenses||[]).reduce((s,t)=>s+(t.amount||0),0)) + ((monthData.savings||[]).reduce((s,t)=>s+(t.amount||0),0)); }
         }
-
         function renderAnnualSummaryChart() {
             try {
                 const year = state.currentDate.getFullYear();
@@ -10034,7 +5458,7 @@ const firebaseConfig = {
                     labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
                     datasets: [
                         { label: 'Entradas', data: monthlyTotals.incomes, backgroundColor: '#22C55E' },
-                        { label: 'Saí­das', data: monthlyTotals.expenses, backgroundColor: '#EF4444' }
+                        { label: 'Saï¿½ï¿½das', data: monthlyTotals.expenses, backgroundColor: '#EF4444' }
                     ]
                 };
                 const asOptions = {
@@ -10069,7 +5493,6 @@ const firebaseConfig = {
             } catch(e){console.error('renderAnnualSummaryChart', e)}
         }
 
-        // Report-specific charts
         function renderMonthlyReportCategoryChart() {
             try {
                 destroyChart('mr-category-breakdown-chart');
@@ -10077,7 +5500,7 @@ const firebaseConfig = {
                 const expenses = monthData.expenses || [];
                 const byCategory = expenses.reduce((acc, e) => { acc[e.category] = (acc[e.category]||0) + (e.amount||0); return acc; }, {});
                 const entries = Object.keys(byCategory).map(k => ({ category: k, value: byCategory[k] }));
-                // sort descending by value so legend and pie render from largest to smallest
+
                 entries.sort((a,b) => (b.value||0) - (a.value||0));
                 const labels = entries.map(e => e.category);
                 const dataVals = entries.map(e => e.value);
@@ -10112,7 +5535,6 @@ const firebaseConfig = {
                 ui.charts['mr-category-breakdown-chart'] = new Chart(ctx.getContext('2d'), { type: 'pie', data: mrData, options: mrOptions });
             } catch(e){console.error('renderMonthlyReportCategoryChart', e)}
         }
-
         function renderAnnualBalanceEvolutionChart() {
             try {
                 destroyChart('ar-balance-evolution-chart');
@@ -10141,7 +5563,7 @@ const firebaseConfig = {
                                     try{
                                         const d = chart.data.datasets && chart.data.datasets[0];
                                         const last = (d && d.data && d.data.length) ? d.data[d.data.length-1] : 0;
-                                        return [{ text: d.label + ' (último: ' + formatCurrency(last) + ')', fillStyle: d.borderColor, hidden: chart.getDatasetMeta(0).hidden, index: 0 }];
+                                        return [{ text: d.label + ' (ï¿½ltimo: ' + formatCurrency(last) + ')', fillStyle: d.borderColor, hidden: chart.getDatasetMeta(0).hidden, index: 0 }];
                                     }catch(e){
                                         return Chart.defaults.plugins.legend.labels.generateLabels(chart);
                                     }
@@ -10156,13 +5578,12 @@ const firebaseConfig = {
                 ui.charts['ar-balance-evolution-chart'] = new Chart(ctx.getContext('2d'), { type: 'line', data: arData, options: arOptions });
             } catch(e){console.error('renderAnnualBalanceEvolutionChart', e)}
         }
-
         function renderAnnualAvgCategoryChart() {
             try {
                 destroyChart('ar-avg-category-spending-chart');
                 const year = state.currentDate.getFullYear();
                 const yearData = state.appData.data[year] || {};
-                // compute average monthly spending per category
+
                 const categories = {};
                 const months = Object.keys(yearData);
                 months.forEach(m => {
@@ -10173,7 +5594,7 @@ const firebaseConfig = {
                 months.forEach(() => {});
                 Object.keys(categories).forEach(cat => { avg[cat] = categories[cat] / Math.max(1, months.length); });
                 const ctx = document.getElementById('ar-avg-category-spending-chart'); if (!ctx || Object.keys(avg).length === 0 || typeof Chart === 'undefined') return;
-                const acData = { labels: Object.keys(avg), datasets: [{ label: 'má©dia Mensal', data: Object.values(avg), backgroundColor: '#F59E0B' }] };
+                const acData = { labels: Object.keys(avg), datasets: [{ label: 'mï¿½dia Mensal', data: Object.values(avg), backgroundColor: '#F59E0B' }] };
                 const acOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -10200,33 +5621,29 @@ const firebaseConfig = {
             } catch(e){console.error('renderAnnualAvgCategoryChart', e)}
         }
 
-        // end KPIs & charts
-
         function renderMonthDisplay() {
             ui.currentMonthDisplay.textContent = state.currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
         }
 
-        // Month picker helpers
         function populateMonthPicker() {
             try {
                 const yearSelect = ui.monthPickerYear;
                 if (!yearSelect) return;
                 yearSelect.innerHTML = '';
                 const currentYear = state.currentDate.getFullYear();
-                // show a range of years: currentYear -5 .. currentYear +5
+
                 for (let y = currentYear - 5; y <= currentYear + 5; y++) {
                     const opt = document.createElement('option');
                     opt.value = y;
                     opt.textContent = y;
                     yearSelect.appendChild(opt);
                 }
-                // set selects to current date
+
                 if (ui.monthPickerMonth) ui.monthPickerMonth.value = String(state.currentDate.getMonth());
                 yearSelect.value = String(currentYear);
             } catch (e) { console.error('populateMonthPicker', e); }
         }
 
-        // We'll move the picker to document.body when opened to avoid stacking context issues
         (function(){
             let _originalParent = null;
             let _originalNext = null;
@@ -10238,7 +5655,7 @@ const firebaseConfig = {
                     _originalNext = picker.nextSibling;
                 }
                 document.body.appendChild(picker);
-                // On mobile, center the picker fixed to avoid off-screen clipping. On desktop keep absolute aligned to trigger.
+
                 if (window.innerWidth <= 639) {
                     picker.style.position = 'fixed';
                     picker.style.left = '50%';
@@ -10249,10 +5666,10 @@ const firebaseConfig = {
                     picker.style.right = '';
                 } else {
                     picker.style.position = 'absolute';
-                    // compute position to align under trigger (right aligned)
+
                     try {
                         const rect = trigger.getBoundingClientRect();
-                        const top = rect.bottom + window.scrollY + 8; // small gap
+                        const top = rect.bottom + window.scrollY + 8; 
                         const right = window.innerWidth - (rect.right + window.scrollX);
                         picker.style.top = top + 'px';
                         picker.style.right = right + 'px';
@@ -10274,7 +5691,6 @@ const firebaseConfig = {
                 }
                 _originalParent = null; _originalNext = null; window.__monthPickerDetached = false;
             }
-
             window.openMonthPicker = function() {
                 try {
                     const picker = ui.monthPicker;
@@ -10282,10 +5698,9 @@ const firebaseConfig = {
                     populateMonthPicker();
                     _attachToBody(picker, ui.currentMonthDisplay);
                     picker.classList.remove('hidden');
-                    setTimeout(() => { if (ui.monthPickerMonth) ui.monthPickerMonth.focus(); }, 50);
+                    if (ui.monthPickerMonth) ui.monthPickerMonth.focus();
                 } catch (e) { console.error('openMonthPicker', e); }
             };
-
             window.closeMonthPicker = function() {
                 try {
                     const picker = ui.monthPicker;
@@ -10295,11 +5710,9 @@ const firebaseConfig = {
                 } catch (e) { console.error('closeMonthPicker', e); }
             };
         })();
-
         function closeMonthPicker() {
             try { if (ui.monthPicker) ui.monthPicker.classList.add('hidden'); } catch (e) { console.error('closeMonthPicker', e); }
         }
-
         function applyMonthPicker() {
             try {
                 if (!ui.monthPickerMonth || !ui.monthPickerYear) return;
@@ -10311,11 +5724,10 @@ const firebaseConfig = {
                 closeMonthPicker();
             } catch (e) { console.error('applyMonthPicker', e); }
         }
-
         function updateSortHeaders() {
             ui.expensesTableHead.querySelectorAll('.sortable-header').forEach(header => {
                 const icon = header.querySelector('.sort-icon');
-                if (!icon) return; // skip if icon not present
+                if (!icon) return; 
                 if (header.dataset.sort === state.sort.key) {
                     header.classList.add('sorted');
                     icon.textContent = state.sort.order === 'asc' ? 'arrow_upward' : 'arrow_downward';
@@ -10326,24 +5738,20 @@ const firebaseConfig = {
             });
         }
 
-        // --- DATA & STATE MANAGEMENT ---
-
         function goToDate(date) {
             state.currentDate = new Date(date.getFullYear(), date.getMonth(), 1);
             render();
         }
-
         function changeMonth(direction) {
             state.currentDate.setMonth(state.currentDate.getMonth() + direction);
             render();
                }
 
-        // Jump to the month of the last installment of a financing/installment group
         function goToLastInstallment({ financingId = null, installmentId = null } = {}) {
             try {
-                // Collect all matching installments and find the one with the latest date
-                let last = null; // { year, month, id }
-                // Iterate over state data to find the last installment
+
+                let last = null; 
+
                 Object.keys(state.appData.data).forEach(year => {
                     Object.keys(state.appData.data[year]).forEach(month => {
                         const monthData = state.appData.data[year][month];
@@ -10363,43 +5771,33 @@ const firebaseConfig = {
                         });
                     });
                 });
+                if (!last) return; 
 
-                if (!last) return; // nothing found
-
-                // Navigate to that month
                 const target = new Date(last.year, last.month - 1, 1);
                 goToDate(target);
-                // After render, highlight the row briefly
-                requestAnimationFrame(() => {
-                    const row = ui.expensesTableBody.querySelector(`tr[data-id="${last.id}"]`);
-                    if (row) {
-                        row.classList.add('ring-2', 'ring-blue-300');
-                        setTimeout(() => row.classList.remove('ring-2', 'ring-blue-300'), 2000);
-                        // Scroll the page to top so the month header is visible
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                });
+
+                const row = ui.expensesTableBody.querySelector(`tr[data-id="${last.id}"]`);
+                if (row) {
+                    row.classList.add('ring-2', 'ring-blue-300');
+
+                    window.scrollTo({ top: 0, behavior: 'auto' });
+                }
             } catch (e) {
-                console.error('goToLastInstallment error', e);
+
             }
         }
-
         function getCurrentMonthData(date = state.currentDate) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
-            
-            // Com a nova `loadData`, state.appData.data sempre existirá¡.
-            // Apenas precisamos garantir que o Mês/ano especí­fico exista para evitar erros.
+
             if (!state.appData.data[year]) {
                 state.appData.data[year] = {};
             }
             if (!state.appData.data[year][month]) {
                 state.appData.data[year][month] = { incomes: [], expenses: [], savings: [] };
             }
-            
             return state.appData.data[year][month];
         }
-        
         function handleSort(key) {
             if (state.sort.key === key) {
                 state.sort.order = state.sort.order === 'asc' ? 'desc' : 'asc';
@@ -10409,7 +5807,6 @@ const firebaseConfig = {
             }
             renderExpenseTable();
         }
-
         function handleTableClick(event, type) {
             const row = event.target.closest('tr');
             if (!row) return;
@@ -10419,89 +5816,122 @@ const firebaseConfig = {
             } else if (event.target.closest('.delete-btn')) {
                 deleteTransaction(type, id);
             } else if (event.target.classList.contains('paid-checkbox')) {
-                togglePaidStatus(id);
+                togglePaidStatus(id, type);
             }
         }
+        async function togglePaidStatus(id, type = 'expenses') {
+            if (type === 'expenses') {
+                const expense = getCurrentMonthData().expenses.find(exp => exp.id === id);
+                if (expense) {
+                    expense.isPaid = !expense.isPaid;
+                    try {
+                        await storage.saveData(state.appData);
+                    } catch (e) {
 
-        async function togglePaidStatus(id) {
-            const expense = getCurrentMonthData().expenses.find(exp => exp.id === id);
-            if (expense) {
-                expense.isPaid = !expense.isPaid;
-                try {
-                    await storage.saveData(state.appData);
-                } catch (e) {
-                    console.error('Erro ao atualizar status pago:', e);
-                    showToast('Falha ao atualizar status no Firebase.', 'bg-red-600');
+                        showToast('Falha ao atualizar status no Firebase.', 'bg-red-600');
+                    }
+                    render();
                 }
-                render();
+            } else if (type === 'incomes') {
+                const monthData = getCurrentMonthData();
+
+                let income = monthData.incomes.find(inc => inc.id === id);
+                if (income) {
+                    income.isPaid = !income.isPaid;
+                    try {
+                        await storage.saveData(state.appData);
+                    } catch (e) {
+
+                        showToast('Falha ao atualizar status no Firebase.', 'bg-red-600');
+                    }
+                    render();
+                    return;
+                }
+
+                let vrEntry = (monthData.vrLedger || []).find(v => v.id === id);
+                if (vrEntry) {
+                    vrEntry.isPaid = !vrEntry.isPaid;
+                    try {
+                        await storage.saveData(state.appData);
+                    } catch (e) {
+
+                        showToast('Falha ao atualizar status no Firebase.', 'bg-red-600');
+                    }
+                    render();
+                    return;
+                }
+
+                let vtEntry = (monthData.vtLedger || []).find(v => v.id === id);
+                if (vtEntry) {
+                    vtEntry.isPaid = !vtEntry.isPaid;
+                    try {
+                        await storage.saveData(state.appData);
+                    } catch (e) {
+
+                        showToast('Falha ao atualizar status no Firebase.', 'bg-red-600');
+                    }
+                    render();
+                }
             }
         }
 
-        // --- MODALS & UI HELPERS (implementAÇÕES defensivas) ---
-        // openModal now accepts an optional prefill object: { payment, description, amount, focusDescription }
         function openModal(type, id = null, prefill = null) {
             try {
                 const modal = ui.transactionModal;
                 if (!modal) return;
-                // Reset and populate
+
                 if (ui.transactionForm) ui.transactionForm.reset();
                 clearTransactionError();
                 if (document.getElementById('transaction-id')) document.getElementById('transaction-id').value = '';
                 populateDropdowns();
                 toggleTransactionType(type || 'expenses');
-                // If editing, populate fields
+
                 if (id) {
-                    document.getElementById('modal-title').textContent = 'Editar transação';
+                    document.getElementById('modal-title').textContent = 'Editar transaï¿½ï¿½o';
                     populateModal(type, id);
                 } else {
-                    document.getElementById('modal-title').textContent = 'Nova transação';
-                    // Apply session-aware defaults: prefer last used in-session values when present
+                    document.getElementById('modal-title').textContent = 'Nova transaï¿½ï¿½o';
+
                     if (!prefill) prepareModalForNextEntry();
                 }
-                // Show modal
+
                 modal.showModal();
 
-                // Apply optional prefill values deterministically (no timeouts)
                 try {
                     if (prefill && typeof prefill === 'object') {
                         const pm = document.getElementById('payment-method');
                         const desc = document.getElementById('description');
                         const cat = document.getElementById('category-expense');
-
                         if (pm && prefill.payment) {
                             pm.value = prefill.payment;
-                            // Dispatch change so existing handlers (which enforce VR/VT rules) run
+
                             try { pm.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) { try { pm.dispatchEvent(new Event('change')); } catch(e){} }
                         }
 
-                        // If prefill provided a category explicitly, set it
                         if (cat && prefill.category) {
                             try { cat.value = prefill.category; } catch(e){}
                         }
 
-                        // If payment is VT and no explicit description provided, enforce 'Abastecimento'
                         if ((prefill.payment === 'VT') && desc && (prefill.description === undefined || prefill.description === null || prefill.description === '')) {
                             try { desc.value = 'Abastecimento'; } catch(e){}
                         } else if (desc && (prefill.description !== undefined)) {
                             desc.value = prefill.description;
                         }
-
                         if (prefill.amount !== undefined) {
                             const amt = document.getElementById('amount'); if (amt) amt.value = prefill.amount;
                         }
-                        // prefill recipient if provided
+
                         if (prefill.recipient) {
                             const r = document.getElementById('payment-recipient');
                             if (r) r.value = prefill.recipient;
                         }
-                        // If requested, focus and select description
+
                         if (desc && (prefill.focusDescription || prefill.description !== undefined)) {
                             try { desc.focus(); desc.select(); } catch (_) {}
                         }
                     }
                 } catch (e) { console.error('openModal apply prefill', e); }
 
-                // Run description detector once to auto-open salary options if description already contains 'salí¡rio'
                 try {
                     const descInput = document.getElementById('description');
                     if (descInput) {
@@ -10511,61 +5941,59 @@ const firebaseConfig = {
                 } catch (e) { console.error('openModal run description detector', e); }
             } catch (e) { console.error('openModal', e); }
         }
-
         function closeModal(modalId) {
             try {
                 const el = document.getElementById(modalId);
                 if (el && typeof el.close === 'function') el.close();
-                // clear any inline error when closing
+
                 clearTransactionError();
-                // remove dynamic buttons if present
+
                 const btn = document.getElementById('conclude-financing-btn'); if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
             } catch (e) { console.error('closeModal', e); }
         }
-
         function populateDropdowns() {
             try {
                 const settings = state.appData.settings || {};
                 const paymentMethods = settings.paymentMethods || [];
-                // If current month has VR balance registered, add a virtual payment method 'VR'
+
                 const md = getCurrentMonthData();
                 const vrAmount = md ? getMonthVRBalance(md) : 0;
-                // VR as a selectable paymentMethod should be an object with type 'vr'
+
                 const vrOptionObj = { name: 'VR', type: 'vr', available: vrAmount };
-                // Merge payments but avoid duplicate VR entries
+
                 const mergedPayments = (paymentMethods || []).slice();
                 if (!mergedPayments.find(p => (p && p.name) === 'VR')) mergedPayments.push(vrOptionObj);
-                // VT: same approach as VR
+
                 const vtAmount = md ? getMonthVTBalance(md) : 0;
                 const vtOptionObj = { name: 'VT', type: 'vt', available: vtAmount };
                 if (!mergedPayments.find(p => (p && p.name) === 'VT')) mergedPayments.push(vtOptionObj);
                 const expenseCategories = settings.expenseCategories || [];
                 const savingCategories = settings.savingCategories || [];
                 const goals = settings.goals || [];
-                // Ensure Alimentação category exists in settings so it's available in the dropdown
+
                 const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
                 const hasAlim = expenseCategories.some(c => normalize(c).includes('aliment'));
                 if (!hasAlim) {
                     try {
-                        // Add Alimentação to settings and persist once
+
                         settings.expenseCategories = settings.expenseCategories || [];
-                        settings.expenseCategories.push('Alimentação');
+                        settings.expenseCategories.push('Alimentaï¿½ï¿½o');
                         state.appData.settings = settings;
-                        // Save asynchronously but do not block UI
-                        storage.saveData(state.appData).then(() => { showToast('Categoria Alimentação adicionada í s configurAÇÕES.', 'bg-green-600'); }).catch(() => {});
-                    } catch (e) { console.error('failed to persist alimentação category', e); }
+
+                        storage.saveData(state.appData).then(() => { showToast('Categoria Alimentaï¿½ï¿½o adicionada ï¿½ï¿½s configurAï¿½ï¿½ES.', 'bg-green-600'); }).catch(() => {});
+                    } catch (e) { console.error('failed to persist alimentaï¿½ï¿½o category', e); }
                 }
-                // Sort lists alphabetically for consistent UX
+
                 const paymentsSorted = sortStrings((mergedPayments || []).map(p => p.name || ''));
                 const expenseCatsSorted = sortStrings(expenseCategories || []);
                 const savingCatsSorted = sortStrings(savingCategories || []);
                 const goalsSorted = sortStrings(goals.map(g => g.name || ''));
-                // Build payment method options from mergedPayments so VR is always present
+
                 if (ui.paymentMethod) {
                     ui.paymentMethod.innerHTML = paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
-                    // If a visual icon-select overlay exists, refresh its list so the visible UI stays in sync
+
                     try { if (typeof ui.paymentMethod._refreshIconSelect === 'function') ui.paymentMethod._refreshIconSelect(); } catch(e){}
-                    // Ensure recipient visibility reflects the (possibly new) selected payment
+
                     try { if (window.toggleRecipientForPayment) window.toggleRecipientForPayment(ui.paymentMethod.value); } catch(e){}
                 }
                 if (ui.categoryExpense) ui.categoryExpense.innerHTML = expenseCatsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -10574,14 +6002,13 @@ const firebaseConfig = {
                     if (goalsSorted.length) savingOptions = savingOptions.concat(goalsSorted.map(g => `<option value="${g}">${g} (Meta)</option>`));
                     ui.categorySaving.innerHTML = savingOptions.join('');
                 }
-                // attempt to refresh other icon-select overlays if present
+
                 try { if (ui.categoryExpense && typeof ui.categoryExpense._refreshIconSelect === 'function') ui.categoryExpense._refreshIconSelect(); } catch(e){}
                 try { if (ui.categorySaving && typeof ui.categorySaving._refreshIconSelect === 'function') ui.categorySaving._refreshIconSelect(); } catch(e){}
                 try { const fpm = document.getElementById('filter-payment-method'); if (fpm && typeof fpm._refreshIconSelect === 'function') fpm._refreshIconSelect(); } catch(e){}
                 try { const fcat = document.getElementById('filter-category'); if (fcat && typeof fcat._refreshIconSelect === 'function') fcat._refreshIconSelect(); } catch(e){}
             } catch (e) { console.error('populateDropdowns', e); }
         }
-
         function toggleTransactionType(type) {
             try {
                 if (!ui.transactionTypeInput) return;
@@ -10595,29 +6022,28 @@ const firebaseConfig = {
                     ui.savingFields.classList.toggle('hidden', type !== 'savings');
                     ui.savingFields.classList.toggle('section-hidden-smooth', type !== 'savings');
                 }
-                // Show salary section only for incomes
+
                 const salarySection = document.getElementById('salary-section');
                 const isSalaryCheckbox = document.getElementById('is-salary');
                 const salaryFields = document.getElementById('salary-fields');
                 if (salarySection) salarySection.classList.toggle('hidden', type !== 'incomes');
-                // When switching types away from incomes, reset salary checkbox and hide fields
+
                 if (type !== 'incomes' && isSalaryCheckbox) {
                     isSalaryCheckbox.checked = false;
                     if (salaryFields) salaryFields.classList.add('hidden');
                     try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.remove('modal-expanded'); } catch(e){}
                 }
-                // If switching to incomes and the salary checkbox exists and is checked, expand modal
+
                 if (type === 'incomes' && isSalaryCheckbox && isSalaryCheckbox.checked) {
                     try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.add('modal-expanded'); } catch(e){}
                 }
                 if (ui.advancedOptions) ui.advancedOptions.classList.remove('hidden');
                 if (ui.installmentsSection) ui.installmentsSection.classList.toggle('hidden', type !== 'expenses');
-                // Adjust financing visibility
+
                 if (ui.financingSection) ui.financingSection.classList.toggle('hidden', type !== 'expenses');
             } catch (e) { console.error('toggleTransactionType', e); }
         }
 
-        // Salary breakdown modal helpers
         function openSalaryBreakdown(income) {
             try {
                 const modal = document.getElementById('salary-breakdown-modal');
@@ -10625,11 +6051,9 @@ const firebaseConfig = {
                 const titleEl = document.getElementById('salary-breakdown-title');
                 if (!modal || !contentEl || !titleEl) return;
 
-                // Always compute for the currently viewed month
                 const year = state.currentDate.getFullYear();
                 const month = state.currentDate.getMonth() + 1;
-                // Prefer salaryMeta coming from the currently viewed month (so hours/days reflect that month).
-                // Fallback: use income.salaryMeta only if no salaryMeta exists in the current month's data.
+
                 const md = getCurrentMonthData();
                 let meta = null;
                 try {
@@ -10640,23 +6064,22 @@ const firebaseConfig = {
                     const found = combined.slice().reverse().find(x => x && x.salaryMeta);
                     if (found) meta = found.salaryMeta;
                 } catch (e) { /* ignore search errors */ }
-                // fallback to the income's meta if nothing found for this month
+
                 if (!meta && income && income.salaryMeta) meta = income.salaryMeta;
                 if (!meta) meta = {};
 
-                // helper: parse hours input which may be a number (decimal) or string like "117:20"
                 function parseHoursRaw(v) {
                     if (v === undefined || v === null || v === '') return undefined;
                     if (typeof v === 'number') return v;
                     const s = String(v).trim();
-                    // support HH:MM
+
                     const m = /^\s*(\d{1,3}):([0-5]?\d)\s*$/.exec(s);
                     if (m) {
                         const hh = parseInt(m[1], 10);
                         const mm = parseInt(m[2], 10);
                         return hh + (mm / 60);
                     }
-                    // support decimal with comma or dot
+
                     const dec = parseFloat(s.replace(/,/g, '.'));
                     if (!isNaN(dec)) return dec;
                     return undefined;
@@ -10673,97 +6096,90 @@ const firebaseConfig = {
                     horasExtrasSabado: Number(meta.horasExtrasSabado || 0),
                     horasExtrasDomingo: Number(meta.horasExtrasDomingo || 0),
                     jornadaMensalHoras: Number(meta.jornadaMensalHoras || 220),
-                    // pass month-specific hours if available (this impacts diasTrabalhados and valorHora)
+
                     hoursTrabalhadas: parsedHours,
                     year,
                     month
                 };
-
                 const calc = calcularSalarioLiquido(params);
-                // Cache the calculated result by income id for tooltip reuse
+
                 try { window.salaryCalcCache = window.salaryCalcCache || {}; if (income && income.id) window.salaryCalcCache[income.id] = calc; } catch(e){}
                 const resumo = calc.resumo || {};
                 const detalhe = calc.detalhe || {};
 
-                // Insert navigation arrows similar to main header so user can move months while modal is open
                 try {
-                    // Abbreviated month with first letter uppercase (e.g. "Out 2025")
+
                     const _d = state.currentDate || new Date();
                     const monthNamesAbbrev = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
                     const monthLabel = `${monthNamesAbbrev[_d.getMonth()]} ${_d.getFullYear()}`;
-                    // Title: keep only the income description and the abbreviated month; nav controls will be appended at the end
-                    titleEl.innerHTML = `${income.description || 'Salí¡rio'} â€” <span id="salary-breakdown-month-label">${monthLabel}</span>`;
-                    // create nav buttons container at the end of the title (grouped)
+
+                    titleEl.innerHTML = `${income.description || 'Salï¿½ï¿½rio'} â€” <span id="salary-breakdown-month-label">${monthLabel}</span>`;
+
                     let navWrap = document.getElementById('salary-breakdown-nav-wrap');
                     if (!navWrap) {
                         navWrap = document.createElement('span');
                         navWrap.id = 'salary-breakdown-nav-wrap';
                         navWrap.className = 'ml-3 inline-flex items-center';
-                        // append to title
+
                         titleEl.appendChild(navWrap);
                     }
-                    // left, today, right buttons
+
                     let leftBtn = document.getElementById('salary-breakdown-prev');
                     let todayBtn = document.getElementById('salary-breakdown-today');
                     let rightBtn = document.getElementById('salary-breakdown-next');
                     if (!leftBtn) {
                         leftBtn = document.createElement('button');
                         leftBtn.id = 'salary-breakdown-prev';
-                        leftBtn.className = 'p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300';
-                        leftBtn.title = 'Mês anterior';
+                        leftBtn.className = 'p-1.5 rounded-full   ';
+                        leftBtn.title = 'Mï¿½s anterior';
                         leftBtn.innerHTML = '<span class="material-symbols-outlined">chevron_left</span>';
                         navWrap.appendChild(leftBtn);
                     }
                     if (!todayBtn) {
                         todayBtn = document.createElement('button');
                         todayBtn.id = 'salary-breakdown-today';
-                        todayBtn.className = 'p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300 mx-1';
-                        todayBtn.title = 'Voltar para o Mês atual';
+                        todayBtn.className = 'p-1.5 rounded-full    mx-1';
+                        todayBtn.title = 'Voltar para o Mï¿½s atual';
                         todayBtn.innerHTML = '<span class="material-symbols-outlined">today</span>';
                         navWrap.appendChild(todayBtn);
                     }
                     if (!rightBtn) {
                         rightBtn = document.createElement('button');
                         rightBtn.id = 'salary-breakdown-next';
-                        rightBtn.className = 'p-1.5 rounded-full transition-colors hover:bg-gray-200 active:bg-gray-300';
-                        rightBtn.title = 'próximo Mês';
+                        rightBtn.className = 'p-1.5 rounded-full   ';
+                        rightBtn.title = 'prï¿½ximo Mï¿½s';
                         rightBtn.innerHTML = '<span class="material-symbols-outlined">chevron_right</span>';
                         navWrap.appendChild(rightBtn);
                     }
-                    // handler to refresh modal content for new current month
+
                     const refreshModalForCurrentMonth = () => {
                         try {
-                            // recompute using the same meta/income but with updated state.currentDate
+
                             const yearNow = state.currentDate.getFullYear();
                             const monthNow = state.currentDate.getMonth() + 1;
-                            // update label
+
                             const lbl = document.getElementById('salary-breakdown-month-label');
                             if (lbl) lbl.textContent = state.currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-                            // rebuild params and recalc: reuse meta and income
+
                             const parsedHoursNow = parseHoursRaw(meta.hoursTrabalhadas || meta.horasTrabalhadas || meta.hoursWorked || meta.hours || '');
                             const paramsNow = Object.assign({}, params, { year: yearNow, month: monthNow, hoursTrabalhadas: parsedHoursNow });
                             const newCalc = calcularSalarioLiquido(paramsNow);
-                            // replace content by recursively calling the original builder: easiest is to set income and call openSalaryBreakdown again
-                            // but to avoid stacking handlers, call content builder code path by updating params and re-executing this function's body up to contentEl.innerHTML
-                            // Simple approach: set contentEl.innerHTML = '' and call openSalaryBreakdown(income) to rebuild modal
+
                             contentEl.innerHTML = '';
-                            // slight delay to allow closing operations and avoid duplicate element IDs
-                            setTimeout(() => openSalaryBreakdown(income), 0);
+                            openSalaryBreakdown(income);
                         } catch (e) { console.error('refreshModalForCurrentMonth', e); }
                     };
 
-                    // attach click handlers
                     leftBtn.onclick = (ev) => { ev.preventDefault(); changeMonth(-1); refreshModalForCurrentMonth(); };
                     rightBtn.onclick = (ev) => { ev.preventDefault(); changeMonth(1); refreshModalForCurrentMonth(); };
                     todayBtn.onclick = (ev) => { ev.preventDefault(); const now = new Date(); state.currentDate = new Date(now.getFullYear(), now.getMonth(), 1); refreshModalForCurrentMonth(); };
                 } catch(e){ console.error('build modal title with nav', e); }
 
-                // Determine whether VR/VT were previously edited (persisted) for this month so we only show the edit icon when relevant
                 const roundLocal = (v) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
-                // find ledger entries matching this salary meta (if present) or by description fallback
-                const findVREntry = (Array.isArray(md.vrLedger) ? md.vrLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(md.vrLedger) ? md.vrLedger.find(l => l && (l.description || '').toLowerCase().includes('benefí­cio') && (l.description || '').toLowerCase().includes('vr')) : null);
-                const findVTEntry = (Array.isArray(md.vtLedger) ? md.vtLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(md.vtLedger) ? md.vtLedger.find(l => l && (l.description || '').toLowerCase().includes('benefí­cio') && (l.description || '').toLowerCase().includes('vt')) : null);
-                // compute defaults used for comparison before checking if persisted ledgers were edited
+
+                const findVREntry = (Array.isArray(md.vrLedger) ? md.vrLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(md.vrLedger) ? md.vrLedger.find(l => l && (l.description || '').toLowerCase().includes('benefï¿½ï¿½cio') && (l.description || '').toLowerCase().includes('vr')) : null);
+                const findVTEntry = (Array.isArray(md.vtLedger) ? md.vtLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(md.vtLedger) ? md.vtLedger.find(l => l && (l.description || '').toLowerCase().includes('benefï¿½ï¿½cio') && (l.description || '').toLowerCase().includes('vt')) : null);
+
                 const benDiasBase = diasUteisNoMes(year, month) + 1;
                 const vrPerDay = Number(detalhe.beneficios && detalhe.beneficios.valorDesjejumDia || params.valorDesjejumDia || 0);
                 const vtPerDay = Number(detalhe.beneficios && detalhe.beneficios.valorTransporteDia || params.valorTransporteDia || 0);
@@ -10772,28 +6188,25 @@ const firebaseConfig = {
                 const vrEdited = !!findVREntry && roundLocal(Number(findVREntry.amount || 0)) !== roundLocal(vrDefault);
                 const vtEdited = !!findVTEntry && roundLocal(Number(findVTEntry.amount || 0)) !== roundLocal(vtDefault);
                 const showDaysIcon = vrEdited || vtEdited;
-
-                const pencilSvg = '<svg class="inline-block ml-1" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21v-3.75L14.81 5.44a1.5 1.5 0 0 1 2.12 0l1.63 1.63a1.5 1.5 0 0 1 0 2.12L6.75 21H3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                const pencilSvg = '<svg class="inline-block ml-1" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http:
                 const vrIconHtml = vrEdited ? pencilSvg : '';
                 const vtIconHtml = vtEdited ? pencilSvg : '';
                 const daysIconHtml = showDaysIcon ? pencilSvg : '';
 
-                // Build card-based layout for clarity
                 let html = '';
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
 
-                // Left column: resumo (salí¡rio, descontos, lí­quido, remuneração, FGTS)
                 html += `<div class="p-3 bg-white rounded shadow-sm">`;
                 html += `<h4 class="font-semibold mb-2">Resumo</h4>`;
-                html += `<div class="mb-1"><strong>Salí¡rio base:</strong> ${formatCurrency(Number(params.salarioBase) || 0)}</div>`;
+                html += `<div class="mb-1"><strong>Salï¿½ï¿½rio base:</strong> ${formatCurrency(Number(params.salarioBase) || 0)}</div>`;
                 if (typeof params.hoursTrabalhadas !== 'undefined') {
-                    // show hours used (decimal + HH:MM)
+
                     const hh = Math.floor(params.hoursTrabalhadas);
                     const mm = Math.round((params.hoursTrabalhadas - hh) * 60);
                     const mmPadded = String(mm).padStart(2, '0');
                     html += `<div class="mb-1 text-sm text-gray-600">Horas consideradas: ${params.hoursTrabalhadas.toFixed(2)} h (${hh}:${mmPadded})</div>`;
                 }
-                // Periculosidade (if present on the salary meta)
+
                 const perc = Number(params.percentualPericulosidade || 0);
                 if (perc && perc > 0) {
                     try {
@@ -10801,77 +6214,64 @@ const firebaseConfig = {
                         html += `<div class="mb-1"><strong>Periculosidade (${perc}%):</strong> ${formatCurrency(percVal)}</div>`;
                     } catch(e) { /* ignore periculosidade render errors */ }
                 }
-                html += `<div class="mb-1"><strong>Salí¡rio bruto tribuTí¡vel:</strong> ${formatCurrency(Number(resumo.salarioBrutoTributavel || 0))}</div>`;
-                // INSS: show total and effective percent relative to bruto
+                html += `<div class="mb-1"><strong>Salï¿½ï¿½rio bruto tribuTï¿½ï¿½vel:</strong> ${formatCurrency(Number(resumo.salarioBrutoTributavel || 0))}</div>`;
+
                 const inssTotal = Number(detalhe.descontos && detalhe.descontos.inssTotal || detalhe.inssTotal || 0);
                 const inssPercent = resumo.salarioBrutoTributavel ? ((inssTotal / Number(resumo.salarioBrutoTributavel)) * 100) : 0;
                 html += `<div class="mb-1"><strong>INSS (total):</strong> ${formatCurrency(inssTotal)} (${inssPercent.toFixed(2)}%)</div>`;
-                // IRRF
+
                 const irrfValue = Number(detalhe.descontos && detalhe.descontos.irrfValue || detalhe.irrfValue || 0);
                 html += `<div class="mb-1"><strong>IRRF:</strong> ${formatCurrency(irrfValue)}</div>`;
                 html += `<div class="mb-1"><strong>Total descontos:</strong> ${formatCurrency(Number(resumo.totalDescontos || 0))}</div>`;
-                html += `<div class="mb-2"><strong>Salí¡rio lí­quido:</strong> <span class="text-indigo-600 font-semibold">${formatCurrency(Number(resumo.salarioLiquido || 0))}</span></div>`;
-                html += `<div class="mb-1"><strong>Benefí­cios (total):</strong> ${formatCurrency(Number(resumo.beneficiosTotais || 0))}</div>`;
-                html += `<div class="mb-1"><strong>Remuneração total:</strong> ${formatCurrency(Number(resumo.remuneracaoTotal || 0))}</div>`;
-                html += `<div class="mt-2 text-xs text-gray-500">FGTS (8% sobre o bruto tribuTí¡vel): ${formatCurrency(Number(detalhe.encargos && detalhe.encargos.fgts || 0))}</div>`;
+                html += `<div class="mb-2"><strong>Salï¿½ï¿½rio lï¿½ï¿½quido:</strong> <span class="text-indigo-600 font-semibold">${formatCurrency(Number(resumo.salarioLiquido || 0))}</span></div>`;
+                html += `<div class="mb-1"><strong>Benefï¿½ï¿½cios (total):</strong> ${formatCurrency(Number(resumo.beneficiosTotais || 0))}</div>`;
+                html += `<div class="mb-1"><strong>Remuneraï¿½ï¿½o total:</strong> ${formatCurrency(Number(resumo.remuneracaoTotal || 0))}</div>`;
+                html += `<div class="mt-2 text-xs text-gray-500">FGTS (8% sobre o bruto tribuTï¿½ï¿½vel): ${formatCurrency(Number(detalhe.encargos && detalhe.encargos.fgts || 0))}</div>`;
                 html += `</div>`;
 
-                // Right column: cards for VR and VT benefits and detalhe de descontos
                 html += `<div class="space-y-3">`;
-                // base days and defaults are computed earlier (to support icon/display logic)
 
                 html += `<div class="p-3 bg-white rounded shadow-sm">`;
-                html += `<h4 class="font-semibold mb-2">Benefí­cio VR (Desjejum)</h4>`;
+                html += `<h4 class="font-semibold mb-2">Benefï¿½ï¿½cio VR (Desjejum)</h4>`;
                 html += `<div class="mb-1">Valor por dia: ${formatCurrency(vrPerDay)}</div>`;
                 html += `<div class="mb-1">Dias considerados: <span id="salary-days" class="text-indigo-600 cursor-pointer inline-block ml-2">${benDiasBase}${daysIconHtml ? ' ' + daysIconHtml : ''}</span></div>`;
-                // show total VR as clickable value (click to edit)
+
                 html += `<div class="mb-1"><label class="text-sm text-gray-600 inline">Total VR:</label> <span id="salary-vr-total" class="font-semibold text-indigo-600 cursor-pointer inline-block ml-2">${formatCurrency(vrDefault)}${vrIconHtml ? ' ' + vrIconHtml : ''}</span></div>`;
                 html += `</div>`;
-
                 html += `<div class="p-3 bg-white rounded shadow-sm">`;
-                html += `<h4 class="font-semibold mb-2">Benefí­cio VT (Transporte)</h4>`;
+                html += `<h4 class="font-semibold mb-2">Benefï¿½ï¿½cio VT (Transporte)</h4>`;
                 html += `<div class="mb-1">Valor por dia: ${formatCurrency(vtPerDay)}</div>`;
                 html += `<div class="mb-1">Dias considerados: <span class="salary-days-display text-indigo-600 cursor-pointer inline-block ml-2">${benDiasBase}${daysIconHtml ? ' ' + daysIconHtml : ''}</span></div>`;
                 html += `<div class="mb-1"><label class="text-sm text-gray-600 inline">Total VT:</label> <span id="salary-vt-total" class="font-semibold text-indigo-600 cursor-pointer inline-block ml-2">${formatCurrency(vtDefault)}${vtIconHtml ? ' ' + vtIconHtml : ''}</span></div>`;
                 html += `</div>`;
 
-                // Combined benefits card
                 html += `<div class="p-3 bg-white rounded shadow-sm">`;
-                html += `<h4 class="font-semibold mb-2">Benefí­cios - Total</h4>`;
+                html += `<h4 class="font-semibold mb-2">Benefï¿½ï¿½cios - Total</h4>`;
                 html += `<div class="mb-1 font-semibold">VR + VT = <span id="salary-benefits-total">${formatCurrency(Math.round((vrDefault + vtDefault) * 100) / 100)}</span></div>`;
                 html += `</div>`;
-
-                html += `</div>`; // end right column
-
-                html += `</div>`; // end grid
-
+                html += `</div>`; 
+                html += `</div>`; 
                 contentEl.innerHTML = html;
 
-                // wire up click-to-edit for VR/VT totals and days; support quick inline edit and persist
                 try {
                     const vrEl = document.getElementById('salary-vr-total');
                     const vtEl = document.getElementById('salary-vt-total');
                     const daysEl = document.getElementById('salary-days');
                     const benefitsTotalEl = document.getElementById('salary-benefits-total');
-
                     const roundMoney = (v) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
-
                     const getNumericFromSpan = (el, fallback) => {
                         if (!el) return fallback || 0;
                         const txt = (el.textContent || '').replace(/[R$\s\.]/g, '').replace(',', '.');
                         const n = parseFloat(txt);
                         return isNaN(n) ? (fallback || 0) : n;
                     };
-
                     const setSpanCurrency = (el, value) => { if (!el) return; el.textContent = formatCurrency(roundMoney(value)); };
                     const setDaysDisplay = (v) => { const els = document.querySelectorAll('.salary-days-display'); els.forEach(e => { e.textContent = String(v); }); if (daysEl) daysEl.textContent = String(v); };
-
                     const recalcBenefitsTotal = () => {
                         const vr = getNumericFromSpan(vrEl, vrDefault);
                         const vt = getNumericFromSpan(vtEl, vtDefault);
                         if (benefitsTotalEl) benefitsTotalEl.textContent = formatCurrency(roundMoney(vr + vt));
                     };
-
                     const upsertLedger = async (typeName, amount) => {
                         try {
                             const mdNow = getCurrentMonthData();
@@ -10879,19 +6279,18 @@ const firebaseConfig = {
                             if (typeName === 'VR') {
                                 if (!Array.isArray(mdNow.vrLedger)) mdNow.vrLedger = [];
                                 let entry = mdNow.vrLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta));
-                                if (!entry) entry = mdNow.vrLedger.find(l => l && (l.description || '').toLowerCase().includes('benefí­cio') && (l.description || '').toLowerCase().includes('vr'));
-                                if (entry) entry.amount = roundMoney(amount); else mdNow.vrLedger.push({ id: generateUUID(), description: 'Benefí­cio - VR', amount: roundMoney(amount), recurringId: null, isRecurring: false, salaryMeta: meta || null });
+                                if (!entry) entry = mdNow.vrLedger.find(l => l && (l.description || '').toLowerCase().includes('benefï¿½ï¿½cio') && (l.description || '').toLowerCase().includes('vr'));
+                                if (entry) entry.amount = roundMoney(amount); else mdNow.vrLedger.push({ id: generateUUID(), description: 'Benefï¿½ï¿½cio - VR', amount: roundMoney(amount), recurringId: null, isRecurring: false, salaryMeta: meta || null });
                             } else if (typeName === 'VT') {
                                 if (!Array.isArray(mdNow.vtLedger)) mdNow.vtLedger = [];
                                 let entry = mdNow.vtLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta));
-                                if (!entry) entry = mdNow.vtLedger.find(l => l && (l.description || '').toLowerCase().includes('benefí­cio') && (l.description || '').toLowerCase().includes('vt'));
-                                if (entry) entry.amount = roundMoney(amount); else mdNow.vtLedger.push({ id: generateUUID(), description: 'Benefí­cio - VT', amount: roundMoney(amount), recurringId: null, isRecurring: false, salaryMeta: meta || null });
+                                if (!entry) entry = mdNow.vtLedger.find(l => l && (l.description || '').toLowerCase().includes('benefï¿½ï¿½cio') && (l.description || '').toLowerCase().includes('vt'));
+                                if (entry) entry.amount = roundMoney(amount); else mdNow.vtLedger.push({ id: generateUUID(), description: 'Benefï¿½ï¿½cio - VT', amount: roundMoney(amount), recurringId: null, isRecurring: false, salaryMeta: meta || null });
                             }
-                            try { await storage.saveData(state.appData); showToast('Benefí­cio salvo para o Mês.', 'bg-green-600'); } catch(e){ console.error('save benefit', e); showToast('Falha ao salvar benefí­cio.', 'bg-red-600'); }
+                            try { await storage.saveData(state.appData); showToast('Benefï¿½ï¿½cio salvo para o Mï¿½s.', 'bg-green-600'); } catch(e){ console.error('save benefit', e); showToast('Falha ao salvar benefï¿½ï¿½cio.', 'bg-red-600'); }
                             render();
                         } catch(e) { console.error('upsertLedger', e); }
                     };
-
                     const makeEditor = (anchorEl, initialValue, onCommit, opts) => {
                         opts = opts || {};
                         if (!anchorEl) return;
@@ -10901,7 +6300,7 @@ const firebaseConfig = {
                         input.value = initialValue;
                         input.className = 'inline-edit-input border px-1 py-0 rounded text-right';
                         input.style.minWidth = '80px';
-                        // keep a reference to anchor id and classes so we can restore a similar element after commit
+
                         const anchorId = anchorEl.id || '';
                         const anchorClass = anchorEl.className || '';
                         const anchorParent = anchorEl.parentNode;
@@ -10915,7 +6314,7 @@ const firebaseConfig = {
                             } catch(e) { /* pass */ }
                             let commitResult = null;
                             try { commitResult = await onCommit(v); } catch(e){ console.error('onCommit editor', e); }
-                            // Build a replacement span to restore the UI where possible (text + optional icon)
+
                             try {
                                 const displayText = (opts.type === 'number') ? (typeof commitResult === 'object' && commitResult.display ? commitResult.display : formatCurrency(Number(v) || 0)) : String(v);
                                 const span = document.createElement('span');
@@ -10923,15 +6322,15 @@ const firebaseConfig = {
                                 span.className = anchorClass;
                                 span.style.minWidth = input.style.minWidth;
                                 span.textContent = displayText;
-                                // append icon HTML if provided by commitResult
+
                                 if (commitResult && commitResult.showIconHtml) {
                                     const wrap = document.createElement('span');
                                     wrap.innerHTML = ' ' + commitResult.showIconHtml;
-                                    // append icon node
+
                                     if (wrap.firstChild) span.appendChild(wrap.firstChild);
                                 }
                                 if (anchorParent) anchorParent.replaceChild(span, input);
-                                // invoke optional restore handler so callers can re-attach click listeners
+
                                 if (opts.onRestore && typeof opts.onRestore === 'function') {
                                     try { opts.onRestore(span, v, commitResult); } catch(e) { console.error('onRestore', e); }
                                 }
@@ -10941,7 +6340,6 @@ const firebaseConfig = {
                         input.addEventListener('blur', commit);
                         input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } if (e.key === 'Escape') { render(); } });
                     };
-
                     if (vrEl) {
                         const attachVREdit = (el) => {
                             try {
@@ -10950,16 +6348,16 @@ const firebaseConfig = {
                                     const cur = getNumericFromSpan(el, vrDefault);
                                     makeEditor(el, String(cur), async (newVal) => {
                                         const num = parseFloat(String(newVal).replace(',', '.')) || 0;
-                                        // persist
+
                                         await upsertLedger('VR', num);
-                                        // return display and icon for restoration
+
                                         return { display: formatCurrency(num), showIconHtml: pencilSvg };
                                     }, {
                                         type: 'number', step: '0.01',
                                         onRestore: (span) => {
-                                            // reattach edit handler to restored span
+
                                             attachVREdit(span);
-                                            // update totals display
+
                                             try { setSpanCurrency(document.getElementById('salary-vr-total'), parseFloat((span.textContent||'').replace(/[R$\s\.]/g,'').replace(',', '.'))||0); } catch(e){}
                                             recalcBenefitsTotal();
                                         }
@@ -10969,7 +6367,6 @@ const firebaseConfig = {
                         };
                         attachVREdit(vrEl);
                     }
-
                     if (vtEl) {
                         const attachVTEdit = (el) => {
                             try {
@@ -10994,7 +6391,6 @@ const firebaseConfig = {
                         attachVTEdit(vtEl);
                     }
 
-                    // attach the days editor to both the main #salary-days and any .salary-days-display elements (VT card)
                     const daysDisplays = [];
                     if (daysEl) daysDisplays.push(daysEl);
                     document.querySelectorAll('.salary-days-display').forEach(d => daysDisplays.push(d));
@@ -11006,22 +6402,22 @@ const firebaseConfig = {
                                     const cur = parseInt((el.textContent || String(benDiasBase)).replace(/[^0-9\-]/g, ''), 10) || benDiasBase;
                                     makeEditor(el, String(cur), async (newVal) => {
                                         const num = parseInt(String(newVal).replace(/[^0-9\-]/g, ''), 10) || benDiasBase;
-                                        // compute new totals
+
                                         const vrPer = vrPerDay || 0;
                                         const vtPer = vtPerDay || 0;
                                         const newVR = Math.round((vrPer * num + Number.EPSILON) * 100) / 100;
                                         const newVT = Math.round((vtPer * num + Number.EPSILON) * 100) / 100;
-                                        // persist both ledgers
+
                                         await upsertLedger('VR', newVR);
                                         await upsertLedger('VT', newVT);
-                                        // return display for days and signal icon
+
                                         return { display: String(num), showIconHtml: pencilSvg };
                                     }, {
                                         type: 'number', step: '1',
                                         onRestore: (span, v, commitResult) => {
-                                            // restore click handler
+
                                             attachDaysEdit(span);
-                                            // update displayed VR/VT spans from persisted ledgers (or from computed values)
+
                                             try {
                                                 const mdNow = getCurrentMonthData();
                                                 const vrEntry = (Array.isArray(mdNow.vrLedger) ? mdNow.vrLedger.find(l => l && l.salaryMeta && JSON.stringify(l.salaryMeta) === JSON.stringify(meta)) : null) || (Array.isArray(mdNow.vrLedger) ? mdNow.vrLedger.find(l => l && (l.description||'').toLowerCase().includes('vr')) : null);
@@ -11038,28 +6434,24 @@ const firebaseConfig = {
                         } catch(e) { console.error('attach days editor', e); }
                     });
 
-                    // initial totals
                     recalcBenefitsTotal();
                 } catch (e) { console.error('wire salary vr/vt click-to-edit', e); }
-
                 try { modal.showModal(); } catch(e){ console.error('openSalaryBreakdown show', e); }
             } catch (e) { console.error('openSalaryBreakdown', e); }
         }
-
         function closeSalaryBreakdown() {
             try { const m = document.getElementById('salary-breakdown-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeSalaryBreakdown', e); }
         }
-
         function toggleInstallmentSection(paymentMethodName) {
             try {
                 const method = (state.appData.settings.paymentMethods || []).find(p => p.name === paymentMethodName);
                 if (ui.installmentsSection) ui.installmentsSection.classList.toggle('hidden', !method || method.type !== 'credit_card');
-                // financing section only for expenses
+
                 if (ui.financingSection && ui.transactionTypeInput && ui.transactionTypeInput.value === 'expenses') {
                     ui.financingSection.classList.remove('hidden');
                     const financingCheckbox = document.getElementById('is-financing');
                     if (financingCheckbox) {
-                        // Use addEventListener to avoid overwriting other handlers and ensure independence
+
                         financingCheckbox.addEventListener && financingCheckbox.addEventListener('change', function() {
                             const ff = document.getElementById('financing-fields'); if (ff) ff.classList.toggle('active', this.checked);
                         });
@@ -11068,10 +6460,9 @@ const firebaseConfig = {
             } catch (e) { console.error('toggleInstallmentSection', e); }
         }
 
-        // Reset transaction modal inputs to sensible defaults
         function resetTransactionModalDefaults() {
             try {
-                // Default payment: first debit method if available, else first paymentMethod
+
                 const payments = (state.appData.settings && state.appData.settings.paymentMethods) || [];
                 let defaultPayment = '';
                 try {
@@ -11079,40 +6470,38 @@ const firebaseConfig = {
                     if (debit) defaultPayment = debit.name;
                 } catch(e) {}
                 if (!defaultPayment && payments.length) defaultPayment = payments[0].name || '';
-                // Fallbacks
+
                 if (!defaultPayment) defaultPayment = 'Pix';
                 if (document.getElementById('payment-method')) document.getElementById('payment-method').value = defaultPayment;
-                // Default category: Contas if exists, else first expense category
+
                 const expenseCats = (state.appData.settings && state.appData.settings.expenseCategories) || [];
                 let defaultCat = expenseCats.find(c => (c||'').toString().toLowerCase().includes('conta')) || expenseCats[0] || 'Contas';
                 if (document.getElementById('category-expense')) document.getElementById('category-expense').value = defaultCat;
-                // Reset recurring and hide installment/financing fields but do not force-uncheck the checkboxes
+
                 const recurring = document.getElementById('is-recurring'); if (recurring) recurring.checked = false;
                 const instFields = document.getElementById('installments-fields'); if (instFields) instFields.classList.remove('active');
                 const financFields = document.getElementById('financing-fields'); if (financFields) financFields.classList.remove('active');
-                // Clear description and amount inputs
+
                 const desc = document.getElementById('description'); if (desc) desc.value = '';
                 const amt = document.getElementById('amount'); if (amt) amt.value = '';
-                // Reset modal-expanded class
+
                 try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.remove('modal-expanded'); } catch(e){}
             } catch (e) { console.error('resetTransactionModalDefaults', e); }
         }
 
-        // Prepare modal inputs for the next entry: prefer session last-used values when present
         function prepareModalForNextEntry() {
             try {
-                // If session has last defaults, use them
+
                 if (ui.lastTransactionDefaults && typeof ui.lastTransactionDefaults === 'object') {
                     const d = ui.lastTransactionDefaults;
                     if (document.getElementById('payment-method') && d.payment) document.getElementById('payment-method').value = d.payment;
                     if (document.getElementById('category-expense') && d.category) document.getElementById('category-expense').value = d.category;
                     return;
                 }
-                // otherwise apply global defaults
+
                 resetTransactionModalDefaults();
             } catch (e) { console.error('prepareModalForNextEntry', e); }
         }
-
         function populateModal(type, id) {
             try {
                 const transaction = getCurrentMonthData()[type].find(t => t.id === id);
@@ -11121,7 +6510,7 @@ const firebaseConfig = {
                 document.getElementById('description').value = transaction.description || '';
                 document.getElementById('amount').value = transaction.amount || '';
                 document.getElementById('is-recurring').checked = !!transaction.isRecurring;
-                // If this transaction is recurring, enable the apply-to-future checkbox default to false (user decides)
+
                 try { if (ui.applyToFuture) ui.applyToFuture.checked = false; } catch(e) {}
                 if (type === 'expenses') {
                     if (document.getElementById('payment-method')) document.getElementById('payment-method').value = transaction.payment || '';
@@ -11130,7 +6519,7 @@ const firebaseConfig = {
                         const financingCheckbox = document.getElementById('is-financing');
                         if (financingCheckbox) {
                             financingCheckbox.checked = true;
-                            // ensure the financing fields are shown (some handlers show/hide on change)
+
                             if (typeof financingCheckbox.onchange === 'function') financingCheckbox.onchange();
                             const ff = document.getElementById('financing-fields'); if (ff) ff.classList.add('active');
                         }
@@ -11140,21 +6529,21 @@ const firebaseConfig = {
                 } else if (type === 'savings') {
                     if (document.getElementById('category-saving')) document.getElementById('category-saving').value = transaction.category || '';
                 } else if (type === 'incomes') {
-                    // If this income was created as part of a salary breakdown, it may carry salaryMeta
+
                     if (transaction.source && transaction.salaryMeta) {
-                        // Open salary section and prefill fields
+
                         const isSalaryCheckbox = document.getElementById('is-salary');
                         const salaryFields = document.getElementById('salary-fields');
                         try {
                             if (isSalaryCheckbox) {
                                 isSalaryCheckbox.checked = true;
                                 if (salaryFields) salaryFields.classList.remove('hidden');
-                                // expand modal when editing salary-related income
+
                                 const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.add('modal-expanded');
                             }
                         } catch(e){}
                         const meta = transaction.salaryMeta || {};
-                        // Only fill main salary inputs when source is 'salary' (salary lí­quido)
+
                         if (transaction.source === 'salary') {
                             document.getElementById('salary-base').value = meta.salarioBase || '';
                             document.getElementById('salary-periculosidade').value = meta.percentualPericulosidade || '';
@@ -11166,13 +6555,11 @@ const firebaseConfig = {
                             document.getElementById('salary-jornada-horas').value = meta.jornadaMensalHoras || '';
                             document.getElementById('salary-horas-trabalhadas').value = meta.horasTrabalhadasRaw || meta.horasTrabalhadas || '';
                         }
-                        // For benefit entries (VT/VR) we keep them editable per-month (they are not auto-recurring when edited)
-                        // but we still show salary meta so user can edit if needed.
+
                     }
                 }
             } catch (e) { console.error('populateModal', e); }
         }
-
         function openGoalModal(id = null) {
             try {
                 const modal = ui.goalModal;
@@ -11194,21 +6581,20 @@ const firebaseConfig = {
             } catch (e) { console.error('openGoalModal', e); }
         }
 
-        // Monthly and Annual report helpers
         function openMonthlyReport() {
             try {
-                // Build and show monthly report modal
+
                 const monthData = getCurrentMonthData();
                 const totalIncome = (monthData.incomes || []).reduce((s,t)=>s+(t.amount||0),0);
-                // Recalculate outcomes using invoice (fatura) totals for credit cards to avoid divergence.
+
                 const expenses = monthData.expenses || [];
                 const year = state.currentDate.getFullYear();
                 const month = String(state.currentDate.getMonth() + 1).padStart(2, '0');
                 const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
                 const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
-                // Sum expenses that are NOT paid with cards (tolerant matching)
+
                 const nonCardExpensesSum = expenses.filter(e => !cardMethods.some(c => paymentMatches(e.payment || '', c.name))).reduce((s,t)=>s+(t.amount||0),0);
-                // Sum invoice totals per-card (total of card expenses minus any anticipations)
+
                 const cardAnticipations = (state.appData.data[year] && state.appData.data[year][month] && state.appData.data[year][month].cardAnticipations) || {};
                 let totalInvoices = 0;
                 cardMethods.forEach(card => {
@@ -11225,30 +6611,30 @@ const firebaseConfig = {
                 const inEl = document.getElementById('mr-total-income'); if (inEl) inEl.textContent = formatCurrency(totalIncome);
                 const outEl = document.getElementById('mr-total-outcome'); if (outEl) outEl.textContent = formatCurrency(totalOutcome);
                 const finEl = document.getElementById('mr-final-balance'); if (finEl) finEl.textContent = formatCurrency(finalBalance);
-                renderMonthlySavingsChart();
+
                 renderMonthlyReportCategoryChart();
-                // Populate top expenses list (include card invoices as single entries)
+
                 try {
                     const topList = document.getElementById('mr-top-expenses-list');
                     if (topList) {
                         topList.innerHTML = '';
                         const contributors = [];
-                        // add non-card individual expenses (tolerant matching)
+
                         (expenses || []).filter(e => !cardMethods.some(c => paymentMatches(e.payment || '', c.name))).forEach(e => {
                             contributors.push({ id: `exp-${generateUUID()}`, label: e.description || 'Despesa', amount: Number(e.amount)||0, count: 1, kind: 'expense' });
                         });
-                        // add one entry per card: invoice total
+
                         cardMethods.forEach(card => {
                             const cardExpenses = (expenses || []).filter(e => paymentMatches(e.payment || '', card.name));
                             const totalBeforeAnticipation = cardExpenses.reduce((s,t)=>s+(t.amount||0),0);
                             const anticipated = Number(cardAnticipations[card.name] || 0);
                             const invoiceTotal = Math.round(((totalBeforeAnticipation - anticipated) + Number.EPSILON) * 100) / 100;
-                            // Only include card invoice if it contributes something (non-zero) or there are expenses
+
                             if ((invoiceTotal !== 0) || cardExpenses.length > 0) {
                                 contributors.push({ id: `card-${card.name}`, label: `Fatura ${card.name}`, amount: invoiceTotal, count: cardExpenses.length, kind: 'invoice' });
                             }
                         });
-                        // sort contributors by amount desc and take top 8
+
                         const topContributors = contributors.slice().sort((a,b) => (b.amount||0) - (a.amount||0)).slice(0,8);
                         if (topContributors.length === 0) topList.innerHTML = '<li class="text-gray-500">Nenhuma despesa registrada.</li>';
                         topContributors.forEach(c => {
@@ -11256,14 +6642,14 @@ const firebaseConfig = {
                             li.className = 'flex justify-between items-center gap-3';
                             const left = document.createElement('span');
                             left.className = 'flex items-center gap-2';
-                            // determine icon: invoice -> payment/card icon, expense -> category icon
+
                             let iconName = '';
                             if (c.kind === 'invoice') {
-                                // extract card name from label 'Fatura <cardName>' or id
+
                                 const m = c.id && c.id.startsWith('card-') ? c.id.replace(/^card-/, '') : (c.label || '').replace(/^Fatura\s*/i, '');
                                 iconName = (typeof getIconFor === 'function') ? getIconFor('payment', m) : '';
                             } else if (c.kind === 'expense') {
-                                // try to find an expense entry that matches this label to get category
+
                                 const match = (expenses || []).find(e => (e.description || '').toString() === c.label || (c.label || '').indexOf(e.description || '') !== -1);
                                 iconName = (typeof getIconFor === 'function') ? getIconFor('category', match ? match.category : '') : '';
                             }
@@ -11284,12 +6670,11 @@ const firebaseConfig = {
                 const modal = ui.monthlyReportModal; if (modal) modal.showModal();
             } catch(e){console.error('openMonthlyReport', e)}
         }
-
         function openAnnualReport() {
             try {
                 const year = state.currentDate.getFullYear();
                 document.getElementById('annual-report-title').textContent = year;
-                // compute yearly totals
+
                 const yearData = state.appData.data[year] || {};
                 const months = Object.keys(yearData);
                 let totalInc = 0, totalOut = 0;
@@ -11302,15 +6687,12 @@ const firebaseConfig = {
                 const inEl = document.getElementById('ar-total-income'); if (inEl) inEl.textContent = formatCurrency(totalInc);
                 const outEl = document.getElementById('ar-total-outcome'); if (outEl) outEl.textContent = formatCurrency(totalOut);
                 const finEl = document.getElementById('ar-final-balance'); if (finEl) finEl.textContent = formatCurrency(final);
-                // Render annual charts
+
                 renderAnnualBalanceEvolutionChart();
                 renderAnnualAvgCategoryChart();
                 const modal = ui.annualReportModal; if (modal) modal.showModal();
             } catch(e){console.error('openAnnualReport', e)}
         }
-
-
-
         async function handleGoalFormSubmit(e) {
             try {
                 e.preventDefault();
@@ -11327,19 +6709,15 @@ const firebaseConfig = {
                 try {
                     await storage.saveData(state.appData);
                 } catch (e) {
-                    console.error('Erro ao salvar meta:', e);
+
                     showToast('Falha ao salvar meta no Firebase.', 'bg-red-600');
                 }
                 closeModal('goal-modal');
             } catch(e){console.error('handleGoalFormSubmit', e)}
         }
 
-        // --- Lí“GICA DE TRANSAí‡í•ES (Adicionar, Editar, Excluir) ---
-
-        // funçÕES auxiliares (definidas antes do uso para evitar ReferenceError)
         async function updateFutureRecurrences(recurringId, newTransaction, type) {
-            const affectedGoals = new Set(); // Track goalIds from affected savings
-            
+            const affectedGoals = new Set(); 
             Object.keys(state.appData.data).forEach(year => {
                 Object.keys(state.appData.data[year]).forEach(month => {
                     const monthData = state.appData.data[year][month];
@@ -11347,12 +6725,11 @@ const firebaseConfig = {
                         monthData[type] = monthData[type].map(item => {
                             const itemDate = new Date(year, month - 1);
                             if (item.recurringId === recurringId && itemDate > state.currentDate) {
-                                // Track goalId if this is a savings entry
+
                                 if (type === 'savings' && (item.goalId || newTransaction.goalId)) {
                                     if (item.goalId) affectedGoals.add(item.goalId);
                                     if (newTransaction.goalId) affectedGoals.add(newTransaction.goalId);
                                 }
-                                
                                 return { 
                                     ...item, 
                                     description: newTransaction.description,
@@ -11360,7 +6737,7 @@ const firebaseConfig = {
                                     category: newTransaction.category,
                                     payment: newTransaction.payment,
                                     type: newTransaction.type,
-                                    goalId: newTransaction.goalId || item.goalId // Preserve or update goalId
+                                    goalId: newTransaction.goalId || item.goalId 
                                 };
                             }
                             return item;
@@ -11368,26 +6745,16 @@ const firebaseConfig = {
                     }
                 });
             });
-            
-
         }
 
-        // Rebuild future financing installments when the user edits an installment.
-        // This will remove future installments (after the original edited one) and
-        // recreate them starting from the edited installment's month using the
-        // edited currentFinancing and totalFinancing values. This keeps numbering
-        // and dates consistent with user's edit (e.g. changing current installment
-        // to a different number will shift the schedule).
         function updateAllFinancing(financingId, originalCurrentFinancing, newTransaction) {
             try {
                 const newCurrent = Number(newTransaction.currentFinancing) || originalCurrentFinancing;
                 const newTotal = Number(newTransaction.totalFinancing) || null;
                 if (!newTotal || newTotal < newCurrent) return;
 
-                // Edited installment month (we edit the transaction in the currently viewed month)
                 const editedMonthStart = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1);
 
-                // 1) Remove any future installments that belong to this financing and are scheduled after the edited month
                 Object.keys(state.appData.data).forEach(year => {
                     Object.keys(state.appData.data[year]).forEach(month => {
                         const monthStart = new Date(Number(year), Number(month) - 1, 1);
@@ -11395,21 +6762,19 @@ const firebaseConfig = {
                         if (monthData.expenses && Array.isArray(monthData.expenses)) {
                             monthData.expenses = monthData.expenses.filter(exp => {
                                 if (exp.financingId !== financingId) return true;
-                                // keep installments that are in or before the edited month; remove those after
+
                                 return monthStart <= editedMonthStart;
                             });
                         }
                     });
                 });
 
-                // 2) Recreate installments from newCurrent+1 .. newTotal starting from edited month + 1
                 for (let k = newCurrent + 1; k <= newTotal; k++) {
-                    const monthOffset = k - newCurrent; // 1 => next month
+                    const monthOffset = k - newCurrent; 
                     const targetDate = new Date(editedMonthStart);
                     targetDate.setMonth(editedMonthStart.getMonth() + monthOffset);
                     const targetMonthData = getCurrentMonthData(targetDate);
                     if (!Array.isArray(targetMonthData.expenses)) targetMonthData.expenses = [];
-
                     const newInst = {
                         ...newTransaction,
                         id: generateUUID(),
@@ -11418,21 +6783,16 @@ const firebaseConfig = {
                         totalFinancing: newTotal,
                         isPaid: false
                     };
-
                     targetMonthData.expenses.push(newInst);
                 }
             } catch (e) {
                 console.error('updateAllFinancing (rebuild) error', e);
             }
         }
-        
-    // createInstallments(baseTransaction, count, start) - start: current installment number (default 1)
+
     async function createInstallments(baseTransaction, count, start = 1) {
             const installmentId = generateUUID();
-            // If a start/current installment > 1 is provided, the user is registering
-            // an in-progress parcel and expects the provided amount to be the
-            // per-installment value (do NOT divide by total). Otherwise divide
-            // the provided amount evenly across total installments.
+
             let installmentAmount;
             const rawAmount = parseFloat(baseTransaction.amount) || 0;
             if (start && start > 1) {
@@ -11440,21 +6800,19 @@ const firebaseConfig = {
             } else {
                 installmentAmount = parseFloat((rawAmount / count).toFixed(2));
             }
-            // Do not create previous installments automatically.
 
-            // create installments numbered start..count (inclusive)
             for (let i = start; i <= count; i++) {
-                // Determine month offset: installment i corresponds to month offset (i - start)
+
                 const monthOffset = i - start;
                 const installmentDate = new Date(state.currentDate);
                 installmentDate.setMonth(state.currentDate.getMonth() + monthOffset);
                 const futureMonthData = getCurrentMonthData(installmentDate);
-                // If payment method is VR, store as vrUsage entry instead of expenses
+
                     if ((baseTransaction.payment || '') === 'VR') {
                     if (!Array.isArray(futureMonthData.vrUsage)) futureMonthData.vrUsage = [];
                     futureMonthData.vrUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString(), installmentId, currentInstallment: i, totalInstallments: count, isPaid: i < start ? true : false });
                 }
-                // If payment method is VT, mirror VR behavior and store in vtUsage ledger
+
                 else if ((baseTransaction.payment || '') === 'VT') {
                     if (!Array.isArray(futureMonthData.vtUsage)) futureMonthData.vtUsage = [];
                     futureMonthData.vtUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VT', date: new Date(installmentDate).toISOString(), installmentId, currentInstallment: i, totalInstallments: count, isPaid: i < start ? true : false });
@@ -11475,11 +6833,10 @@ const firebaseConfig = {
                 await storage.saveData(state.appData);
                 showToast(`${count} parcelas criadas com sucesso!`, 'bg-green-600');
             } catch (e) {
-                console.error('Erro ao criar parcelas:', e);
+
                 showToast('Falha ao salvar parcelas no Firebase.', 'bg-red-600');
             }
         }
-
     async function createFinancing(baseTransaction, total, current) {
             const financingId = generateUUID();
             for (let i = current; i <= total; i++) {
@@ -11508,12 +6865,11 @@ const firebaseConfig = {
                 await storage.saveData(state.appData);
                 showToast(`Financiamento de ${total} parcelas criado!`, 'bg-green-600');
             } catch (e) {
-                console.error('Erro ao criar financiamento:', e);
+
                 showToast('Falha ao salvar financiamento no Firebase.', 'bg-red-600');
             }
         }
 
-        // Create financing entries for incomes (receivables)
         async function createIncomeFinancing(baseTransaction, total, current) {
             const financingId = generateUUID();
             for (let i = current; i <= total; i++) {
@@ -11526,41 +6882,35 @@ const firebaseConfig = {
             try { await storage.saveData(state.appData); showToast(`Financiamento de entrada criado (${total}x).`, 'bg-green-600'); } catch(e) { console.error('createIncomeFinancing save', e); showToast('Falha ao salvar financiamento de entrada.', 'bg-red-600'); }
         }
 
-        // Create income installments (parcelada) across months when user marks an income as installment
         async function createIncomeInstallments(baseTransaction, count, start = 1) {
             const installmentId = generateUUID();
-            // If start > 1, assume provided amount is per-installment; otherwise divide by count
+
             let installmentAmount;
             const rawAmount = parseFloat(baseTransaction.amount) || 0;
             if (start && start > 1) installmentAmount = parseFloat(rawAmount.toFixed(2));
             else installmentAmount = parseFloat((rawAmount / count).toFixed(2));
-
             for (let i = start; i <= count; i++) {
                 const monthOffset = i - start;
                 const d = new Date(state.currentDate);
                 d.setMonth(state.currentDate.getMonth() + monthOffset);
                 const md = getCurrentMonthData(d);
                 if (!Array.isArray(md.incomes)) md.incomes = [];
-                md.incomes.push({ id: generateUUID(), description: baseTransaction.description || 'Serviço', amount: installmentAmount, installmentId, currentInstallment: i, totalInstallments: count, isPaid: false, isRecurring: !!baseTransaction.isRecurring });
+                md.incomes.push({ id: generateUUID(), description: baseTransaction.description || 'Serviï¿½o', amount: installmentAmount, installmentId, currentInstallment: i, totalInstallments: count, isPaid: false, isRecurring: !!baseTransaction.isRecurring });
             }
             try { await storage.saveData(state.appData); showToast(`${count} parcelas de entrada criadas.`, 'bg-green-600'); } catch(e) { console.error('createIncomeInstallments save', e); showToast('Falha ao salvar parcelas de entrada.', 'bg-red-600'); }
         }
-
         async function deleteFutureInstallments(installmentId, currentInstallment) {
-            const deletedSavingsGoals = new Set(); // Track goalIds from deleted savings
-            
+            const deletedSavingsGoals = new Set(); 
             Object.keys(state.appData.data).forEach(year => {
                 Object.keys(state.appData.data[year]).forEach(month => {
                     const monthData = state.appData.data[year][month];
-                    
-                    // Handle expenses
+
                     if (monthData.expenses && Array.isArray(monthData.expenses)) {
                         monthData.expenses = monthData.expenses.filter(exp => 
                             !(exp.installmentId === installmentId && exp.currentInstallment >= currentInstallment)
                         );
                     }
-                    
-                    // Handle savings - collect goalIds before deletion for sync
+
                     if (monthData.savings && Array.isArray(monthData.savings)) {
                         monthData.savings.forEach(saving => {
                             if (saving.installmentId === installmentId && 
@@ -11569,39 +6919,31 @@ const firebaseConfig = {
                                 deletedSavingsGoals.add(saving.goalId);
                             }
                         });
-                        
                         monthData.savings = monthData.savings.filter(saving => 
                             !(saving.installmentId === installmentId && saving.currentInstallment >= currentInstallment)
                         );
                     }
                 });
             });
-            
-
         }
-
         async function deleteFutureFinancing(financingId, fromCurrentFinancing) {
-            const deletedSavingsGoals = new Set(); // Track goalIds from deleted savings
-            
+            const deletedSavingsGoals = new Set(); 
             Object.keys(state.appData.data).forEach(year => {
                 Object.keys(state.appData.data[year]).forEach(month => {
                     const monthData = state.appData.data[year][month];
-                    
-                    // Handle expenses
+
                     if (monthData.expenses && Array.isArray(monthData.expenses)) {
                         monthData.expenses = monthData.expenses.filter(exp => 
                             !(exp.financingId === financingId && (exp.currentFinancing || 0) >= fromCurrentFinancing)
                         );
                     }
-                    
-                    // Handle incomes
+
                     if (monthData.incomes && Array.isArray(monthData.incomes)) {
                         monthData.incomes = monthData.incomes.filter(inc => 
                             !(inc.financingId === financingId && (inc.currentFinancing || 0) >= fromCurrentFinancing)
                         );
                     }
-                    
-                    // Handle savings - collect goalIds before deletion for sync
+
                     if (monthData.savings && Array.isArray(monthData.savings)) {
                         monthData.savings.forEach(saving => {
                             if (saving.financingId === financingId && 
@@ -11610,7 +6952,6 @@ const firebaseConfig = {
                                 deletedSavingsGoals.add(saving.goalId);
                             }
                         });
-                        
                         monthData.savings = monthData.savings.filter(saving => 
                             !(saving.financingId === financingId && (saving.currentFinancing || 0) >= fromCurrentFinancing)
                         );
@@ -11618,11 +6959,9 @@ const firebaseConfig = {
                 });
             });
         }
-
         async function deleteFutureRecurrences(recurringId) {
             const currentMonthStart = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1);
-            const deletedSavingsGoals = new Set(); // Track goalIds from deleted savings
-            
+            const deletedSavingsGoals = new Set(); 
             Object.keys(state.appData.data).forEach(year => {
                 Object.keys(state.appData.data[year]).forEach(month => {
                     const monthStart = new Date(year, month - 1, 1);
@@ -11630,7 +6969,7 @@ const firebaseConfig = {
                         const monthData = state.appData.data[year][month];
                         ['incomes', 'expenses', 'savings'].forEach(type => {
                             if (monthData[type] && Array.isArray(monthData[type])) {
-                                // Collect goalIds from savings before deletion for sync
+
                                 if (type === 'savings') {
                                     monthData[type].forEach(item => {
                                         if (item.recurringId === recurringId && item.goalId) {
@@ -11646,58 +6985,52 @@ const firebaseConfig = {
             });
         }
 
-        // funçío principal para salvar (adicionar ou editar)
         async function saveTransaction(transaction, type, id) {
             const currentMonthData = getCurrentMonthData();
             if (!Array.isArray(currentMonthData[type])) currentMonthData[type] = [];
-
-            if (id) { // Editando
+            if (id) { 
                 const index = currentMonthData[type].findIndex(t => t.id === id);
                 if (index > -1) {
                     const originalTransaction = currentMonthData[type][index];
-                    
-                    // Preserva IDs importantes que nío devem mudar na ediçío
+
                     transaction.recurringId = originalTransaction.recurringId;
                     transaction.financingId = originalTransaction.financingId;
                     transaction.installmentId = originalTransaction.installmentId;
 
-                    // If there's a recurringId or financingId, consult the 'apply-to-future' checkbox (if present)
                     const applyToFutureChecked = (ui.applyToFuture && ui.applyToFuture.checked) ? true : null;
                             if (originalTransaction.recurringId) {
                         if (applyToFutureChecked === true) {
                             await updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
                         } else if (applyToFutureChecked === null) {
-                            // fallback to old confirm dialog when checkbox not available
+
                             try {
-                                const ok = await confirmAsync('Esta í© uma transação recorrente. Deseja atualizar as futuras tambá©m?', 'Aplicar í s futuras');
+                                const ok = await confirmAsync('Esta ï¿½ï¿½ uma transaï¿½ï¿½o recorrente. Deseja atualizar as futuras tambï¿½m?', 'Aplicar ï¿½ï¿½s futuras');
                                 if (ok) await updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
                             } catch(e) { /* user cancelled */ }
                         }
                     }
-
                     if (originalTransaction.financingId) {
                         if (applyToFutureChecked === true) {
                             updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
                         } else if (applyToFutureChecked === null) {
                             try {
-                                const okf = await confirmAsync('Esta í© uma transação de financiamento. Deseja atualizar as parcelas futuras tambá©m?', 'Aplicar í s futuras parcelas');
+                                const okf = await confirmAsync('Esta ï¿½ï¿½ uma transaï¿½ï¿½o de financiamento. Deseja atualizar as parcelas futuras tambï¿½m?', 'Aplicar ï¿½ï¿½s futuras parcelas');
                                 if (okf) updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
                             } catch(e) { /* cancelled */ }
                         }
                     }
 
-                    // If editing a savings entry, try to preserve or update the goal link
                     if (type === 'savings') {
                         try {
-                            // preserve existing goalId unless the category/description indicates another goal
+
                             const goals = state.appData.settings.goals || [];
                             let linkedGoalId = originalTransaction.goalId || null;
-                            // Try to detect a goal by category first
+
                             if (transaction.category) {
                                 const g = goals.find(x => (x.name || '').toString().toLowerCase() === (transaction.category || '').toString().toLowerCase());
                                 if (g) linkedGoalId = g.id;
                             }
-                            // If still not found, try matching by description text
+
                             if (!linkedGoalId && transaction.description) {
                                 const desc = (transaction.description || '').toString().toLowerCase();
                                 const g2 = goals.find(x => desc.indexOf((x.name || '').toString().toLowerCase()) !== -1 || (transaction.description||'').toString().trim() === (x.name||''));
@@ -11706,21 +7039,20 @@ const firebaseConfig = {
                             if (linkedGoalId) transaction.goalId = linkedGoalId;
                         } catch (e) { /* ignore linking errors */ }
                     }
-
                     currentMonthData[type][index] = { ...originalTransaction, ...transaction };
                     try {
                         await storage.saveData(state.appData);
-                        showToast('transação editada com sucesso!', 'bg-green-600');
+                        showToast('transaï¿½ï¿½o editada com sucesso!', 'bg-green-600');
                     } catch (e) {
-                        console.error('Erro ao salvar transação editada:', e);
-                        showToast('Falha ao salvar transação no Firebase.', 'bg-red-600');
+
+                        showToast('Falha ao salvar transaï¿½ï¿½o no Firebase.', 'bg-red-600');
                     }
                 }
-            } else { // Adicionando
+            } else { 
                 if (transaction.isRecurring) {
                     transaction.recurringId = generateUUID();
                 }
-                // For savings entries, attempt to auto-link to a goal by category or description
+
                 if (type === 'savings') {
                     try {
                         const goals = state.appData.settings.goals || [];
@@ -11735,30 +7067,28 @@ const firebaseConfig = {
                         if (linked) transaction.goalId = linked.id;
                     } catch (e) { /* ignore */ }
                 }
-
                 currentMonthData[type].push(transaction);
                 try {
                     await storage.saveData(state.appData);
-                    showToast('transação salva com sucesso!', 'bg-green-600');
-                    // Persist session 'last used' payment/category for faster subsequent entries (in-memory only)
+                    showToast('transaï¿½ï¿½o salva com sucesso!', 'bg-green-600');
+
                     try {
                         const lastPayment = document.getElementById('payment-method') ? document.getElementById('payment-method').value : null;
                         const lastCat = document.getElementById('category-expense') ? document.getElementById('category-expense').value : null;
                         ui.lastTransactionDefaults = { payment: lastPayment, category: lastCat };
                     } catch(e) { /* ignore */ }
-                    // Prepare modal for next entry using session defaults (will fall back to app defaults on reload)
+
                     try { prepareModalForNextEntry(); } catch(e) { console.error('prepare next after save', e); }
                 } catch (e) {
-                    console.error('Erro ao salvar nova transação:', e);
-                    showToast('Falha ao salvar transação no Firebase.', 'bg-red-600');
+
+                    showToast('Falha ao salvar transaï¿½ï¿½o no Firebase.', 'bg-red-600');
                 }
             }
         }
 
-        // Show a compact preview of which future months would be affected by applying changes
         function previewFutureChanges(id, type) {
             try {
-                if (!id) return showToast('ID da transação nío informado para prí©-visualização.', 'bg-gray-600');
+                if (!id) return showToast('ID da transaï¿½ï¿½o nï¿½o informado para prï¿½ï¿½-visualizaï¿½ï¿½o.', 'bg-gray-600');
                 const affected = [];
                 Object.keys(state.appData.data || {}).forEach(year => {
                     Object.keys(state.appData.data[year] || {}).forEach(month => {
@@ -11771,71 +7101,67 @@ const firebaseConfig = {
                         });
                     });
                 });
-                if (affected.length === 0) return showToast('Nenhuma recorríªncia futura encontrada para esta transação.', 'bg-gray-600');
+                if (affected.length === 0) return showToast('Nenhuma recorrï¿½ï¿½ncia futura encontrada para esta transaï¿½ï¿½o.', 'bg-gray-600');
                 const lines = affected.slice(0, 20).map(a => `${String(a.month).padStart(2,'0')}/${a.year}: ${formatCurrency(a.amount)}`);
                 const more = affected.length > 20 ? `\n...e mais ${affected.length - 20} meses` : '';
-                alert('Recorríªncias afetadas:\n' + lines.join('\n') + more);
-            } catch (e) { console.error('previewFutureChanges', e); showToast('Erro ao gerar prí©-visualização.', 'bg-red-600'); }
+                alert('Recorrï¿½ï¿½ncias afetadas:\n' + lines.join('\n') + more);
+            } catch (e) { console.error('previewFutureChanges', e); showToast('Erro ao gerar prï¿½ï¿½-visualizaï¿½ï¿½o.', 'bg-red-600'); }
         }
 
-    // funçío principal para excluir
     async function deleteTransaction(type, id) {
             const currentMonthData = getCurrentMonthData();
             if (!Array.isArray(currentMonthData[type])) return;
-            
             const transaction = currentMonthData[type].find(t => t.id === id);
             if (!transaction) return;
-
-            let confirmMessage = 'Tem certeza que deseja excluir esta transação?';
+            let confirmMessage = 'Tem certeza que deseja excluir esta transaï¿½ï¿½o?';
             let action = () => {
                 const index = currentMonthData[type].findIndex(t => t.id === id);
                 if (index > -1) currentMonthData[type].splice(index, 1);
-                return 'transação excluí­da com sucesso!';
+                return 'transaï¿½ï¿½o excluï¿½ï¿½da com sucesso!';
             };
-
             if (transaction.installmentId) {
-                // Ask the user whether to delete only this installment or this + future installments
+
                 try {
-                    const deleteOnlyThis = await confirmAsync('Esta í© uma transação parcelada. Deseja excluir apenas esta parcela? (OK = Sim, Cancel = nío)', 'Excluir parcela');
+                    const deleteOnlyThis = await confirmAsync('Esta ï¿½ï¿½ uma transaï¿½ï¿½o parcelada. Deseja excluir apenas esta parcela? (OK = Sim, Cancel = nï¿½o)', 'Excluir parcela');
                     if (deleteOnlyThis) {
-                        confirmMessage = 'Confirma exclusío desta parcela?';
+                        confirmMessage = 'Confirma exclusï¿½o desta parcela?';
                         action = () => {
                             const index = currentMonthData[type].findIndex(t => t.id === id);
                             if (index > -1) currentMonthData[type].splice(index, 1);
-                            return 'Parcela excluí­da com sucesso!';
+                            return 'Parcela excluï¿½ï¿½da com sucesso!';
                         };
                     } else {
-                        const deleteFuture = await confirmAsync('Deseja excluir esta e todas as parcelas futuras? (OK = Sim, Cancel = nío)', 'Excluir parcelas futuras');
+                        const deleteFuture = await confirmAsync('Deseja excluir esta e todas as parcelas futuras? (OK = Sim, Cancel = nï¿½o)', 'Excluir parcelas futuras');
                         if (deleteFuture) {
-                            confirmMessage = 'Confirma exclusío desta e das parcelas futuras?';
+                            confirmMessage = 'Confirma exclusï¿½o desta e das parcelas futuras?';
                             action = async () => {
                                 await deleteFutureInstallments(transaction.installmentId, transaction.currentInstallment);
-                                return 'Parcelas excluí­das com sucesso!';
+                                return 'Parcelas excluï¿½ï¿½das com sucesso!';
                             };
                         } else {
-                            // user cancelled
+
                             return;
                         }
                     }
                 } catch(e) { return; }
             } else if (transaction.financingId) {
-                // Financing case: offer to delete only this financing installment or this + future financing installments
+
                 try {
-                    const delOnly = await confirmAsync('Esta í© uma parcela de financiamento. Deseja excluir apenas esta parcela? (OK = Sim, Cancel = nío)', 'Excluir parcela de financiamento');
+                    const delOnly = await confirmAsync('Esta ï¿½ï¿½ uma parcela de financiamento. Deseja excluir apenas esta parcela? (OK = Sim, Cancel = nï¿½o)', 'Excluir parcela de financiamento');
                     if (delOnly) {
-                        confirmMessage = 'Confirma exclusío desta parcela?';
+                        confirmMessage = 'Confirma exclusï¿½o desta parcela?';
                         action = () => {
                             const index = currentMonthData[type].findIndex(t => t.id === id);
                             if (index > -1) currentMonthData[type].splice(index, 1);
-                            return 'Parcela excluí­da com sucesso!';
+                            return 'Parcela excluï¿½ï¿½da com sucesso!';
                         };
                     } else {
-                        const delFuture = await confirmAsync('Deseja excluir esta e todas as parcelas futuras do financiamento? (OK = Sim, Cancel = nío)', 'Excluir parcelas de financiamento futuras');
+                        const delFuture = await confirmAsync('Deseja excluir esta e todas as parcelas futuras do financiamento? (OK = Sim, Cancel = nï¿½o)', 'Excluir parcelas de financiamento futuras');
                         if (delFuture) {
-                            confirmMessage = 'Confirma exclusío desta e das parcelas futuras do financiamento?';
+                            confirmMessage = 'Confirma exclusï¿½o desta e das parcelas futuras do financiamento?';
                             action = async () => {
                                 await deleteFutureFinancing(transaction.financingId, transaction.currentFinancing);
-                                return 'Parcelas de financiamento excluí­das com sucesso!';
+                                return 'Parcelas de financiamento excluï¿½ï¿½das com sucesso!';
                             };
                         } else {
                             return;
@@ -11843,43 +7169,37 @@ const firebaseConfig = {
                     }
                 } catch(e) { return; }
             } else if (transaction.recurringId) {
-                confirmMessage = 'Esta í© uma transação recorrente. Deseja excluir esta e todas as futuras recorríªncias (a partir deste Mês)?';
+                confirmMessage = 'Esta ï¿½ï¿½ uma transaï¿½ï¿½o recorrente. Deseja excluir esta e todas as futuras recorrï¿½ï¿½ncias (a partir deste Mï¿½s)?';
                 action = async () => {
                     await deleteFutureRecurrences(transaction.recurringId);
-                    return 'Recorríªncias excluí­das com sucesso!';
+                    return 'Recorrï¿½ï¿½ncias excluï¿½ï¿½das com sucesso!';
                 };
             }
-
             try {
-                const ok = await confirmAsync(confirmMessage, 'Confirmar exclusío');
+                const ok = await confirmAsync(confirmMessage, 'Confirmar exclusï¿½o');
                 if (!ok) return;
-                
                 const toastMessage = await action();
                 try {
                     await storage.saveData(state.appData);
                     showToast(toastMessage, 'bg-red-600');
                 } catch (e) {
-                    console.error('Erro ao excluir transação:', e);
-                    showToast('Falha ao salvar exclusío no Firebase.', 'bg-red-600');
+
+                    showToast('Falha ao salvar exclusï¿½o no Firebase.', 'bg-red-600');
                 }
                 render();
             } catch(e) { return; }
         }
 
-        // Ponto de entrada do formulí¡rio
         async function handleFormSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('transaction-id').value;
             const type = ui.transactionTypeInput.value;
-
             const transactionData = {
                 description: document.getElementById('description').value,
                 amount: parseLocaleNumber(document.getElementById('amount').value) || 0,
                 isRecurring: document.getElementById('is-recurring').checked
             };
-
             if (!id) transactionData.id = generateUUID();
-
             if (type === 'expenses') {
                 Object.assign(transactionData, {
                     payment: document.getElementById('payment-method').value,
@@ -11887,63 +7207,63 @@ const firebaseConfig = {
                     type: document.getElementById('expense-type').value,
                     isPaid: false
                 });
-                // Attach recipient when present
+
                 try {
                     const pmVal = (transactionData.payment || '').toString();
                     const recipientEl = document.getElementById('payment-recipient');
-                    if ((pmVal === 'PIX' || pmVal === 'Transferíªncia') && recipientEl) {
+                    if ((pmVal === 'PIX' || pmVal === 'Transferï¿½ï¿½ncia') && recipientEl) {
                         const recVal = (recipientEl.value || '').toString().trim();
                         if (!recVal) {
-                            setTransactionError('Informe o destinaTí¡rio para PIX ou Transferíªncia.');
-                            return; // block save
+                            setTransactionError('Informe o destinaTï¿½ï¿½rio para PIX ou Transferï¿½ï¿½ncia.');
+                            return; 
                         }
                         transactionData.recipient = recVal;
                     } else if (recipientEl && recipientEl.value) {
-                        // include if user filled for other methods (optional)
+
                         transactionData.recipient = recipientEl.value;
                     }
                 } catch (rErr) { console.error('recipient collect error', rErr); }
-                // If financing fields are present in the modal, include them
+
                 const financingCheckbox = document.getElementById('is-financing');
                 if (financingCheckbox && financingCheckbox.checked) {
                     const totalFin = parseInt(document.getElementById('financing-total').value, 10);
                     const currentFin = parseInt(document.getElementById('financing-current').value, 10);
                     if (!isNaN(totalFin)) transactionData.totalFinancing = totalFin;
                     if (!isNaN(currentFin)) transactionData.currentFinancing = currentFin;
-                    // Keep financingId if editing
+
                     const existingFId = document.getElementById('transaction-id').value;
                     if (existingFId) transactionData.financingId = currentFin ? (transactionData.financingId || null) : transactionData.financingId;
                 }
-                // If payment method is VR, ensure category is Alimentação (or equivalent), mark as paid and record usage in current month's vrUsage ledger
+
                 const pm = transactionData.payment || '';
                 if (pm === 'VR') {
-                    // Mark VR expenses as already paid (VR behaves like debit)
+
                     transactionData.isPaid = true;
                     const settings = state.appData.settings || {};
                     const expenseCategories = settings.expenseCategories || [];
-                    // try to find an 'Alimentação' category (case-insensitive, accent-insensitive)
+
                     const normalize = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
                     const foundAlim = expenseCategories.find(c => normalize(c).includes('aliment'));
                     const currentCat = transactionData.category || '';
                     if (!normalize(currentCat).includes('aliment')) {
                         if (foundAlim) {
-                            // Auto-set to the found Alimentação category
+
                             transactionData.category = foundAlim;
-                            showToast('Pagamento via VR: categoria ajustada para Alimentação.', 'bg-yellow-600');
+                            showToast('Pagamento via VR: categoria ajustada para Alimentaï¿½ï¿½o.', 'bg-yellow-600');
                         } else {
-                            // Warn user but allow save
+
                             try {
-                                const ok = await confirmAsync('você selecionou VR como forma de pagamento, mas a categoria nío parece ser Alimentação. Deseja prosseguir?', 'Confirmar VR');
+                                const ok = await confirmAsync('vocï¿½ selecionou VR como forma de pagamento, mas a categoria nï¿½o parece ser Alimentaï¿½ï¿½o. Deseja prosseguir?', 'Confirmar VR');
                                 if (!ok) return;
                             } catch(e) { return; }
                         }
                     }
-                    // Force type to Essenciais when paying with VR
+
                     try { transactionData.type = 'Essenciais'; } catch(e) { /* ignore */ }
-                    // Validate VR balance: do not allow expense > available VR balance for current month
+
                     const mdCheck = getCurrentMonthData();
                     let availableVR = getMonthVRBalance(mdCheck);
-                    // If editing an existing VR expense, add back the original amount so the validation allows reducing/increasing within the original envelope
+
                     if (id) {
                         try {
                             const existing = mdCheck.expenses && mdCheck.expenses.find(e => e.id === id);
@@ -11954,35 +7274,35 @@ const firebaseConfig = {
                     }
                     const spendAmount = Number(transactionData.amount) || 0;
                     if (spendAmount > availableVR) {
-                        // Show inline error in modal so the user can immediately see the problem
-                        setTransactionError('Valor superior ao saldo disponí­vel de VR para este Mês. Verifique o saldo no card de VR.');
-                        return; // block save
+
+                        setTransactionError('Valor superior ao saldo disponï¿½ï¿½vel de VR para este Mï¿½s. Verifique o saldo no card de VR.');
+                        return; 
                     } else {
                         clearTransactionError();
                     }
-                        // Instead of saving this as a normal expense, store it in the month's vrUsage ledger
+
                         const md = getCurrentMonthData();
                         if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
                         const usageEntry = { id: generateUUID(), amount: Number(transactionData.amount) || 0, description: transactionData.description || '', date: new Date().toISOString() };
                         md.vrUsage.push(usageEntry);
-                        // Persist immediately and bail out of the normal expense save flow
+
                         try {
                             await storage.saveData(state.appData);
-                            showToast('Despesa registrada no VR (lançamento separado).', 'bg-green-600');
+                            showToast('Despesa registrada no VR (lanï¿½amento separado).', 'bg-green-600');
                         } catch (e) {
-                            console.error('Erro ao salvar uso de VR:', e);
+
                             showToast('Falha ao salvar uso de VR no Firebase.', 'bg-red-600');
                         }
-                        // Close modal and re-render instead of continuing to add to expenses
+
                         closeModal('transaction-modal');
                         render();
                         return;
                 }
-                // VT mirror of VR: store VT purchases in vtUsage ledger (do not add to expenses)
+
                 if (pm === 'VT') {
-                    // Mark VT purchases similar to VR (treated as immediate debit)
+
                     transactionData.isPaid = true;
-                    // Ensure category is Transporte (if not already)
+
                     try {
                         const settings = state.appData.settings || {};
                         const expenseCategories = settings.expenseCategories || [];
@@ -11995,12 +7315,10 @@ const firebaseConfig = {
                         }
                     } catch (e) { console.error('vt category enforcement', e); }
 
-                    // If description empty, set to Abastecimento
                     if (!transactionData.description || transactionData.description.trim() === '') {
                         transactionData.description = 'Abastecimento';
                     }
 
-                    // Validate VT balance similar to VR
                     const mdCheck = getCurrentMonthData();
                     let availableVT = getMonthVTBalance(mdCheck);
                     if (id) {
@@ -12013,24 +7331,21 @@ const firebaseConfig = {
                     }
                     const spendAmount = Number(transactionData.amount) || 0;
                     if (spendAmount > availableVT) {
-                        setTransactionError('Valor superior ao saldo disponí­vel de VT para este Mês. Verifique o saldo no card de VT.');
+                        setTransactionError('Valor superior ao saldo disponï¿½ï¿½vel de VT para este Mï¿½s. Verifique o saldo no card de VT.');
                         return;
                     } else {
                         clearTransactionError();
                     }
 
-                    // Note: opening the dedicated VT modal from the transaction flow was removed to avoid multiple access
-                    // points. The VT modal should be opened only from the '+' button inside the VT card. Fall back to
-                    // storing a minimal vtUsage entry immediately.
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
                     const usageEntry = { id: generateUUID(), amount: Number(transactionData.amount) || 0, description: transactionData.description || '', date: new Date().toISOString() };
                     md.vtUsage.push(usageEntry);
                     try {
                         await storage.saveData(state.appData);
-                        showToast('Despesa registrada no VT (lançamento separado).', 'bg-green-600');
+                        showToast('Despesa registrada no VT (lanï¿½amento separado).', 'bg-green-600');
                     } catch (e) {
-                        console.error('Erro ao salvar uso de VT:', e);
+
                         showToast('Falha ao salvar uso de VT no Firebase.', 'bg-red-600');
                     }
                     closeModal('transaction-modal');
@@ -12038,36 +7353,34 @@ const firebaseConfig = {
                     return;
                 }
             } else if (type === 'savings') {
-                // Use selected saving category; goal linking removed (not functional)
+
                 try { transactionData.category = document.getElementById('category-saving').value; } catch(e) { transactionData.category = '' }
                 delete transactionData.goalId;
             }
-
             const isInstallment = document.getElementById('is-installment').checked;
             const installmentsCount = parseInt(document.getElementById('installment-count')?.value || document.getElementById('installments-count')?.value, 10);
             const isFinancing = document.getElementById('is-financing').checked;
             const financingTotal = parseInt(document.getElementById('financing-total').value, 10);
             const financingCurrent = parseInt(document.getElementById('financing-current').value, 10);
-
             try {
                 const currentMonthData = getCurrentMonthData();
-                // If editing an existing expense and user converted it to installments/financing, handle conversion
+
                 if (id && type === 'expenses') {
                     const original = currentMonthData.expenses.find(t => t.id === id);
                     if (original) {
-                        // Convert single expense -> installments
+
                         if (isInstallment && installmentsCount > 1 && !original.installmentId && !original.financingId) {
-                            // remove original single transaction
+
                             const idx = currentMonthData.expenses.findIndex(t => t.id === id);
                             if (idx > -1) currentMonthData.expenses.splice(idx, 1);
                             const startInstallment = parseInt(document.getElementById('installment-start')?.value || document.getElementById('installments-current')?.value || '1', 10) || 1;
                             await createInstallments(transactionData, installmentsCount, startInstallment);
-                            // done
+
                             closeModal('transaction-modal');
                             render();
                             return;
                         }
-                        // Convert single expense -> financing
+
                         if (isFinancing && financingTotal > 1 && financingCurrent >= 1 && !original.financingId && !original.installmentId) {
                             const idx = currentMonthData.expenses.findIndex(t => t.id === id);
                             if (idx > -1) currentMonthData.expenses.splice(idx, 1);
@@ -12079,56 +7392,52 @@ const firebaseConfig = {
                     }
                 }
 
-                // Default flows for creating new or simple edits
                     if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
-                    // console.debug('[handleFormSubmit] creating installments (new)', installmentsCount /*, transactionData */);
+
                     const startInstallment = parseInt(document.getElementById('installment-start')?.value || document.getElementById('installments-current')?.value || '1', 10) || 1;
                     await createInstallments(transactionData, installmentsCount, startInstallment);
                 } else if (type === 'expenses' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
-                    // console.debug('[handleFormSubmit] creating financing (new)', financingTotal, financingCurrent /*, transactionData */);
+
                     await createFinancing(transactionData, financingTotal, financingCurrent);
                 } else if (type === 'incomes' && isFinancing && financingTotal > 1 && financingCurrent >= 1 && !id) {
-                    // Creating financing for incomes (receivable financing)
+
                     await createIncomeFinancing(transactionData, financingTotal, financingCurrent);
                 } else if (type === 'incomes' && isInstallment && installmentsCount > 1 && !id) {
-                    // Creating parcelada (installments) for incomes (Serviço)
+
                     const startInstallment = parseInt(document.getElementById('installment-start')?.value || document.getElementById('installments-current')?.value || '1', 10) || 1;
                     await createIncomeInstallments(transactionData, installmentsCount, startInstallment);
                 } else if (type === 'incomes' && document.getElementById('is-salary') && document.getElementById('is-salary').checked) {
-                // Special handling for salary: calculate breakdown and update/create entries
+
                 try {
                         const year = state.currentDate.getFullYear();
                         const month = state.currentDate.getMonth() + 1;
-                        // If salary-base not provided, prefer the main 'amount' field when description indicates salary
+
                         const amountFieldVal = parseLocaleNumber((document.getElementById('amount') || { value: 0 }).value) || 0;
                         const providedSalaryBase = parseLocaleNumber((document.getElementById('salary-base') || { value: 0 }).value) || 0;
                         const salarioBaseToUse = providedSalaryBase > 0 ? providedSalaryBase : amountFieldVal;
 
-                        // read current recurring checkbox value at submit time
                         const isRecurringNow = document.getElementById('is-recurring') ? document.getElementById('is-recurring').checked : !!transactionData.isRecurring;
 
-                        // Helper: parse hours input which may be decimal or HH:MM (e.g. "117:20")
                         const parseHoursString = (raw) => {
                             try {
                                 if (raw === undefined || raw === null) return 0;
                                 if (typeof raw === 'number') return raw;
                                 let s = String(raw).trim();
                                 if (s === '') return 0;
-                                // If contains colon, treat as H:MM or HH:MM
+
                                 const colonMatch = s.match(/^(-?\d+):([0-5]?\d)$/);
                                 if (colonMatch) {
                                     const h = parseInt(colonMatch[1], 10) || 0;
                                     const m = parseInt(colonMatch[2], 10) || 0;
                                     const totalMinutes = h * 60 + (h < 0 ? -m : m);
-                                    return Math.round((totalMinutes / 60) * 1000000) / 1000000; // keep reasonable precision
+                                    return Math.round((totalMinutes / 60) * 1000000) / 1000000; 
                                 }
-                                // Replace comma with dot for locales that use comma
+
                                 s = s.replace(',', '.');
                                 const fv = parseFloat(s);
                                 return isNaN(fv) ? 0 : fv;
                             } catch (e) { return 0; }
                         };
-
                         const rawHoursRaw = (document.getElementById('salary-horas-trabalhadas') || { value: '' }).value;
                         const params = {
                             salarioBase: salarioBaseToUse,
@@ -12138,51 +7447,49 @@ const firebaseConfig = {
                             valorDesjejumDia: parseLocaleNumber((document.getElementById('salary-desjejum-dia') || { value: 0 }).value) || 0,
                             valorTransporteDia: parseLocaleNumber((document.getElementById('salary-transporte-dia') || { value: 0 }).value) || 0,
                             diasTrabalhados: parseInt((document.getElementById('salary-dias-trabalhados') || { value: '' }).value, 10) || undefined,
-                            // hoursTrabalhadas accepts decimal or HH:MM (e.g. "117:20"). Minutes will be converted to fractional hours.
+
                             hoursTrabalhadas: parseHoursString(rawHoursRaw) || 0,
-                            // preserve the original string (e.g. "117:20") so we can store it in salaryMeta and show/edit later
+
                             horasTrabalhadasRaw: rawHoursRaw || '',
                             horasExtrasSabado: parseHoursString((document.getElementById('salary-h-extra-sab') || { value: 0 }).value) || 0,
                             horasExtrasDomingo: parseHoursString((document.getElementById('salary-h-extra-dom') || { value: 0 }).value) || 0,
                             jornadaMensalHoras: parseHoursString((document.getElementById('salary-jornada-horas') || { value: 220 }).value) || 220,
-                            // hoursTrabalhadas will be set/used inside calcularSalarioLiquido when needed
+
                             year, month
                         };
                         const calc = calcularSalarioLiquido(params);
-                        // parse formatted numbers back to numeric values
+
                         const parseNum = (s) => { try { return typeof s === 'number' ? s : parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || parseFloat(s); } catch(e){ return parseFloat(s) || 0; } };
-                        // The function currently returns formatted strings in resumo; they use dot as decimal separator (toFixed)
+
                         const salarioLiquido = parseFloat(calc.resumo.salarioLiquido) || 0;
                         const beneficiosTotais = parseFloat(calc.resumo.beneficiosTotais) || 0;
                         const valorHorasExtras = parseFloat(calc.resumo.valorHorasExtras) || 0;
 
-                        // create helper to build values for a given month
                         const buildValuesFor = (pMonthly) => {
                             const calcMonth = calcularSalarioLiquido(pMonthly);
                             const salarioLiquidoM = parseFloat(calcMonth.resumo.salarioLiquido) || 0;
                             const valorHorasExtrasM = parseFloat(calcMonth.resumo.valorHorasExtras) || 0;
-                            // Benefits refer to the following month
+
                             const nextDate = new Date(pMonthly.year, pMonthly.month, 1);
                             const nextY2 = nextDate.getFullYear();
                             const nextM2 = nextDate.getMonth() + 1;
                             const roundLocal = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
-                            // VT: transporte benefit per requirement - use dias íºteis do máŠS SELECIONADO + 1
+
                             const beneficiosVTM = roundLocal((pMonthly.valorTransporteDia || 0) * (diasUteisNoMes(pMonthly.year, pMonthly.month) + 1));
-                            // VR: desjejum benefit per requirement - use dias íºteis do máŠS SELECIONADO + 1
+
                             const beneficiosVRM = roundLocal((pMonthly.valorDesjejumDia || 0) * (diasUteisNoMes(pMonthly.year, pMonthly.month) + 1));
                             return { salarioLiquido: salarioLiquidoM, beneficiosVT: beneficiosVTM, beneficiosVR: beneficiosVRM, valorHorasExtras: valorHorasExtrasM };
                         };
 
-                        // helper to remove previous salary-generated items in a month by recurringId or by salaryMeta
                         const removeSalaryItemsFromMonth = (monthDataObj, opts) => {
                             if (!monthDataObj) return;
                             const oldMetaStr = opts.oldMetaStr || null;
                             const rid = opts.recurringId || null;
                             if (!Array.isArray(monthDataObj.incomes)) monthDataObj.incomes = [];
-                            // Ensure ledgers exist
+
                             if (!Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = [];
                             if (!Array.isArray(monthDataObj.vtLedger)) monthDataObj.vtLedger = [];
-                            // Remove incomes and ledger entries that belong to the recurringId when provided
+
                             if (rid) {
                                 monthDataObj.incomes = monthDataObj.incomes.filter(i => i.recurringId !== rid);
                                 monthDataObj.vrLedger = monthDataObj.vrLedger.filter(l => l.recurringId !== rid);
@@ -12194,46 +7501,43 @@ const firebaseConfig = {
                             }
                         };
 
-                        // pushEntriesToMonth re-used (keeps salaryMeta on created items)
                         const pushEntriesToMonth = (monthDataObj, rId, values, meta) => {
                             if (!Array.isArray(monthDataObj.incomes)) monthDataObj.incomes = [];
                             if (!Array.isArray(monthDataObj.vrLedger)) monthDataObj.vrLedger = [];
                             if (!Array.isArray(monthDataObj.vtLedger)) monthDataObj.vtLedger = [];
                             const toPush = [];
-                            if (values.salarioLiquido > 0) toPush.push({ id: generateUUID(), description: `Salí¡rio (Lí­quido)`, amount: values.salarioLiquido, isRecurring: !!transactionData.isRecurring, recurringId: rId, source: 'salary', salaryMeta: meta || null });
-                            // VT should be stored in vtLedger (mirror VR implementation) to avoid showing twice in incomes
+                            if (values.salarioLiquido > 0) toPush.push({ id: generateUUID(), description: `Salï¿½ï¿½rio (Lï¿½ï¿½quido)`, amount: values.salarioLiquido, isRecurring: !!transactionData.isRecurring, recurringId: rId, source: 'salary', salaryMeta: meta || null });
+
                             if (values.beneficiosVT > 0) {
-                                monthDataObj.vtLedger.push({ id: generateUUID(), description: 'Benefí­cio - VT', amount: values.beneficiosVT, recurringId: rId || null, isRecurring: !!rId, salaryMeta: meta || null });
+                                monthDataObj.vtLedger.push({ id: generateUUID(), description: 'Benefï¿½ï¿½cio - VT', amount: values.beneficiosVT, recurringId: rId || null, isRecurring: !!rId, salaryMeta: meta || null });
                             }
                             if (values.beneficiosVR > 0) {
-                                monthDataObj.vrLedger.push({ id: generateUUID(), description: 'Benefí­cio - VR', amount: values.beneficiosVR, recurringId: rId || null, isRecurring: !!rId, salaryMeta: meta || null });
+                                monthDataObj.vrLedger.push({ id: generateUUID(), description: 'Benefï¿½ï¿½cio - VR', amount: values.beneficiosVR, recurringId: rId || null, isRecurring: !!rId, salaryMeta: meta || null });
                             }
                             if (values.valorHorasExtras > 0) toPush.push({ id: generateUUID(), description: `Horas Extras`, amount: values.valorHorasExtras, isRecurring: !!transactionData.isRecurring, recurringId: rId, source: 'overtime', salaryMeta: meta || null });
                             toPush.forEach(en => monthDataObj.incomes.push(en));
                         };
 
-                        // Now handle editing vs creating
                         if (id) {
-                            // Editing an existing income: try to find the original salary income
+
                             const original = currentMonthData.incomes.find(t => t.id === id);
                             const oldMetaStr = original && original.salaryMeta ? JSON.stringify(original.salaryMeta) : null;
                             const origRecurringId = original && original.recurringId ? original.recurringId : null;
                             let applyToFuture = false;
                             if (origRecurringId) {
-                                try { applyToFuture = await confirmAsync('Essa í© uma entrada recorrente. Deseja aplicar as alterAÇÕES í s recorríªncias futuras? (OK = Sim)', 'Aplicar í s futuras'); } catch(e) { applyToFuture = false; }
+                                try { applyToFuture = await confirmAsync('Essa ï¿½ï¿½ uma entrada recorrente. Deseja aplicar as alterAï¿½ï¿½ES ï¿½ï¿½s recorrï¿½ï¿½ncias futuras? (OK = Sim)', 'Aplicar ï¿½ï¿½s futuras'); } catch(e) { applyToFuture = false; }
                             }
-
                             if (origRecurringId && applyToFuture) {
-                                // Update this and future months for this recurringId
+
                                 Object.keys(state.appData.data).forEach(yearKey => {
                                     Object.keys(state.appData.data[yearKey]).forEach(monthKey => {
                                         const monthStart = new Date(Number(yearKey), Number(monthKey) - 1, 1);
                                         const editedMonthStart = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1);
                                         if (monthStart >= editedMonthStart) {
                                             const md = state.appData.data[yearKey][monthKey];
-                                            // remove old recurring entries
+
                                             removeSalaryItemsFromMonth(md, { recurringId: origRecurringId });
-                                            // compute pMonthly for this month
+
                                             const pMonthly = Object.assign({}, params, { year: Number(yearKey), month: Number(monthKey) });
                                             const vals = buildValuesFor(pMonthly);
                                             const meta = { salarioBase: pMonthly.salarioBase, percentualPericulosidade: pMonthly.percentualPericulosidade, outrosProventosTributaveis: pMonthly.outrosProventosTributaveis, numeroDependentes: pMonthly.numeroDependentes, valorDesjejumDia: pMonthly.valorDesjejumDia, valorTransporteDia: pMonthly.valorTransporteDia, diasTrabalhados: pMonthly.diasTrabalhados, horasTrabalhadas: pMonthly.hoursTrabalhadas, jornadaMensalHoras: pMonthly.jornadaMensalHoras };
@@ -12242,19 +7546,18 @@ const firebaseConfig = {
                                     });
                                 });
                             } else {
-                                // Update only current month
+
                                 removeSalaryItemsFromMonth(currentMonthData, { oldMetaStr, recurringId: origRecurringId && !applyToFuture ? origRecurringId : null });
                                 const pMonthlyNow = Object.assign({}, params, { year: state.currentDate.getFullYear(), month: state.currentDate.getMonth() + 1 });
                                 const valsNow = buildValuesFor(pMonthlyNow);
                                 const metaNow = { salarioBase: pMonthlyNow.salarioBase, percentualPericulosidade: pMonthlyNow.percentualPericulosidade, outrosProventosTributaveis: pMonthlyNow.outrosProventosTributaveis, numeroDependentes: pMonthlyNow.numeroDependentes, valorDesjejumDia: pMonthlyNow.valorDesjejumDia, valorTransporteDia: pMonthlyNow.valorTransporteDia, diasTrabalhados: pMonthlyNow.diasTrabalhados, horasTrabalhadas: pMonthlyNow.hoursTrabalhadas, jornadaMensalHoras: pMonthlyNow.jornadaMensalHoras };
-                                // Keep original recurringId on this month if it existed
+
                                 const targetRid = origRecurringId || (transactionData.isRecurring ? generateUUID() : null);
                                 pushEntriesToMonth(currentMonthData, targetRid, valsNow, metaNow);
                             }
-
-                            try { await storage.saveData(state.appData); showToast('Salí¡rio atualizado com sucesso!', 'bg-green-600'); } catch(e){ console.error('save edited salary', e); showToast('Falha ao salvar salí¡rio editado.', 'bg-red-600'); }
+                            try { await storage.saveData(state.appData); showToast('Salï¿½ï¿½rio atualizado com sucesso!', 'bg-green-600'); } catch(e){ console.error('save edited salary', e); showToast('Falha ao salvar salï¿½ï¿½rio editado.', 'bg-red-600'); }
                         } else {
-                            // Creating new salary entries (no id provided)
+
                             const recurringId = transactionData.isRecurring ? generateUUID() : null;
                             if (transactionData.isRecurring) {
                                 const rId = recurringId;
@@ -12274,37 +7577,31 @@ const firebaseConfig = {
                                 const metaNow = { salarioBase: pMonthlyNow.salarioBase, percentualPericulosidade: pMonthlyNow.percentualPericulosidade, outrosProventosTributaveis: pMonthlyNow.outrosProventosTributaveis, numeroDependentes: pMonthlyNow.numeroDependentes, valorDesjejumDia: pMonthlyNow.valorDesjejumDia, valorTransporteDia: pMonthlyNow.valorTransporteDia, diasTrabalhados: pMonthlyNow.diasTrabalhados, horasTrabalhadas: pMonthlyNow.hoursTrabalhadas, jornadaMensalHoras: pMonthlyNow.jornadaMensalHoras };
                                 pushEntriesToMonth(currentMonthData, null, valsNow, metaNow);
                             }
-                            try { await storage.saveData(state.appData); showToast('Salí¡rio salvo com sucesso!', 'bg-green-600'); } catch(e){ console.error('save new salary', e); showToast('Falha ao salvar salí¡rio no Firebase.', 'bg-red-600'); }
+                            try { await storage.saveData(state.appData); showToast('Salï¿½ï¿½rio salvo com sucesso!', 'bg-green-600'); } catch(e){ console.error('save new salary', e); showToast('Falha ao salvar salï¿½ï¿½rio no Firebase.', 'bg-red-600'); }
                         }
-
                         try {
                             await storage.saveData(state.appData);
-                            showToast('Salí¡rio salvo com sucesso!', 'bg-green-600');
+                            showToast('Salï¿½ï¿½rio salvo com sucesso!', 'bg-green-600');
                         } catch (err) {
-                            console.error('Erro ao salvar salí¡rio:', err);
-                            showToast('Falha ao salvar salí¡rio no Firebase.', 'bg-red-600');
+
+                            showToast('Falha ao salvar salï¿½ï¿½rio no Firebase.', 'bg-red-600');
                         }
 
-                        // Optionally show a quick details toast with totals (short)
-                        // showToast(`Lí­quido: ${formatCurrency(salarioLiquido)} â€¢ Benefí­cios: ${formatCurrency(beneficiosTotais)} â€¢ Extras: ${formatCurrency(valorHorasExtras)}`, 'bg-blue-600');
-
                     } catch (err) {
-                        console.error('Erro no processamento do salí¡rio:', err);
-                        showToast('Erro ao processar salí¡rio: ' + (err && err.message ? err.message : ''), 'bg-red-600');
+
+                        showToast('Erro ao processar salï¿½ï¿½rio: ' + (err && err.message ? err.message : ''), 'bg-red-600');
                     }
                 } else {
                     await saveTransaction(transactionData, type, id);
                 }
             } catch (e) {
-                console.error('Erro ao processar formulí¡rio:', e);
-                showToast('Erro ao salvar transação: ' + (e && e.message ? e.message : ''), 'bg-red-600');
-            }
 
+                showToast('Erro ao salvar transaï¿½ï¿½o: ' + (e && e.message ? e.message : ''), 'bg-red-600');
+            }
             closeModal('transaction-modal');
             render();
         }
 
-            // --- VR inline-edit helpers ---
             function startInlineVREdit(el, vrId) {
                 try {
                     if (!el) return;
@@ -12329,7 +7626,6 @@ const firebaseConfig = {
                     });
                 } catch(e){ console.error('startInlineVREdit', e); }
             }
-
             async function commitInlineVREdit(vrId, newAmount, inputEl) {
                 try {
                     const md = getCurrentMonthData();
@@ -12340,11 +7636,10 @@ const firebaseConfig = {
                     const oldAmount = entry.amount || 0;
                     entry.amount = Math.round((Number(newAmount) + Number.EPSILON) * 100) / 100;
                     try { await storage.saveData(state.appData); } catch(e){ console.error('commitInlineVREdit save', e); }
-                    // Inline edits should not forcibly apply to future recurrences; explicit action via modal will allow that.
+
                     render();
                 } catch(e){ console.error('commitInlineVREdit', e); }
             }
-
             function applyToFutureVREntries(recurringId, newAmount) {
                 try {
                     Object.keys(state.appData.data).forEach(year => {
@@ -12360,11 +7655,10 @@ const firebaseConfig = {
                         });
                     });
                     try { storage.saveData(state.appData); } catch(e){ console.error('applyToFutureVREntries save', e); }
-                    showToast('AlterAÇÕES aplicadas í s recorríªncias futuras.', 'bg-green-600');
+                    showToast('AlterAï¿½ï¿½ES aplicadas ï¿½ï¿½s recorrï¿½ï¿½ncias futuras.', 'bg-green-600');
                 } catch(e){ console.error('applyToFutureVREntries', e); }
             }
 
-                // --- VT inline-edit helpers (mirror of VR) ---
                 function startInlineVTEdit(el, vtId) {
                     try {
                         if (!el) return;
@@ -12389,7 +7683,6 @@ const firebaseConfig = {
                         });
                     } catch(e){ console.error('startInlineVTEdit', e); }
                 }
-
                 async function commitInlineVTEdit(vtId, newAmount, inputEl) {
                     try {
                         const md = getCurrentMonthData();
@@ -12403,7 +7696,6 @@ const firebaseConfig = {
                         render();
                     } catch(e){ console.error('commitInlineVTEdit', e); }
                 }
-
                 function applyToFutureVTEntries(recurringId, newAmount) {
                     try {
                         Object.keys(state.appData.data).forEach(year => {
@@ -12419,11 +7711,10 @@ const firebaseConfig = {
                             });
                         });
                         try { storage.saveData(state.appData); } catch(e){ console.error('applyToFutureVTEntries save', e); }
-                        showToast('AlterAÇÕES aplicadas í s recorríªncias futuras.', 'bg-green-600');
+                        showToast('AlterAï¿½ï¿½ES aplicadas ï¿½ï¿½s recorrï¿½ï¿½ncias futuras.', 'bg-green-600');
                     } catch(e){ console.error('applyToFutureVTEntries', e); }
                 }
 
-            // Delete a VR ledger entry by id. If it's recurring, ask to remove future recurrences as well.
             async function deleteVRLedgerEntry(id, yearContext, monthContext) {
                 try {
                     if (!id) return;
@@ -12436,11 +7727,11 @@ const firebaseConfig = {
                     const entry = monthData.vrLedger[idx];
                     let removeFuture = false;
                     if (entry && entry.recurringId) {
-                        try { removeFuture = await confirmAsync('Este VR í© recorrente. Deseja excluir tambá©m as recorríªncias futuras? (OK = Sim)', 'Excluir recorríªncias VR'); } catch(e) { removeFuture = false; }
+                        try { removeFuture = await confirmAsync('Este VR ï¿½ï¿½ recorrente. Deseja excluir tambï¿½m as recorrï¿½ï¿½ncias futuras? (OK = Sim)', 'Excluir recorrï¿½ï¿½ncias VR'); } catch(e) { removeFuture = false; }
                     }
-                    // remove this entry from current month
+
                     monthData.vrLedger.splice(idx, 1);
-                    // if removeFuture and entry.recurringId, sweep future months
+
                     if (removeFuture && entry && entry.recurringId) {
                         const rid = entry.recurringId;
                         const currentMonthStart = new Date(y, m - 1, 1);
@@ -12458,11 +7749,10 @@ const firebaseConfig = {
                             });
                         });
                     }
-                    try { await storage.saveData(state.appData); showToast('VR excluí­do.'); } catch (e) { console.error('delete vr save', e); showToast('Falha ao excluir VR.', 'bg-red-600'); }
+                    try { await storage.saveData(state.appData); showToast('VR excluï¿½ï¿½do.'); } catch (e) { console.error('delete vr save', e); showToast('Falha ao excluir VR.', 'bg-red-600'); }
                 } catch (e) { console.error('deleteVRLedgerEntry', e); }
             }
 
-            // Delete VT ledger entry by id (mirror VR behavior)
             async function deleteVTLedgerEntry(id, yearContext, monthContext) {
                 try {
                     if (!id) return;
@@ -12475,7 +7765,7 @@ const firebaseConfig = {
                     const entry = monthData.vtLedger[idx];
                     let removeFuture = false;
                     if (entry && entry.recurringId) {
-                        try { removeFuture = await confirmAsync('Este VT í© recorrente. Deseja excluir tambá©m as recorríªncias futuras? (OK = Sim)', 'Excluir recorríªncias VT'); } catch(e) { removeFuture = false; }
+                        try { removeFuture = await confirmAsync('Este VT ï¿½ï¿½ recorrente. Deseja excluir tambï¿½m as recorrï¿½ï¿½ncias futuras? (OK = Sim)', 'Excluir recorrï¿½ï¿½ncias VT'); } catch(e) { removeFuture = false; }
                     }
                     monthData.vtLedger.splice(idx, 1);
                     if (removeFuture && entry && entry.recurringId) {
@@ -12495,11 +7785,10 @@ const firebaseConfig = {
                             });
                         });
                     }
-                    try { await storage.saveData(state.appData); showToast('VT excluí­do.'); } catch (e) { console.error('delete vt save', e); showToast('Falha ao excluir VT.', 'bg-red-600'); }
+                    try { await storage.saveData(state.appData); showToast('VT excluï¿½ï¿½do.'); } catch (e) { console.error('delete vt save', e); showToast('Falha ao excluir VT.', 'bg-red-600'); }
                 } catch (e) { console.error('deleteVTLedgerEntry', e); }
             }
 
-            // Open the VR modal to edit a ledger entry
             function openVREdit(id) {
                 try {
                     const modal = document.getElementById('vr-modal');
@@ -12508,32 +7797,30 @@ const firebaseConfig = {
                     const entry = (md.vrLedger || []).find(v => v.id === id) || null;
                     if (entry) {
                         document.getElementById('vr-entry-id').value = entry.id || '';
-                        document.getElementById('vr-entry-desc').value = entry.description || 'Benefí­cio - VR';
+                        document.getElementById('vr-entry-desc').value = entry.description || 'Benefï¿½ï¿½cio - VR';
                         document.getElementById('vr-entry-amount').value = entry.amount || 0;
                     } else {
                         document.getElementById('vr-entry-id').value = '';
-                        document.getElementById('vr-entry-desc').value = 'Benefí­cio - VR';
+                        document.getElementById('vr-entry-desc').value = 'Benefï¿½ï¿½cio - VR';
                         document.getElementById('vr-entry-amount').value = '';
                     }
                     try { modal.showModal(); } catch(e){ console.error('openVREdit showModal', e); }
                 } catch (e) { console.error('openVREdit', e); }
             }
-
             function closeVRModal() {
                 try { const m = document.getElementById('vr-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeVRModal', e); }
             }
-
             async function saveVRLedgerEntry() {
                 try {
                     const id = document.getElementById('vr-entry-id').value;
-                    const desc = document.getElementById('vr-entry-desc').value || 'Benefí­cio - VR';
+                    const desc = document.getElementById('vr-entry-desc').value || 'Benefï¿½ï¿½cio - VR';
                     const amount = parseLocaleNumber(document.getElementById('vr-entry-amount').value) || 0;
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vrLedger)) md.vrLedger = [];
                     if (id) {
                         const idx = md.vrLedger.findIndex(v => v.id === id);
                         if (idx > -1) {
-                            // Update only this month. VR edits are independent by default.
+
                             md.vrLedger[idx].description = desc;
                             md.vrLedger[idx].amount = amount;
                         }
@@ -12547,7 +7834,6 @@ const firebaseConfig = {
                 } catch (e) { console.error('saveVRLedgerEntry', e); showToast('Falha ao salvar VR.', 'bg-red-600'); }
             }
 
-            // VR Usage edit helpers
             function openVRUsageEdit(id) {
                 try {
                     const md = getCurrentMonthData();
@@ -12566,11 +7852,9 @@ const firebaseConfig = {
                     try { modal.showModal(); } catch(e) { console.error('openVRUsageEdit showModal', e); }
                 } catch(e) { console.error('openVRUsageEdit', e); }
             }
-
             function closeVRUsageModal() {
                 try { const m = document.getElementById('vr-usage-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeVRUsageModal', e); }
             }
-
             async function saveVRUsageEdit(e) {
                 try {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
@@ -12579,20 +7863,18 @@ const firebaseConfig = {
                     const amount = parseLocaleNumber(document.getElementById('vr-usage-amount').value) || 0;
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vrUsage)) md.vrUsage = [];
-                    // Validate against available VR balance for this month.
+
                     const ledgerTotal = (Array.isArray(md.vrLedger) ? md.vrLedger.reduce((s,l) => s + (Number(l && l.amount) || 0), 0) : 0);
                     const currentUsageExcludingThis = (md.vrUsage || []).reduce((s,u) => s + (Number(u && u.amount) || 0), 0) - ((id && md.vrUsage.find(u => u.id === id)) ? Number(md.vrUsage.find(u => u.id === id).amount || 0) : 0);
                     const projectedUsage = Math.round((currentUsageExcludingThis + amount) * 100) / 100;
                     if (projectedUsage > Math.round((ledgerTotal + Number.EPSILON) * 100) / 100) {
-                        // Exceeds available VR balance â€” show inline error and abort
-                        // Use transaction error area if transaction modal is open, otherwise toast
-                        try {
-                            setTransactionError('Valor superior ao saldo disponí­vel de VR para este Mês. Verifique o saldo no card de VR.');
-                        } catch(e) { /* ignore */ }
-                        showToast('Saldo de VR insuficiente para esta ediçío.', 'bg-red-600');
-                        return; // abort save
-                    }
 
+                        try {
+                            setTransactionError('Valor superior ao saldo disponï¿½ï¿½vel de VR para este Mï¿½s. Verifique o saldo no card de VR.');
+                        } catch(e) { /* ignore */ }
+                        showToast('Saldo de VR insuficiente para esta ediï¿½ï¿½o.', 'bg-red-600');
+                        return; 
+                    }
                     if (id) {
                         const idx = md.vrUsage.findIndex(u => u.id === id);
                         if (idx > -1) {
@@ -12608,7 +7890,6 @@ const firebaseConfig = {
                 } catch(e) { console.error('saveVRUsageEdit', e); }
             }
 
-            // VT Ledger helpers
             function openVTEdit(id) {
                 try {
                     const modal = document.getElementById('vt-modal');
@@ -12617,25 +7898,23 @@ const firebaseConfig = {
                     const entry = (md.vtLedger || []).find(v => v.id === id) || null;
                     if (entry) {
                         document.getElementById('vt-entry-id').value = entry.id || '';
-                        document.getElementById('vt-entry-desc').value = entry.description || 'Benefí­cio - VT';
+                        document.getElementById('vt-entry-desc').value = entry.description || 'Benefï¿½ï¿½cio - VT';
                         document.getElementById('vt-entry-amount').value = entry.amount || 0;
                     } else {
                         document.getElementById('vt-entry-id').value = '';
-                        document.getElementById('vt-entry-desc').value = 'Benefí­cio - VT';
+                        document.getElementById('vt-entry-desc').value = 'Benefï¿½ï¿½cio - VT';
                         document.getElementById('vt-entry-amount').value = '';
                     }
                     try { modal.showModal(); } catch(e){ console.error('openVTEdit showModal', e); }
                 } catch (e) { console.error('openVTEdit', e); }
             }
-
             function closeVTModal() {
                 try { const m = document.getElementById('vt-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeVTModal', e); }
             }
-
             async function saveVTLedgerEntry() {
                 try {
                     const id = document.getElementById('vt-entry-id').value;
-                    const desc = document.getElementById('vt-entry-desc').value || 'Benefí­cio - VT';
+                    const desc = document.getElementById('vt-entry-desc').value || 'Benefï¿½ï¿½cio - VT';
                     const amount = parseLocaleNumber(document.getElementById('vt-entry-amount').value) || 0;
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vtLedger)) md.vtLedger = [];
@@ -12655,7 +7934,6 @@ const firebaseConfig = {
                 } catch (e) { console.error('saveVTLedgerEntry', e); showToast('Falha ao salvar VT.', 'bg-red-600'); }
             }
 
-            // VT Usage edit helpers
             function openVTUsageEdit(id) {
                 try {
                     const md = getCurrentMonthData();
@@ -12674,11 +7952,9 @@ const firebaseConfig = {
                     try { modal.showModal(); } catch(e) { console.error('openVTUsageEdit showModal', e); }
                 } catch(e) { console.error('openVTUsageEdit', e); }
             }
-
             function closeVTUsageModal() {
                 try { const m = document.getElementById('vt-usage-modal'); if (m && typeof m.close === 'function') m.close(); } catch(e) { console.error('closeVTUsageModal', e); }
             }
-
             async function saveVTUsageEdit(e) {
                 try {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
@@ -12687,16 +7963,15 @@ const firebaseConfig = {
                     const amount = parseLocaleNumber(document.getElementById('vt-usage-amount').value) || 0;
                     const md = getCurrentMonthData();
                     if (!Array.isArray(md.vtUsage)) md.vtUsage = [];
-                    // Validate against available VT balance for this month.
+
                     const ledgerTotal = (Array.isArray(md.vtLedger) ? md.vtLedger.reduce((s,l) => s + (Number(l && l.amount) || 0), 0) : 0);
                     const currentUsageExcludingThis = (md.vtUsage || []).reduce((s,u) => s + (Number(u && u.amount) || 0), 0) - ((id && md.vtUsage.find(u => u.id === id)) ? Number(md.vtUsage.find(u => u.id === id).amount || 0) : 0);
                     const projectedUsage = Math.round((currentUsageExcludingThis + amount) * 100) / 100;
                     if (projectedUsage > Math.round((ledgerTotal + Number.EPSILON) * 100) / 100) {
-                        try { setTransactionError('Valor superior ao saldo disponí­vel de VT para este Mês. Verifique o saldo no card de VT.'); } catch(e) {}
-                        showToast('Saldo de VT insuficiente para esta ediçío.', 'bg-red-600');
-                        return; // abort save
+                        try { setTransactionError('Valor superior ao saldo disponï¿½ï¿½vel de VT para este Mï¿½s. Verifique o saldo no card de VT.'); } catch(e) {}
+                        showToast('Saldo de VT insuficiente para esta ediï¿½ï¿½o.', 'bg-red-600');
+                        return; 
                     }
-
                     if (id) {
                         const idx = md.vtUsage.findIndex(u => u.id === id);
                         if (idx > -1) {
@@ -12712,16 +7987,15 @@ const firebaseConfig = {
                 } catch(e) { console.error('saveVTUsageEdit', e); }
             }
 
-        // Export public API
         return {
             init,
-            // VR helpers
+
             openVRUsageEdit,
             closeVRUsageModal,
             saveVRUsageEdit,
             saveVRLedgerEntry,
             closeVRModal,
-            // VT helpers
+
             openVTUsageEdit,
             closeVTUsageModal,
             saveVTUsageEdit,
@@ -12729,12 +8003,10 @@ const firebaseConfig = {
             closeVTModal,
             openVTEdit
         };
-    })(); // Close App IIFE and assign to App
+    })(); 
 
-    // Inicializa a aplicação quando o DOM estiver pronto
     document.addEventListener('DOMContentLoaded', () => {
-        // App.init() movido para dentro de onAuthStateChanged - será chamado após autenticação
-        // Attach VR modal buttons after init so elements are available
+
         try {
                 const vrSaveBtn = document.getElementById('vr-entry-save'); if (vrSaveBtn) vrSaveBtn.addEventListener('click', (e) => { e.preventDefault(); App.saveVRLedgerEntry(); });
                 const vrCancel = document.getElementById('vr-entry-cancel'); if (vrCancel) vrCancel.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('vr-entry-id').value = ''; document.getElementById('vr-entry-desc').value = ''; document.getElementById('vr-entry-amount').value = ''; });
@@ -12742,11 +8014,11 @@ const firebaseConfig = {
                 const vruSave = document.getElementById('vr-usage-save'); if (vruSave) vruSave.addEventListener('click', (e) => { e.preventDefault(); App.saveVRUsageEdit(e); });
                 const vruCancel = document.getElementById('vr-usage-cancel'); if (vruCancel) vruCancel.addEventListener('click', (e) => { e.preventDefault(); App.closeVRUsageModal(); });
                 const vruClose = document.getElementById('vr-usage-close'); if (vruClose) vruClose.addEventListener('click', () => App.closeVRUsageModal());
-                // Ensure form submission (Enter key) does not trigger a full page submit
+
                 const vruForm = document.getElementById('vr-usage-form'); if (vruForm) vruForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVRUsageEdit(e); });
-                // Also protect VR ledger form (vr-entry-form) from default submit behavior
+
                 const vrEntryForm = document.getElementById('vr-entry-form'); if (vrEntryForm) vrEntryForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVRLedgerEntry(); });
-                // VT modal bindings
+
                 const vtSaveBtn = document.getElementById('vt-entry-save'); if (vtSaveBtn) vtSaveBtn.addEventListener('click', (e) => { e.preventDefault(); App.saveVTLedgerEntry(); });
                 const vtCancel = document.getElementById('vt-entry-cancel'); if (vtCancel) vtCancel.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('vt-entry-id').value = ''; document.getElementById('vt-entry-desc').value = ''; document.getElementById('vt-entry-amount').value = ''; });
                 const vtClose = document.getElementById('close-vt-modal'); if (vtClose) vtClose.addEventListener('click', () => App.closeVTModal());
@@ -12755,18 +8027,17 @@ const firebaseConfig = {
                 const vtuClose = document.getElementById('vt-usage-close'); if (vtuClose) vtuClose.addEventListener('click', () => App.closeVTUsageModal());
                 const vtuForm = document.getElementById('vt-usage-form'); if (vtuForm) vtuForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVTUsageEdit(e); });
                 const vtEntryForm = document.getElementById('vt-entry-form'); if (vtEntryForm) vtEntryForm.addEventListener('submit', (e) => { e.preventDefault(); App.saveVTLedgerEntry(); });
-                // ...salary modal wiring moved to bindEvents to ensure helper is in scope
-                // Mobile FAB: delegate to existing add-transaction button to preserve behavior
+
                 try {
                     const mobileFab = document.getElementById('mobile-add-transaction-fab');
                     const desktopAddBtn = document.getElementById('add-transaction-btn');
                     if (mobileFab && desktopAddBtn) {
                         mobileFab.addEventListener('click', (e) => {
-                            // If on mobile, simulate click on the main add button which opens the modal
+
                             if (window.innerWidth <= 639) {
                                 try { desktopAddBtn.click(); } catch (err) { openModal('expenses'); }
                             } else {
-                                // hide mobile FAB on desktop
+
                                 mobileFab.style.display = 'none';
                             }
                         });
@@ -12774,23 +8045,8 @@ const firebaseConfig = {
                 } catch(e) { console.error('attach mobile FAB', e); }
             } catch(e) { console.error('attach vr modal buttons', e); }
     });
-    </script>
-    <!-- Toasts -->
-    <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded shadow-lg hidden" style="z-index: 2147483647 !important;" role="status" aria-live="polite"></div>
-    <!-- Confirm Modal (generic) -->
-    <dialog id="confirm-dialog" class="p-4 rounded-2xl shadow-2xl card w-full max-w-md">
-        <div class="mb-3">
-            <h3 id="confirm-dialog-title" class="text-lg font-semibold">Confirmar</h3>
-        </div>
-        <div id="confirm-dialog-body" class="text-sm text-gray-700 mb-4">Tem certeza?</div>
-        <div class="flex justify-end gap-2">
-            <button id="confirm-dialog-cancel" class="px-3 py-1 rounded bg-gray-100">Cancelar</button>
-            <button id="confirm-dialog-ok" class="px-3 py-1 rounded bg-red-600 text-white">Excluir</button>
-        </div>
-    </dialog>
-    <script>
     (function(){
-        // Wire confirm dialog buttons if present
+
         function initConfirmDialog() {
             try {
                 const dlg = document.getElementById('confirm-dialog');
@@ -12802,7 +8058,6 @@ const firebaseConfig = {
             } catch(e) { console.error('initConfirmDialog', e); }
         }
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initConfirmDialog); else initConfirmDialog();
-
         window.showConfirm = function(message, title) {
             return new Promise(function(resolve){
                 try {
@@ -12822,155 +8077,16 @@ const firebaseConfig = {
             });
         };
 
-        // audit log feature removed
     })();
-    </script>
-    <!-- Mobile Bottom Navigation -->
-    <nav id="mobile-bottom-nav" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-full shadow-lg px-3 py-2 z-50 gap-3 hidden">
-        <button data-view="dashboard" class="mobile-nav-btn p-2 rounded-full" title="Visío Geral"><span class="material-symbols-outlined">dashboard</span></button>
-        <button data-view="credit-cards" class="mobile-nav-btn p-2 rounded-full" title="Faturas"><span class="material-symbols-outlined">credit_card</span></button>
-    </nav>
-    <!-- Mobile Action Sheet (hidden until FAB tapped) -->
-    <div id="mobile-action-sheet" class="hidden fixed inset-x-0 bottom-0 z-60 flex items-end justify-center">
-        <div id="mas-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);" aria-hidden="true"></div>
-        <div id="mas-sheet" role="dialog" aria-modal="true" class="w-full max-w-2xl bg-white rounded-t-xl shadow-2xl p-4" style="transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.9,.3,1);">
-            <div class="sheet-handle" style="width:56px;height:6px;background:#e5e7eb;border-radius:999px;margin:6px auto 10px;"></div>
-            <div class="grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
-                <button id="mas-new-transaction" class="mobile-sheet-btn" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#06b6d4,#0369a1);color:#fff;font-weight:600;">Nova transação</button>
-                <button id="mas-new-income" class="mobile-sheet-btn" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#10b981,#059669);color:#fff;font-weight:600;">Nova receita</button>
-                <button id="mas-new-expense" class="mobile-sheet-btn" style="padding:14px;border-radius:12px;background:linear-gradient(180deg,#f97316,#dc2626);color:#fff;font-weight:600;">Nova despesa</button>
-                <button id="mas-import" class="mobile-sheet-btn" style="padding:14px;border-radius:12px;background:#f3f4f6;color:#111;font-weight:600;">Importar planilha</button>
-            </div>
-            <div style="margin-top:12px;text-align:center;"><button id="mas-cancel" style="padding:10px 14px;border-radius:10px;background:#fff;border:1px solid #e5e7eb;">Fechar</button></div>
-        </div>
-    </div>
-    <!-- Mobile Floating Add Transaction Button -->
-    <button id="mobile-add-transaction-fab" aria-label="Adicionar transação" title="Nova transação">+
-    </button>
-
-    <!-- Mobile-only enhancements: CSS + JS (do not change desktop) -->
-    <style id="mobile-enhancements">
-    /* Scope to small screens only so desktop is unchanged */
-    @media (max-width: 768px) {
-        /* Gentle global typography scaling and spacing for mobile */
-        html, body { font-size: 16px !important; -webkit-font-smoothing:antialiased; }
-        body { padding-bottom: 6.5rem !important; /* avoid bottom nav overlap */ }
-
-        /* Make main layout use full viewport width with comfortable horizontal padding */
-        /* Target common wrapper/container names; these selectors are safe because they're scoped to mobile only */
-        .container, .app-container, .main, .content, .page, .panel, .wrap, #app {
-            width: calc(100vw - 1.5rem) !important;
-            max-width: calc(100vw - 1.5rem) !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
-        }
-
-        /* Make bottom nav more prominent and finger-friendly */
-        #mobile-bottom-nav {
-            display: flex !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            bottom: 0.8rem !important;
-            padding: 0.45rem 0.75rem !important;
-            gap: 8px !important;
-            border-radius: 9999px !important;
-            box-shadow: 0 10px 30px rgba(2,6,23,0.12) !important;
-            z-index: 140000 !important;
-        }
-        #mobile-bottom-nav .mobile-nav-btn { width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; }
-
-        /* Floating action button: larger, high-contrast, positioned above bottom-nav with smooth shadow */
-        #mobile-add-transaction-fab {
-            display: inline-flex !important;
-            position: fixed !important;
-            right: 1rem !important;
-            bottom: 5.8rem !important; /* above bottom nav */
-            width: 64px !important;
-            height: 64px !important;
-            border-radius: 9999px !important;
-            background: linear-gradient(180deg,#06b6d4,#0369a1) !important;
-            color: #fff !important;
-            font-size: 34px !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-shadow: 0 14px 34px rgba(3,105,161,0.18) !important;
-            z-index: 150000 !important;
-            border: none !important;
-            -webkit-tap-highlight-color: transparent;
-            transition: transform .14s ease, box-shadow .14s ease;
-        }
-        #mobile-add-transaction-fab:active { transform: scale(.96); box-shadow: 0 8px 18px rgba(3,105,161,0.12) !important; }
-
-        /* Mobile action sheet styles */
-        #mobile-action-sheet { display: none; }
-        #mobile-action-sheet.show { display: flex; }
-        #mas-sheet.open { transform: translateY(0%); }
-
-        /* Make modal dialogs full-screen and easier to scroll on mobile */
-        dialog[open] {
-            width: 100vw !important;
-            height: 100vh !important;
-            left: 0 !important;
-            right: 0 !important;
-            top: 0 !important;
-            bottom: 0 !important;
-            margin: 0 !important;
-            border-radius: 12px !important;
-            padding: 0.75rem !important;
-            overflow: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            display: flex !important; flex-direction: column !important;
-        }
-        dialog::backdrop { background: rgba(0,0,0,0.6) !important; }
-        dialog .modal-body, dialog .dialog-body, dialog .content { width: calc(100vw - 2rem) !important; margin: 0 auto !important; }
-
-    /* Keep cards and panels full-bleed where intended, but keep tables as normal rows to avoid horizontal scroll on mobile */
-    .dashboard-card, .fatura-card, .transaction-card, .card, .panel { width: calc(100vw - 1.5rem) !important; max-width: calc(100vw - 1.5rem) !important; margin: 0.6rem auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(2,6,23,0.06) !important; padding: 12px !important; background: linear-gradient(180deg,#ffffff,#fbfbff); }
-
-    /* Tables: keep natural table layout (rows stacked vertically). Use subtle dividers between rows for mobile readability. */
-    .responsive-table, .responsive-table table { width: 100% !important; max-width: 100% !important; }
-    /* Prevent fixed col widths from forcing horizontal scroll on mobile */
-    .responsive-table colgroup col { width: auto !important; }
-    .responsive-table tr { display: table-row !important; margin: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
-    .responsive-table td { display: table-cell !important; vertical-align: middle !important; padding: 10px 8px !important; border: none !important; border-bottom: 1px solid rgba(0,0,0,0.06) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .responsive-table td .material-symbols-outlined { margin-right: 8px !important; }
-
-        /* Forms and inputs take full width like the transaction modal */
-        form, .form-row, .field, .form-group { width: calc(100vw - 2rem) !important; max-width: calc(100vw - 2rem) !important; margin: 0.4rem auto !important; }
-        input, select, textarea, .select-wrapper, .icon-select-button { display: block !important; width: 100% !important; box-sizing: border-box !important; font-size: 16px !important; padding: 12px !important; border-radius: 10px !important; }
-        label { display:block; margin-bottom:6px; color:#374151; font-weight:600; }
-        .field small, .hint { display:block; color:#6b7280; margin-top:6px; }
-
-        /* Buttons full width in dialogs and action groups */
-        .modal-actions, .dialog-actions, .action-row { display:flex; flex-direction:column; gap:10px; }
-        .modal-actions button, .dialog-actions button, .modal-action-btn { width:100% !important; }
-
-        /* Dashboard compactness and legibility */
-        .dashboard-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
-
-        /* Compact, tappable action buttons and inputs */
-        .actions-cell button { min-width: 48px !important; height:48px !important; }
-        input, select, textarea { font-size: 16px !important; padding: 12px !important; }
-
-        /* Improve focus outlines for keyboard and accessibility on mobile */
-        :focus { outline: 3px solid rgba(6, 182, 212, 0.18); outline-offset: 3px; }
-    }
-    </style>
-
-    <script>
     (function(){
-        // Mobile runtime enhancements (no changes for desktop)
-        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
 
+        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
         document.addEventListener('DOMContentLoaded', function(){
             try {
-                // Show mobile bottom nav when appropriate
+
                 const mobileNav = document.getElementById('mobile-bottom-nav');
                 if (mobileNav && isMobile()) mobileNav.classList.remove('hidden');
 
-                // Action sheet elements
                 const actionSheet = document.getElementById('mobile-action-sheet');
                 const masSheet = document.getElementById('mas-sheet');
                 const masBackdrop = document.getElementById('mas-backdrop');
@@ -12979,22 +8095,20 @@ const firebaseConfig = {
                 const masNewIncome = document.getElementById('mas-new-income');
                 const masNewExpense = document.getElementById('mas-new-expense');
                 const masImport = document.getElementById('mas-import');
-
                 function openActionSheet(){
                     if (!actionSheet || !masSheet) return;
                     actionSheet.classList.add('show');
-                    // open with slight delay so transition works
-                    requestAnimationFrame(()=> masSheet.classList.add('open'));
-                    // prevent background scroll
+                    masSheet.classList.add('open');
+
                     document.documentElement.style.overflow = 'hidden';
                 }
                 function closeActionSheet(){
                     if (!actionSheet || !masSheet) return;
                     masSheet.classList.remove('open');
-                    setTimeout(()=>{ actionSheet.classList.remove('show'); document.documentElement.style.overflow = ''; }, 280);
+                    actionSheet.classList.remove('show');
+                    document.documentElement.style.overflow = '';
                 }
 
-                // Ensure mobile FAB is visible on small screens and focusable; override to open action sheet
                 const fab = document.getElementById('mobile-add-transaction-fab');
                 const addBtn = document.getElementById('add-transaction-btn');
                 if (fab && isMobile()) {
@@ -13004,15 +8118,13 @@ const firebaseConfig = {
                     fab.addEventListener('click', function(e){ e.preventDefault(); try { openActionSheet(); } catch(err) { try { if (addBtn) addBtn.click(); else openModal && openModal('expenses'); } catch(e){} } });
                 }
 
-                // Wire sheet buttons to existing handlers where possible
                 if (masCancel) masCancel.addEventListener('click', closeActionSheet);
                 if (masBackdrop) masBackdrop.addEventListener('click', closeActionSheet);
-                if (masNewTransaction) masNewTransaction.addEventListener('click', function(){ closeActionSheet(); setTimeout(()=>{ try { if (addBtn) addBtn.click(); else openModal && openModal('expenses'); } catch(e){} }, 260); });
-                if (masNewIncome) masNewIncome.addEventListener('click', function(){ closeActionSheet(); setTimeout(()=>{ try { const inc = document.getElementById('add-income-btn'); if (inc) inc.click(); else openModal && openModal('incomes'); } catch(e){} }, 260); });
-                if (masNewExpense) masNewExpense.addEventListener('click', function(){ closeActionSheet(); setTimeout(()=>{ try { const exp = document.getElementById('add-expense-btn'); if (exp) exp.click(); else openModal && openModal('expenses'); } catch(e){} }, 260); });
-                if (masImport) masImport.addEventListener('click', function(){ closeActionSheet(); setTimeout(()=>{ try { const imp = document.getElementById('open-import-modal-btn'); if (imp) imp.click(); else { const el = document.getElementById('import-spreadsheet-modal'); if (el && typeof el.showModal === 'function') el.showModal(); } } catch(e){} }, 260); });
+                if (masNewTransaction) masNewTransaction.addEventListener('click', function(){ closeActionSheet(); try { if (addBtn) addBtn.click(); else openModal && openModal('expenses'); } catch(e){} });
+                if (masNewIncome) masNewIncome.addEventListener('click', function(){ closeActionSheet(); try { const inc = document.getElementById('add-income-btn'); if (inc) inc.click(); else openModal && openModal('incomes'); } catch(e){} });
+                if (masNewExpense) masNewExpense.addEventListener('click', function(){ closeActionSheet(); try { const exp = document.getElementById('add-expense-btn'); if (exp) exp.click(); else openModal && openModal('expenses'); } catch(e){} });
+                if (masImport) masImport.addEventListener('click', function(){ closeActionSheet(); try { const imp = document.getElementById('open-import-modal-btn'); if (imp) imp.click(); else { const el = document.getElementById('import-spreadsheet-modal'); if (el && typeof el.showModal === 'function') el.showModal(); } } catch(e){} });
 
-                // Make bottom nav buttons navigate views (reuse existing changeView bindings)
                 try {
                     const nav = document.getElementById('mobile-bottom-nav');
                     if (nav) {
@@ -13020,13 +8132,11 @@ const firebaseConfig = {
                     }
                 } catch(e){}
 
-                // Swipe to change month (touch gestures) - DESABILITADO conforme solicitação do usuá¡rio
-                // O usuá¡rio nío quer que ao arrastar o site para direita e esquerda mude o calendí¡rio
                 /* (function(){
                     let startX = 0, startY = 0, startTime = 0;
-                    const threshold = 60; // px to consider swipe
-                    const restraint = 80; // max vertical movement
-                    const allowedTime = 500; // ms
+                    const threshold = 60; 
+                    const restraint = 80; 
+                    const allowedTime = 500; 
                     document.addEventListener('touchstart', function(e){
                         const t = e.changedTouches[0]; startX = t.pageX; startY = t.pageY; startTime = new Date().getTime();
                     }, { passive: true });
@@ -13034,7 +8144,7 @@ const firebaseConfig = {
                         try {
                             const t = e.changedTouches[0]; const distX = t.pageX - startX; const distY = t.pageY - startY; const elapsed = new Date().getTime() - startTime;
                             if (elapsed <= allowedTime && Math.abs(distX) >= threshold && Math.abs(distY) <= restraint) {
-                                // left swipe = next month, right swipe = prev month
+
                                 if (distX < 0) { const next = document.getElementById('next-month-btn'); if (next) next.click(); }
                                 else { const prev = document.getElementById('prev-month-btn'); if (prev) prev.click(); }
                             }
@@ -13042,38 +8152,27 @@ const firebaseConfig = {
                     }, { passive: true });
                 })(); */
 
-                // Improve modal backdrop tap-to-close responsiveness on mobile (single tap closes)
                 try {
                     document.querySelectorAll('dialog').forEach(d => {
                         d.addEventListener('click', function(e){ if (e.target === d && isMobile()) { try { d.close(); } catch(_) { d.removeAttribute('open'); } } });
                     });
                 } catch(e) {}
 
-                // Prevent accidental focus loss when keyboard opens on iOS by ensuring inputs are scrolled into view
                 try {
-                    document.body.addEventListener('focusin', function(e){ if (!isMobile()) return; try { setTimeout(()=>{ e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 240); } catch(_){} });
+                    document.body.addEventListener('focusin', function(e){ if (!isMobile()) return; try { e.target.scrollIntoView({ block: 'center', behavior: 'auto' }); } catch(_){} });
                 } catch(e) {}
 
-                // Reduce motion for mobile to keep interactions snappy
                 try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('reduced-motion'); } catch(e) {}
 
-                // Swipe/ARIA-init removed: transactions use inline action buttons now
             } catch(e) { console.error('mobile-enhancements init', e); }
         });
     })();
-    </script>
-    <!-- Swipe-to-reveal behavior removed: rows are standard table rows with inline action buttons -->
-
-    <!-- ===== MICROINTERAí‡í•ES E MELHORIAS UX ===== -->
-
-    <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Intersection Observer para animAÇÕES de entrada
+
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
         };
-
         const observer = new IntersectionObserver(function(entries) {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -13083,40 +8182,34 @@ const firebaseConfig = {
             });
         }, observerOptions);
 
-        // Animar elementos quando entram na viewport
         function initScrollAnimations() {
             const animatedElements = document.querySelectorAll('.animate-slide-up, .animate-fade-in, .animate-scale-in');
             animatedElements.forEach(el => {
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(20px)';
-                el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+
                 observer.observe(el);
             });
         }
 
-        // Melhorar feedback dos botões
         function enhanceButtonFeedback() {
             const buttons = document.querySelectorAll('.modern-btn, .kpi-card, .modern-card');
             buttons.forEach(button => {
                 button.addEventListener('mouseenter', function() {
                     this.style.transform = 'translateY(-2px)';
                 });
-                
                 button.addEventListener('mouseleave', function() {
                     this.style.transform = 'translateY(0)';
                 });
-                
                 button.addEventListener('mousedown', function() {
                     this.style.transform = 'translateY(0) scale(0.98)';
                 });
-                
                 button.addEventListener('mouseup', function() {
                     this.style.transform = 'translateY(-2px) scale(1)';
                 });
             });
         }
 
-        // Animação de números (contadores)
         function animateNumbers() {
             const numbers = document.querySelectorAll('.kpi-value');
             numbers.forEach(numberEl => {
@@ -13136,32 +8229,17 @@ const firebaseConfig = {
                         }
                     });
                 }, { threshold: 0.5 });
-                
                 observer.observe(numberEl);
             });
         }
-
         function animateCounter(element, start, end, originalText) {
-            const duration = 1500;
-            const increment = end / (duration / 16);
-            let current = start;
-            
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= end) {
-                    current = end;
-                    clearInterval(timer);
-                }
-                
-                // Manter formato original
-                const formattedValue = originalText.replace(/[\d.,]+/, Math.floor(current).toLocaleString('pt-BR'));
-                element.textContent = formattedValue;
-            }, 16);
+
+            const formattedValue = originalText.replace(/[\d.,]+/, Math.floor(end).toLocaleString('pt-BR'));
+            element.textContent = formattedValue;
         }
 
-        // Melhorar experiência de loading
         function enhanceLoadingStates() {
-            // Adicionar skeleton loading para tabelas
+
             const tables = document.querySelectorAll('.modern-table tbody');
             tables.forEach(tbody => {
                 if (tbody.children.length === 0) {
@@ -13178,38 +8256,28 @@ const firebaseConfig = {
             });
         }
 
-        // Toast notifications melhoradas
         function enhanceToasts() {
             const originalShowToast = window.showToast;
             if (originalShowToast) {
                 window.showToast = function(message, bgClass = 'bg-gray-800') {
-                    // Criar toast moderno
+
                     const toast = document.createElement('div');
-                    toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg text-white shadow-lg transform translate-x-full transition-transform duration-300 ${bgClass}`;
+                    toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg text-white shadow-lg ${bgClass}`;
                     toast.innerHTML = `
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined">check_circle</span>
                             <span>${message}</span>
                         </div>
                     `;
-                    
                     document.body.appendChild(toast);
-                    
-                    // Animar entrada
+
                     setTimeout(() => {
-                        toast.style.transform = 'translateX(0)';
-                    }, 100);
-                    
-                    // Auto remover
-                    setTimeout(() => {
-                        toast.style.transform = 'translateX(full)';
-                        setTimeout(() => toast.remove(), 300);
+                        toast.remove();
                     }, 3000);
                 };
             }
         }
 
-        // Smooth scroll para links internos
         function enhanceSmoothScroll() {
             const links = document.querySelectorAll('a[href^="#"]');
             links.forEach(link => {
@@ -13218,7 +8286,7 @@ const firebaseConfig = {
                     const target = document.querySelector(this.getAttribute('href'));
                     if (target) {
                         target.scrollIntoView({
-                            behavior: 'smooth',
+                            behavior: 'auto',
                             block: 'start'
                         });
                     }
@@ -13226,14 +8294,12 @@ const firebaseConfig = {
             });
         }
 
-        // Melhorar acessibilidade do teclado
         function enhanceKeyboardNavigation() {
-            // Adicionar navegação por teclado para cards clicí¡veis
+
             const clickableCards = document.querySelectorAll('.kpi-card, .modern-card[onclick], .modern-card[data-click]');
             clickableCards.forEach(card => {
                 card.setAttribute('tabindex', '0');
                 card.setAttribute('role', 'button');
-                
                 card.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
@@ -13243,35 +8309,29 @@ const firebaseConfig = {
             });
         }
 
-        // Detectar se í© mobile para ajustes especí­ficos
         function isMobile() {
             return window.innerWidth <= 768;
         }
 
-        // Melhorar performance em mobile
         function optimizeForMobile() {
             if (isMobile()) {
-                // Reduzir animAÇÕES complexas
+
                 document.documentElement.style.setProperty('--transition-normal', '200ms ease');
                 document.documentElement.style.setProperty('--transition-slow', '300ms ease');
-                
-                // Adicionar classe para CSS especí­fico de mobile
+
                 document.body.classList.add('mobile-device');
             }
         }
 
-        // Adicionar estados de hover para touch devices
         function enhanceTouchSupport() {
             if ('ontouchstart' in window) {
                 document.body.classList.add('touch-device');
-                
-                // Simular hover em dispositivos touch
+
                 const hoverElements = document.querySelectorAll('.modern-btn, .kpi-card, .modern-card');
                 hoverElements.forEach(el => {
                     el.addEventListener('touchstart', function() {
                         this.classList.add('touch-hover');
                     });
-                    
                     el.addEventListener('touchend', function() {
                         setTimeout(() => {
                             this.classList.remove('touch-hover');
@@ -13281,7 +8341,6 @@ const firebaseConfig = {
             }
         }
 
-        // Inicializar todas as MELHORIAS
         try {
             initScrollAnimations();
             enhanceButtonFeedback();
@@ -13293,10 +8352,9 @@ const firebaseConfig = {
             optimizeForMobile();
             enhanceTouchSupport();
         } catch (error) {
-            console.warn('Erro ao inicializar MELHORIAS UX:', error);
+
         }
 
-        // Re-aplicar MELHORIAS quando o DOM for atualizado (para Conteúdo diní¢mico)
         const domObserver = new MutationObserver(function(mutations) {
             let shouldReapply = false;
             mutations.forEach(mutation => {
@@ -13311,7 +8369,6 @@ const firebaseConfig = {
                     });
                 }
             });
-            
             if (shouldReapply) {
                 setTimeout(() => {
                     initScrollAnimations();
@@ -13320,87 +8377,66 @@ const firebaseConfig = {
                 }, 100);
             }
         });
-
         domObserver.observe(document.body, {
             childList: true,
             subtree: true
         });
     });
 
-    // ===== FIREBASE AUTHENTICATION =====
-    // Firebase já inicializado no início do script (linha 5785)
-    // ObTím referência do Firebase Auth
     const auth = firebase.auth();
 
-    // Auth State Observer - Controla visibilidade da UI baseado no estado de autenticação
     auth.onAuthStateChanged(async (user) => {
         const loginScreen = document.getElementById('loginScreen');
         const mainApp = document.getElementById('mainApp');
-        
         if (user) {
-            // Usuário logado - inicializa app e carrega dados
-            console.log('✅ Usuário autenticado:', user.email);
-            
+
             loginScreen.style.display = 'none';
             mainApp.style.display = 'block';
             mainApp.classList.add('authenticated');
-            
-            // Inicializa aplicação APÓS autenticação para evitar Permission Denied
+
             if (App && typeof App.init === 'function') {
                 await App.init();
             }
         } else {
-            // Usuário nío logado
-            console.log('⚠️ Usuário nío autenticado');
+
             loginScreen.style.display = 'flex';
             mainApp.style.display = 'none';
             mainApp.classList.remove('authenticated');
         }
     });
 
-    // Funçío de Login
     async function handleLogin(e) {
         e.preventDefault();
-        
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         const loginError = document.getElementById('loginError');
         const loginBtn = document.getElementById('loginBtn');
-        
-        // Validação básica
+
         if (!email || !password) {
             showLoginError('Por favor, preencha email e senha.');
             return;
         }
-        
-        // Desabilitar Botão durante o login
+
         loginBtn.disabled = true;
         loginBtn.textContent = 'Entrando...';
         loginError.style.display = 'none';
-        
         try {
             await auth.signInWithEmailAndPassword(email, password);
-            // O onAuthStateChanged cuidará da transiçío de tela
-            console.log('✅ Login realizado com sucesso');
-            
-            // Limpar campos
+
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPassword').value = '';
         } catch (error) {
-            console.error('❌ Erro no login:', error);
-            
-            // Tratamento de erros específicos
+
             let errorMessage = 'Erro ao fazer login. Tente novamente.';
-            
             switch (error.code) {
                 case 'auth/user-not-found':
-                    errorMessage = 'Usuário nío encontrado.';
+                    errorMessage = 'Usuï¿½rio nï¿½o encontrado.';
                     break;
                 case 'auth/wrong-password':
                     errorMessage = 'Senha incorreta.';
                     break;
                 case 'auth/invalid-email':
-                    errorMessage = 'Email inválido.';
+                    errorMessage = 'Email invï¿½lido.';
                     break;
                 case 'auth/user-disabled':
                     errorMessage = 'Esta conta foi desabilitada.';
@@ -13409,58 +8445,51 @@ const firebaseConfig = {
                     errorMessage = 'Muitas tentativas. Tente novamente mais tarde.';
                     break;
                 case 'auth/network-request-failed':
-                    errorMessage = 'Erro de conexío. Verifique sua internet.';
+                    errorMessage = 'Erro de conexï¿½o. Verifique sua internet.';
                     break;
                 case 'auth/invalid-credential':
-                    errorMessage = 'Credenciais inválidas. Verifique email e senha.';
+                    errorMessage = 'Credenciais invï¿½lidas. Verifique email e senha.';
                     break;
                 default:
                     errorMessage = `Erro: ${error.message}`;
             }
-            
             showLoginError(errorMessage);
         } finally {
-            // Reabilitar Botão
+
             loginBtn.disabled = false;
             loginBtn.textContent = 'Entrar';
         }
     }
 
-    // Funçío auxiliar para exibir erros
     function showLoginError(message) {
         const loginError = document.getElementById('loginError');
         loginError.textContent = message;
         loginError.style.display = 'block';
         loginError.classList.add('show');
-        
         setTimeout(() => {
             loginError.classList.remove('show');
         }, 5000);
     }
 
-    // Funçío de Logout
     async function handleLogout() {
         try {
             await auth.signOut();
-            console.log('✅ Logout realizado com sucesso');
+
         } catch (error) {
-            console.error('❌ Erro ao fazer logout:', error);
+
             alert('Erro ao fazer logout. Tente novamente.');
         }
     }
 
-    // Event Listeners
     window.addEventListener('DOMContentLoaded', () => {
-        // Login button
+
         const loginBtn = document.getElementById('loginBtn');
         if (loginBtn) {
             loginBtn.addEventListener('click', handleLogin);
         }
-        
-        // Enter key no email e password
+
         const loginEmail = document.getElementById('loginEmail');
         const loginPassword = document.getElementById('loginPassword');
-        
         if (loginEmail) {
             loginEmail.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -13469,7 +8498,6 @@ const firebaseConfig = {
                 }
             });
         }
-        
         if (loginPassword) {
             loginPassword.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -13478,14 +8506,9 @@ const firebaseConfig = {
                 }
             });
         }
-        
-        // Logout button
+
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', handleLogout);
         }
     });
-    // ===== FIM FIREBASE AUTHENTICATION =====
-    </script>
-</body>
-</html>

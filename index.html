@@ -14,80 +14,6 @@
             animation: fadeIn 0.5s ease;
         }
         
-        // helpers: formatting & escape (canonical definitions hoisted for entire App IIFE)
-        function formatCurrency(v) { try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0); } catch (e) { return String(v); } }
-        function formatDecimalBR(v, decimals){
-            const n = Number(v);
-            if (!Number.isFinite(n)) return '';
-            const d = (typeof decimals === 'number' && decimals >= 0) ? decimals : 2;
-            return n.toFixed(d).replace('.', ',');
-        }
-        function roundTo(v, decimals){
-            const n = Number(v);
-            if (!Number.isFinite(n)) return NaN;
-            const d = (typeof decimals === 'number' && decimals >= 0) ? decimals : 2;
-            const p = Math.pow(10, d);
-            return Math.round((n + Number.EPSILON) * p) / p;
-        }
-        function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-
-        // Parse numbers entered in pt-BR style into JS numbers.
-        // Supports liters with 3 decimals (e.g. "9,510") and currency with 2 decimals.
-        // When mid-typing like "59,", returns NaN to avoid shifting decimals.
-        function parseLocaleNumber(s, maxDecimals) {
-            try {
-                if (s === undefined || s === null) return NaN;
-                if (typeof s === 'number') return Number.isFinite(s) ? s : NaN;
-                let str = String(s).trim();
-                if (str === '') return NaN;
-
-                // Remove currency symbols/spaces, keep only digits/separators/minus
-                str = str.replace(/[R$\s\u00A0]/g, '');
-                str = str.replace(/[^0-9,\.\-]/g, '');
-
-                // Protect minus: allow only leading minus
-                str = str.replace(/(?!^)-/g, '');
-                if (str === '' || str === '-') return NaN;
-
-                const sign = str[0] === '-' ? -1 : 1;
-                if (sign === -1) str = str.slice(1);
-
-                const d = (typeof maxDecimals === 'number' && maxDecimals >= 0) ? maxDecimals : null;
-                const lastComma = str.lastIndexOf(',');
-                const lastDot = str.lastIndexOf('.');
-                const lastSep = Math.max(lastComma, lastDot);
-
-                if (lastSep === -1) {
-                    const digits = str.replace(/\D/g, '');
-                    if (!digits) return NaN;
-                    return sign * Number(digits);
-                }
-
-                const sepChar = str[lastSep];
-                const intRaw = str.slice(0, lastSep);
-                const fracRaw = str.slice(lastSep + 1);
-                if (fracRaw === '') return NaN;
-
-                const intDigits = intRaw.replace(/\D/g, '');
-                const fracDigitsAll = fracRaw.replace(/\D/g, '');
-                if (!intDigits && !fracDigitsAll) return NaN;
-
-                // Heuristic for money-like fields (<= 2 decimals): a single dot with 3 trailing digits is thousands.
-                const sepCount = (str.match(/[.,]/g) || []).length;
-                if (d !== null && d <= 2 && sepCount === 1 && sepChar === '.' && fracDigitsAll.length === 3) {
-                    const allDigits = (intRaw + fracRaw).replace(/\D/g, '');
-                    if (!allDigits) return NaN;
-                    return sign * Number(allDigits);
-                }
-
-                const fracDigits = (d === null) ? fracDigitsAll : fracDigitsAll.slice(0, d);
-                const normalized = (intDigits ? intDigits : '0') + (fracDigits ? ('.' + fracDigits) : '');
-                const v = Number(normalized);
-                return Number.isFinite(v) ? sign * v : NaN;
-            } catch (e) { return NaN; }
-        }
-
-        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
@@ -5779,82 +5705,6 @@
                 }
             }catch(e){ /* Chart.js not available or canvas not ready */ }
         }
-
-        // helpers: formatting & escape
-        function formatCurrency(v) { try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0); } catch (e) { return String(v); } }
-        function formatDecimalBR(v, decimals){
-            const n = Number(v);
-            if (!Number.isFinite(n)) return '';
-            const d = (typeof decimals === 'number' && decimals >= 0) ? decimals : 2;
-            return n.toFixed(d).replace('.', ',');
-        }
-        function roundTo(v, decimals){
-            const n = Number(v);
-            if (!Number.isFinite(n)) return NaN;
-            const d = (typeof decimals === 'number' && decimals >= 0) ? decimals : 2;
-            const p = Math.pow(10, d);
-            return Math.round((n + Number.EPSILON) * p) / p;
-        }
-        function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-
-        // Parse numbers entered in pt-BR style into JS numbers.
-        // Supports liters with 3 decimals (e.g. "9,510") and currency with 2 decimals.
-        // When mid-typing like "59,", returns NaN to avoid shifting decimals.
-        function parseLocaleNumber(s, maxDecimals) {
-            try {
-                if (s === undefined || s === null) return NaN;
-                if (typeof s === 'number') return Number.isFinite(s) ? s : NaN;
-                let str = String(s).trim();
-                if (str === '') return NaN;
-
-                // Remove currency symbols/spaces, keep only digits/separators/minus
-                str = str.replace(/[R$\s\u00A0]/g, '');
-                str = str.replace(/[^0-9,\.\-]/g, '');
-
-                // Protect minus: allow only leading minus
-                str = str.replace(/(?!^)-/g, '');
-                if (str === '' || str === '-') return NaN;
-
-                const sign = str[0] === '-' ? -1 : 1;
-                if (sign === -1) str = str.slice(1);
-
-                const d = (typeof maxDecimals === 'number' && maxDecimals >= 0) ? maxDecimals : null;
-                const lastComma = str.lastIndexOf(',');
-                const lastDot = str.lastIndexOf('.');
-                const lastSep = Math.max(lastComma, lastDot);
-
-                if (lastSep === -1) {
-                    const digits = str.replace(/\D/g, '');
-                    if (!digits) return NaN;
-                    return sign * Number(digits);
-                }
-
-                const sepChar = str[lastSep];
-                const intRaw = str.slice(0, lastSep);
-                const fracRaw = str.slice(lastSep + 1);
-                if (fracRaw === '') return NaN;
-
-                const intDigits = intRaw.replace(/\D/g, '');
-                const fracDigitsAll = fracRaw.replace(/\D/g, '');
-                if (!intDigits && !fracDigitsAll) return NaN;
-
-                // Heuristic for money-like fields (<= 2 decimals): a single dot with 3 trailing digits is thousands.
-                const sepCount = (str.match(/[.,]/g) || []).length;
-                if (d !== null && d <= 2 && sepCount === 1 && sepChar === '.' && fracDigitsAll.length === 3) {
-                    const allDigits = (intRaw + fracRaw).replace(/\D/g, '');
-                    if (!allDigits) return NaN;
-                    return sign * Number(allDigits);
-                }
-
-                const fracDigits = (d === null) ? fracDigitsAll : fracDigitsAll.slice(0, d);
-                const normalized = (intDigits ? intDigits : '0') + (fracDigits ? ('.' + fracDigits) : '');
-                const v = Number(normalized);
-                return Number.isFinite(v) ? sign * v : NaN;
-            } catch (e) { return NaN; }
-        }
-
-        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
-
             // Safe id generator: prefer global generateUUID if available, otherwise fallback
             function safeGenerateId() {
                 try { if (typeof generateUUID === 'function') return generateUUID(); } catch(e) {}
@@ -6721,19 +6571,11 @@ const firebaseConfig = {
         // --- CORE UTILITIES (kept minimal to avoid behavior changes) ---
         const util = {
             normalizeEmail: (email) => String(email || '').replace(/\u00A0/g, ' ').trim().toLowerCase(),
-            formatCurrency: (...args) => formatCurrency(...args),
-            parseLocaleNumber: (...args) => parseLocaleNumber(...args),
-            escapeHtml: (...args) => escapeHtml(...args),
-            isMobile: (...args) => isMobile(...args)
+            formatCurrency,
+            parseLocaleNumber,
+            escapeHtml,
+            isMobile
         };
-
-        // Expose shared helpers globally so late scripts (mobile/UX) can reuse them safely
-        try {
-            window.formatCurrency = window.formatCurrency || formatCurrency;
-            window.parseLocaleNumber = window.parseLocaleNumber || parseLocaleNumber;
-            window.escapeHtml = window.escapeHtml || escapeHtml;
-            window.isMobile = window.isMobile || isMobile;
-        } catch (e) { /* ignore env issues */ }
 
         // Namespaces to group features (populated later without behavior changes)
         const charts = {};

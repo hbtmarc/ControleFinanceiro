@@ -14,80 +14,80 @@
             animation: fadeIn 0.5s ease;
         }
         
-        .login-container {
-            background: white;
-            padding: 3rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 90%;
-            max-width: 400px;
-            animation: slideUp 0.5s ease;
+        // helpers: formatting & escape (canonical definitions hoisted for entire App IIFE)
+        function formatCurrency(v) { try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0); } catch (e) { return String(v); } }
+        function formatDecimalBR(v, decimals){
+            const n = Number(v);
+            if (!Number.isFinite(n)) return '';
+            const d = (typeof decimals === 'number' && decimals >= 0) ? decimals : 2;
+            return n.toFixed(d).replace('.', ',');
         }
-        
-        .login-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 0.5rem;
-            text-align: center;
+        function roundTo(v, decimals){
+            const n = Number(v);
+            if (!Number.isFinite(n)) return NaN;
+            const d = (typeof decimals === 'number' && decimals >= 0) ? decimals : 2;
+            const p = Math.pow(10, d);
+            return Math.round((n + Number.EPSILON) * p) / p;
         }
-        
-        .login-subtitle {
-            font-size: 0.95rem;
-            color: #6b7280;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        .login-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.75rem;
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+        // Parse numbers entered in pt-BR style into JS numbers.
+        // Supports liters with 3 decimals (e.g. "9,510") and currency with 2 decimals.
+        // When mid-typing like "59,", returns NaN to avoid shifting decimals.
+        function parseLocaleNumber(s, maxDecimals) {
+            try {
+                if (s === undefined || s === null) return NaN;
+                if (typeof s === 'number') return Number.isFinite(s) ? s : NaN;
+                let str = String(s).trim();
+                if (str === '') return NaN;
+
+                // Remove currency symbols/spaces, keep only digits/separators/minus
+                str = str.replace(/[R$\s\u00A0]/g, '');
+                str = str.replace(/[^0-9,\.\-]/g, '');
+
+                // Protect minus: allow only leading minus
+                str = str.replace(/(?!^)-/g, '');
+                if (str === '' || str === '-') return NaN;
+
+                const sign = str[0] === '-' ? -1 : 1;
+                if (sign === -1) str = str.slice(1);
+
+                const d = (typeof maxDecimals === 'number' && maxDecimals >= 0) ? maxDecimals : null;
+                const lastComma = str.lastIndexOf(',');
+                const lastDot = str.lastIndexOf('.');
+                const lastSep = Math.max(lastComma, lastDot);
+
+                if (lastSep === -1) {
+                    const digits = str.replace(/\D/g, '');
+                    if (!digits) return NaN;
+                    return sign * Number(digits);
+                }
+
+                const sepChar = str[lastSep];
+                const intRaw = str.slice(0, lastSep);
+                const fracRaw = str.slice(lastSep + 1);
+                if (fracRaw === '') return NaN;
+
+                const intDigits = intRaw.replace(/\D/g, '');
+                const fracDigitsAll = fracRaw.replace(/\D/g, '');
+                if (!intDigits && !fracDigitsAll) return NaN;
+
+                // Heuristic for money-like fields (<= 2 decimals): a single dot with 3 trailing digits is thousands.
+                const sepCount = (str.match(/[.,]/g) || []).length;
+                if (d !== null && d <= 2 && sepCount === 1 && sepChar === '.' && fracDigitsAll.length === 3) {
+                    const allDigits = (intRaw + fracRaw).replace(/\D/g, '');
+                    if (!allDigits) return NaN;
+                    return sign * Number(allDigits);
+                }
+
+                const fracDigits = (d === null) ? fracDigitsAll : fracDigitsAll.slice(0, d);
+                const normalized = (intDigits ? intDigits : '0') + (fracDigits ? ('.' + fracDigits) : '');
+                const v = Number(normalized);
+                return Number.isFinite(v) ? sign * v : NaN;
+            } catch (e) { return NaN; }
         }
 
-        .login-password-wrap {
-            position: relative;
-        }
-
-        .login-password-wrap .login-input {
-            padding-right: 3rem;
-        }
-
-        .login-password-toggle {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: #6b7280;
-            padding: 0.25rem;
-            line-height: 1;
-        }
-
-        .login-password-toggle:focus {
-            outline: none;
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 0.75rem;
+        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
@@ -518,6 +518,61 @@
         max-height: calc(var(--vh, 1vh) * 100) !important;
     }
         </style>
+
+        <script>
+        // Helpers globalizados para uso imediato (mobile/UX e funções fora do App)
+        (function(){
+            function formatCurrency(v) { try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0); } catch (e) { return String(v); } }
+            function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+            function parseLocaleNumber(s, maxDecimals) {
+                try {
+                    if (s === undefined || s === null) return NaN;
+                    if (typeof s === 'number') return Number.isFinite(s) ? s : NaN;
+                    let str = String(s).trim();
+                    if (str === '') return NaN;
+                    str = str.replace(/[R$\s\u00A0]/g, '');
+                    str = str.replace(/[^0-9,\.\-]/g, '');
+                    str = str.replace(/(?!^)-/g, '');
+                    if (str === '' || str === '-') return NaN;
+                    const sign = str[0] === '-' ? -1 : 1;
+                    if (sign === -1) str = str.slice(1);
+                    const d = (typeof maxDecimals === 'number' && maxDecimals >= 0) ? maxDecimals : null;
+                    const lastComma = str.lastIndexOf(',');
+                    const lastDot = str.lastIndexOf('.');
+                    const lastSep = Math.max(lastComma, lastDot);
+                    if (lastSep === -1) {
+                        const digits = str.replace(/\D/g, '');
+                        if (!digits) return NaN;
+                        return sign * Number(digits);
+                    }
+                    const sepChar = str[lastSep];
+                    const intRaw = str.slice(0, lastSep);
+                    const fracRaw = str.slice(lastSep + 1);
+                    if (fracRaw === '') return NaN;
+                    const intDigits = intRaw.replace(/\D/g, '');
+                    const fracDigitsAll = fracRaw.replace(/\D/g, '');
+                    if (!intDigits && !fracDigitsAll) return NaN;
+                    const sepCount = (str.match(/[.,]/g) || []).length;
+                    if (d !== null && d <= 2 && sepCount === 1 && sepChar === '.' && fracDigitsAll.length === 3) {
+                        const allDigits = (intRaw + fracRaw).replace(/\D/g, '');
+                        if (!allDigits) return NaN;
+                        return sign * Number(allDigits);
+                    }
+                    const fracDigits = (d === null) ? fracDigitsAll : fracDigitsAll.slice(0, d);
+                    const normalized = (intDigits ? intDigits : '0') + (fracDigits ? ('.' + fracDigits) : '');
+                    const v = Number(normalized);
+                    return Number.isFinite(v) ? sign * v : NaN;
+                } catch (e) { return NaN; }
+            }
+            function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
+            try {
+                if (!window.formatCurrency) window.formatCurrency = formatCurrency;
+                if (!window.parseLocaleNumber) window.parseLocaleNumber = parseLocaleNumber;
+                if (!window.escapeHtml) window.escapeHtml = escapeHtml;
+                if (!window.isMobile) window.isMobile = isMobile;
+            } catch (e) { /* ignore env issues */ }
+        })();
+        </script>
         <style>
         /* Modal mobile layout fixes: ensure modal content stacks and buttons fit on small screens */
         @media (max-width: 639px) {
@@ -5726,7 +5781,7 @@
         }
 
         // helpers: formatting & escape
-        function formatCurrency(v){ try{ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v)||0); }catch(e){ return String(v); } }
+        function formatCurrency(v) { try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0); } catch (e) { return String(v); } }
         function formatDecimalBR(v, decimals){
             const n = Number(v);
             if (!Number.isFinite(n)) return '';
@@ -5740,63 +5795,65 @@
             const p = Math.pow(10, d);
             return Math.round((n + Number.EPSILON) * p) / p;
         }
-        function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+        function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-            // Parse numbers entered in pt-BR style into JS numbers.
-            // Supports liters with 3 decimals (e.g. "9,510") and currency with 2 decimals.
-            // When mid-typing like "59,", returns NaN to avoid shifting decimals.
-            function parseLocaleNumber(s, maxDecimals) {
-                try {
-                    if (s === undefined || s === null) return NaN;
-                    if (typeof s === 'number') return Number.isFinite(s) ? s : NaN;
-                    let str = String(s).trim();
-                    if (str === '') return NaN;
+        // Parse numbers entered in pt-BR style into JS numbers.
+        // Supports liters with 3 decimals (e.g. "9,510") and currency with 2 decimals.
+        // When mid-typing like "59,", returns NaN to avoid shifting decimals.
+        function parseLocaleNumber(s, maxDecimals) {
+            try {
+                if (s === undefined || s === null) return NaN;
+                if (typeof s === 'number') return Number.isFinite(s) ? s : NaN;
+                let str = String(s).trim();
+                if (str === '') return NaN;
 
-                    // Remove currency symbols/spaces, keep only digits/separators/minus
-                    str = str.replace(/[R$\s\u00A0]/g, '');
-                    str = str.replace(/[^0-9,\.\-]/g, '');
+                // Remove currency symbols/spaces, keep only digits/separators/minus
+                str = str.replace(/[R$\s\u00A0]/g, '');
+                str = str.replace(/[^0-9,\.\-]/g, '');
 
-                    // Protect minus: allow only leading minus
-                    str = str.replace(/(?!^)-/g, '');
-                    if (str === '' || str === '-') return NaN;
+                // Protect minus: allow only leading minus
+                str = str.replace(/(?!^)-/g, '');
+                if (str === '' || str === '-') return NaN;
 
-                    const sign = str[0] === '-' ? -1 : 1;
-                    if (sign === -1) str = str.slice(1);
+                const sign = str[0] === '-' ? -1 : 1;
+                if (sign === -1) str = str.slice(1);
 
-                    const d = (typeof maxDecimals === 'number' && maxDecimals >= 0) ? maxDecimals : null;
-                    const lastComma = str.lastIndexOf(',');
-                    const lastDot = str.lastIndexOf('.');
-                    const lastSep = Math.max(lastComma, lastDot);
+                const d = (typeof maxDecimals === 'number' && maxDecimals >= 0) ? maxDecimals : null;
+                const lastComma = str.lastIndexOf(',');
+                const lastDot = str.lastIndexOf('.');
+                const lastSep = Math.max(lastComma, lastDot);
 
-                    if (lastSep === -1) {
-                        const digits = str.replace(/\D/g, '');
-                        if (!digits) return NaN;
-                        return sign * Number(digits);
-                    }
+                if (lastSep === -1) {
+                    const digits = str.replace(/\D/g, '');
+                    if (!digits) return NaN;
+                    return sign * Number(digits);
+                }
 
-                    const sepChar = str[lastSep];
-                    const intRaw = str.slice(0, lastSep);
-                    const fracRaw = str.slice(lastSep + 1);
-                    if (fracRaw === '') return NaN;
+                const sepChar = str[lastSep];
+                const intRaw = str.slice(0, lastSep);
+                const fracRaw = str.slice(lastSep + 1);
+                if (fracRaw === '') return NaN;
 
-                    const intDigits = intRaw.replace(/\D/g, '');
-                    const fracDigitsAll = fracRaw.replace(/\D/g, '');
-                    if (!intDigits && !fracDigitsAll) return NaN;
+                const intDigits = intRaw.replace(/\D/g, '');
+                const fracDigitsAll = fracRaw.replace(/\D/g, '');
+                if (!intDigits && !fracDigitsAll) return NaN;
 
-                    // Heuristic for money-like fields (<= 2 decimals): a single dot with 3 trailing digits is thousands.
-                    const sepCount = (str.match(/[.,]/g) || []).length;
-                    if (d !== null && d <= 2 && sepCount === 1 && sepChar === '.' && fracDigitsAll.length === 3) {
-                        const allDigits = (intRaw + fracRaw).replace(/\D/g, '');
-                        if (!allDigits) return NaN;
-                        return sign * Number(allDigits);
-                    }
+                // Heuristic for money-like fields (<= 2 decimals): a single dot with 3 trailing digits is thousands.
+                const sepCount = (str.match(/[.,]/g) || []).length;
+                if (d !== null && d <= 2 && sepCount === 1 && sepChar === '.' && fracDigitsAll.length === 3) {
+                    const allDigits = (intRaw + fracRaw).replace(/\D/g, '');
+                    if (!allDigits) return NaN;
+                    return sign * Number(allDigits);
+                }
 
-                    const fracDigits = (d === null) ? fracDigitsAll : fracDigitsAll.slice(0, d);
-                    const normalized = (intDigits ? intDigits : '0') + (fracDigits ? ('.' + fracDigits) : '');
-                    const v = Number(normalized);
-                    return Number.isFinite(v) ? sign * v : NaN;
-                } catch (e) { return NaN; }
-            }
+                const fracDigits = (d === null) ? fracDigitsAll : fracDigitsAll.slice(0, d);
+                const normalized = (intDigits ? intDigits : '0') + (fracDigits ? ('.' + fracDigits) : '');
+                const v = Number(normalized);
+                return Number.isFinite(v) ? sign * v : NaN;
+            } catch (e) { return NaN; }
+        }
+
+        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
 
             // Safe id generator: prefer global generateUUID if available, otherwise fallback
             function safeGenerateId() {
@@ -6200,10 +6257,6 @@
         });
 
     })();
-
-    document.addEventListener('DOMContentLoaded', () => {
-        // Legacy import button is wired to open the import modal (handled above)
-    });
 
     // Transaction UI is in-page (Actions view). No dialog open/close wrapper here.
     
@@ -6624,7 +6677,7 @@ const firebaseConfig = {
                 data: {}
             };
         },
-        propagateInitialInstallments(initialData) {}
+
     };
     
     var App = (function() {
@@ -6667,8 +6720,20 @@ const firebaseConfig = {
 
         // --- CORE UTILITIES (kept minimal to avoid behavior changes) ---
         const util = {
-            normalizeEmail: (email) => String(email || '').replace(/\u00A0/g, ' ').trim().toLowerCase()
+            normalizeEmail: (email) => String(email || '').replace(/\u00A0/g, ' ').trim().toLowerCase(),
+            formatCurrency: (...args) => formatCurrency(...args),
+            parseLocaleNumber: (...args) => parseLocaleNumber(...args),
+            escapeHtml: (...args) => escapeHtml(...args),
+            isMobile: (...args) => isMobile(...args)
         };
+
+        // Expose shared helpers globally so late scripts (mobile/UX) can reuse them safely
+        try {
+            window.formatCurrency = window.formatCurrency || formatCurrency;
+            window.parseLocaleNumber = window.parseLocaleNumber || parseLocaleNumber;
+            window.escapeHtml = window.escapeHtml || escapeHtml;
+            window.isMobile = window.isMobile || isMobile;
+        } catch (e) { /* ignore env issues */ }
 
         // Namespaces to group features (populated later without behavior changes)
         const charts = {};
@@ -6735,45 +6800,6 @@ const firebaseConfig = {
                 return v.toString(16);
             });
         }
-
-            // Parse numbers entered in pt-BR style (e.g. "1.234,56" or "59,52") into JS numbers
-            function parseLocaleNumber(s) {
-                try {
-                    if (s === undefined || s === null) return NaN;
-                    if (typeof s === 'number') return s;
-                    let str = String(s).trim();
-                    if (str === '') return NaN;
-                    
-                    // Remove currency symbols and spaces
-                    str = str.replace(/[R$\s\u00A0]/g, '');
-                    
-                    // Protect minus: allow only leading minus
-                    str = str.replace(/(?!^)-/g, '');
-                    if (str === '' || str === '-') return NaN;
-                    
-                    // Detect format: if there's a comma followed by 1-2 digits at the end, it's BR format (123.456,78)
-                    // Otherwise, if there's a dot followed by 1-2 digits at the end, it's US format (123,456.78)
-                    const hasBRDecimal = /,\d{1,2}$/.test(str); // ends with ,XX or ,X
-                    const hasUSDecimal = /\.\d{1,2}$/.test(str); // ends with .XX or .X
-                    
-                    if (hasBRDecimal) {
-                        // Brazilian format: 1.234.567,89 -> remove dots, replace comma with dot
-                        str = str.replace(/\./g, '').replace(',', '.');
-                    } else if (hasUSDecimal) {
-                        // US format: 1,234,567.89 -> remove commas, keep dot
-                        str = str.replace(/,/g, '');
-                    } else {
-                        // No clear decimal separator, or integer - just remove all separators
-                        str = str.replace(/[.,]/g, '');
-                    }
-                    
-                    // Remove any remaining non-numeric characters except dot and minus
-                    str = str.replace(/[^0-9.\-]/g, '');
-                    
-                    const v = parseFloat(str);
-                    return isNaN(v) ? NaN : v;
-                } catch (e) { return NaN; }
-            }
 
             // Safe id generator: prefer global generateUUID if available, otherwise fallback
             function safeGenerateId() {
@@ -6842,11 +6868,6 @@ const firebaseConfig = {
         // relying on window.state or internal helpers. This is intentionally
         // minimal and keeps the implementation inside App.
     try { window.appApi = window.appApi || {}; window.appApi.saveVtEntry = saveVtEntry; window.appApi.updateVtEntry = updateVtEntry; window.appApi.render = function(){ try { if (typeof render === 'function') return render(); } catch(e){ console.error('appApi.render wrapper error', e); } }; } catch(e) { /* ignore env failures */ }
-
-        function formatCurrency(value) {
-            if (typeof value !== 'number') value = parseFloat(value) || 0;
-            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
 
         function propagateRecurringTransactions() {
             // Ensure recurring transactions exist for months and propagate future recurrences for expenses and savings
@@ -7763,12 +7784,6 @@ const firebaseConfig = {
                     const items = arr.slice(0,3).map(it => `<div class="truncate">${escapeHtml(label + ': ' + (it.description || it.desc || it.label || 'â€”') + ' â€” ' + (formatCurrency(Number(it.amount)||0)))}</div>`).join('');
                     return `<div class="mt-1 text-xs">${items}</div>`;
                 }
-
-                function formatCurrency(v) {
-                    try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v)||0); } catch(e) { return String(v); }
-                }
-
-                function escapeHtml(s) { return String(s||'').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
                 // open modal and list backups
                 async function openBackupModal() {
@@ -9248,12 +9263,6 @@ const firebaseConfig = {
         }
 
 
-
-
-
-        // small helper: escape text for innerHTML usage
-        function escapeHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
         // --- Goal <-> Savings synchronization helpers ---
         function sumSavingsForGoal(goalId) {
             try {
@@ -10459,11 +10468,6 @@ const firebaseConfig = {
                     openModal('expenses', expId);
                 }));
             } catch(e) { console.error('attach grouped view handlers', e); }
-        }
-
-        // Simple helper to escape HTML for text insertion
-        function escapeHtml(str) {
-            return (str || '').toString().replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]; });
         }
 
         // Small modal-list helper (reuses transaction modal if present, otherwise falls back to alert)
@@ -13967,7 +13971,6 @@ const firebaseConfig = {
     <script>
     (function(){
         // Mobile runtime enhancements (no changes for desktop)
-        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
 
         document.addEventListener('DOMContentLoaded', function(){
             try {
@@ -14246,11 +14249,6 @@ const firebaseConfig = {
                     }
                 });
             });
-        }
-
-        // Detectar se í© mobile para ajustes especí­ficos
-        function isMobile() {
-            return window.innerWidth <= 768;
         }
 
         // Melhorar performance em mobile

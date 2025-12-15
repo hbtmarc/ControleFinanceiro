@@ -6627,7 +6627,7 @@ const firebaseConfig = {
         propagateInitialInstallments(initialData) {}
     };
     
-    const App = (function() {
+    var App = (function() {
     // showToast is defined globally above so it can be used before App.init()
         // STATE & UI (Private variables)
         const state = {
@@ -6650,6 +6650,82 @@ const firebaseConfig = {
         };
         // in-memory session defaults for the transaction modal (do not persist)
         ui.lastTransactionDefaults = null;
+
+        // --- DOM HELPERS / CACHE ---
+        const dom = {
+            cache: {},
+            qs: (selector, root = document) => (root || document).querySelector(selector),
+            qsa: (selector, root = document) => Array.from((root || document).querySelectorAll(selector)),
+            byId: (id) => document.getElementById(id),
+            get(key, selector, root = document) {
+                if (this.cache[key]) return this.cache[key];
+                const node = this.qs(selector, root);
+                if (node) this.cache[key] = node;
+                return node;
+            }
+        };
+
+        // --- CORE UTILITIES (kept minimal to avoid behavior changes) ---
+        const util = {
+            normalizeEmail: (email) => String(email || '').replace(/\u00A0/g, ' ').trim().toLowerCase()
+        };
+
+        // Namespaces to group features (populated later without behavior changes)
+        const charts = {};
+        const importExport = {};
+        const backup = {};
+        const authModule = {};
+
+        // --- FIREBASE / DB WRAPPER (idempotent) ---
+        const db = {
+            app: null,
+            database: null,
+            root: null,
+            init() {
+                if (this.root) return this.root;
+                try {
+                    this.app = firebase.apps && firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+                } catch (err) {
+                    try { this.app = firebase.apps && firebase.apps.length ? firebase.app() : null; } catch (_) { this.app = null; }
+                }
+                try {
+                    this.database = (typeof database !== 'undefined') ? database : firebase.database();
+                } catch (_) {
+                    this.database = firebase.database();
+                }
+                try {
+                    const legacyRoot = (typeof window !== 'undefined' && window.financeAppDB_v10) ? window.financeAppDB_v10 : null;
+                    this.root = legacyRoot || this.database.ref((storage && storage.DB_KEY) ? storage.DB_KEY : 'financeAppDB_v10');
+                    if (!legacyRoot) {
+                        try { window.financeAppDB_v10 = this.root; } catch (_) { /* ignore */ }
+                    }
+                } catch (err) {
+                    console.error('App.db.init failed to set root ref', err);
+                }
+                return this.root;
+            }
+        };
+
+        // Simple screen toggles, preserved to avoid UI regressions
+        ui.showLogin = function showLogin() {
+            const loginScreen = dom.byId('loginScreen');
+            const mainApp = dom.byId('mainApp');
+            if (loginScreen) loginScreen.style.display = 'flex';
+            if (mainApp) {
+                mainApp.style.display = 'none';
+                mainApp.classList.remove('authenticated');
+            }
+        };
+
+        ui.showMain = function showMain() {
+            const loginScreen = dom.byId('loginScreen');
+            const mainApp = dom.byId('mainApp');
+            if (loginScreen) loginScreen.style.display = 'none';
+            if (mainApp) {
+                mainApp.style.display = 'block';
+                mainApp.classList.add('authenticated');
+            }
+        };
 
         // --- HELPERS ---
         function generateUUID() {
@@ -7070,6 +7146,8 @@ const firebaseConfig = {
         }
 
         function mapUI() {
+            if (ui._mapped) return;
+            ui._mapped = true;
             const ids = [
                 'current-month-display', 'prev-month-btn', 'next-month-btn', 'today-btn', 'month-picker', 'month-picker-month', 'month-picker-year', 'month-picker-apply', 'month-picker-cancel', 
                 'income-table-body', 'expenses-table-body', 'savings-table-body', 'expenses-table-head', 
@@ -7151,6 +7229,8 @@ const firebaseConfig = {
         }
 
         function bindEvents() {
+            if (ui._eventsBound) return;
+            ui._eventsBound = true;
             if (ui.prevMonthBtn) ui.prevMonthBtn.addEventListener('click', () => changeMonth(-1));
             if (ui.nextMonthBtn) ui.nextMonthBtn.addEventListener('click', () => changeMonth(1));
             if (ui.todayBtn) ui.todayBtn.addEventListener('click', () => goToDate(new Date()));
@@ -7357,6 +7437,7 @@ const firebaseConfig = {
                             }
                             if (recurringCheckbox) recurringCheckbox.checked = true;
                         }
+
                         // If description starts with 'Serviço', ensure modal is in 'incomes' and show financing options
                         if (isServicoPrefix) {
                             if (ui.transactionTypeInput && ui.transactionTypeInput.value !== 'incomes') {
@@ -7744,6 +7825,11 @@ const firebaseConfig = {
                         console.error('deleteBackup error:', err);
                     }
                 }
+                // Make backup utilities available via App.backup namespace
+                backup.createBackup = createBackup;
+                backup.listBackups = listBackups;
+                backup.renderBackupsList = renderBackupsList;
+                backup.showBackupPreview = showBackupPreview;
 
                 if (createBackupBtn) createBackupBtn.addEventListener('click', async () => { try { await createBackup(); } catch(e){} });
                 if (restoreBackupBtn) restoreBackupBtn.addEventListener('click', () => openBackupModal());
@@ -8218,6 +8304,94 @@ const firebaseConfig = {
             }
         }
 
+        function bootstrap() {
+            try { db.init(); } catch (e) { console.error('App.db.init error', e); }
+            try { mapUI(); } catch (e) { console.error('mapUI error', e); }
+            try { bindEvents(); } catch (e) { console.error('bindEvents error', e); }
+            try { authModule.bindLoginUI(); } catch (e) { console.error('bindLoginUI error', e); }
+            try { authModule.bindAuthObserver(); } catch (e) { console.error('bindAuthObserver error', e); }
+        }
+
+        // --- AUTH MODULE WRAPPERS (logic remains in existing handlers) ---
+        authModule.handleLogin = function wrappedLogin(e) {
+            return typeof handleLogin === 'function' ? handleLogin(e) : null;
+        };
+        authModule.handleSignup = function wrappedSignup(e) {
+            return typeof handleSignup === 'function' ? handleSignup(e) : null;
+        };
+        authModule.handleResetPassword = function wrappedReset(e) {
+            return typeof handleResetPassword === 'function' ? handleResetPassword(e) : null;
+        };
+        authModule.handleLogout = function wrappedLogout() {
+            return typeof handleLogout === 'function' ? handleLogout() : null;
+        };
+
+        authModule.bindAuthObserver = function bindAuthObserver() {
+            if (authModule._observerBound) return;
+            authModule._observerBound = true;
+            try {
+                const authRef = (typeof auth !== 'undefined') ? auth : firebase.auth();
+                authRef.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        try { console.log('✅ Usuário autenticado:', user.email); } catch (_) {}
+                        ui.showMain();
+                        try { await init(); } catch (err) { console.error('App.init after auth error', err); }
+                    } else {
+                        try { console.log('⚠️ Usuário nío autenticado'); } catch (_) {}
+                        ui.showLogin();
+                    }
+                });
+            } catch (e) { console.error('bindAuthObserver error', e); }
+        };
+
+        authModule.bindLoginUI = function bindLoginUI() {
+            if (authModule._loginUiBound) return;
+            authModule._loginUiBound = true;
+            // Prefill remembered email (if any)
+            try {
+                const savedEmail = localStorage.getItem('cf_remember_email');
+                const rememberEmailEl = dom.byId('rememberEmail');
+                const loginEmail = dom.byId('loginEmail');
+                if (savedEmail && loginEmail) {
+                    loginEmail.value = savedEmail;
+                    if (rememberEmailEl) rememberEmailEl.checked = true;
+                }
+            } catch (e) { /* ignore */ }
+
+            const loginForm = dom.byId('loginForm');
+            const loginBtn = dom.byId('loginBtn');
+            if (loginForm) {
+                loginForm.addEventListener('submit', authModule.handleLogin);
+            } else if (loginBtn) {
+                loginBtn.addEventListener('click', authModule.handleLogin);
+            }
+
+            // Toggle mostrar/ocultar senha
+            try {
+                const toggleBtn = dom.byId('togglePasswordBtn');
+                const pwd = dom.byId('loginPassword');
+                if (toggleBtn && pwd) {
+                    toggleBtn.addEventListener('click', () => {
+                        const isPassword = pwd.type === 'password';
+                        pwd.type = isPassword ? 'text' : 'password';
+                        const icon = toggleBtn.querySelector('.material-symbols-outlined');
+                        if (icon) icon.textContent = isPassword ? 'visibility_off' : 'visibility';
+                        toggleBtn.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
+                        toggleBtn.title = isPassword ? 'Ocultar senha' : 'Mostrar senha';
+                        try { pwd.focus(); } catch (_) {}
+                    });
+                }
+            } catch (e) { /* ignore */ }
+
+            const signupBtn = dom.byId('signupBtn');
+            if (signupBtn) signupBtn.addEventListener('click', authModule.handleSignup);
+            const resetBtn = dom.byId('resetPasswordBtn');
+            if (resetBtn) resetBtn.addEventListener('click', authModule.handleResetPassword);
+
+            const logoutBtn = dom.byId('logoutBtn');
+            if (logoutBtn) logoutBtn.addEventListener('click', authModule.handleLogout);
+        };
+
         function handleExport() {
             if (!state.appData) {
                 alert("nío hí¡ dados para exportar.");
@@ -8300,6 +8474,10 @@ const firebaseConfig = {
             };
             reader.readAsText(file);
         }
+
+        // Expose import/export handlers under namespaced object
+        importExport.handleExport = handleExport;
+        importExport.handleImport = handleImport;
 
         // --- RENDER FUNCTIONS ---
 
@@ -10698,6 +10876,10 @@ const firebaseConfig = {
             renderPaymentMethodChart();
             renderAnnualSummaryChart();
         }
+
+        // Expose chart helpers for namespaced access
+        charts.render = renderCharts;
+        charts.destroyChart = destroyChart;
 
         // renderSpendingGoalsChart removed (Metas de Gastos KPI no longer used)
 
@@ -13526,6 +13708,16 @@ const firebaseConfig = {
 
         // Export public API
         return {
+            bootstrap,
+            dom,
+            util,
+            db,
+            ui,
+            auth: authModule,
+            charts,
+            importExport,
+            backup,
+            bindEvents,
             init,
             // VR helpers
             openVRUsageEdit,
@@ -13541,11 +13733,14 @@ const firebaseConfig = {
             closeVTModal,
             openVTEdit
         };
-    })(); // Close App IIFE and assign to App
+        })(); // Close App IIFE and assign to App
+        try { window.App = App; } catch (e) { /* ignore */ }
 
     // Inicializa a aplicação quando o DOM estiver pronto
     document.addEventListener('DOMContentLoaded', () => {
-        // App.init() movido para dentro de onAuthStateChanged - será chamado após autenticação
+        // Bootstrapping centralizado (DOM cache, bindings, auth observer)
+        try { if (App && typeof App.bootstrap === 'function') App.bootstrap(); } catch (e) { console.error('App.bootstrap error', e); }
+        // App.init() permanece sendo chamado apí³s autenticação pelo observer
         // Attach VR modal buttons after init so elements are available
         try {
                 const vrSaveBtn = document.getElementById('vr-entry-save'); if (vrSaveBtn) vrSaveBtn.addEventListener('click', (e) => { e.preventDefault(); App.saveVRLedgerEntry(); });
@@ -14142,31 +14337,8 @@ const firebaseConfig = {
     // ObTím referência do Firebase Auth
     const auth = firebase.auth();
 
-    // Auth State Observer - Controla visibilidade da UI baseado no estado de autenticação
-    auth.onAuthStateChanged(async (user) => {
-        const loginScreen = document.getElementById('loginScreen');
-        const mainApp = document.getElementById('mainApp');
-        
-        if (user) {
-            // Usuário logado - inicializa app e carrega dados
-            console.log('✅ Usuário autenticado:', user.email);
-            
-            loginScreen.style.display = 'none';
-            mainApp.style.display = 'block';
-            mainApp.classList.add('authenticated');
-            
-            // Inicializa aplicação APÓS autenticação para evitar Permission Denied
-            if (App && typeof App.init === 'function') {
-                await App.init();
-            }
-        } else {
-            // Usuário nío logado
-            console.log('⚠️ Usuário nío autenticado');
-            loginScreen.style.display = 'flex';
-            mainApp.style.display = 'none';
-            mainApp.classList.remove('authenticated');
-        }
-    });
+    // Auth State Observer centralizado no App.auth
+    try { if (App && App.auth && typeof App.auth.bindAuthObserver === 'function') App.auth.bindAuthObserver(); } catch (e) { console.error('bindAuthObserver fallback error', e); }
 
     // Funçío de Login
     async function handleLogin(e) {
@@ -14432,57 +14604,9 @@ const firebaseConfig = {
         }
     }
 
-    // Event Listeners
+    // Event Listeners centralizados em App.auth
     window.addEventListener('DOMContentLoaded', () => {
-        // Prefill de e-mail lembrado
-        try {
-            const savedEmail = localStorage.getItem('cf_remember_email');
-            const rememberEmailEl = document.getElementById('rememberEmail');
-            const loginEmail = document.getElementById('loginEmail');
-            if (savedEmail && loginEmail) {
-                loginEmail.value = savedEmail;
-                if (rememberEmailEl) rememberEmailEl.checked = true;
-            }
-        } catch (e) { /* ignore */ }
-
-        // Login form submit (melhor compatibilidade com salvar senha do navegador)
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        if (loginForm) {
-            loginForm.addEventListener('submit', handleLogin);
-        } else if (loginBtn) {
-            // fallback (caso o form não exista por algum motivo)
-            loginBtn.addEventListener('click', handleLogin);
-        }
-
-        // Toggle mostrar/ocultar senha
-        try {
-            const toggleBtn = document.getElementById('togglePasswordBtn');
-            const pwd = document.getElementById('loginPassword');
-            if (toggleBtn && pwd) {
-                toggleBtn.addEventListener('click', () => {
-                    const isPassword = pwd.type === 'password';
-                    pwd.type = isPassword ? 'text' : 'password';
-                    const icon = toggleBtn.querySelector('.material-symbols-outlined');
-                    if (icon) icon.textContent = isPassword ? 'visibility_off' : 'visibility';
-                    toggleBtn.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
-                    toggleBtn.title = isPassword ? 'Ocultar senha' : 'Mostrar senha';
-                    try { pwd.focus(); } catch(_e) {}
-                });
-            }
-        } catch (e) { /* ignore */ }
-
-        // Signup / Reset password
-        const signupBtn = document.getElementById('signupBtn');
-        if (signupBtn) signupBtn.addEventListener('click', handleSignup);
-        const resetBtn = document.getElementById('resetPasswordBtn');
-        if (resetBtn) resetBtn.addEventListener('click', handleResetPassword);
-        
-        // Logout button
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', handleLogout);
-        }
+        try { if (App && App.auth && typeof App.auth.bindLoginUI === 'function') App.auth.bindLoginUI(); } catch (e) { console.error('bindLoginUI fallback error', e); }
     });
     // ===== FIM FIREBASE AUTHENTICATION =====
     </script>

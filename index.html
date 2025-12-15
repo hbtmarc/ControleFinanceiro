@@ -55,6 +55,31 @@
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+
+        .login-password-wrap {
+            position: relative;
+        }
+
+        .login-password-wrap .login-input {
+            padding-right: 3rem;
+        }
+
+        .login-password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .login-password-toggle:focus {
+            outline: none;
+        }
         
         .login-btn {
             width: 100%;
@@ -77,6 +102,52 @@
         
         .login-btn:active {
             transform: translateY(0);
+        }
+
+        .login-secondary-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .login-link-btn {
+            background: transparent;
+            border: none;
+            padding: 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .login-link-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .login-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: -0.5rem;
+            margin-bottom: 1.25rem;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .login-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .login-option input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
         }
         
         .login-error {
@@ -3237,21 +3308,45 @@
             <h1 class="login-title">Fluxo Financeiro</h1>
             <p class="login-subtitle">Entre com suas credenciais Firebase</p>
             <div class="login-error" id="loginError" style="display: none;">Erro ao fazer login</div>
-            <input 
-                type="email" 
-                id="loginEmail" 
-                class="login-input" 
-                placeholder="Email"
-                autocomplete="email"
-            />
-            <input 
-                type="password" 
-                id="loginPassword" 
-                class="login-input" 
-                placeholder="Senha"
-                autocomplete="current-password"
-            />
-            <button id="loginBtn" class="login-btn">Entrar</button>
+            <form id="loginForm" autocomplete="on">
+                <input 
+                    type="email" 
+                    id="loginEmail" 
+                    name="username"
+                    class="login-input" 
+                    placeholder="Email"
+                    autocomplete="username"
+                    inputmode="email"
+                />
+                <div class="login-password-wrap">
+                    <input 
+                        type="password" 
+                        id="loginPassword" 
+                        name="password"
+                        class="login-input" 
+                        placeholder="Senha"
+                        autocomplete="current-password"
+                    />
+                    <button id="togglePasswordBtn" type="button" class="login-password-toggle" aria-label="Mostrar senha" title="Mostrar senha">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                </div>
+                <div class="login-options" aria-label="Opções de login">
+                    <label class="login-option" for="rememberEmail">
+                        <input type="checkbox" id="rememberEmail" />
+                        <span>Lembrar e-mail</span>
+                    </label>
+                    <label class="login-option" for="keepSignedIn">
+                        <input type="checkbox" id="keepSignedIn" checked />
+                        <span>Manter conectado</span>
+                    </label>
+                </div>
+                <button id="loginBtn" class="login-btn" type="submit">Entrar</button>
+                <div class="login-secondary-actions" aria-label="Ações de autenticação">
+                    <button id="signupBtn" type="button" class="login-link-btn">Criar conta</button>
+                    <button id="resetPasswordBtn" type="button" class="login-link-btn">Esqueci a senha</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -14077,13 +14172,21 @@ const firebaseConfig = {
     async function handleLogin(e) {
         e.preventDefault();
         
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
+        const emailRaw = String(document.getElementById('loginEmail').value || '');
+        const email = emailRaw.replace(/\u00A0/g, ' ').trim().toLowerCase();
+        const passwordEl = document.getElementById('loginPassword');
+        const passwordOriginal = passwordEl ? String(passwordEl.value || '') : '';
+        // Mitiga apenas NBSP (caractere invisível comum ao copiar/colar). Não altera espaços normais.
+        const passwordNormalized = passwordOriginal.replace(/\u00A0/g, ' ');
+        const passwordTrimmed = passwordNormalized.trim();
+        const passwordHasEdgeWhitespace = passwordNormalized !== passwordTrimmed;
         const loginError = document.getElementById('loginError');
         const loginBtn = document.getElementById('loginBtn');
+        const rememberEmailEl = document.getElementById('rememberEmail');
+        const keepSignedInEl = document.getElementById('keepSignedIn');
         
         // Validação básica
-        if (!email || !password) {
+        if (!email || !passwordOriginal) {
             showLoginError('Por favor, preencha email e senha.');
             return;
         }
@@ -14094,13 +14197,52 @@ const firebaseConfig = {
         loginError.style.display = 'none';
         
         try {
-            await auth.signInWithEmailAndPassword(email, password);
+            // Diagnóstico leve para facilitar suporte (não expõe senha)
+            try {
+                console.log('🔐 Tentando login em:', (auth && auth.app && auth.app.options) ? auth.app.options.projectId : '(sem projectId)');
+            } catch (_e) {}
+
+            // Persistência do login (sem salvar senha manualmente):
+            // - LOCAL: mantém conectado após fechar/abrir o navegador
+            // - SESSION: dura apenas até fechar o navegador
+            try {
+                const keep = keepSignedInEl ? !!keepSignedInEl.checked : true;
+                const persistence = keep ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
+                await auth.setPersistence(persistence);
+            } catch (err) {
+                console.warn('⚠️ Não foi possível definir persistência do Auth:', err);
+            }
+
+            // 1) tenta com a senha exatamente como digitada
+            try {
+                await auth.signInWithEmailAndPassword(email, passwordNormalized);
+            } catch (err) {
+                // 2) se falhar com invalid-credential e a senha parece ter espaços acidentais no começo/fim,
+                // tenta uma única vez com trim.
+                const code = err && err.code ? String(err.code) : '';
+                if (code === 'auth/invalid-credential' && passwordHasEdgeWhitespace) {
+                    await auth.signInWithEmailAndPassword(email, passwordTrimmed);
+                    console.warn('⚠️ Login funcionou após remover espaços no início/fim da senha.');
+                } else {
+                    throw err;
+                }
+            }
             // O onAuthStateChanged cuidará da transiçío de tela
             console.log('✅ Login realizado com sucesso');
+
+            // Lembrar apenas o e-mail localmente (senha fica a cargo do gerenciador de senhas do navegador)
+            try {
+                const remember = rememberEmailEl ? !!rememberEmailEl.checked : false;
+                if (remember) localStorage.setItem('cf_remember_email', email);
+                else localStorage.removeItem('cf_remember_email');
+            } catch (err) { /* ignore */ }
             
-            // Limpar campos
-            document.getElementById('loginEmail').value = '';
+            // Limpar senha; e-mail depende da opção "Lembrar e-mail"
             document.getElementById('loginPassword').value = '';
+            try {
+                const remember = rememberEmailEl ? !!rememberEmailEl.checked : false;
+                if (!remember) document.getElementById('loginEmail').value = '';
+            } catch (err) { /* ignore */ }
         } catch (error) {
             console.error('❌ Erro no login:', error);
             
@@ -14126,8 +14268,43 @@ const firebaseConfig = {
                 case 'auth/network-request-failed':
                     errorMessage = 'Erro de conexío. Verifique sua internet.';
                     break;
+                case 'auth/unauthorized-domain':
+                    errorMessage = 'Domínio não autorizado para autenticação. Abra o app via um servidor (http://localhost) ou adicione o domínio em Firebase Console → Authentication → Settings → Authorized domains.';
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage = 'Login por e-mail/senha está desativado neste projeto. Ative em Firebase Console → Authentication → Sign-in method.';
+                    break;
                 case 'auth/invalid-credential':
-                    errorMessage = 'Credenciais inválidas. Verifique email e senha.';
+                    errorMessage = 'Credenciais inválidas. Verifique e-mail e senha.';
+                    // Observação importante: com proteção contra enumeração de e-mail, o Firebase retorna
+                    // auth/invalid-credential tanto para senha errada quanto para usuário inexistente.
+                    errorMessage += ' Se você nunca cadastrou esse usuário, crie em Firebase Console → Authentication → Users (ou use “Criar conta”).';
+
+                    // Ajuda extra: tenta identificar se o e-mail está cadastrado
+                    try {
+                        const methods = await auth.fetchSignInMethodsForEmail(email);
+                        const hasUser = Array.isArray(methods) && methods.length > 0;
+                        if (!hasUser) {
+                            errorMessage += ' Este e-mail não parece estar cadastrado neste projeto.';
+                            // Oferece criar a conta imediatamente (resolve o bloqueio sem ir ao Console)
+                            try {
+                                const ok = window.confirm('Este e-mail não está cadastrado neste projeto. Deseja criar uma conta agora com este e-mail e esta senha?');
+                                if (ok) {
+                                    try {
+                                        await auth.createUserWithEmailAndPassword(email, passwordNormalized);
+                                        console.log('✅ Conta criada automaticamente a partir do login:', email);
+                                        return; // onAuthStateChanged cuidará da UI
+                                    } catch (signupErr) {
+                                        console.error('❌ Falha ao criar conta automaticamente:', signupErr);
+                                        showLoginError('Falha ao criar a conta automaticamente. Use “Criar conta” ou verifique as configurações do Firebase Auth.');
+                                        return;
+                                    }
+                                }
+                            } catch (_confirmErr) { /* ignore */ }
+                        }
+                    } catch (_e) { /* ignore */ }
+
+                    if (passwordHasEdgeWhitespace) errorMessage += ' Dica: sua senha contém espaços no início/fim; tente remover.';
                     break;
                 default:
                     errorMessage = `Erro: ${error.message}`;
@@ -14138,6 +14315,97 @@ const firebaseConfig = {
             // Reabilitar Botão
             loginBtn.disabled = false;
             loginBtn.textContent = 'Entrar';
+        }
+    }
+
+    // Criar conta (Email/Senha)
+    async function handleSignup(e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        const email = String((document.getElementById('loginEmail')?.value || '')).replace(/\u00A0/g, ' ').trim().toLowerCase();
+        const passwordEl = document.getElementById('loginPassword');
+        let password = passwordEl ? String(passwordEl.value || '') : '';
+        password = password.replace(/\u00A0/g, ' ').trim();
+
+        if (!email || !password) {
+            showLoginError('Informe e-mail e senha para criar a conta.');
+            return;
+        }
+        if (password.length < 6) {
+            showLoginError('A senha precisa ter no mínimo 6 caracteres.');
+            return;
+        }
+
+        const signupBtn = document.getElementById('signupBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        try {
+            if (signupBtn) { signupBtn.disabled = true; signupBtn.textContent = 'Criando...'; }
+            if (loginBtn) loginBtn.disabled = true;
+
+            // Respeita a opção "Manter conectado"
+            try {
+                const keepSignedInEl = document.getElementById('keepSignedIn');
+                const keep = keepSignedInEl ? !!keepSignedInEl.checked : true;
+                const persistence = keep ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
+                await auth.setPersistence(persistence);
+            } catch (err) {
+                console.warn('⚠️ Não foi possível definir persistência do Auth (signup):', err);
+            }
+
+            await auth.createUserWithEmailAndPassword(email, password);
+            console.log('✅ Conta criada com sucesso:', email);
+            // onAuthStateChanged fará o resto
+        } catch (error) {
+            console.error('❌ Erro ao criar conta:', error);
+            let msg = 'Falha ao criar conta. Tente novamente.';
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    msg = 'Este e-mail já está em uso. Tente “Entrar” ou “Esqueci a senha”.';
+                    break;
+                case 'auth/invalid-email':
+                    msg = 'Email inválido.';
+                    break;
+                case 'auth/weak-password':
+                    msg = 'Senha fraca. Use pelo menos 6 caracteres.';
+                    break;
+                default:
+                    msg = `Erro: ${error.message}`;
+            }
+            showLoginError(msg);
+        } finally {
+            if (signupBtn) { signupBtn.disabled = false; signupBtn.textContent = 'Criar conta'; }
+            if (loginBtn) loginBtn.disabled = false;
+        }
+    }
+
+    // Reset de senha por e-mail
+    async function handleResetPassword(e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        const email = (document.getElementById('loginEmail')?.value || '').trim();
+        if (!email) {
+            showLoginError('Informe o e-mail para enviar o link de redefinição.');
+            return;
+        }
+        const btn = document.getElementById('resetPasswordBtn');
+        try {
+            if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+            await auth.sendPasswordResetEmail(email);
+            showLoginError('Link de redefinição enviado. Verifique seu e-mail.');
+        } catch (error) {
+            console.error('❌ Erro ao enviar reset de senha:', error);
+            let msg = 'Falha ao enviar e-mail de redefinição.';
+            switch (error.code) {
+                case 'auth/invalid-email':
+                    msg = 'Email inválido.';
+                    break;
+                case 'auth/user-not-found':
+                    msg = 'Usuário não encontrado. Use “Criar conta”.';
+                    break;
+                default:
+                    msg = `Erro: ${error.message}`;
+            }
+            showLoginError(msg);
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Esqueci a senha'; }
         }
     }
 
@@ -14166,33 +14434,49 @@ const firebaseConfig = {
 
     // Event Listeners
     window.addEventListener('DOMContentLoaded', () => {
-        // Login button
+        // Prefill de e-mail lembrado
+        try {
+            const savedEmail = localStorage.getItem('cf_remember_email');
+            const rememberEmailEl = document.getElementById('rememberEmail');
+            const loginEmail = document.getElementById('loginEmail');
+            if (savedEmail && loginEmail) {
+                loginEmail.value = savedEmail;
+                if (rememberEmailEl) rememberEmailEl.checked = true;
+            }
+        } catch (e) { /* ignore */ }
+
+        // Login form submit (melhor compatibilidade com salvar senha do navegador)
+        const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
-        if (loginBtn) {
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleLogin);
+        } else if (loginBtn) {
+            // fallback (caso o form não exista por algum motivo)
             loginBtn.addEventListener('click', handleLogin);
         }
-        
-        // Enter key no email e password
-        const loginEmail = document.getElementById('loginEmail');
-        const loginPassword = document.getElementById('loginPassword');
-        
-        if (loginEmail) {
-            loginEmail.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleLogin(e);
-                }
-            });
-        }
-        
-        if (loginPassword) {
-            loginPassword.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleLogin(e);
-                }
-            });
-        }
+
+        // Toggle mostrar/ocultar senha
+        try {
+            const toggleBtn = document.getElementById('togglePasswordBtn');
+            const pwd = document.getElementById('loginPassword');
+            if (toggleBtn && pwd) {
+                toggleBtn.addEventListener('click', () => {
+                    const isPassword = pwd.type === 'password';
+                    pwd.type = isPassword ? 'text' : 'password';
+                    const icon = toggleBtn.querySelector('.material-symbols-outlined');
+                    if (icon) icon.textContent = isPassword ? 'visibility_off' : 'visibility';
+                    toggleBtn.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
+                    toggleBtn.title = isPassword ? 'Ocultar senha' : 'Mostrar senha';
+                    try { pwd.focus(); } catch(_e) {}
+                });
+            }
+        } catch (e) { /* ignore */ }
+
+        // Signup / Reset password
+        const signupBtn = document.getElementById('signupBtn');
+        if (signupBtn) signupBtn.addEventListener('click', handleSignup);
+        const resetBtn = document.getElementById('resetPasswordBtn');
+        if (resetBtn) resetBtn.addEventListener('click', handleResetPassword);
         
         // Logout button
         const logoutBtn = document.getElementById('logoutBtn');

@@ -1,4 +1,7 @@
-﻿        <style>
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+        <style>
         /* ===== TELA DE LOGIN ===== */
         #loginScreen {
             position: fixed;
@@ -14,6 +17,80 @@
             animation: fadeIn 0.5s ease;
         }
         
+        .login-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            animation: slideUp 0.5s ease;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        
+        .login-subtitle {
+            font-size: 0.95rem;
+            color: #6b7280;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-password-wrap {
+            position: relative;
+        }
+
+        .login-password-wrap .login-input {
+            padding-right: 3rem;
+        }
+
+        .login-password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .login-password-toggle:focus {
+            outline: none;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
@@ -88,6 +165,22 @@
         
         .login-error.show {
             display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         @keyframes shake {
@@ -428,61 +521,6 @@
         max-height: calc(var(--vh, 1vh) * 100) !important;
     }
         </style>
-
-        <script>
-        // Helpers globalizados para uso imediato (mobile/UX e funções fora do App)
-        (function(){
-            function formatCurrency(v) { try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0); } catch (e) { return String(v); } }
-            function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-            function parseLocaleNumber(s, maxDecimals) {
-                try {
-                    if (s === undefined || s === null) return NaN;
-                    if (typeof s === 'number') return Number.isFinite(s) ? s : NaN;
-                    let str = String(s).trim();
-                    if (str === '') return NaN;
-                    str = str.replace(/[R$\s\u00A0]/g, '');
-                    str = str.replace(/[^0-9,\.\-]/g, '');
-                    str = str.replace(/(?!^)-/g, '');
-                    if (str === '' || str === '-') return NaN;
-                    const sign = str[0] === '-' ? -1 : 1;
-                    if (sign === -1) str = str.slice(1);
-                    const d = (typeof maxDecimals === 'number' && maxDecimals >= 0) ? maxDecimals : null;
-                    const lastComma = str.lastIndexOf(',');
-                    const lastDot = str.lastIndexOf('.');
-                    const lastSep = Math.max(lastComma, lastDot);
-                    if (lastSep === -1) {
-                        const digits = str.replace(/\D/g, '');
-                        if (!digits) return NaN;
-                        return sign * Number(digits);
-                    }
-                    const sepChar = str[lastSep];
-                    const intRaw = str.slice(0, lastSep);
-                    const fracRaw = str.slice(lastSep + 1);
-                    if (fracRaw === '') return NaN;
-                    const intDigits = intRaw.replace(/\D/g, '');
-                    const fracDigitsAll = fracRaw.replace(/\D/g, '');
-                    if (!intDigits && !fracDigitsAll) return NaN;
-                    const sepCount = (str.match(/[.,]/g) || []).length;
-                    if (d !== null && d <= 2 && sepCount === 1 && sepChar === '.' && fracDigitsAll.length === 3) {
-                        const allDigits = (intRaw + fracRaw).replace(/\D/g, '');
-                        if (!allDigits) return NaN;
-                        return sign * Number(allDigits);
-                    }
-                    const fracDigits = (d === null) ? fracDigitsAll : fracDigitsAll.slice(0, d);
-                    const normalized = (intDigits ? intDigits : '0') + (fracDigits ? ('.' + fracDigits) : '');
-                    const v = Number(normalized);
-                    return Number.isFinite(v) ? sign * v : NaN;
-                } catch (e) { return NaN; }
-            }
-            function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
-            try {
-                if (!window.formatCurrency) window.formatCurrency = formatCurrency;
-                if (!window.parseLocaleNumber) window.parseLocaleNumber = parseLocaleNumber;
-                if (!window.escapeHtml) window.escapeHtml = escapeHtml;
-                if (!window.isMobile) window.isMobile = isMobile;
-            } catch (e) { /* ignore env issues */ }
-        })();
-        </script>
         <style>
         /* Modal mobile layout fixes: ensure modal content stacks and buttons fit on small screens */
         @media (max-width: 639px) {
@@ -1918,15 +1956,13 @@
         }
         
         </style>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#3b82f6">
+    <link rel="icon" href="data:,">
     <title>Fluxo Financeiro</title>
 
     <!-- Firebase CDN Scripts (v10 Modular Compat) -->
@@ -1964,6 +2000,33 @@
                 }
                 originalError.apply(console, args);
             };
+        })();
+
+        // Remove credenciais expostas na URL (username/password/token) e limpa os campos visuais
+        (function scrubSensitiveQueryParams() {
+            try {
+                const url = new URL(window.location.href);
+                const sensitiveKeys = ['password', 'pass', 'pwd', 'token', 'apikey', 'apiKey', 'username', 'email'];
+                let hadSensitive = false;
+                sensitiveKeys.forEach((key) => {
+                    if (url.searchParams.has(key)) {
+                        url.searchParams.delete(key);
+                        hadSensitive = true;
+                    }
+                });
+                if (hadSensitive) {
+                    // Atualiza a URL sem recarregar e sem os parâmetros
+                    history.replaceState({}, document.title, url.toString());
+                    // Garante que campos de login fiquem vazios caso o navegador pré-preencha
+                    const emailEl = document.getElementById('loginEmail');
+                    const pwdEl = document.getElementById('loginPassword');
+                    if (emailEl) emailEl.value = '';
+                    if (pwdEl) pwdEl.value = '';
+                    console.warn('⚠️ Parâmetros sensíveis removidos da URL para proteger suas credenciais.');
+                }
+            } catch (e) {
+                console.error('scrubSensitiveQueryParams', e);
+            }
         })();
         
         window.populateSelect = function(selectId, items, iconSpanSelector){
@@ -2302,6 +2365,8 @@
                 padding: 0 !important;
                 background: transparent !important;
             }
+            /* Each cell inside mobile row should be hidden except the full-width mobile-row-cell (rendered by JS with colspan). */
+            .responsive-table td { display: none !important; }
             .mobile-row-cell { display: block !important; width: 100% !important; padding: 8px 10px !important; box-sizing: border-box !important; background: white !important; border-radius: 8px; border: 1px solid rgba(0,0,0,0.04); }
             .mobile-row { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-width:0; }
             .mobile-row .mobile-left { min-width:0; overflow:hidden; }
@@ -2455,8 +2520,12 @@
             .responsive-table tbody td { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; vertical-align: middle !important; }
             /* Ensure the table wrapper does not allow horizontal scroll */
             .overflow-x-auto { overflow-x: hidden !important; }
+            .responsive-table colgroup col { width: auto !important; }
             /* Make action buttons larger for touch (applies in mobile and desktop when table collapses) */
             .responsive-table td.actions-cell button, .responsive-table td.actions-cell .edit-btn, .responsive-table td.actions-cell .delete-btn { width:44px; height:44px; padding:8px; display:inline-flex !important; align-items:center; justify-content:center; }
+            /* Add clearer spacing for table rows on mobile */
+            .responsive-table tr { padding: 0.6rem 0 !important; }
+            .responsive-table td { padding: 0.6rem 0.6rem !important; }
         }
     </style>
     <style>
@@ -2888,6 +2957,26 @@
         
         .select-icon {
             left: 0.75rem !important;
+        }
+        
+        /* Otimizar barra de navegação inferior */
+        #mobile-bottom-nav {
+            padding: 0.5rem 0.75rem !important;
+            bottom: 1rem !important;
+            gap: 0.5rem !important;
+        }
+        
+        .mobile-nav-btn {
+            width: 52px !important;
+            height: 52px !important;
+        }
+        
+        /* Melhorar FAB de adicionar transação */
+        #mobile-add-transaction-fab {
+            width: 56px !important;
+            height: 56px !important;
+            bottom: 5rem !important;
+            right: 1rem !important;
         }
         
         /* Melhorar touch targets para í­cones de ação */
@@ -3641,6 +3730,53 @@
                                     </div>
                                     <span id="kpi-projected-expenses" class="text-base font-semibold text-error-600">R$ 0,00</span>
                                 </div>
+                            </div>
+                        </div>
+                        <!-- Planejamento mensal: orçamento e metas -->
+                        <style id="budget-card-tweaks">
+                        #budget-card { --card-gap: 10px; }
+                        #budget-card .budget-row { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:13px; color:#1f2937; }
+                        #budget-card .budget-label { display:flex; align-items:center; gap:6px; min-width:0; color:#4b5563; white-space:nowrap; }
+                        #budget-card .budget-label .dot { width:6px; height:6px; border-radius:999px; background:#cbd5e1; }
+                        #budget-card .budget-value { font-weight:700; color:#0f172a; white-space:nowrap; }
+                        #budget-card .section-title { font-size:12px; letter-spacing:0.02em; text-transform:uppercase; color:#6b7280; margin-bottom:6px; }
+                        #budget-card .budget-slab { background:#f8fafc; border:1px solid #e5e7eb; border-radius:14px; padding:10px 12px; }
+                        #budget-card .budget-bar { height:8px; border-radius:999px; background:#e5e7eb; overflow:hidden; margin-top:6px; }
+                        #budget-card .budget-bar-fill { height:100%; border-radius:inherit; transition:width .28s ease; }
+                        #budget-card .kpi-chip { padding:4px 10px; border-radius:999px; background:#eef2ff; color:#312e81; font-weight:600; font-size:12px; white-space:nowrap; }
+                        #budget-card #planning-alerts .alert-row { display:flex; gap:6px; align-items:flex-start; font-size:12px; color:#374151; }
+                        #budget-card #planning-alerts .alert-row span { display:block; line-height:1.3; }
+                        </style>
+                        <div id="budget-card" class="modern-card p-4 animate-scale-in">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-indigo-600">account_balance</span>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800">Planejamento do Mês</h3>
+                                        <p class="text-xs text-gray-500">Orçado vs realizado</p>
+                                    </div>
+                                </div>
+                                <button id="budget-edit-btn" class="modern-btn modern-btn-secondary text-xs px-3 py-1" title="Ajustar orçamento do mês">Editar</button>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="budget-slab">
+                                    <div class="budget-row">
+                                        <span class="budget-label"><span class="dot"></span>Orçamento total</span>
+                                        <span id="budget-total-label" class="budget-value">--</span>
+                                    </div>
+                                    <div class="budget-bar">
+                                        <div id="budget-total-bar" class="budget-bar-fill bg-indigo-500" style="width:0%"></div>
+                                    </div>
+                                </div>
+                                <div class="budget-slab">
+                                    <div class="section-title">Top 5 categorias</div>
+                                    <div id="budget-category-list" class="space-y-2"></div>
+                                </div>
+                                <div class="budget-slab">
+                                    <div class="section-title">Metas rápidas</div>
+                                    <div id="planning-goals-list" class="space-y-2"></div>
+                                </div>
+                                <div id="planning-alerts" class="space-y-2"></div>
                             </div>
                         </div>
                         <!-- VR KPI: minimal â€” shows available balance and spent progress -->
@@ -5663,12 +5799,186 @@
                 }
             }catch(e){ /* Chart.js not available or canvas not ready */ }
         }
+
+        // helpers: formatting & escape
+        function formatCurrency(v){ try{ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v)||0); }catch(e){ return String(v); } }
+        function formatDecimalBR(v, decimals){
+            const n = Number(v);
+            if (!Number.isFinite(n)) return '';
+            const d = (typeof decimals === 'number' && decimals >= 0) ? decimals : 2;
+            return n.toFixed(d).replace('.', ',');
+        }
+        function roundTo(v, decimals){
+            const n = Number(v);
+            if (!Number.isFinite(n)) return NaN;
+            const d = (typeof decimals === 'number' && decimals >= 0) ? decimals : 2;
+            const p = Math.pow(10, d);
+            return Math.round((n + Number.EPSILON) * p) / p;
+        }
+        function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+            // Parse numbers entered in pt-BR style into JS numbers.
+            // Supports liters with 3 decimals (e.g. "9,510") and currency with 2 decimals.
+            // When mid-typing like "59,", returns NaN to avoid shifting decimals.
+            function parseLocaleNumber(s, maxDecimals) {
+                try {
+                    if (s === undefined || s === null) return NaN;
+                    if (typeof s === 'number') return Number.isFinite(s) ? s : NaN;
+                    let str = String(s).trim();
+                    if (str === '') return NaN;
+
+                    // Remove currency symbols/spaces, keep only digits/separators/minus
+                    str = str.replace(/[R$\s\u00A0]/g, '');
+                    str = str.replace(/[^0-9,\.\-]/g, '');
+
+                    // Protect minus: allow only leading minus
+                    str = str.replace(/(?!^)-/g, '');
+                    if (str === '' || str === '-') return NaN;
+
+                    const sign = str[0] === '-' ? -1 : 1;
+                    if (sign === -1) str = str.slice(1);
+
+                    const d = (typeof maxDecimals === 'number' && maxDecimals >= 0) ? maxDecimals : null;
+                    const lastComma = str.lastIndexOf(',');
+                    const lastDot = str.lastIndexOf('.');
+                    const lastSep = Math.max(lastComma, lastDot);
+
+                    if (lastSep === -1) {
+                        const digits = str.replace(/\D/g, '');
+                        if (!digits) return NaN;
+                        return sign * Number(digits);
+                    }
+
+                    const sepChar = str[lastSep];
+                    const intRaw = str.slice(0, lastSep);
+                    const fracRaw = str.slice(lastSep + 1);
+                    if (fracRaw === '') return NaN;
+
+                    const intDigits = intRaw.replace(/\D/g, '');
+                    const fracDigitsAll = fracRaw.replace(/\D/g, '');
+                    if (!intDigits && !fracDigitsAll) return NaN;
+
+                    // Heuristic for money-like fields (<= 2 decimals): a single dot with 3 trailing digits is thousands.
+                    const sepCount = (str.match(/[.,]/g) || []).length;
+                    if (d !== null && d <= 2 && sepCount === 1 && sepChar === '.' && fracDigitsAll.length === 3) {
+                        const allDigits = (intRaw + fracRaw).replace(/\D/g, '');
+                        if (!allDigits) return NaN;
+                        return sign * Number(allDigits);
+                    }
+
+                    const fracDigits = (d === null) ? fracDigitsAll : fracDigitsAll.slice(0, d);
+                    const normalized = (intDigits ? intDigits : '0') + (fracDigits ? ('.' + fracDigits) : '');
+                    const v = Number(normalized);
+                    return Number.isFinite(v) ? sign * v : NaN;
+                } catch (e) { return NaN; }
+            }
+
             // Safe id generator: prefer global generateUUID if available, otherwise fallback
             function safeGenerateId() {
                 try { if (typeof generateUUID === 'function') return generateUUID(); } catch(e) {}
                 // fallback simple id
                 return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
             }
+
+        // --- MODEL CORE (state + normalize/validate + migrations) ---
+        const model = {
+            normalizeTransaction(txInput = {}, forcedType) {
+                const clone = JSON.parse(JSON.stringify(txInput || {}));
+                const type = forcedType || clone.type || 'expenses';
+                const now = new Date(state.currentDate || new Date());
+                const toISODate = (d) => {
+                    try {
+                        const dt = (d instanceof Date) ? d : new Date(d || now);
+                        const iso = dt.toISOString();
+                        return iso.slice(0, 10); // YYYY-MM-DD
+                    } catch (e) { return new Date(now).toISOString().slice(0, 10); }
+                };
+                const cleanStr = (v) => (v === undefined || v === null) ? '' : String(v).trim();
+                const cleanNum = (v) => {
+                    const parsed = parseLocaleNumber(v);
+                    return Number.isFinite(parsed) ? parsed : 0;
+                };
+
+                const base = {
+                    id: clone.id || safeGenerateId(),
+                    description: cleanStr(clone.description),
+                    amount: cleanNum(clone.amount),
+                    date: toISODate(clone.date || clone.createdAt),
+                    isRecurring: !!clone.isRecurring,
+                    isPaid: !!clone.isPaid,
+                    payment: cleanStr(clone.payment),
+                    category: cleanStr(clone.category),
+                    type: cleanStr(clone.type || type),
+                    recurringId: clone.recurringId || null,
+                    installmentId: clone.installmentId || null,
+                    currentInstallment: Number.isFinite(Number(clone.currentInstallment)) ? Number(clone.currentInstallment) : null,
+                    totalInstallments: Number.isFinite(Number(clone.totalInstallments)) ? Number(clone.totalInstallments) : null,
+                    financingId: clone.financingId || null,
+                    currentFinancing: Number.isFinite(Number(clone.currentFinancing)) ? Number(clone.currentFinancing) : null,
+                    totalFinancing: Number.isFinite(Number(clone.totalFinancing)) ? Number(clone.totalFinancing) : null,
+                    recipient: cleanStr(clone.recipient)
+                };
+
+                if (type === 'incomes') {
+                    base.payment = cleanStr(clone.payment || clone.method || '');
+                }
+                if (type === 'savings') {
+                    base.category = cleanStr(clone.category || clone.group || '');
+                }
+
+                // Remove NaN/empty strings for numeric-only fields
+                ['currentInstallment','totalInstallments','currentFinancing','totalFinancing'].forEach(k => {
+                    if (!Number.isFinite(base[k])) base[k] = null;
+                });
+
+                return base;
+            },
+            validateTransaction(tx = {}, type) {
+                const errors = [];
+                const t = type || tx.type;
+                if (!tx.description || !tx.description.trim()) errors.push('Descrição é obrigatória.');
+                if (!Number.isFinite(Number(tx.amount)) || Number(tx.amount) === 0) errors.push('Valor inválido.');
+                if (t === 'expenses') {
+                    if (!tx.payment) errors.push('Forma de pagamento é obrigatória.');
+                    if (!tx.category) errors.push('Categoria é obrigatória.');
+                }
+                if (t === 'savings') {
+                    if (!tx.category) errors.push('Categoria de reserva é obrigatória.');
+                }
+                if (tx.date && isNaN(new Date(tx.date).getTime())) errors.push('Data inválida.');
+                return errors;
+            }
+        };
+
+        const migrations = {
+            run() {
+                try {
+                    if (!state.appData || !state.appData.data) return;
+                    Object.keys(state.appData.data).forEach(year => {
+                        Object.keys(state.appData.data[year]).forEach(month => {
+                            const md = state.appData.data[year][month] || {};
+                            ['incomes','expenses','savings'].forEach(type => {
+                                if (!Array.isArray(md[type])) md[type] = [];
+                                md[type] = md[type].map(item => {
+                                    const normalized = model.normalizeTransaction(item, type);
+                                    return { ...item, ...normalized };
+                                });
+                            });
+                        });
+                    });
+                } catch (e) { console.error('migrations.run', e); }
+            }
+        };
+
+        function prepareTransaction(type, tx) {
+            const normalized = model.normalizeTransaction({ ...tx }, type);
+            const errors = model.validateTransaction(normalized, type);
+            if (errors.length) {
+                try { setTransactionError(errors.join(' ')); } catch (_) {}
+                return null;
+            }
+            return normalized;
+        }
 
         // auto-calculation and validation wiring
         document.addEventListener('DOMContentLoaded', function(){
@@ -5864,6 +6174,10 @@
         // VT KPI card click handler intentionally removed to avoid multiple access points to the VT modal.
         // Access to the VT â€” Abastecimentos modal is restricted to the '+' button inside the VT card on the
         // credit-cards (Faturas) view to prevent conflicts.
+
+        // Expose shared helpers so the main App IIFE can reuse them
+        try { window.model = model; } catch(e) { /* ignore */ }
+        try { window.migrations = migrations; } catch(e) { /* ignore */ }
     })();
     // Async confirm helper used across the app; uses modal when available
     function confirmAsync(message, title) {
@@ -6066,6 +6380,10 @@
 
     })();
 
+    document.addEventListener('DOMContentLoaded', () => {
+        // Legacy import button is wired to open the import modal (handled above)
+    });
+
     // Transaction UI is in-page (Actions view). No dialog open/close wrapper here.
     
     // ===== FUNCIONALIDADE DE DUPLO CLIQUE PARA FECHAR MODAIS =====
@@ -6143,6 +6461,17 @@ const firebaseConfig = {
 };
 
 
+    // Lightweight debug logger used before App is available
+    if (typeof window !== 'undefined' && !window.debugLog) {
+        window.debugLog = function(...args) {
+            try {
+                const dbg = window.state && window.state.uiFlags && window.state.uiFlags.debug;
+                if (!dbg) return;
+                console.debug('[App]', ...args);
+            } catch (_) {}
+        };
+    }
+
     // Inicializa o Firebase (apenas se ainda nío foi inicializado)
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
@@ -6156,10 +6485,18 @@ const firebaseConfig = {
             const initialData = this.getInitialData();
             try {
                 // console.debug('storage.loadData: fetching data from Firebase...');
-                const snapshot = await database.ref(this.DB_KEY).get();
+                const timeoutMs = 8000;
+                const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs));
+                const snapshot = await Promise.race([database.ref(this.DB_KEY).get(), timeout]);
                 if (!snapshot.exists()) {
                     // console.debug("Firebase esTí¡ vazio. Inicializando com dados padrío e salvando no banco.");
-                    await this.saveData(initialData);
+                    try {
+                        await this.saveData(initialData);
+                        showToast('Banco vazio: inicializado com dados padrão.', 'bg-blue-600');
+                    } catch (e) {
+                        console.error('Falha ao salvar dados iniciais no Firebase', e);
+                        showToast('Não foi possível criar os dados iniciais no Firebase.', 'bg-red-600');
+                    }
                     return initialData;
                 }
 
@@ -6399,26 +6736,37 @@ const firebaseConfig = {
             return sanitize(obj);
         },
 
-        saveData: function(data) {
-            try {
-                // console.debug("Sanitizing data before saving to Firebase...");
-                showLoading();
-                const safe = this.sanitizeForFirebase(data);
-                // Persist without verbose logging of the entire object
-                return database.ref(this.DB_KEY).set(safe)
-                    .then(() => { /* saved successfully */ hideLoading(); return Promise.resolve(); })
-                    .catch(e => {
-                        console.error("Erro ao salvar no Firebase:", e);
-                        hideLoading();
-                        showToast('Erro ao salvar dados no Firebase: ' + (e && e.message ? e.message : e), 'bg-red-600');
-                        return Promise.reject(e);
-                    });
-            } catch (err) {
-                console.error('Erro ao sanitizar dados antes de salvar:', err);
-                hideLoading();
-                showToast('Erro interno ao preparar dados para salvar.', 'bg-red-600');
-                return Promise.reject(err);
-            }
+        // UI-safe text helper: escape strings right before injecting into the DOM
+        safeText: function(value) {
+            return escapeHtml((value === null || value === undefined) ? '' : String(value));
+        },
+
+        saveData: function(data, opts = {}) {
+            const { retries = 1, timeoutMs = 8000 } = opts;
+            const attemptSave = async (attempt = 0) => {
+                try {
+                    showLoading();
+                    const safe = this.sanitizeForFirebase(data);
+                    const ref = database.ref(this.DB_KEY);
+                    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs));
+                    await Promise.race([ref.set(safe), timeout]);
+                    hideLoading();
+                    debugLog('saveData success', { attempt });
+                    return;
+                } catch (err) {
+                    hideLoading();
+                    const isOffline = (typeof navigator !== 'undefined' && navigator.onLine === false) || (err && err.code === 'disconnected');
+                    const message = isOffline ? 'Sem conexão. Verifique sua internet e tente novamente.' : 'Erro ao salvar no Firebase.';
+                    showToast(message, 'bg-red-600');
+                    debugLog('saveData error', { attempt, err });
+                    if (attempt < retries) {
+                        await new Promise(res => setTimeout(res, 1200));
+                        return attemptSave(attempt + 1);
+                    }
+                    return Promise.reject(err);
+                }
+            };
+            return attemptSave(0);
         },
         getInitialData: function() {
             return {
@@ -6473,6 +6821,12 @@ const firebaseConfig = {
                         { name: "Apple Pay", type: "wallet" },
                         { name: "Outro", type: "other" }
                     ],
+                    // Monthly planning defaults (persisted separately from transactions)
+                    budgets: {}, // keyed by YYYY-MM -> { total: number, categories: { [category]: number } }
+                    planningGoals: {
+                        emergency: { targetPctIncome: 0.10, minAmount: 0 }, // save at least 10% of income for emergency
+                        cardPayoff: { enabled: true }
+                    },
                     feedbackMessages: [
                         { id: 'A', text: "í“timo trabalho! você superou sua meta de reserva este Mês!" },
                         { id: 'B', text: "Missío cumprida! Suas finanças esTío alinhadas com as metas." },
@@ -6485,23 +6839,67 @@ const firebaseConfig = {
                 data: {}
             };
         },
-
+        propagateInitialInstallments(initialData) {}
     };
     
-    var App = (function() {
+    const App = (function() {
     // showToast is defined globally above so it can be used before App.init()
+        // Shared domain helpers coming from the VT block above
+        const model = (typeof window !== 'undefined' && window.model) ? window.model : undefined;
+        const migrations = (typeof window !== 'undefined' && window.migrations) ? window.migrations : undefined;
+
         // STATE & UI (Private variables)
         const state = {
             currentDate: new Date(),
+            month: { year: null, month: null },
+            user: null,
             appData: null,
             currentView: 'dashboard',
             sort: { key: 'description', order: 'asc' },
-            filters: { searchTerm: '' },
+            filters: { searchTerm: '', expenseFilters: {} },
+            totals: { incomes: 0, expenses: 0, savings: 0, balance: 0, vr: 0, vt: 0 },
+            cache: { months: {} },
+            uiFlags: { isMobile: false, isModalOpen: false, actionLocked: false, debug: false },
+            planning: { runtime: {}, dirty: {} },
             // UX: control whether Despesas are shown grouped by Descrição
             showGroupedExpenses: false,
             // Per-card grouping state for credit card invoices
             cardGrouped: {}
         };
+
+        // Cache DOM lookups used across handlers to avoid repeated queries
+        const domCache = {};
+        function getDom(id) {
+            if (!id) return null;
+            if (!domCache[id]) domCache[id] = document.getElementById(id);
+            return domCache[id];
+        }
+
+        // Debounce helper to throttle noisy inputs
+        function debounce(fn, wait = 300) {
+            let t = null;
+            return function debounced(...args) {
+                const ctx = this;
+                clearTimeout(t);
+                t = setTimeout(() => fn.apply(ctx, args), wait);
+            };
+        }
+
+        // Debug logger with toggle (no console noise when disabled)
+        function debugLog(...args) {
+            try {
+                if (!state.uiFlags.debug) return;
+                console.debug('[App]', ...args);
+            } catch (_) {}
+        }
+
+        try {
+            window.AppDebug = {
+                enable() { state.uiFlags.debug = true; },
+                disable() { state.uiFlags.debug = false; },
+                log: debugLog
+            };
+        } catch (_) {}
 
     // Expose the internal state globally so legacy/global handlers can access it safely
     try { window.state = state; } catch (e) { /* ignore if env prevents assignment */ }
@@ -6512,86 +6910,6 @@ const firebaseConfig = {
         // in-memory session defaults for the transaction modal (do not persist)
         ui.lastTransactionDefaults = null;
 
-        // --- DOM HELPERS / CACHE ---
-        const dom = {
-            cache: {},
-            qs: (selector, root = document) => (root || document).querySelector(selector),
-            qsa: (selector, root = document) => Array.from((root || document).querySelectorAll(selector)),
-            byId: (id) => document.getElementById(id),
-            get(key, selector, root = document) {
-                if (this.cache[key]) return this.cache[key];
-                const node = this.qs(selector, root);
-                if (node) this.cache[key] = node;
-                return node;
-            }
-        };
-
-        // --- CORE UTILITIES (kept minimal to avoid behavior changes) ---
-        const util = {
-            normalizeEmail: (email) => String(email || '').replace(/\u00A0/g, ' ').trim().toLowerCase(),
-            formatCurrency,
-            parseLocaleNumber,
-            escapeHtml,
-            isMobile
-        };
-
-        // Namespaces to group features (populated later without behavior changes)
-        const charts = {};
-        const importExport = {};
-        const backup = {};
-        const authModule = {};
-
-        // --- FIREBASE / DB WRAPPER (idempotent) ---
-        const db = {
-            app: null,
-            database: null,
-            root: null,
-            init() {
-                if (this.root) return this.root;
-                try {
-                    this.app = firebase.apps && firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
-                } catch (err) {
-                    try { this.app = firebase.apps && firebase.apps.length ? firebase.app() : null; } catch (_) { this.app = null; }
-                }
-                try {
-                    this.database = (typeof database !== 'undefined') ? database : firebase.database();
-                } catch (_) {
-                    this.database = firebase.database();
-                }
-                try {
-                    const legacyRoot = (typeof window !== 'undefined' && window.financeAppDB_v10) ? window.financeAppDB_v10 : null;
-                    this.root = legacyRoot || this.database.ref((storage && storage.DB_KEY) ? storage.DB_KEY : 'financeAppDB_v10');
-                    if (!legacyRoot) {
-                        try { window.financeAppDB_v10 = this.root; } catch (_) { /* ignore */ }
-                    }
-                } catch (err) {
-                    console.error('App.db.init failed to set root ref', err);
-                }
-                return this.root;
-            }
-        };
-
-        // Simple screen toggles, preserved to avoid UI regressions
-        ui.showLogin = function showLogin() {
-            const loginScreen = dom.byId('loginScreen');
-            const mainApp = dom.byId('mainApp');
-            if (loginScreen) loginScreen.style.display = 'flex';
-            if (mainApp) {
-                mainApp.style.display = 'none';
-                mainApp.classList.remove('authenticated');
-            }
-        };
-
-        ui.showMain = function showMain() {
-            const loginScreen = dom.byId('loginScreen');
-            const mainApp = dom.byId('mainApp');
-            if (loginScreen) loginScreen.style.display = 'none';
-            if (mainApp) {
-                mainApp.style.display = 'block';
-                mainApp.classList.add('authenticated');
-            }
-        };
-
         // --- HELPERS ---
         function generateUUID() {
             // Simple UUID v4 generator for local IDs
@@ -6601,12 +6919,320 @@ const firebaseConfig = {
             });
         }
 
+            // Parse numbers entered in pt-BR style (e.g. "1.234,56" or "59,52") into JS numbers
+            function parseLocaleNumber(s) {
+                try {
+                    if (s === undefined || s === null) return NaN;
+                    if (typeof s === 'number') return s;
+                    let str = String(s).trim();
+                    if (str === '') return NaN;
+                    
+                    // Remove currency symbols and spaces
+                    str = str.replace(/[R$\s\u00A0]/g, '');
+                    
+                    // Protect minus: allow only leading minus
+                    str = str.replace(/(?!^)-/g, '');
+                    if (str === '' || str === '-') return NaN;
+                    
+                    // Detect format: if there's a comma followed by 1-2 digits at the end, it's BR format (123.456,78)
+                    // Otherwise, if there's a dot followed by 1-2 digits at the end, it's US format (123,456.78)
+                    const hasBRDecimal = /,\d{1,2}$/.test(str); // ends with ,XX or ,X
+                    const hasUSDecimal = /\.\d{1,2}$/.test(str); // ends with .XX or .X
+                    
+                    if (hasBRDecimal) {
+                        // Brazilian format: 1.234.567,89 -> remove dots, replace comma with dot
+                        str = str.replace(/\./g, '').replace(',', '.');
+                    } else if (hasUSDecimal) {
+                        // US format: 1,234,567.89 -> remove commas, keep dot
+                        str = str.replace(/,/g, '');
+                    } else {
+                        // No clear decimal separator, or integer - just remove all separators
+                        str = str.replace(/[.,]/g, '');
+                    }
+                    
+                    // Remove any remaining non-numeric characters except dot and minus
+                    str = str.replace(/[^0-9.\-]/g, '');
+                    
+                    const v = parseFloat(str);
+                    return isNaN(v) ? NaN : v;
+                } catch (e) { return NaN; }
+            }
+
             // Safe id generator: prefer global generateUUID if available, otherwise fallback
             function safeGenerateId() {
                 try { if (typeof generateUUID === 'function') return generateUUID(); } catch(e) {}
                 // fallback simple id
                 return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
             }
+
+        // Planning helpers: monthly budgets + simple goals (emergency fund and card payoff)
+        const planning = {
+            monthKey(date = state.currentDate) {
+                const d = date || new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            },
+            ensureSettingsDefaults() {
+                state.appData.settings = state.appData.settings || {};
+                if (!state.appData.settings.budgets) state.appData.settings.budgets = {};
+                if (!state.appData.settings.planningGoals) state.appData.settings.planningGoals = { emergency: { targetPctIncome: 0.10, minAmount: 0 }, cardPayoff: { enabled: true } };
+                return state.appData.settings;
+            },
+            saveSettings() {
+                try { return storage.saveData(state.appData); } catch (e) { console.error('planning.saveSettings', e); return Promise.reject(e); }
+            },
+            estimateDefaultBudget(date = state.currentDate) {
+                const baseDate = date || new Date();
+                const prev = new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1);
+                const prevActuals = this.computeActuals(prev);
+                const prevTotal = Number(prevActuals.total) || 0;
+                const incomeNow = (getCurrentMonthData(baseDate).incomes || []).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+                const baseFromIncome = incomeNow > 0 ? incomeNow * 0.6 : 0;
+                const baseline = prevTotal > 0 ? prevTotal * 0.95 : baseFromIncome;
+                const rounded = Math.round((baseline + Number.EPSILON) * 100) / 100;
+                return rounded > 0 ? rounded : 0;
+            },
+            ensureMonthBudget(date = state.currentDate) {
+                this.ensureSettingsDefaults();
+                const key = this.monthKey(date);
+                const budgets = state.appData.settings.budgets;
+                if (!budgets[key]) {
+                    const estimate = this.estimateDefaultBudget(date);
+                    const prevActuals = this.computeActuals(new Date((date || new Date()).getFullYear(), (date || new Date()).getMonth() - 1, 1));
+                    const categories = {};
+                    Object.entries(prevActuals.byCategory || {})
+                        .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))
+                        .slice(0, 5)
+                        .forEach(([cat, val]) => {
+                            const safeVal = Math.max(0, Number(val) || 0);
+                            categories[cat] = Math.round(safeVal * 0.95 * 100) / 100;
+                        });
+                    budgets[key] = { total: estimate, categories };
+                    try { this.saveSettings(); } catch (_) { /* ignore */ }
+                }
+                const budget = budgets[key] || { total: 0, categories: {} };
+                budget.categories = budget.categories || {};
+                budgets[key] = budget;
+                return budget;
+            },
+            setMonthBudget(date, partial = {}) {
+                this.ensureSettingsDefaults();
+                const key = this.monthKey(date);
+                const existing = this.ensureMonthBudget(date);
+                const merged = {
+                    ...existing,
+                    ...partial,
+                    categories: { ...existing.categories, ...(partial.categories || {}) }
+                };
+                state.appData.settings.budgets[key] = merged;
+                return this.saveSettings();
+            },
+            computeActuals(date = state.currentDate) {
+                const md = getCurrentMonthData(date);
+                const res = { total: 0, byCategory: {} };
+                const add = (cat, amt) => {
+                    const key = (cat && cat.toString().trim()) ? cat : 'Sem categoria';
+                    res.byCategory[key] = Math.round(((res.byCategory[key] || 0) + amt + Number.EPSILON) * 100) / 100;
+                };
+                (md.expenses || []).forEach(exp => {
+                    const amt = Number(exp.amount) || 0;
+                    if (!amt) return;
+                    res.total = Math.round((res.total + amt + Number.EPSILON) * 100) / 100;
+                    add(exp.category || '', amt);
+                });
+                return res;
+            },
+            getActuals(date = state.currentDate) {
+                const key = this.monthKey(date);
+                state.planning.runtime = state.planning.runtime || {};
+                state.planning.dirty = state.planning.dirty || {};
+                if (state.planning.runtime[key] && !state.planning.dirty[key]) return state.planning.runtime[key];
+                const fresh = this.computeActuals(date);
+                state.planning.runtime[key] = fresh;
+                state.planning.dirty[key] = false;
+                return fresh;
+            },
+            bumpRuntime(date, category, amount) {
+                const key = this.monthKey(date || state.currentDate);
+                const delta = Number(amount) || 0;
+                state.planning.runtime = state.planning.runtime || {};
+                state.planning.dirty = state.planning.dirty || {};
+                if (!state.planning.runtime[key]) state.planning.runtime[key] = { total: 0, byCategory: {} };
+                const rt = state.planning.runtime[key];
+                rt.total = Math.round((rt.total + delta + Number.EPSILON) * 100) / 100;
+                const catKey = (category && category.toString().trim()) ? category : 'Sem categoria';
+                rt.byCategory[catKey] = Math.round(((rt.byCategory[catKey] || 0) + delta + Number.EPSILON) * 100) / 100;
+                state.planning.dirty[key] = false;
+            },
+            markDirty(date = state.currentDate) {
+                const key = this.monthKey(date);
+                state.planning.dirty = state.planning.dirty || {};
+                state.planning.dirty[key] = true;
+            },
+            topCategories(actuals, limit = 5) {
+                const entries = Object.entries(actuals.byCategory || {}).map(([cat, value]) => ({ cat, value: Number(value) || 0 }));
+                entries.sort((a, b) => b.value - a.value);
+                return entries.slice(0, limit);
+            },
+            computeCardInvoiceSnapshot(monthData) {
+                const md = monthData || getCurrentMonthData();
+                const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
+                const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
+                const cardAnticipations = md.cardAnticipations || {};
+                let totalInvoices = 0; let paidInvoices = 0;
+                cardMethods.forEach(card => {
+                    const cardExpenses = (md.expenses || []).filter(e => paymentMatches(e.payment || '', card.name));
+                    const totalBefore = cardExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+                    const anticipated = Number(cardAnticipations[card.name] || 0);
+                    const invoiceTotal = Math.max(0, Math.round(((totalBefore - anticipated) + Number.EPSILON) * 100) / 100);
+                    totalInvoices += invoiceTotal;
+                    paidInvoices += cardExpenses.filter(e => e.isPaid).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+                });
+                return { total: Math.round((totalInvoices + Number.EPSILON) * 100) / 100, paid: Math.round((paidInvoices + Number.EPSILON) * 100) / 100 };
+            },
+            buildGoals(date = state.currentDate) {
+                const md = getCurrentMonthData(date);
+                const config = (state.appData.settings && state.appData.settings.planningGoals) || {};
+                const goals = [];
+                const totalIncome = (md.incomes || []).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+                const savingsTotal = (md.savings || []).reduce((s, i) => s + (Number(i.amount) || 0), 0);
+                const emergencyPct = (config.emergency && typeof config.emergency.targetPctIncome === 'number') ? config.emergency.targetPctIncome : 0.10;
+                const emergencyMin = (config.emergency && typeof config.emergency.minAmount === 'number') ? config.emergency.minAmount : 0;
+                const emergencyTarget = Math.max(emergencyMin, Math.round(((totalIncome * emergencyPct) + Number.EPSILON) * 100) / 100);
+                if (emergencyTarget > 0) {
+                    goals.push({
+                        id: 'emergency',
+                        title: 'Reserva de emergência',
+                        target: emergencyTarget,
+                        current: Math.round((savingsTotal + Number.EPSILON) * 100) / 100,
+                        remaining: Math.max(0, Math.round(((emergencyTarget - savingsTotal) + Number.EPSILON) * 100) / 100),
+                        percent: emergencyTarget > 0 ? Math.min(100, Math.round(((savingsTotal / emergencyTarget) * 100) * 10) / 10) : 100,
+                        hint: `${Math.round(emergencyPct * 100)}%`
+                    });
+                }
+                const cardCfg = config.cardPayoff || { enabled: true };
+                if (cardCfg.enabled) {
+                    const cardSnapshot = this.computeCardInvoiceSnapshot(md);
+                    if (cardSnapshot.total > 0) {
+                        goals.push({
+                            id: 'card',
+                            title: 'Quitar faturas do cartão',
+                            target: cardSnapshot.total,
+                            current: Math.round((cardSnapshot.paid + Number.EPSILON) * 100) / 100,
+                            remaining: Math.max(0, Math.round(((cardSnapshot.total - cardSnapshot.paid) + Number.EPSILON) * 100) / 100),
+                            percent: cardSnapshot.total > 0 ? Math.min(100, Math.round(((cardSnapshot.paid / cardSnapshot.total) * 100) * 10) / 10) : 100,
+                            hint: ''
+                        });
+                    }
+                }
+                return goals;
+            },
+            buildAlerts({ budget, actuals, goals }) {
+                const alerts = [];
+                if (budget && budget.total > 0) {
+                    const ratio = actuals.total / budget.total;
+                    if (ratio >= 1.01) alerts.push(`Você estourou ${Math.round((ratio - 1) * 100)}% do orçamento total.`);
+                    else if (ratio >= 0.85) alerts.push(`Atenção: ${Math.round(ratio * 100)}% do orçamento total já foi usado.`);
+                }
+                const categories = budget && budget.categories ? budget.categories : {};
+                Object.entries(actuals.byCategory || {}).forEach(([cat, val]) => {
+                    const b = Number(categories[cat] || 0);
+                    if (b <= 0) return;
+                    const ratio = val / b;
+                    if (ratio >= 1.05) alerts.push(`${cat}: estourou ${Math.round((ratio - 1) * 100)}% do orçamento.`);
+                    else if (ratio >= 0.9) alerts.push(`${cat}: ${Math.round(ratio * 100)}% do orçamento usado.`);
+                });
+                (goals || []).forEach(g => {
+                    if (g.remaining > 0 && g.target > 0) alerts.push(`Faltam ${formatCurrency(g.remaining)} para ${g.title}.`);
+                });
+                return alerts;
+            }
+        };
+
+        // Month-level aggregates cache (expenses by category/type/payment and totals)
+        const aggregates = {
+            runtime: {},
+            dirty: {},
+            monthKey(date = state.currentDate) {
+                const d = date || new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            },
+            markDirty(date = state.currentDate) {
+                const key = this.monthKey(date);
+                this.dirty[key] = true;
+            },
+            markAllDirty() {
+                Object.keys(this.runtime).forEach(k => { this.dirty[k] = true; });
+            },
+            compute(date = state.currentDate) {
+                const md = getCurrentMonthData(date);
+                const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
+                const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
+                const cardAnticipations = md.cardAnticipations || {};
+
+                const totals = {
+                    totalIncome: 0,
+                    totalSavings: 0,
+                    totalExpenses: 0,
+                    totalExpensesPaid: 0,
+                    totalAnticipations: Object.values(cardAnticipations || {}).reduce((s, v) => s + (Number(v) || 0), 0),
+                    byCategory: {},
+                    byPayment: {},
+                    byType: {}
+                };
+
+                // Incomes and savings
+                (md.incomes || []).forEach(i => { totals.totalIncome += Number(i.amount) || 0; });
+                (md.savings || []).forEach(s => { totals.totalSavings += Number(s.amount) || 0; });
+
+                // Expenses grouped by payment to handle card invoice logic once
+                const byPaymentGroup = {};
+                (md.expenses || []).forEach(exp => {
+                    const amount = Number(exp.amount) || 0;
+                    totals.totalExpenses += amount;
+                    // category/type buckets
+                    const catKey = (exp.category || 'Sem categoria').toString();
+                    totals.byCategory[catKey] = Math.round(((totals.byCategory[catKey] || 0) + amount + Number.EPSILON) * 100) / 100;
+                    const typeKey = (exp.type || 'Sem tipo').toString();
+                    totals.byType[typeKey] = Math.round(((totals.byType[typeKey] || 0) + amount + Number.EPSILON) * 100) / 100;
+                    const payLabel = (typeof getPaymentLabel === 'function') ? getPaymentLabel(exp.payment || '') : (exp.payment || '_');
+                    totals.byPayment[payLabel] = Math.round(((totals.byPayment[payLabel] || 0) + amount + Number.EPSILON) * 100) / 100;
+                    (byPaymentGroup[payLabel] = byPaymentGroup[payLabel] || []).push(exp);
+                });
+
+                // Compute paid totals respecting card invoices and anticipations
+                Object.entries(byPaymentGroup).forEach(([payment, group]) => {
+                    const isCard = cardMethods.some(c => paymentMatches(payment || '', c.name));
+                    if (isCard) {
+                        const paidCount = group.filter(g => g.isPaid).length;
+                        if (group.length > 0 && paidCount === group.length) {
+                            const sumAll = group.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+                            const anticipated = Number(cardAnticipations[payment] || 0);
+                            totals.totalExpensesPaid += Math.round(((sumAll - anticipated) + Number.EPSILON) * 100) / 100;
+                        } else {
+                            totals.totalExpensesPaid += group.filter(g => g.isPaid).reduce((s, x) => s + (Number(x.amount) || 0), 0);
+                        }
+                    } else {
+                        totals.totalExpensesPaid += group.filter(g => g.isPaid).reduce((s, x) => s + (Number(x.amount) || 0), 0);
+                    }
+                });
+
+                // Round primary totals
+                totals.totalIncome = Math.round((totals.totalIncome + Number.EPSILON) * 100) / 100;
+                totals.totalSavings = Math.round((totals.totalSavings + Number.EPSILON) * 100) / 100;
+                totals.totalExpenses = Math.round((totals.totalExpenses + Number.EPSILON) * 100) / 100;
+                totals.totalExpensesPaid = Math.round((totals.totalExpensesPaid + Number.EPSILON) * 100) / 100;
+
+                return totals;
+            },
+            get(date = state.currentDate) {
+                const key = this.monthKey(date);
+                if (this.runtime[key] && !this.dirty[key]) return this.runtime[key];
+                const fresh = this.compute(date);
+                this.runtime[key] = fresh;
+                this.dirty[key] = false;
+                return fresh;
+            }
+        };
 
         // Public API: save a VT fuel entry using App's internal state and storage.
         // This avoids callers needing direct access to `state` or to replicate
@@ -6631,10 +7257,15 @@ const firebaseConfig = {
                 md.vtUsage.push(entry);
                 await storage.saveData(state.appData);
                 return { success: true };
-            } catch (e) {
-                console.error('saveVtEntry error', e);
-                throw e;
+            } catch (err) {
+                debugLog('loadData error', err);
+                const isOffline = (typeof navigator !== 'undefined' && navigator.onLine === false) || (err && err.message && err.message.indexOf('timeout') !== -1);
+                if (isOffline) showToast('Sem conexão. Abrindo dados locais temporários.', 'bg-yellow-600');
+                else showToast('Falha ao carregar dados. Tente novamente.', 'bg-red-600');
+                // fallback: return initial data so the app can still operate offline/local
+                return initialData;
             }
+
         }
 
         async function updateVtEntry(updated) {
@@ -6668,6 +7299,11 @@ const firebaseConfig = {
         // relying on window.state or internal helpers. This is intentionally
         // minimal and keeps the implementation inside App.
     try { window.appApi = window.appApi || {}; window.appApi.saveVtEntry = saveVtEntry; window.appApi.updateVtEntry = updateVtEntry; window.appApi.render = function(){ try { if (typeof render === 'function') return render(); } catch(e){ console.error('appApi.render wrapper error', e); } }; } catch(e) { /* ignore env failures */ }
+
+        function formatCurrency(value) {
+            if (typeof value !== 'number') value = parseFloat(value) || 0;
+            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
         function propagateRecurringTransactions() {
             // Ensure recurring transactions exist for months and propagate future recurrences for expenses and savings
@@ -6797,7 +7433,13 @@ const firebaseConfig = {
             
             // Definir data atual ANTES de qualquer renderização
             state.currentDate = new Date();
+            state.month = { year: state.currentDate.getFullYear(), month: state.currentDate.getMonth() + 1 };
+            state.cache.months = state.cache.months || {};
+            state.totals = state.totals || { incomes: 0, expenses: 0, savings: 0, balance: 0, vr: 0, vt: 0 };
             
+            // Migrate legacy records to normalized shape (idempotente)
+            migrations.run();
+
             // MIGRATE: Update credit cards with closeDay and dueDay if missing
             try {
                 if (!state.appData.settings) state.appData.settings = {};
@@ -6835,6 +7477,11 @@ const firebaseConfig = {
                 // Persist normalized settings in background
                 storage.saveData(state.appData).catch(() => {});
             } catch(e) { /* non-fatal */ }
+            // Ensure planning defaults exist and current month has a budget entry
+            try {
+                planning.ensureSettingsDefaults();
+                planning.ensureMonthBudget(state.currentDate);
+            } catch (e) { console.error('planning defaults init', e); }
             // console.debug("Dados prontos para uso na aplicação:", state.appData);
             mapUI();
             bindEvents();
@@ -6967,8 +7614,6 @@ const firebaseConfig = {
         }
 
         function mapUI() {
-            if (ui._mapped) return;
-            ui._mapped = true;
             const ids = [
                 'current-month-display', 'prev-month-btn', 'next-month-btn', 'today-btn', 'month-picker', 'month-picker-month', 'month-picker-year', 'month-picker-apply', 'month-picker-cancel', 
                 'income-table-body', 'expenses-table-body', 'savings-table-body', 'expenses-table-head', 
@@ -6988,6 +7633,7 @@ const firebaseConfig = {
                 'import-data-btn', 'import-file-input', 'export-data-btn',
                 'monthly-report-btn', 'annual-report-btn', 'monthly-report-modal', 'annual-report-modal',
                 'desktop-dashboard-btn', 'desktop-creditcards-btn',
+                'budget-card', 'budget-edit-btn', 'budget-total-bar', 'budget-total-label', 'budget-category-list', 'planning-goals-list', 'planning-alerts',
                 'expenses-filter-btn', 'expenses-filter-popover', 'filter-payment-method', 'filter-spending-type', 'filter-category', 'filter-type', 'filter-recurring', 'filter-installment', 'filter-apply-btn', 'filter-clear-btn',
                 'close-monthly-report-btn', 'close-annual-report-btn', 'add-goal-btn', 'goal-modal', 'close-goal-modal-btn',
                 'goal-form', 'goals-container', 'financing-section'
@@ -7034,15 +7680,15 @@ const firebaseConfig = {
                 
                 // Atualizar preview quando mudar valor ou parcelas
                 if (installmentCount && amountField && previewCount && previewValue) {
-                    const updateInstallmentPreview = () => {
+                    const updateInstallmentPreview = debounce(() => {
                         const count = parseInt(installmentCount.value) || 12;
                         const amount = parseLocaleNumber(amountField.value) || 0;
                         const installmentValue = count > 0 ? amount / count : 0;
-                        
+
                         previewCount.textContent = count;
                         previewValue.textContent = formatCurrency(installmentValue);
-                    };
-                    
+                    }, 300);
+
                     installmentCount.addEventListener('input', updateInstallmentPreview);
                     amountField.addEventListener('input', updateInstallmentPreview);
                 }
@@ -7050,15 +7696,17 @@ const firebaseConfig = {
         }
 
         function bindEvents() {
-            if (ui._eventsBound) return;
-            ui._eventsBound = true;
             if (ui.prevMonthBtn) ui.prevMonthBtn.addEventListener('click', () => changeMonth(-1));
             if (ui.nextMonthBtn) ui.nextMonthBtn.addEventListener('click', () => changeMonth(1));
             if (ui.todayBtn) ui.todayBtn.addEventListener('click', () => goToDate(new Date()));
+            if (ui.budgetEditBtn) ui.budgetEditBtn.addEventListener('click', () => promptBudgetEdit());
             // Month picker interactions
             if (ui.currentMonthDisplay) ui.currentMonthDisplay.addEventListener('click', (e) => { e.stopPropagation(); openMonthPicker(); });
             if (ui.monthPickerCancel) ui.monthPickerCancel.addEventListener('click', closeMonthPicker);
-            if (ui.monthPickerApply) ui.monthPickerApply.addEventListener('click', applyMonthPicker);
+            if (ui.monthPickerApply) {
+                const debouncedApplyMonth = debounce(() => applyMonthPicker(), 300);
+                ui.monthPickerApply.addEventListener('click', debouncedApplyMonth);
+            }
             // Close picker on outside click
             document.addEventListener('click', (e) => {
                 const picker = ui.monthPicker;
@@ -7258,7 +7906,6 @@ const firebaseConfig = {
                             }
                             if (recurringCheckbox) recurringCheckbox.checked = true;
                         }
-
                         // If description starts with 'Serviço', ensure modal is in 'incomes' and show financing options
                         if (isServicoPrefix) {
                             if (ui.transactionTypeInput && ui.transactionTypeInput.value !== 'incomes') {
@@ -7585,6 +8232,12 @@ const firebaseConfig = {
                     return `<div class="mt-1 text-xs">${items}</div>`;
                 }
 
+                function formatCurrency(v) {
+                    try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v)||0); } catch(e) { return String(v); }
+                }
+
+                function escapeHtml(s) { return String(s||'').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
                 // open modal and list backups
                 async function openBackupModal() {
                     if (!backupModal) return;
@@ -7640,11 +8293,6 @@ const firebaseConfig = {
                         console.error('deleteBackup error:', err);
                     }
                 }
-                // Make backup utilities available via App.backup namespace
-                backup.createBackup = createBackup;
-                backup.listBackups = listBackups;
-                backup.renderBackupsList = renderBackupsList;
-                backup.showBackupPreview = showBackupPreview;
 
                 if (createBackupBtn) createBackupBtn.addEventListener('click', async () => { try { await createBackup(); } catch(e){} });
                 if (restoreBackupBtn) restoreBackupBtn.addEventListener('click', () => openBackupModal());
@@ -7922,10 +8570,13 @@ const firebaseConfig = {
             if (ui.addGoalBtn) ui.addGoalBtn.addEventListener('click', () => openGoalModal());
             if (ui.closeGoalModalBtn) ui.closeGoalModalBtn.addEventListener('click', () => closeModal('goal-modal'));
             if (ui.goalForm) ui.goalForm.addEventListener('submit', (e) => handleGoalFormSubmit(e));
-            if (ui.searchDescription) ui.searchDescription.addEventListener('input', (e) => {
-                state.filters.searchTerm = e.target.value;
-                renderExpenseTable();
-            });
+            if (ui.searchDescription) {
+                const debouncedSearch = debounce((val) => {
+                    state.filters.searchTerm = val;
+                    renderExpenseTable();
+                }, 300);
+                ui.searchDescription.addEventListener('input', (e) => debouncedSearch(e.target.value));
+            }
 
             // Expenses filter popover handlers
             if (ui.expensesFilterBtn && ui.expensesFilterPopover) {
@@ -8119,94 +8770,6 @@ const firebaseConfig = {
             }
         }
 
-        function bootstrap() {
-            try { db.init(); } catch (e) { console.error('App.db.init error', e); }
-            try { mapUI(); } catch (e) { console.error('mapUI error', e); }
-            try { bindEvents(); } catch (e) { console.error('bindEvents error', e); }
-            try { authModule.bindLoginUI(); } catch (e) { console.error('bindLoginUI error', e); }
-            try { authModule.bindAuthObserver(); } catch (e) { console.error('bindAuthObserver error', e); }
-        }
-
-        // --- AUTH MODULE WRAPPERS (logic remains in existing handlers) ---
-        authModule.handleLogin = function wrappedLogin(e) {
-            return typeof handleLogin === 'function' ? handleLogin(e) : null;
-        };
-        authModule.handleSignup = function wrappedSignup(e) {
-            return typeof handleSignup === 'function' ? handleSignup(e) : null;
-        };
-        authModule.handleResetPassword = function wrappedReset(e) {
-            return typeof handleResetPassword === 'function' ? handleResetPassword(e) : null;
-        };
-        authModule.handleLogout = function wrappedLogout() {
-            return typeof handleLogout === 'function' ? handleLogout() : null;
-        };
-
-        authModule.bindAuthObserver = function bindAuthObserver() {
-            if (authModule._observerBound) return;
-            authModule._observerBound = true;
-            try {
-                const authRef = (typeof auth !== 'undefined') ? auth : firebase.auth();
-                authRef.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        try { console.log('✅ Usuário autenticado:', user.email); } catch (_) {}
-                        ui.showMain();
-                        try { await init(); } catch (err) { console.error('App.init after auth error', err); }
-                    } else {
-                        try { console.log('⚠️ Usuário nío autenticado'); } catch (_) {}
-                        ui.showLogin();
-                    }
-                });
-            } catch (e) { console.error('bindAuthObserver error', e); }
-        };
-
-        authModule.bindLoginUI = function bindLoginUI() {
-            if (authModule._loginUiBound) return;
-            authModule._loginUiBound = true;
-            // Prefill remembered email (if any)
-            try {
-                const savedEmail = localStorage.getItem('cf_remember_email');
-                const rememberEmailEl = dom.byId('rememberEmail');
-                const loginEmail = dom.byId('loginEmail');
-                if (savedEmail && loginEmail) {
-                    loginEmail.value = savedEmail;
-                    if (rememberEmailEl) rememberEmailEl.checked = true;
-                }
-            } catch (e) { /* ignore */ }
-
-            const loginForm = dom.byId('loginForm');
-            const loginBtn = dom.byId('loginBtn');
-            if (loginForm) {
-                loginForm.addEventListener('submit', authModule.handleLogin);
-            } else if (loginBtn) {
-                loginBtn.addEventListener('click', authModule.handleLogin);
-            }
-
-            // Toggle mostrar/ocultar senha
-            try {
-                const toggleBtn = dom.byId('togglePasswordBtn');
-                const pwd = dom.byId('loginPassword');
-                if (toggleBtn && pwd) {
-                    toggleBtn.addEventListener('click', () => {
-                        const isPassword = pwd.type === 'password';
-                        pwd.type = isPassword ? 'text' : 'password';
-                        const icon = toggleBtn.querySelector('.material-symbols-outlined');
-                        if (icon) icon.textContent = isPassword ? 'visibility_off' : 'visibility';
-                        toggleBtn.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
-                        toggleBtn.title = isPassword ? 'Ocultar senha' : 'Mostrar senha';
-                        try { pwd.focus(); } catch (_) {}
-                    });
-                }
-            } catch (e) { /* ignore */ }
-
-            const signupBtn = dom.byId('signupBtn');
-            if (signupBtn) signupBtn.addEventListener('click', authModule.handleSignup);
-            const resetBtn = dom.byId('resetPasswordBtn');
-            if (resetBtn) resetBtn.addEventListener('click', authModule.handleResetPassword);
-
-            const logoutBtn = dom.byId('logoutBtn');
-            if (logoutBtn) logoutBtn.addEventListener('click', authModule.handleLogout);
-        };
-
         function handleExport() {
             if (!state.appData) {
                 alert("nío hí¡ dados para exportar.");
@@ -8290,10 +8853,6 @@ const firebaseConfig = {
             reader.readAsText(file);
         }
 
-        // Expose import/export handlers under namespaced object
-        importExport.handleExport = handleExport;
-        importExport.handleImport = handleImport;
-
         // --- RENDER FUNCTIONS ---
 
         function render() {
@@ -8332,7 +8891,117 @@ const firebaseConfig = {
         function renderDashboard() {
             updateKPIs();
             renderAllTables();
+            renderBudgetCard();
             renderCharts();
+        }
+
+        function renderBudgetCard() {
+            if (!ui.budgetCard) return;
+            const budget = planning.ensureMonthBudget(state.currentDate);
+            const actuals = planning.getActuals(state.currentDate);
+            const goalsSnapshot = planning.buildGoals(state.currentDate);
+            const alerts = planning.buildAlerts({ budget, actuals, goals: goalsSnapshot });
+
+            // Total budget vs executed
+            if (ui.budgetTotalLabel) ui.budgetTotalLabel.textContent = `${formatCurrency(actuals.total)} / ${formatCurrency(budget.total || 0)}`;
+            if (ui.budgetTotalBar) {
+                const ratio = budget.total > 0 ? (actuals.total / budget.total) : 0;
+                const pct = Math.min(120, Math.max(0, Math.round(ratio * 100)));
+                ui.budgetTotalBar.style.width = `${pct}%`;
+                ui.budgetTotalBar.classList.remove('bg-green-500','bg-yellow-400','bg-red-500','bg-indigo-500');
+                if (ratio >= 1) ui.budgetTotalBar.classList.add('bg-red-500');
+                else if (ratio >= 0.85) ui.budgetTotalBar.classList.add('bg-yellow-400');
+                else ui.budgetTotalBar.classList.add('bg-green-500');
+            }
+
+            // Top 5 categories
+            if (ui.budgetCategoryList) {
+                const entries = planning.topCategories(actuals, 5);
+                if (!entries.length) {
+                    ui.budgetCategoryList.innerHTML = '<p class="text-gray-500 text-xs">Nenhuma despesa registrada.</p>';
+                } else {
+                    ui.budgetCategoryList.innerHTML = entries.map(({ cat, value }) => {
+                        const catBudget = Number((budget.categories || {})[cat] || 0);
+                        const ratio = catBudget > 0 ? (value / catBudget) : 1;
+                        const pct = Math.min(120, Math.max(0, Math.round((catBudget > 0 ? (value / catBudget) : 1) * 100)));
+                        const barClass = ratio >= 1 ? 'bg-red-500' : (ratio >= 0.9 ? 'bg-yellow-400' : 'bg-indigo-500');
+                        const budgetLabel = catBudget > 0 ? `${formatCurrency(value)} / ${formatCurrency(catBudget)}` : `${formatCurrency(value)} (sem orçamento)`;
+                        return `
+                            <div class="space-y-1">
+                                <div class="budget-row">
+                                    <span class="budget-label">${escapeHtml(cat)}</span>
+                                    <span class="budget-value">${budgetLabel}</span>
+                                </div>
+                                <div class="budget-bar">
+                                    <div class="budget-bar-fill ${barClass}" style="width:${pct}%"></div>
+                                </div>
+                            </div>`;
+                    }).join('');
+                }
+            }
+
+            // Goals snapshot
+            if (ui.planningGoalsList) {
+                if (!goalsSnapshot.length) {
+                    ui.planningGoalsList.innerHTML = '<p class="text-gray-500 text-xs">Nenhuma meta automática para este mês.</p>';
+                } else {
+                    ui.planningGoalsList.innerHTML = goalsSnapshot.map(g => {
+                        const pct = g.target > 0 ? Math.min(120, Math.max(0, Math.round((g.current / g.target) * 100))) : 100;
+                        const barClass = g.percent >= 100 ? 'bg-green-500' : (g.percent >= 75 ? 'bg-yellow-400' : 'bg-indigo-500');
+                        return `
+                            <div class="space-y-1">
+                                <div class="budget-row">
+                                    <span class="budget-label">${escapeHtml(g.title)}${g.hint ? ` <span class="text-gray-400">(${escapeHtml(g.hint)})</span>` : ''}</span>
+                                    <span class="budget-value">${formatCurrency(g.current)} / ${formatCurrency(g.target)}</span>
+                                </div>
+                                <div class="budget-bar">
+                                    <div class="budget-bar-fill ${barClass}" style="width:${pct}%"></div>
+                                </div>
+                            </div>`;
+                    }).join('');
+                }
+            }
+
+            // Alerts
+            if (ui.planningAlerts) {
+                if (!alerts.length) {
+                    ui.planningAlerts.innerHTML = '<p class="text-gray-500">Tudo certo com o planejamento deste mês.</p>';
+                } else {
+                    ui.planningAlerts.innerHTML = alerts.map(msg => `<div class="alert-row"><span class="material-symbols-outlined text-xs text-yellow-600" style="font-size:14px">warning</span><span>${escapeHtml(msg)}</span></div>`).join('');
+                }
+            }
+        }
+
+        // Lightweight refresh after transaction changes: update KPIs, budget card and just the impacted table
+        function refreshAfterTransaction(type) {
+            try { aggregates.markDirty(state.currentDate); } catch (_) {}
+            updateKPIs();
+            renderBudgetCard();
+            if (type === 'expenses') renderExpenseTable();
+            else if (type === 'incomes') renderIncomeTable();
+            else if (type === 'savings') renderSavingsTable();
+            // Keep credit card view in sync when it is currently visible
+            try { if (state.currentView === 'credit-cards') renderCreditCardView(); } catch (_) {}
+        }
+
+        async function promptBudgetEdit() {
+            try {
+                const current = planning.ensureMonthBudget(state.currentDate);
+                const input = prompt('Orçamento total de despesas para este mês (R$):', current.total || '');
+                if (input === null) return;
+                const val = parseLocaleNumber(input);
+                if (!Number.isFinite(val) || val <= 0) {
+                    showToast('Valor de orçamento inválido.', 'bg-red-600');
+                    return;
+                }
+                await planning.setMonthBudget(state.currentDate, { total: Math.round((val + Number.EPSILON) * 100) / 100 });
+                planning.markDirty(state.currentDate);
+                showToast('Orçamento do mês atualizado.', 'bg-green-600');
+                renderBudgetCard();
+            } catch (e) {
+                console.error('promptBudgetEdit', e);
+                showToast('Falha ao atualizar orçamento.', 'bg-red-600');
+            }
         }
 
         function renderCreditCardView() {
@@ -9062,6 +9731,12 @@ const firebaseConfig = {
             } catch(e) { console.error('populateCardExpenses', e); }
         }
 
+
+
+
+
+        // small helper: escape text for innerHTML usage
+        function escapeHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
         // --- Goal <-> Savings synchronization helpers ---
         function sumSavingsForGoal(goalId) {
@@ -10270,6 +10945,11 @@ const firebaseConfig = {
             } catch(e) { console.error('attach grouped view handlers', e); }
         }
 
+        // Simple helper to escape HTML for text insertion
+        function escapeHtml(str) {
+            return (str || '').toString().replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]; });
+        }
+
         // Small modal-list helper (reuses transaction modal if present, otherwise falls back to alert)
         function showModalList(title, content) {
             // Keep this non-modal: use a simple native alert.
@@ -10451,33 +11131,10 @@ const firebaseConfig = {
     function updateKPIs() {
             try {
                 const monthData = getCurrentMonthData();
-                const totalIncome = (monthData.incomes || []).reduce((s, t) => s + (t.amount || 0), 0);
-                // Compute total paid expenses but treat full-paid credit-card invoices as (sum of card expenses - anticipated)
-                const expensesAll = monthData.expenses || [];
-                const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
-                const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
-                const cardAnticipations = monthData.cardAnticipations || {};
-                const byPayment = expensesAll.reduce((acc, e) => { const k = (typeof getPaymentLabel === 'function') ? getPaymentLabel(e.payment || '') : (e.payment || '_none_'); (acc[k] = acc[k] || []).push(e); return acc; }, {});
-                let totalExpenses = 0;
-                for (const [payment, group] of Object.entries(byPayment)) {
-                    // payment here is a display label (getPaymentLabel). Check tolerant match against cardMethods
-                    const isCardPayment = cardMethods.some(c => paymentMatches(payment || '', c.name));
-                    if (isCardPayment) {
-                        const paidCount = group.filter(g => g.isPaid).length;
-                        if (group.length > 0 && paidCount === group.length) {
-                            // full invoice paid: count invoice total (sum - antecipado)
-                            const sumAll = group.reduce((s, x) => s + (Number(x.amount) || 0), 0);
-                            const anticipatedForCard = Number(cardAnticipations[payment] || 0);
-                            totalExpenses += Math.round((sumAll - anticipatedForCard + Number.EPSILON) * 100) / 100;
-                        } else {
-                            // partial payments: count only paid items
-                            totalExpenses += group.filter(g => g.isPaid).reduce((s, x) => s + (Number(x.amount) || 0), 0);
-                        }
-                    } else {
-                        totalExpenses += group.filter(g => g.isPaid).reduce((s, x) => s + (Number(x.amount) || 0), 0);
-                    }
-                }
-                const totalSavings = (monthData.savings || []).reduce((s, t) => s + (t.amount || 0), 0);
+                const monthAgg = aggregates.get(state.currentDate);
+                const totalIncome = monthAgg.totalIncome;
+                const totalExpenses = monthAgg.totalExpensesPaid;
+                const totalSavings = monthAgg.totalSavings;
                 const balance = totalIncome - totalExpenses - totalSavings;
 
         // Update DOM with animated numbers
@@ -10487,10 +11144,8 @@ const firebaseConfig = {
         animateKPINumber('kpi-balance', balance);
 
                 // Projected balance (consider all expenses but subtract card anticipations so invoice totals are used)
-                const totalProjectedExpenses = (monthData.expenses || []).reduce((s, e) => s + (Number(e && e.amount) || 0), 0);
-                // Sum anticipations stored per-card for this month (new: monthData.cardAnticipations = { cardName: amount })
-                const totalAnticipations = Object.values(monthData.cardAnticipations || {}).reduce((s, a) => s + (Number(a) || 0), 0);
-                // Adjust projected expenses by subtracting anticipations so the KPI reflects invoice totals (sum - antecipado)
+                const totalProjectedExpenses = monthAgg.totalExpenses;
+                const totalAnticipations = monthAgg.totalAnticipations;
                 const adjustedProjectedExpenses = totalProjectedExpenses - totalAnticipations;
                 const projectedBalance = totalIncome - adjustedProjectedExpenses - totalSavings;
                 const projEl = document.getElementById('kpi-projected-balance'); if (projEl) { animateKPINumber('kpi-projected-balance', projectedBalance); projEl.classList.toggle('text-red-600', projectedBalance < 0); projEl.classList.toggle('text-green-600', projectedBalance >= 0); }
@@ -10499,7 +11154,7 @@ const firebaseConfig = {
 
                 // Percentual de cada despesa do Mês (agrupado por Descrição, soma valores e conta ocorríªncias)
                 const expenses = monthData.expenses || [];
-                const totalMonthExpenses = expenses.reduce((s, exp) => s + (Number(exp.amount) || 0), 0);
+                const totalMonthExpenses = monthAgg.totalExpenses;
                 const container = document.getElementById('kpi-expense-percentuals');
                 if (container) {
                     container.innerHTML = '';
@@ -10680,10 +11335,6 @@ const firebaseConfig = {
             renderPaymentMethodChart();
             renderAnnualSummaryChart();
         }
-
-        // Expose chart helpers for namespaced access
-        charts.render = renderCharts;
-        charts.destroyChart = destroyChart;
 
         // renderSpendingGoalsChart removed (Metas de Gastos KPI no longer used)
 
@@ -12112,6 +12763,8 @@ const firebaseConfig = {
         async function handleGoalFormSubmit(e) {
             try {
                 e.preventDefault();
+                if (state.uiFlags.actionLocked) { showToast('Ação em andamento. Aguarde.', 'bg-yellow-600'); return; }
+                state.uiFlags.actionLocked = true;
                 const id = document.getElementById('goal-id').value;
                 const name = document.getElementById('goal-name').value;
                 const amount = parseLocaleNumber(document.getElementById('goal-amount').value) || 0;
@@ -12129,7 +12782,7 @@ const firebaseConfig = {
                     showToast('Falha ao salvar meta no Firebase.', 'bg-red-600');
                 }
                 closeModal('goal-modal');
-            } catch(e){console.error('handleGoalFormSubmit', e)}
+            } catch(e){console.error('handleGoalFormSubmit', e)} finally { state.uiFlags.actionLocked = false; }
         }
 
         // --- Lí“GICA DE TRANSAí‡í•ES (Adicionar, Editar, Excluir) ---
@@ -12221,18 +12874,27 @@ const firebaseConfig = {
                 }
             } catch (e) {
                 console.error('updateAllFinancing (rebuild) error', e);
+            } finally {
+                try {
+                    Object.keys(state.planning.runtime || {}).forEach(k => {
+                        state.planning.dirty = state.planning.dirty || {};
+                        state.planning.dirty[k] = true;
+                    });
+                } catch (_) {}
             }
         }
         
     // createInstallments(baseTransaction, count, start) - start: current installment number (default 1)
     async function createInstallments(baseTransaction, count, start = 1) {
+            const normalizedBase = prepareTransaction('expenses', baseTransaction);
+            if (!normalizedBase) return;
             const installmentId = generateUUID();
             // If a start/current installment > 1 is provided, the user is registering
             // an in-progress parcel and expects the provided amount to be the
             // per-installment value (do NOT divide by total). Otherwise divide
             // the provided amount evenly across total installments.
             let installmentAmount;
-            const rawAmount = parseFloat(baseTransaction.amount) || 0;
+            const rawAmount = parseFloat(normalizedBase.amount) || 0;
             if (start && start > 1) {
                 installmentAmount = parseFloat(rawAmount.toFixed(2));
             } else {
@@ -12248,18 +12910,18 @@ const firebaseConfig = {
                 installmentDate.setMonth(state.currentDate.getMonth() + monthOffset);
                 const futureMonthData = getCurrentMonthData(installmentDate);
                 // If payment method is VR, store as vrUsage entry instead of expenses
-                    if ((baseTransaction.payment || '') === 'VR') {
+                    if ((normalizedBase.payment || '') === 'VR') {
                     if (!Array.isArray(futureMonthData.vrUsage)) futureMonthData.vrUsage = [];
-                    futureMonthData.vrUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString(), installmentId, currentInstallment: i, totalInstallments: count, isPaid: i < start ? true : false });
+                    futureMonthData.vrUsage.push({ id: generateUUID(), amount: installmentAmount, description: normalizedBase.description || 'Despesa VR', date: new Date(installmentDate).toISOString(), installmentId, currentInstallment: i, totalInstallments: count, isPaid: i < start ? true : false });
                 }
                 // If payment method is VT, mirror VR behavior and store in vtUsage ledger
-                else if ((baseTransaction.payment || '') === 'VT') {
+                else if ((normalizedBase.payment || '') === 'VT') {
                     if (!Array.isArray(futureMonthData.vtUsage)) futureMonthData.vtUsage = [];
-                    futureMonthData.vtUsage.push({ id: generateUUID(), amount: installmentAmount, description: baseTransaction.description || 'Despesa VT', date: new Date(installmentDate).toISOString(), installmentId, currentInstallment: i, totalInstallments: count, isPaid: i < start ? true : false });
+                    futureMonthData.vtUsage.push({ id: generateUUID(), amount: installmentAmount, description: normalizedBase.description || 'Despesa VT', date: new Date(installmentDate).toISOString(), installmentId, currentInstallment: i, totalInstallments: count, isPaid: i < start ? true : false });
                 } else {
                     if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
                     futureMonthData.expenses.push({ 
-                        ...baseTransaction, 
+                        ...normalizedBase, 
                         id: generateUUID(), 
                         amount: installmentAmount, 
                         installmentId, 
@@ -12267,6 +12929,7 @@ const firebaseConfig = {
                         totalInstallments: count, 
                         isPaid: i < start ? true : false 
                      });
+                    planning.bumpRuntime(installmentDate, normalizedBase.category, installmentAmount);
                 }
             }
             try {
@@ -12279,27 +12942,30 @@ const firebaseConfig = {
         }
 
     async function createFinancing(baseTransaction, total, current) {
+            const normalizedBase = prepareTransaction('expenses', baseTransaction);
+            if (!normalizedBase) return;
             const financingId = generateUUID();
             for (let i = current; i <= total; i++) {
                 const installmentDate = new Date(state.currentDate);
                 installmentDate.setMonth(state.currentDate.getMonth() + (i - current));
                 const futureMonthData = getCurrentMonthData(installmentDate);
-                if ((baseTransaction.payment || '') === 'VR') {
+                if ((normalizedBase.payment || '') === 'VR') {
                     if (!Array.isArray(futureMonthData.vrUsage)) futureMonthData.vrUsage = [];
-                    futureMonthData.vrUsage.push({ id: generateUUID(), amount: parseFloat(baseTransaction.amount) || 0, description: baseTransaction.description || 'Despesa VR', date: new Date(installmentDate).toISOString(), financingId, currentFinancing: i, totalFinancing: total });
+                    futureMonthData.vrUsage.push({ id: generateUUID(), amount: parseFloat(normalizedBase.amount) || 0, description: normalizedBase.description || 'Despesa VR', date: new Date(installmentDate).toISOString(), financingId, currentFinancing: i, totalFinancing: total });
                 }
-                else if ((baseTransaction.payment || '') === 'VT') {
+                else if ((normalizedBase.payment || '') === 'VT') {
                     if (!Array.isArray(futureMonthData.vtUsage)) futureMonthData.vtUsage = [];
-                    futureMonthData.vtUsage.push({ id: generateUUID(), amount: parseFloat(baseTransaction.amount) || 0, description: baseTransaction.description || 'Despesa VT', date: new Date(installmentDate).toISOString(), financingId, currentFinancing: i, totalFinancing: total });
+                    futureMonthData.vtUsage.push({ id: generateUUID(), amount: parseFloat(normalizedBase.amount) || 0, description: normalizedBase.description || 'Despesa VT', date: new Date(installmentDate).toISOString(), financingId, currentFinancing: i, totalFinancing: total });
                 } else {
                     if (!Array.isArray(futureMonthData.expenses)) futureMonthData.expenses = [];
                     futureMonthData.expenses.push({
-                        ...baseTransaction,
+                        ...normalizedBase,
                         id: generateUUID(),
                         financingId,
                         currentFinancing: i,
                         totalFinancing: total
                     });
+                    planning.bumpRuntime(installmentDate, normalizedBase.category, parseFloat(normalizedBase.amount) || 0);
                 }
             }
             try {
@@ -12313,23 +12979,27 @@ const firebaseConfig = {
 
         // Create financing entries for incomes (receivables)
         async function createIncomeFinancing(baseTransaction, total, current) {
+                const normalizedBase = prepareTransaction('incomes', baseTransaction);
+                if (!normalizedBase) return;
             const financingId = generateUUID();
             for (let i = current; i <= total; i++) {
                 const installmentDate = new Date(state.currentDate);
                 installmentDate.setMonth(state.currentDate.getMonth() + (i - current));
                 const futureMonthData = getCurrentMonthData(installmentDate);
                 if (!Array.isArray(futureMonthData.incomes)) futureMonthData.incomes = [];
-                futureMonthData.incomes.push({ ...baseTransaction, id: generateUUID(), financingId, currentFinancing: i, totalFinancing: total, isPaid: false });
+                    futureMonthData.incomes.push({ ...normalizedBase, id: generateUUID(), financingId, currentFinancing: i, totalFinancing: total, isPaid: false });
             }
             try { await storage.saveData(state.appData); showToast(`Financiamento de entrada criado (${total}x).`, 'bg-green-600'); } catch(e) { console.error('createIncomeFinancing save', e); showToast('Falha ao salvar financiamento de entrada.', 'bg-red-600'); }
         }
 
         // Create income installments (parcelada) across months when user marks an income as installment
         async function createIncomeInstallments(baseTransaction, count, start = 1) {
+                const normalizedBase = prepareTransaction('incomes', baseTransaction);
+                if (!normalizedBase) return;
             const installmentId = generateUUID();
             // If start > 1, assume provided amount is per-installment; otherwise divide by count
             let installmentAmount;
-            const rawAmount = parseFloat(baseTransaction.amount) || 0;
+                const rawAmount = parseFloat(normalizedBase.amount) || 0;
             if (start && start > 1) installmentAmount = parseFloat(rawAmount.toFixed(2));
             else installmentAmount = parseFloat((rawAmount / count).toFixed(2));
 
@@ -12339,7 +13009,7 @@ const firebaseConfig = {
                 d.setMonth(state.currentDate.getMonth() + monthOffset);
                 const md = getCurrentMonthData(d);
                 if (!Array.isArray(md.incomes)) md.incomes = [];
-                md.incomes.push({ id: generateUUID(), description: baseTransaction.description || 'Serviço', amount: installmentAmount, installmentId, currentInstallment: i, totalInstallments: count, isPaid: false, isRecurring: !!baseTransaction.isRecurring });
+                md.incomes.push({ id: generateUUID(), description: normalizedBase.description || 'Serviço', amount: installmentAmount, installmentId, currentInstallment: i, totalInstallments: count, isPaid: false, isRecurring: !!normalizedBase.isRecurring });
             }
             try { await storage.saveData(state.appData); showToast(`${count} parcelas de entrada criadas.`, 'bg-green-600'); } catch(e) { console.error('createIncomeInstallments save', e); showToast('Falha ao salvar parcelas de entrada.', 'bg-red-600'); }
         }
@@ -12374,6 +13044,12 @@ const firebaseConfig = {
                     }
                 });
             });
+            try {
+                Object.keys(state.planning.runtime || {}).forEach(k => {
+                    state.planning.dirty = state.planning.dirty || {};
+                    state.planning.dirty[k] = true;
+                });
+            } catch (_) {}
             
 
         }
@@ -12415,6 +13091,12 @@ const firebaseConfig = {
                     }
                 });
             });
+            try {
+                Object.keys(state.planning.runtime || {}).forEach(k => {
+                    state.planning.dirty = state.planning.dirty || {};
+                    state.planning.dirty[k] = true;
+                });
+            } catch (_) {}
         }
 
         async function deleteFutureRecurrences(recurringId) {
@@ -12442,10 +13124,19 @@ const firebaseConfig = {
                     }
                 });
             });
+            try {
+                Object.keys(state.planning.runtime || {}).forEach(k => {
+                    state.planning.dirty = state.planning.dirty || {};
+                    state.planning.dirty[k] = true;
+                });
+            } catch (_) {}
         }
 
         // funçío principal para salvar (adicionar ou editar)
         async function saveTransaction(transaction, type, id) {
+            const prepared = prepareTransaction(type, transaction);
+            if (!prepared) return;
+            const tx = prepared;
             const currentMonthData = getCurrentMonthData();
             if (!Array.isArray(currentMonthData[type])) currentMonthData[type] = [];
 
@@ -12455,31 +13146,31 @@ const firebaseConfig = {
                     const originalTransaction = currentMonthData[type][index];
                     
                     // Preserva IDs importantes que nío devem mudar na ediçío
-                    transaction.recurringId = originalTransaction.recurringId;
-                    transaction.financingId = originalTransaction.financingId;
-                    transaction.installmentId = originalTransaction.installmentId;
+                    tx.recurringId = originalTransaction.recurringId;
+                    tx.financingId = originalTransaction.financingId;
+                    tx.installmentId = originalTransaction.installmentId;
 
                     // If there's a recurringId or financingId, consult the 'apply-to-future' checkbox (if present)
                     const applyToFutureChecked = (ui.applyToFuture && ui.applyToFuture.checked) ? true : null;
                             if (originalTransaction.recurringId) {
                         if (applyToFutureChecked === true) {
-                            await updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
+                            await updateFutureRecurrences(originalTransaction.recurringId, tx, type);
                         } else if (applyToFutureChecked === null) {
                             // fallback to old confirm dialog when checkbox not available
                             try {
                                 const ok = await confirmAsync('Esta í© uma transação recorrente. Deseja atualizar as futuras tambá©m?', 'Aplicar í s futuras');
-                                if (ok) await updateFutureRecurrences(originalTransaction.recurringId, transaction, type);
+                                if (ok) await updateFutureRecurrences(originalTransaction.recurringId, tx, type);
                             } catch(e) { /* user cancelled */ }
                         }
                     }
 
                     if (originalTransaction.financingId) {
                         if (applyToFutureChecked === true) {
-                            updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
+                            updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, tx);
                         } else if (applyToFutureChecked === null) {
                             try {
                                 const okf = await confirmAsync('Esta í© uma transação de financiamento. Deseja atualizar as parcelas futuras tambá©m?', 'Aplicar í s futuras parcelas');
-                                if (okf) updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, transaction);
+                                if (okf) updateAllFinancing(originalTransaction.financingId, originalTransaction.currentFinancing, tx);
                             } catch(e) { /* cancelled */ }
                         }
                     }
@@ -12491,21 +13182,21 @@ const firebaseConfig = {
                             const goals = state.appData.settings.goals || [];
                             let linkedGoalId = originalTransaction.goalId || null;
                             // Try to detect a goal by category first
-                            if (transaction.category) {
-                                const g = goals.find(x => (x.name || '').toString().toLowerCase() === (transaction.category || '').toString().toLowerCase());
+                            if (tx.category) {
+                                const g = goals.find(x => (x.name || '').toString().toLowerCase() === (tx.category || '').toString().toLowerCase());
                                 if (g) linkedGoalId = g.id;
                             }
                             // If still not found, try matching by description text
-                            if (!linkedGoalId && transaction.description) {
-                                const desc = (transaction.description || '').toString().toLowerCase();
+                            if (!linkedGoalId && tx.description) {
+                                const desc = (tx.description || '').toString().toLowerCase();
                                 const g2 = goals.find(x => desc.indexOf((x.name || '').toString().toLowerCase()) !== -1 || (transaction.description||'').toString().trim() === (x.name||''));
                                 if (g2) linkedGoalId = g2.id;
                             }
-                            if (linkedGoalId) transaction.goalId = linkedGoalId;
+                            if (linkedGoalId) tx.goalId = linkedGoalId;
                         } catch (e) { /* ignore linking errors */ }
                     }
 
-                    currentMonthData[type][index] = { ...originalTransaction, ...transaction };
+                    currentMonthData[type][index] = { ...originalTransaction, ...tx };
                     try {
                         await storage.saveData(state.appData);
                         showToast('transação editada com sucesso!', 'bg-green-600');
@@ -12513,28 +13204,31 @@ const firebaseConfig = {
                         console.error('Erro ao salvar transação editada:', e);
                         showToast('Falha ao salvar transação no Firebase.', 'bg-red-600');
                     }
+                    if (type === 'expenses') planning.markDirty(state.currentDate);
+                    refreshAfterTransaction(type);
                 }
             } else { // Adicionando
-                if (transaction.isRecurring) {
-                    transaction.recurringId = generateUUID();
+                if (tx.isRecurring) {
+                    tx.recurringId = generateUUID();
                 }
                 // For savings entries, attempt to auto-link to a goal by category or description
                 if (type === 'savings') {
                     try {
                         const goals = state.appData.settings.goals || [];
                         let linked = null;
-                        if (transaction.category) {
-                            linked = goals.find(g => (g.name || '').toString().toLowerCase() === (transaction.category || '').toString().toLowerCase());
+                        if (tx.category) {
+                            linked = goals.find(g => (g.name || '').toString().toLowerCase() === (tx.category || '').toString().toLowerCase());
                         }
-                        if (!linked && transaction.description) {
-                            const desc = (transaction.description || '').toString().toLowerCase();
+                        if (!linked && tx.description) {
+                            const desc = (tx.description || '').toString().toLowerCase();
                             linked = goals.find(g => desc.indexOf((g.name || '').toString().toLowerCase()) !== -1 || (transaction.description||'').toString().trim() === (g.name||''));
                         }
-                        if (linked) transaction.goalId = linked.id;
+                        if (linked) tx.goalId = linked.id;
                     } catch (e) { /* ignore */ }
                 }
 
-                currentMonthData[type].push(transaction);
+                currentMonthData[type].push(tx);
+                    if (type === 'expenses') planning.bumpRuntime(state.currentDate, tx.category, tx.amount);
                 try {
                     await storage.saveData(state.appData);
                     showToast('transação salva com sucesso!', 'bg-green-600');
@@ -12546,6 +13240,7 @@ const firebaseConfig = {
                     } catch(e) { /* ignore */ }
                     // Prepare modal for next entry using session defaults (will fall back to app defaults on reload)
                     try { prepareModalForNextEntry(); } catch(e) { console.error('prepare next after save', e); }
+                    refreshAfterTransaction(type);
                 } catch (e) {
                     console.error('Erro ao salvar nova transação:', e);
                     showToast('Falha ao salvar transação no Firebase.', 'bg-red-600');
@@ -12660,23 +13355,30 @@ const firebaseConfig = {
                     console.error('Erro ao excluir transação:', e);
                     showToast('Falha ao salvar exclusío no Firebase.', 'bg-red-600');
                 }
-                render();
+                if (type === 'expenses') planning.markDirty(state.currentDate);
+                refreshAfterTransaction(type);
             } catch(e) { return; }
         }
 
         // Ponto de entrada do formulí¡rio
         async function handleFormSubmit(e) {
             e.preventDefault();
-            const id = document.getElementById('transaction-id').value;
+            if (state.uiFlags.actionLocked) { showToast('Ação em andamento. Aguarde.', 'bg-yellow-600'); return; }
+            state.uiFlags.actionLocked = true;
+            try {
+            const id = (getDom('transaction-id') || {}).value || '';
             const type = ui.transactionTypeInput.value;
 
-            const transactionData = {
-                description: document.getElementById('description').value,
-                amount: parseLocaleNumber(document.getElementById('amount').value) || 0,
-                isRecurring: document.getElementById('is-recurring').checked
+            let transactionData = {
+                description: (getDom('description') || {}).value,
+                amount: parseLocaleNumber((getDom('amount') || {}).value) || 0,
+                isRecurring: (getDom('is-recurring') || {}).checked
             };
 
             if (!id) transactionData.id = generateUUID();
+
+            transactionData = prepareTransaction(type, transactionData);
+            if (!transactionData) return;
 
             if (type === 'expenses') {
                 Object.assign(transactionData, {
@@ -12773,7 +13475,7 @@ const firebaseConfig = {
                         }
                         // Close modal and re-render instead of continuing to add to expenses
                         closeModal('transaction-modal');
-                        render();
+                        refreshAfterTransaction('expenses');
                         return;
                 }
                 // VT mirror of VR: store VT purchases in vtUsage ledger (do not add to expenses)
@@ -12847,8 +13549,7 @@ const firebaseConfig = {
             const financingTotal = parseInt(document.getElementById('financing-total').value, 10);
             const financingCurrent = parseInt(document.getElementById('financing-current').value, 10);
 
-            try {
-                const currentMonthData = getCurrentMonthData();
+            const currentMonthData = getCurrentMonthData();
                 // If editing an existing expense and user converted it to installments/financing, handle conversion
                 if (id && type === 'expenses') {
                     const original = currentMonthData.expenses.find(t => t.id === id);
@@ -12878,7 +13579,7 @@ const firebaseConfig = {
                 }
 
                 // Default flows for creating new or simple edits
-                    if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
+                if (type === 'expenses' && isInstallment && installmentsCount > 1 && !id) {
                     // console.debug('[handleFormSubmit] creating installments (new)', installmentsCount /*, transactionData */);
                     const startInstallment = parseInt(document.getElementById('installment-start')?.value || document.getElementById('installments-current')?.value || '1', 10) || 1;
                     await createInstallments(transactionData, installmentsCount, startInstallment);
@@ -13096,6 +13797,8 @@ const firebaseConfig = {
             } catch (e) {
                 console.error('Erro ao processar formulí¡rio:', e);
                 showToast('Erro ao salvar transação: ' + (e && e.message ? e.message : ''), 'bg-red-600');
+            } finally {
+                state.uiFlags.actionLocked = false;
             }
 
             closeModal('transaction-modal');
@@ -13512,17 +14215,10 @@ const firebaseConfig = {
 
         // Export public API
         return {
-            bootstrap,
-            dom,
-            util,
-            db,
-            ui,
-            auth: authModule,
-            charts,
-            importExport,
-            backup,
-            bindEvents,
             init,
+            state,
+            model,
+            migrations,
             // VR helpers
             openVRUsageEdit,
             closeVRUsageModal,
@@ -13537,14 +14233,14 @@ const firebaseConfig = {
             closeVTModal,
             openVTEdit
         };
-        })(); // Close App IIFE and assign to App
-        try { window.App = App; } catch (e) { /* ignore */ }
+    })(); // Close App IIFE and assign to App
+
+    // Expose App globally for UI event handlers and console access
+    window.App = App;
 
     // Inicializa a aplicação quando o DOM estiver pronto
     document.addEventListener('DOMContentLoaded', () => {
-        // Bootstrapping centralizado (DOM cache, bindings, auth observer)
-        try { if (App && typeof App.bootstrap === 'function') App.bootstrap(); } catch (e) { console.error('App.bootstrap error', e); }
-        // App.init() permanece sendo chamado apí³s autenticação pelo observer
+        // App.init() movido para dentro de onAuthStateChanged - será chamado após autenticação
         // Attach VR modal buttons after init so elements are available
         try {
                 const vrSaveBtn = document.getElementById('vr-entry-save'); if (vrSaveBtn) vrSaveBtn.addEventListener('click', (e) => { e.preventDefault(); App.saveVRLedgerEntry(); });
@@ -13771,6 +14467,7 @@ const firebaseConfig = {
     <script>
     (function(){
         // Mobile runtime enhancements (no changes for desktop)
+        function isMobile() { return window.innerWidth <= 768 || /iPhone|Android/.test(navigator.userAgent || ''); }
 
         document.addEventListener('DOMContentLoaded', function(){
             try {
@@ -14051,6 +14748,11 @@ const firebaseConfig = {
             });
         }
 
+        // Detectar se í© mobile para ajustes especí­ficos
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
         // Melhorar performance em mobile
         function optimizeForMobile() {
             if (isMobile()) {
@@ -14135,8 +14837,31 @@ const firebaseConfig = {
     // ObTím referência do Firebase Auth
     const auth = firebase.auth();
 
-    // Auth State Observer centralizado no App.auth
-    try { if (App && App.auth && typeof App.auth.bindAuthObserver === 'function') App.auth.bindAuthObserver(); } catch (e) { console.error('bindAuthObserver fallback error', e); }
+    // Auth State Observer - Controla visibilidade da UI baseado no estado de autenticação
+    auth.onAuthStateChanged(async (user) => {
+        const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
+        
+        if (user) {
+            // Usuário logado - inicializa app e carrega dados
+            console.log('✅ Usuário autenticado:', user.email);
+            
+            loginScreen.style.display = 'none';
+            mainApp.style.display = 'block';
+            mainApp.classList.add('authenticated');
+            
+            // Inicializa aplicação APÓS autenticação para evitar Permission Denied
+            if (App && typeof App.init === 'function') {
+                await App.init();
+            }
+        } else {
+            // Usuário nío logado
+            console.log('⚠️ Usuário nío autenticado');
+            loginScreen.style.display = 'flex';
+            mainApp.style.display = 'none';
+            mainApp.classList.remove('authenticated');
+        }
+    });
 
     // Funçío de Login
     async function handleLogin(e) {
@@ -14402,9 +15127,57 @@ const firebaseConfig = {
         }
     }
 
-    // Event Listeners centralizados em App.auth
+    // Event Listeners
     window.addEventListener('DOMContentLoaded', () => {
-        try { if (App && App.auth && typeof App.auth.bindLoginUI === 'function') App.auth.bindLoginUI(); } catch (e) { console.error('bindLoginUI fallback error', e); }
+        // Prefill de e-mail lembrado
+        try {
+            const savedEmail = localStorage.getItem('cf_remember_email');
+            const rememberEmailEl = document.getElementById('rememberEmail');
+            const loginEmail = document.getElementById('loginEmail');
+            if (savedEmail && loginEmail) {
+                loginEmail.value = savedEmail;
+                if (rememberEmailEl) rememberEmailEl.checked = true;
+            }
+        } catch (e) { /* ignore */ }
+
+        // Login form submit (melhor compatibilidade com salvar senha do navegador)
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleLogin);
+        } else if (loginBtn) {
+            // fallback (caso o form não exista por algum motivo)
+            loginBtn.addEventListener('click', handleLogin);
+        }
+
+        // Toggle mostrar/ocultar senha
+        try {
+            const toggleBtn = document.getElementById('togglePasswordBtn');
+            const pwd = document.getElementById('loginPassword');
+            if (toggleBtn && pwd) {
+                toggleBtn.addEventListener('click', () => {
+                    const isPassword = pwd.type === 'password';
+                    pwd.type = isPassword ? 'text' : 'password';
+                    const icon = toggleBtn.querySelector('.material-symbols-outlined');
+                    if (icon) icon.textContent = isPassword ? 'visibility_off' : 'visibility';
+                    toggleBtn.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
+                    toggleBtn.title = isPassword ? 'Ocultar senha' : 'Mostrar senha';
+                    try { pwd.focus(); } catch(_e) {}
+                });
+            }
+        } catch (e) { /* ignore */ }
+
+        // Signup / Reset password
+        const signupBtn = document.getElementById('signupBtn');
+        if (signupBtn) signupBtn.addEventListener('click', handleSignup);
+        const resetBtn = document.getElementById('resetPasswordBtn');
+        if (resetBtn) resetBtn.addEventListener('click', handleResetPassword);
+        
+        // Logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+        }
     });
     // ===== FIM FIREBASE AUTHENTICATION =====
     </script>

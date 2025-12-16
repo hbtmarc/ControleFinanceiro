@@ -2978,190 +2978,6 @@
             bottom: 5rem !important;
             right: 1rem !important;
         }
-        
-        /* Melhorar touch targets para í­cones de ação */
-        .quick-add-goal-btn,
-        .delete-goal-btn,
-        .edit-btn,
-        .delete-btn {
-            min-width: 44px !important;
-            min-height: 44px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-        
-
-        
-        /* Melhorar filtros de despesas */
-        #expenses-filter-popover {
-            left: 0.5rem !important;
-            right: 0.5rem !important;
-            max-width: calc(100vw - 1rem) !important;
-        }
-        
-        /* Month picker otimizado */
-        #month-picker {
-            right: 0 !important;
-            left: auto !important;
-            width: 90vw !important;
-            max-width: 280px !important;
-        }
-        
-        /* Melhorar spacing entre elementos */
-        .space-y-4 > * + * {
-            margin-top: 0.75rem !important;
-        }
-        
-        .space-y-6 > * + * {
-            margin-top: 1rem !important;
-        }
-        
-        .space-y-8 > * + * {
-            margin-top: 1.25rem !important;
-        }
-    }
-    
-    /* OtimizAÇÕES especí­ficas para iPhone 15 Pro Max (430px width) */
-    @media (max-width: 430px) {
-        /* Ajustes finos para tela exata do iPhone 15 Pro Max */
-        .container,
-        main {
-            max-width: 100% !important;
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
-        }
-        
-        /* KPI values ligeiramente menores */
-        .kpi-value {
-            font-size: 1.375rem !important;
-        }
-        
-        /* Tabs ainda mais compactas */
-        #tabs .tab-button {
-            font-size: 0.6875rem !important;
-            padding: 0.625rem 0.375rem !important;
-        }
-        
-        /* Calendí¡rio header compacto */
-        .flex.items-center.gap-1 {
-            gap: 0.25rem !important;
-        }
-    }
-    
-    /* MELHORIAS para landscape em mobile */
-    @media (max-width: 932px) and (orientation: landscape) {
-        /* Ajustar altura de elementos em landscape */
-        dialog {
-            max-height: 85vh !important;
-        }
-        
-        .kpi-card {
-            padding: 0.75rem !important;
-        }
-        
-        #mobile-bottom-nav {
-            padding: 0.375rem 0.5rem !important;
-        }
-        
-        .mobile-nav-btn {
-            width: 44px !important;
-            height: 44px !important;
-        }
-    }
-    </style>
-    <style>
-    /* Mobile-only UI polish: floating action button, larger touch targets, clearer bottom nav spacing */
-    @media (max-width: 639px) {
-        /* Floating Add button for mobile (visible only on small screens) */
-        #mobile-add-transaction-fab {
-            display: inline-flex !important;
-            position: fixed;
-            right: 1rem;
-            bottom: 5.6rem; /* above the mobile bottom nav */
-            width: 64px;
-            height: 64px;
-            border-radius: 9999px;
-            background: linear-gradient(180deg,#0ea5e9,#0369a1);
-            color: white;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(2,6,23,0.18);
-            z-index: 140000;
-            border: none;
-            font-size: 28px;
-        }
-        #mobile-add-transaction-fab:active { transform: translateY(1px); }
-
-        /* Make small header icons and list actions larger for touch */
-        header .material-symbols-outlined, .mobile-nav-btn .material-symbols-outlined { font-size: 22px !important; }
-        .responsive-table td .material-symbols-outlined, .responsive-table td button { padding: 10px !important; }
-
-        /* Improve spacing inside responsive table rows for readability */
-        .responsive-table tr { padding: 0.85rem !important; }
-        .responsive-table td { padding: 0.9rem 0.6rem !important; }
-
-        /* Ensure month-picker and filter bottom-sheets have comfortable margins */
-        #month-picker, #expenses-filter-popover { left: 0.6rem !important; right: 0.6rem !important; bottom: 4.6rem !important; max-height: 52vh !important; }
-    }
-    /* Hidden by default (desktop) - shown only on mobile via media query above */
-    #mobile-add-transaction-fab { display: none; }
-    </style>
-    <style>
-    /* Glassmorphism + motion refresh */
-    :root {
-        --glass-bg: rgba(255, 255, 255, 0.14);
-        --glass-strong: rgba(255, 255, 255, 0.28);
-        --glass-stroke: 1px solid rgba(255, 255, 255, 0.35);
-        --glass-shadow: 0 20px 60px rgba(15, 23, 42, 0.25), 0 1px 0 rgba(255, 255, 255, 0.22);
-        --radius-lg: 18px;
-        --text-strong: #0f172a;
-        --text-soft: #334155;
-        --accent: #38bdf8;
-        --accent-2: #a855f7;
-        --accent-3: #22d3ee;
-    }
-
-    body {
-        background:
-            radial-gradient(circle at 16% 20%, rgba(56, 189, 248, 0.25), transparent 38%),
-            radial-gradient(circle at 82% 10%, rgba(168, 85, 247, 0.22), transparent 36%),
-            radial-gradient(circle at 32% 82%, rgba(34, 211, 238, 0.18), transparent 34%),
-            linear-gradient(135deg, #f8fbff 0%, #eef2ff 46%, #fdf7ff 100%);
-        color: var(--text-strong);
-        min-height: 100vh;
-        overflow-x: hidden;
-        position: relative;
-    }
-
-    body::selection { background: rgba(56, 189, 248, 0.2); color: var(--text-strong); }
-    #mainApp, #loginScreen { position: relative; z-index: 1; }
-
-    .aurora-backdrop {
-        position: fixed;
-        inset: -20% -10%;
-        z-index: 0;
-        filter: blur(95px);
-        opacity: 0.75;
-        pointer-events: none;
-        mix-blend-mode: screen;
-    }
-
-    .aurora-backdrop .blob {
-        position: absolute;
-        width: 42vw;
-        height: 42vw;
-        border-radius: 9999px;
-        opacity: 0.85;
-        animation: drift 18s ease-in-out infinite alternate;
-    }
-
-    .aurora-backdrop .blob.a { background: #8ec5ff; top: -8%; left: -6%; animation-duration: 20s; }
-    .aurora-backdrop .blob.b { background: #c7a7ff; top: 10%; right: -12%; animation-duration: 24s; }
-    .aurora-backdrop .blob.c { background: #7cf4d7; bottom: -8%; left: 18%; animation-duration: 22s; }
-
-    @keyframes drift { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(6%, -4%, 0) scale(1.08); } }
-
     #mainApp > .max-w-7xl { position: relative; z-index: 1; }
     #mainApp header {
         background: var(--glass-bg);
@@ -3773,12 +3589,84 @@
                                     <div id="budget-category-list" class="space-y-2"></div>
                                 </div>
                                 <div class="budget-slab">
-                                    <div class="section-title">Metas rápidas</div>
+                                    <div class="flex items-center justify-between section-title" style="margin-bottom:6px;">
+                                        <span>Metas rápidas</span>
+                                        <button id="planning-goal-create-btn" class="modern-btn modern-btn-secondary text-xs px-2 py-1" type="button">Criar meta</button>
+                                    </div>
                                     <div id="planning-goals-list" class="space-y-2"></div>
                                 </div>
                                 <div id="planning-alerts" class="space-y-2"></div>
                             </div>
                         </div>
+
+                        <!-- Modal: editar orçamento mensal -->
+                        <dialog id="budget-modal" class="app-dialog p-4 rounded-2xl shadow-2xl card w-full max-w-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <p class="text-xs text-gray-500">Planejamento do mês</p>
+                                    <h3 class="text-lg font-semibold text-gray-800">Editar orçamento</h3>
+                                </div>
+                                <button id="budget-modal-close" class="text-gray-500" aria-label="Fechar">✕</button>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="flex flex-col gap-1 text-sm text-gray-700">
+                                    <span>Orçamento total (despesas)</span>
+                                    <input id="budget-modal-total" type="number" step="0.01" min="0" class="border rounded px-2 py-2" placeholder="Ex.: 5000" />
+                                </label>
+                                <div>
+                                    <div class="flex items-center justify-between text-sm text-gray-700 mb-1">
+                                        <span>Orçamento por categoria</span>
+                                        <small class="text-gray-400">Baseado nas categorias do mês</small>
+                                    </div>
+                                    <div id="budget-modal-categories" class="space-y-2 max-h-64 overflow-auto pr-1"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button id="budget-modal-cancel" class="px-3 py-2 rounded bg-gray-100 text-gray-700">Cancelar</button>
+                                <button id="budget-modal-save" class="px-3 py-2 rounded bg-indigo-600 text-white">Salvar</button>
+                            </div>
+                        </dialog>
+
+                        <!-- Modal: criar meta rápida -->
+                        <dialog id="planning-goal-modal" class="app-dialog p-4 rounded-2xl shadow-2xl card w-full max-w-md">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <p class="text-xs text-gray-500">Metas rápidas</p>
+                                    <h3 class="text-lg font-semibold text-gray-800">Nova meta</h3>
+                                </div>
+                                <button id="planning-goal-modal-close" class="text-gray-500" aria-label="Fechar">✕</button>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="flex flex-col gap-1 text-sm text-gray-700">
+                                    <span>Título</span>
+                                    <input id="planning-goal-title" type="text" class="border rounded px-2 py-2" placeholder="Ex.: Reserva de emergência" />
+                                </label>
+                                <label class="flex flex-col gap-1 text-sm text-gray-700">
+                                    <span>Tipo</span>
+                                    <select id="planning-goal-type" class="border rounded px-2 py-2">
+                                        <option value="custom">Personalizada</option>
+                                        <option value="saving">Reserva</option>
+                                        <option value="debt">Quitar dívida/cartão</option>
+                                    </select>
+                                </label>
+                                <label class="flex flex-col gap-1 text-sm text-gray-700">
+                                    <span>Valor alvo</span>
+                                    <input id="planning-goal-target" type="number" step="0.01" min="0" class="border rounded px-2 py-2" placeholder="Ex.: 1500" />
+                                </label>
+                                <label class="flex flex-col gap-1 text-sm text-gray-700">
+                                    <span>Valor atual (opcional)</span>
+                                    <input id="planning-goal-current" type="number" step="0.01" min="0" class="border rounded px-2 py-2" placeholder="Ex.: 300" />
+                                </label>
+                                <label class="flex flex-col gap-1 text-sm text-gray-700">
+                                    <span>Prazo (opcional)</span>
+                                    <input id="planning-goal-deadline" type="date" class="border rounded px-2 py-2" />
+                                </label>
+                            </div>
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button id="planning-goal-cancel" class="px-3 py-2 rounded bg-gray-100 text-gray-700">Cancelar</button>
+                                <button id="planning-goal-save" class="px-3 py-2 rounded bg-indigo-600 text-white">Salvar meta</button>
+                            </div>
+                        </dialog>
                         <!-- VR KPI: minimal â€” shows available balance and spent progress -->
                         <div id="kpi-vr-card" class="card p-2 rounded-xl mb-2">
                             <div class="flex items-center justify-between">
@@ -6478,6 +6366,37 @@ const firebaseConfig = {
     }
     const database = firebase.database();
 
+    // Persistence guard to prevent data loss on unstable connectivity
+    const persistence = {
+        lastLoadOk: false,
+        lastLoadAt: null,
+        lastKnownCounts: { incomes: 0, expenses: 0, savings: 0 },
+        connected: false,
+        writeBlockedReason: null
+    };
+
+    // Monitor connection state
+    try {
+        database.ref('.info/connected').on('value', (snap) => {
+            persistence.connected = !!(snap && snap.val());
+        });
+    } catch (_) { /* non-fatal */ }
+
+    function countDataEntries(data) {
+        const counts = { incomes: 0, expenses: 0, savings: 0 };
+        try {
+            Object.values(data || {}).forEach(yearObj => {
+                Object.values(yearObj || {}).forEach(monthObj => {
+                    if (!monthObj) return;
+                    counts.incomes += Array.isArray(monthObj.incomes) ? monthObj.incomes.length : 0;
+                    counts.expenses += Array.isArray(monthObj.expenses) ? monthObj.expenses.length : 0;
+                    counts.savings += Array.isArray(monthObj.savings) ? monthObj.savings.length : 0;
+                });
+            });
+        } catch (_) {}
+        return counts;
+    }
+
     const storage = {
         DB_KEY: 'financeAppDB_v10',
         loadData: async function() {
@@ -6489,14 +6408,11 @@ const firebaseConfig = {
                 const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs));
                 const snapshot = await Promise.race([database.ref(this.DB_KEY).get(), timeout]);
                 if (!snapshot.exists()) {
-                    // console.debug("Firebase esTí¡ vazio. Inicializando com dados padrío e salvando no banco.");
-                    try {
-                        await this.saveData(initialData);
-                        showToast('Banco vazio: inicializado com dados padrão.', 'bg-blue-600');
-                    } catch (e) {
-                        console.error('Falha ao salvar dados iniciais no Firebase', e);
-                        showToast('Não foi possível criar os dados iniciais no Firebase.', 'bg-red-600');
-                    }
+                    // Banco vazio: não gravar nada automaticamente; apenas usar estrutura inicial
+                    persistence.lastLoadOk = true;
+                    persistence.lastLoadAt = Date.now();
+                    persistence.lastKnownCounts = { incomes: 0, expenses: 0, savings: 0 };
+                    persistence.writeBlockedReason = null;
                     return initialData;
                 }
 
@@ -6699,11 +6615,19 @@ const firebaseConfig = {
                 // Garante que sub-propriedades crí­ticas de settings existam
                 mergedData.settings.goals = mergedData.settings.goals || [];
                 mergedData.settings.paymentMethods = mergedData.settings.paymentMethods || [];
+                const counts = countDataEntries(mergedData.data);
+                persistence.lastLoadOk = true;
+                persistence.lastLoadAt = Date.now();
+                persistence.lastKnownCounts = counts;
+                persistence.writeBlockedReason = null;
                 
                 // console.debug("Dados do Firebase carregados e validados com sucesso.");
                 return mergedData;
             } catch (err) {
                 console.error("Erro crí­tico ao carregar dados do Firebase. Usando estrutura de dados inicial.", err);
+                persistence.lastLoadOk = false;
+                persistence.writeBlockedReason = 'load_failed';
+                persistence.lastKnownCounts = countDataEntries(initialData.data);
                 return initialData; // Retorna a estrutura padrío em caso de qualquer erro de conexío/leitura.
             }
         },
@@ -6743,20 +6667,54 @@ const firebaseConfig = {
 
         saveData: function(data, opts = {}) {
             const { retries = 1, timeoutMs = 8000 } = opts;
+            const counts = countDataEntries((data || {}).data || {});
+            const totalKnown = (persistence.lastKnownCounts.incomes + persistence.lastKnownCounts.expenses + persistence.lastKnownCounts.savings);
+            const totalNow = counts.incomes + counts.expenses + counts.savings;
+            const isOffline = (typeof navigator !== 'undefined' && navigator.onLine === false) || !persistence.connected;
+            if (isOffline) {
+                persistence.writeBlockedReason = 'offline';
+                showToast('Sem conexão: alterações não serão gravadas agora.', 'bg-red-600');
+                return Promise.reject(new Error('write_blocked_offline'));
+            }
+            if (persistence.lastLoadOk === false) {
+                persistence.writeBlockedReason = 'load_failed';
+                showToast('Dados não carregados com segurança; gravação bloqueada para evitar perda.', 'bg-red-600');
+                return Promise.reject(new Error('write_blocked_unverified_load'));
+            }
+            if (totalNow === 0 && totalKnown > 0) {
+                persistence.writeBlockedReason = 'wipe_detected';
+                debugLog('Wipe prevented: attempted write with zero counts while previous data existed', { counts, lastKnown: persistence.lastKnownCounts });
+                showToast('Gravação bloqueada para evitar perda de dados.', 'bg-red-600');
+                return Promise.reject(new Error('write_blocked_wipe_guard'));
+            }
+            persistence.writeBlockedReason = null;
             const attemptSave = async (attempt = 0) => {
                 try {
                     showLoading();
                     const safe = this.sanitizeForFirebase(data);
+                    // Backup shadow before write to mitigate loss
+                    try {
+                        const user = (firebase.auth && firebase.auth().currentUser)
+                            ? firebase.auth().currentUser
+                            : ((typeof state !== 'undefined' && state && state.user) ? state.user : (typeof window !== 'undefined' && window.state ? window.state.user : null));
+                        const uid = user && user.uid ? user.uid : null;
+                        if (uid) {
+                            const shadowRef = database.ref(`users/${uid}/backupsShadow/${Date.now()}`);
+                            shadowRef.set({ payload: safe, createdAt: Date.now() }).catch(() => {});
+                        }
+                    } catch (_) { /* ignore backup failures */ }
+
                     const ref = database.ref(this.DB_KEY);
                     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs));
-                    await Promise.race([ref.set(safe), timeout]);
+                    await Promise.race([ref.update(safe), timeout]);
                     hideLoading();
                     debugLog('saveData success', { attempt });
+                    persistence.lastKnownCounts = counts;
                     return;
                 } catch (err) {
                     hideLoading();
-                    const isOffline = (typeof navigator !== 'undefined' && navigator.onLine === false) || (err && err.code === 'disconnected');
-                    const message = isOffline ? 'Sem conexão. Verifique sua internet e tente novamente.' : 'Erro ao salvar no Firebase.';
+                    const offlineNow = (typeof navigator !== 'undefined' && navigator.onLine === false) || (err && err.code === 'disconnected');
+                    const message = offlineNow ? 'Sem conexão. Verifique sua internet e tente novamente.' : 'Erro ao salvar no Firebase.';
                     showToast(message, 'bg-red-600');
                     debugLog('saveData error', { attempt, err });
                     if (attempt < retries) {
@@ -6861,6 +6819,7 @@ const firebaseConfig = {
             cache: { months: {} },
             uiFlags: { isMobile: false, isModalOpen: false, actionLocked: false, debug: false },
             planning: { runtime: {}, dirty: {} },
+            persistence,
             // UX: control whether Despesas are shown grouped by Descrição
             showGroupedExpenses: false,
             // Per-card grouping state for credit card invoices
@@ -6965,186 +6924,298 @@ const firebaseConfig = {
                 return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
             }
 
-        // Planning helpers: monthly budgets + simple goals (emergency fund and card payoff)
+        // Planning helpers: monthly budgets and quick goals persisted in RTDB per user
+        const planningCache = { budgets: {}, goals: [], goalsLoaded: false };
         const planning = {
+            status: 'idle',
+            lastError: null,
             monthKey(date = state.currentDate) {
                 const d = date || new Date();
                 return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             },
-            ensureSettingsDefaults() {
-                state.appData.settings = state.appData.settings || {};
-                if (!state.appData.settings.budgets) state.appData.settings.budgets = {};
-                if (!state.appData.settings.planningGoals) state.appData.settings.planningGoals = { emergency: { targetPctIncome: 0.10, minAmount: 0 }, cardPayoff: { enabled: true } };
-                return state.appData.settings;
-            },
-            saveSettings() {
-                try { return storage.saveData(state.appData); } catch (e) { console.error('planning.saveSettings', e); return Promise.reject(e); }
-            },
-            estimateDefaultBudget(date = state.currentDate) {
-                const baseDate = date || new Date();
-                const prev = new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1);
-                const prevActuals = this.computeActuals(prev);
-                const prevTotal = Number(prevActuals.total) || 0;
-                const incomeNow = (getCurrentMonthData(baseDate).incomes || []).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-                const baseFromIncome = incomeNow > 0 ? incomeNow * 0.6 : 0;
-                const baseline = prevTotal > 0 ? prevTotal * 0.95 : baseFromIncome;
-                const rounded = Math.round((baseline + Number.EPSILON) * 100) / 100;
-                return rounded > 0 ? rounded : 0;
-            },
-            ensureMonthBudget(date = state.currentDate) {
-                this.ensureSettingsDefaults();
-                const key = this.monthKey(date);
-                const budgets = state.appData.settings.budgets;
-                if (!budgets[key]) {
-                    const estimate = this.estimateDefaultBudget(date);
-                    const prevActuals = this.computeActuals(new Date((date || new Date()).getFullYear(), (date || new Date()).getMonth() - 1, 1));
-                    const categories = {};
-                    Object.entries(prevActuals.byCategory || {})
-                        .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))
-                        .slice(0, 5)
-                        .forEach(([cat, val]) => {
-                            const safeVal = Math.max(0, Number(val) || 0);
-                            categories[cat] = Math.round(safeVal * 0.95 * 100) / 100;
-                        });
-                    budgets[key] = { total: estimate, categories };
-                    try { this.saveSettings(); } catch (_) { /* ignore */ }
+            getUid() {
+                try {
+                    const user = (firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser : state.user;
+                    return user && user.uid ? user.uid : null;
+                } catch (_) {
+                    return (state.user && state.user.uid) || null;
                 }
-                const budget = budgets[key] || { total: 0, categories: {} };
-                budget.categories = budget.categories || {};
-                budgets[key] = budget;
-                return budget;
             },
-            setMonthBudget(date, partial = {}) {
-                this.ensureSettingsDefaults();
-                const key = this.monthKey(date);
-                const existing = this.ensureMonthBudget(date);
-                const merged = {
-                    ...existing,
-                    ...partial,
-                    categories: { ...existing.categories, ...(partial.categories || {}) }
-                };
-                state.appData.settings.budgets[key] = merged;
-                return this.saveSettings();
-            },
-            computeActuals(date = state.currentDate) {
-                const md = getCurrentMonthData(date);
-                const res = { total: 0, byCategory: {} };
-                const add = (cat, amt) => {
-                    const key = (cat && cat.toString().trim()) ? cat : 'Sem categoria';
-                    res.byCategory[key] = Math.round(((res.byCategory[key] || 0) + amt + Number.EPSILON) * 100) / 100;
-                };
-                (md.expenses || []).forEach(exp => {
-                    const amt = Number(exp.amount) || 0;
-                    if (!amt) return;
-                    res.total = Math.round((res.total + amt + Number.EPSILON) * 100) / 100;
-                    add(exp.category || '', amt);
+            normalizeBudget(raw = {}, monthKey) {
+                const categories = {};
+                Object.entries(raw.categories || {}).forEach(([k, v]) => {
+                    const n = Number(v);
+                    categories[k] = Number.isFinite(n) && n >= 0 ? Math.round((n + Number.EPSILON) * 100) / 100 : 0;
                 });
-                return res;
+                const totalRaw = Number(raw.totalExpensesBudget);
+                const total = Number.isFinite(totalRaw) && totalRaw >= 0 ? Math.round((totalRaw + Number.EPSILON) * 100) / 100 : null;
+                return {
+                    monthKey,
+                    totalExpensesBudget: total,
+                    categories,
+                    updatedAt: raw.updatedAt || Date.now()
+                };
             },
-            getActuals(date = state.currentDate) {
-                const key = this.monthKey(date);
-                state.planning.runtime = state.planning.runtime || {};
-                state.planning.dirty = state.planning.dirty || {};
-                if (state.planning.runtime[key] && !state.planning.dirty[key]) return state.planning.runtime[key];
-                const fresh = this.computeActuals(date);
-                state.planning.runtime[key] = fresh;
-                state.planning.dirty[key] = false;
-                return fresh;
-            },
-            bumpRuntime(date, category, amount) {
-                const key = this.monthKey(date || state.currentDate);
-                const delta = Number(amount) || 0;
-                state.planning.runtime = state.planning.runtime || {};
-                state.planning.dirty = state.planning.dirty || {};
-                if (!state.planning.runtime[key]) state.planning.runtime[key] = { total: 0, byCategory: {} };
-                const rt = state.planning.runtime[key];
-                rt.total = Math.round((rt.total + delta + Number.EPSILON) * 100) / 100;
-                const catKey = (category && category.toString().trim()) ? category : 'Sem categoria';
-                rt.byCategory[catKey] = Math.round(((rt.byCategory[catKey] || 0) + delta + Number.EPSILON) * 100) / 100;
-                state.planning.dirty[key] = false;
-            },
-            markDirty(date = state.currentDate) {
-                const key = this.monthKey(date);
-                state.planning.dirty = state.planning.dirty || {};
-                state.planning.dirty[key] = true;
-            },
-            topCategories(actuals, limit = 5) {
-                const entries = Object.entries(actuals.byCategory || {}).map(([cat, value]) => ({ cat, value: Number(value) || 0 }));
-                entries.sort((a, b) => b.value - a.value);
-                return entries.slice(0, limit);
-            },
-            computeCardInvoiceSnapshot(monthData) {
-                const md = monthData || getCurrentMonthData();
-                const paymentMethods = (state.appData.settings && state.appData.settings.paymentMethods) || [];
-                const cardMethods = paymentMethods.filter(p => p.type === 'credit_card');
-                const cardAnticipations = md.cardAnticipations || {};
-                let totalInvoices = 0; let paidInvoices = 0;
-                cardMethods.forEach(card => {
-                    const cardExpenses = (md.expenses || []).filter(e => paymentMatches(e.payment || '', card.name));
-                    const totalBefore = cardExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-                    const anticipated = Number(cardAnticipations[card.name] || 0);
-                    const invoiceTotal = Math.max(0, Math.round(((totalBefore - anticipated) + Number.EPSILON) * 100) / 100);
-                    totalInvoices += invoiceTotal;
-                    paidInvoices += cardExpenses.filter(e => e.isPaid).reduce((s, e) => s + (Number(e.amount) || 0), 0);
-                });
-                return { total: Math.round((totalInvoices + Number.EPSILON) * 100) / 100, paid: Math.round((paidInvoices + Number.EPSILON) * 100) / 100 };
-            },
-            buildGoals(date = state.currentDate) {
-                const md = getCurrentMonthData(date);
-                const config = (state.appData.settings && state.appData.settings.planningGoals) || {};
-                const goals = [];
-                const totalIncome = (md.incomes || []).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-                const savingsTotal = (md.savings || []).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-                const emergencyPct = (config.emergency && typeof config.emergency.targetPctIncome === 'number') ? config.emergency.targetPctIncome : 0.10;
-                const emergencyMin = (config.emergency && typeof config.emergency.minAmount === 'number') ? config.emergency.minAmount : 0;
-                const emergencyTarget = Math.max(emergencyMin, Math.round(((totalIncome * emergencyPct) + Number.EPSILON) * 100) / 100);
-                if (emergencyTarget > 0) {
-                    goals.push({
-                        id: 'emergency',
-                        title: 'Reserva de emergência',
-                        target: emergencyTarget,
-                        current: Math.round((savingsTotal + Number.EPSILON) * 100) / 100,
-                        remaining: Math.max(0, Math.round(((emergencyTarget - savingsTotal) + Number.EPSILON) * 100) / 100),
-                        percent: emergencyTarget > 0 ? Math.min(100, Math.round(((savingsTotal / emergencyTarget) * 100) * 10) / 10) : 100,
-                        hint: `${Math.round(emergencyPct * 100)}%`
+            buildDefaultBudget(date = state.currentDate) {
+                const aggs = aggregates.get(date);
+                const total = Math.max(0, Math.round(((aggs.totalExpenses || 0) * 1.05 + Number.EPSILON) * 100) / 100) || null;
+                const categories = {};
+                Object.entries(aggs.byCategory || {})
+                    .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))
+                    .slice(0, 5)
+                    .forEach(([cat, val]) => {
+                        categories[cat] = Math.max(0, Math.round((((Number(val) || 0) * 1.05) + Number.EPSILON) * 100) / 100);
                     });
+                return this.normalizeBudget({ totalExpensesBudget: total, categories, updatedAt: Date.now() }, this.monthKey(date));
+            },
+            getCachedBudget(monthKey = this.monthKey()) {
+                return planningCache.budgets[monthKey];
+            },
+            withTimeout(promise, ms = 7000, label = 'request') {
+                return Promise.race([
+                    promise,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout:${label}`)), ms))
+                ]);
+            },
+            async loadBudget(monthKey = this.monthKey()) {
+                const uid = this.getUid();
+                const fallback = this.buildDefaultBudget(state.currentDate);
+                if (!uid) {
+                    planningCache.budgets[monthKey] = fallback;
+                    return fallback;
                 }
-                const cardCfg = config.cardPayoff || { enabled: true };
-                if (cardCfg.enabled) {
-                    const cardSnapshot = this.computeCardInvoiceSnapshot(md);
-                    if (cardSnapshot.total > 0) {
-                        goals.push({
-                            id: 'card',
-                            title: 'Quitar faturas do cartão',
-                            target: cardSnapshot.total,
-                            current: Math.round((cardSnapshot.paid + Number.EPSILON) * 100) / 100,
-                            remaining: Math.max(0, Math.round(((cardSnapshot.total - cardSnapshot.paid) + Number.EPSILON) * 100) / 100),
-                            percent: cardSnapshot.total > 0 ? Math.min(100, Math.round(((cardSnapshot.paid / cardSnapshot.total) * 100) * 10) / 10) : 100,
-                            hint: ''
+                try {
+                    const ref = database.ref(`users/${uid}/settings/budgets/${monthKey}`);
+                    const snap = await ref.get();
+                    let payload = snap.exists() ? snap.val() : null;
+                    if (!payload) {
+                        payload = { totalExpensesBudget: fallback.totalExpensesBudget, categories: fallback.categories, updatedAt: Date.now() };
+                        await ref.set(payload);
+                    }
+                    const normalized = this.normalizeBudget(payload, monthKey);
+                    planningCache.budgets[monthKey] = normalized;
+                    return normalized;
+                } catch (e) {
+                    console.error('loadBudget error, fallback to local defaults', e);
+                    planningCache.budgets[monthKey] = fallback;
+                    return fallback;
+                }
+            },
+            async saveBudget(monthKey, data) {
+                const uid = this.getUid();
+                if (!uid) throw new Error('Usuário não autenticado para salvar orçamento.');
+                const normalized = this.normalizeBudget({ ...data, updatedAt: Date.now() }, monthKey);
+                await database.ref(`users/${uid}/settings/budgets/${monthKey}`).set(normalized);
+                planningCache.budgets[monthKey] = normalized;
+                return normalized;
+            },
+            async loadGoals(force = false) {
+                if (planningCache.goalsLoaded && !force) return planningCache.goals;
+                const uid = this.getUid();
+                if (!uid) {
+                    planningCache.goals = [];
+                    planningCache.goalsLoaded = true;
+                    return planningCache.goals;
+                }
+                try {
+                    const snap = await database.ref(`users/${uid}/goals`).get();
+                    const goals = [];
+                    if (snap.exists()) {
+                        snap.forEach(child => {
+                            const val = child.val() || {};
+                            goals.push({
+                                id: child.key,
+                                title: val.title || 'Meta',
+                                type: val.type || 'custom',
+                                targetAmount: Number(val.targetAmount) || 0,
+                                currentAmount: Math.max(0, Number(val.currentAmount) || 0),
+                                deadline: val.deadline || null,
+                                status: val.status || 'active',
+                                createdAt: val.createdAt || Date.now()
+                            });
                         });
                     }
+                    planningCache.goals = goals.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                    planningCache.goalsLoaded = true;
+                    return planningCache.goals;
+                } catch (e) {
+                    console.error('loadGoals error, fallback to empty list', e);
+                    planningCache.goals = [];
+                    planningCache.goalsLoaded = true;
+                    return planningCache.goals;
                 }
-                return goals;
             },
-            buildAlerts({ budget, actuals, goals }) {
+            async saveGoal(goal) {
+                const uid = this.getUid();
+                if (!uid) throw new Error('Usuário não autenticado para salvar meta.');
+                const now = Date.now();
+                const data = {
+                    title: (goal.title || '').toString().trim(),
+                    type: goal.type || 'custom',
+                    targetAmount: Math.max(0, Math.round(((Number(goal.targetAmount) || 0) + Number.EPSILON) * 100) / 100),
+                    currentAmount: Math.max(0, Math.round(((Number(goal.currentAmount) || 0) + Number.EPSILON) * 100) / 100),
+                    deadline: goal.deadline || null,
+                    status: goal.status || 'active',
+                    createdAt: goal.createdAt || now
+                };
+                if (!data.title) throw new Error('Informe um título para a meta.');
+                if (!(data.targetAmount > 0)) throw new Error('Valor alvo deve ser maior que zero.');
+                const ref = database.ref(`users/${uid}/goals`);
+                const goalId = goal.id || ref.push().key;
+                await ref.child(goalId).set({ ...data, id: goalId });
+                const existingIdx = planningCache.goals.findIndex(g => g.id === goalId);
+                if (existingIdx >= 0) planningCache.goals[existingIdx] = { ...data, id: goalId };
+                else planningCache.goals.push({ ...data, id: goalId });
+                planningCache.goals.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                return goalId;
+            },
+            async deleteGoal(goalId) {
+                const uid = this.getUid();
+                if (!uid || !goalId) return;
+                await database.ref(`users/${uid}/goals/${goalId}`).remove();
+                planningCache.goals = planningCache.goals.filter(g => g.id !== goalId);
+            },
+            computeBudgetStatus(monthKey, aggs) {
+                const budget = this.getCachedBudget(monthKey) || this.buildDefaultBudget(state.currentDate);
+                const actualTotal = Math.round(((aggs.totalExpenses || 0) + Number.EPSILON) * 100) / 100;
+                const ratioTotal = budget.totalExpensesBudget && budget.totalExpensesBudget > 0 ? actualTotal / budget.totalExpensesBudget : 0;
+                const categories = [];
+                const catSet = new Set([...Object.keys(aggs.byCategory || {}), ...Object.keys(budget.categories || {})]);
+                if (catSet.size === 0) catSet.add('Outros');
+                catSet.forEach(cat => {
+                    const spent = Math.round(((aggs.byCategory && aggs.byCategory[cat] ? aggs.byCategory[cat] : 0) + Number.EPSILON) * 100) / 100;
+                    const planned = Math.max(0, Number((budget.categories || {})[cat]) || 0);
+                    const ratio = planned > 0 ? spent / planned : 1;
+                    const pct = Math.min(120, Math.max(0, Math.round((planned > 0 ? ratio : 1) * 100)));
+                    categories.push({ cat, spent, planned, ratio, pct });
+                });
+                categories.sort((a, b) => b.spent - a.spent);
                 const alerts = [];
-                if (budget && budget.total > 0) {
-                    const ratio = actuals.total / budget.total;
-                    if (ratio >= 1.01) alerts.push(`Você estourou ${Math.round((ratio - 1) * 100)}% do orçamento total.`);
-                    else if (ratio >= 0.85) alerts.push(`Atenção: ${Math.round(ratio * 100)}% do orçamento total já foi usado.`);
+                if (budget.totalExpensesBudget && budget.totalExpensesBudget > 0) {
+                    if (ratioTotal >= 1) alerts.push('Você estourou 100% do orçamento total.');
+                    else if (ratioTotal >= 0.8) alerts.push(`Atenção: ${Math.round(ratioTotal * 100)}% do orçamento total já foi usado.`);
                 }
-                const categories = budget && budget.categories ? budget.categories : {};
-                Object.entries(actuals.byCategory || {}).forEach(([cat, val]) => {
-                    const b = Number(categories[cat] || 0);
-                    if (b <= 0) return;
-                    const ratio = val / b;
-                    if (ratio >= 1.05) alerts.push(`${cat}: estourou ${Math.round((ratio - 1) * 100)}% do orçamento.`);
-                    else if (ratio >= 0.9) alerts.push(`${cat}: ${Math.round(ratio * 100)}% do orçamento usado.`);
+                categories.forEach(c => {
+                    if (c.planned <= 0) return;
+                    if (c.ratio >= 1) alerts.push(`${c.cat}: ultrapassou o orçamento.`);
+                    else if (c.ratio >= 0.8) alerts.push(`${c.cat}: ${Math.round(c.ratio * 100)}% do orçamento.`);
                 });
-                (goals || []).forEach(g => {
-                    if (g.remaining > 0 && g.target > 0) alerts.push(`Faltam ${formatCurrency(g.remaining)} para ${g.title}.`);
-                });
-                return alerts;
+                return { budget, categories, actualTotal, ratioTotal, alerts };
+            },
+            getActiveGoals(limit = 3) {
+                return planningCache.goals
+                    .filter(g => g.status !== 'done' && g.status !== 'deleted')
+                    .slice(0, limit);
+            },
+            setStatus(status, error = null) {
+                this.status = status;
+                this.lastError = error;
+            },
+            async refresh(date = state.currentDate, options = {}) {
+                const { silent = false } = options || {};
+                const key = this.monthKey(date);
+                if (!silent) {
+                    this.setStatus('loading');
+                    this.render();
+                }
+                const results = await Promise.allSettled([
+                    this.withTimeout(this.loadBudget(key), 7500, 'budget'),
+                    this.withTimeout(this.loadGoals(), 7500, 'goals')
+                ]);
+                const failed = results.find(r => r.status === 'rejected');
+                if (failed) {
+                    this.setStatus('error', failed.reason && failed.reason.message ? failed.reason.message : 'Falha ao carregar planejamento');
+                    this.render();
+                    return;
+                }
+                this.setStatus('ready');
+                this.render();
+            },
+            render() {
+                if (!ui.budgetCard) return;
+                if (this.status === 'loading') {
+                    if (ui.budgetTotalLabel) ui.budgetTotalLabel.textContent = 'Carregando planejamento…';
+                    if (ui.budgetTotalBar) { ui.budgetTotalBar.style.width = '15%'; ui.budgetTotalBar.className = 'budget-bar-fill bg-indigo-200'; }
+                    if (ui.budgetCategoryList) ui.budgetCategoryList.innerHTML = '<p class="text-gray-500 text-xs">Carregando categorias…</p>';
+                    if (ui.planningGoalsList) ui.planningGoalsList.innerHTML = '<p class="text-gray-500 text-xs">Carregando metas…</p>';
+                    if (ui.planningAlerts) ui.planningAlerts.innerHTML = '<p class="text-gray-500">Carregando planejamento…</p>';
+                    return;
+                }
+                if (this.status === 'error') {
+                    const retryBtn = '<button class="text-blue-600 text-xs underline" onclick="window.App && App.planning && App.planning.refresh()">Recarregar</button>';
+                    const msg = this.lastError || 'Não foi possível carregar o planejamento.';
+                    if (ui.budgetTotalLabel) ui.budgetTotalLabel.textContent = 'Erro ao carregar planejamento';
+                    if (ui.budgetTotalBar) { ui.budgetTotalBar.style.width = '0%'; ui.budgetTotalBar.className = 'budget-bar-fill bg-red-200'; }
+                    if (ui.budgetCategoryList) ui.budgetCategoryList.innerHTML = `<p class="text-red-500 text-xs">${escapeHtml(msg)}</p><div class="mt-1">${retryBtn}</div>`;
+                    if (ui.planningGoalsList) ui.planningGoalsList.innerHTML = `<p class="text-red-500 text-xs">${escapeHtml(msg)}</p><div class="mt-1">${retryBtn}</div>`;
+                    if (ui.planningAlerts) ui.planningAlerts.innerHTML = `<div class="alert-row"><span class="material-symbols-outlined text-xs text-red-600" style="font-size:14px">error</span><span>${escapeHtml(msg)}</span><span class="ml-2">${retryBtn}</span></div>`;
+                    return;
+                }
+                const monthKey = this.monthKey(state.currentDate);
+                const aggs = aggregates.get(state.currentDate);
+                const status = this.computeBudgetStatus(monthKey, aggs);
+
+                if (ui.budgetTotalLabel) ui.budgetTotalLabel.textContent = `${formatCurrency(status.actualTotal)} / ${formatCurrency(status.budget.totalExpensesBudget || 0)}`;
+                if (ui.budgetTotalBar) {
+                    const pct = Math.min(120, Math.max(0, Math.round(status.ratioTotal * 100)));
+                    ui.budgetTotalBar.style.width = `${pct}%`;
+                    ui.budgetTotalBar.classList.remove('bg-green-500','bg-yellow-400','bg-red-500','bg-indigo-500');
+                    if (status.ratioTotal >= 1) ui.budgetTotalBar.classList.add('bg-red-500');
+                    else if (status.ratioTotal >= 0.8) ui.budgetTotalBar.classList.add('bg-yellow-400');
+                    else ui.budgetTotalBar.classList.add('bg-green-500');
+                }
+
+                if (ui.budgetCategoryList) {
+                    const top = status.categories.slice(0, 5);
+                    if (!top.length) {
+                        ui.budgetCategoryList.innerHTML = '<p class="text-gray-500 text-xs">Nenhuma despesa registrada.</p>';
+                    } else {
+                        ui.budgetCategoryList.innerHTML = top.map(item => {
+                            const barClass = item.ratio >= 1 ? 'bg-red-500' : (item.ratio >= 0.9 ? 'bg-yellow-400' : 'bg-indigo-500');
+                            const label = item.planned > 0 ? `${formatCurrency(item.spent)} / ${formatCurrency(item.planned)}` : `${formatCurrency(item.spent)} (sem orçamento)`;
+                            return `
+                                <div class="space-y-1">
+                                    <div class="budget-row">
+                                        <span class="budget-label">${escapeHtml(item.cat)}</span>
+                                        <span class="budget-value">${label}</span>
+                                    </div>
+                                    <div class="budget-bar">
+                                        <div class="budget-bar-fill ${barClass}" style="width:${item.pct}%"></div>
+                                    </div>
+                                </div>`;
+                        }).join('');
+                    }
+                }
+
+                if (ui.planningGoalsList) {
+                    const goals = this.getActiveGoals(3);
+                    if (!goals.length) {
+                        ui.planningGoalsList.innerHTML = '<p class="text-gray-500 text-xs">Nenhuma meta ativa.</p>';
+                    } else {
+                        ui.planningGoalsList.innerHTML = goals.map(g => {
+                            const ratio = g.targetAmount > 0 ? Math.min(120, Math.max(0, Math.round((g.currentAmount / g.targetAmount) * 100))) : 0;
+                            const barClass = ratio >= 100 ? 'bg-green-500' : (ratio >= 75 ? 'bg-yellow-400' : 'bg-indigo-500');
+                            return `
+                                <div class="space-y-1">
+                                    <div class="budget-row">
+                                        <span class="budget-label">${escapeHtml(g.title)}</span>
+                                        <span class="budget-value">${formatCurrency(g.currentAmount)} / ${formatCurrency(g.targetAmount)}</span>
+                                    </div>
+                                    <div class="budget-bar">
+                                        <div class="budget-bar-fill ${barClass}" style="width:${ratio}%"></div>
+                                    </div>
+                                </div>`;
+                        }).join('');
+                    }
+                }
+
+                if (ui.planningAlerts) {
+                    if (!status.alerts.length) ui.planningAlerts.innerHTML = '<p class="text-gray-500">Tudo certo com o planejamento deste mês.</p>';
+                    else ui.planningAlerts.innerHTML = status.alerts.map(msg => `<div class="alert-row"><span class="material-symbols-outlined text-xs text-yellow-600" style="font-size:14px">warning</span><span>${escapeHtml(msg)}</span></div>`).join('');
+                }
+            },
+            markDirty(date = state.currentDate) {
+                aggregates.markDirty(date);
             }
         };
 
@@ -7477,14 +7548,11 @@ const firebaseConfig = {
                 // Persist normalized settings in background
                 storage.saveData(state.appData).catch(() => {});
             } catch(e) { /* non-fatal */ }
-            // Ensure planning defaults exist and current month has a budget entry
-            try {
-                planning.ensureSettingsDefaults();
-                planning.ensureMonthBudget(state.currentDate);
-            } catch (e) { console.error('planning defaults init', e); }
+            try { state.user = (firebase.auth && firebase.auth().currentUser) || state.user || null; } catch (_) {}
             // console.debug("Dados prontos para uso na aplicação:", state.appData);
             mapUI();
             bindEvents();
+            try { planning.refresh(state.currentDate); } catch (e) { console.error('planning init refresh', e); }
             // Migrate any existing VR income items into a dedicated vrLedger per month
             try {
                 Object.keys(state.appData.data).forEach(year => {
@@ -7634,6 +7702,9 @@ const firebaseConfig = {
                 'monthly-report-btn', 'annual-report-btn', 'monthly-report-modal', 'annual-report-modal',
                 'desktop-dashboard-btn', 'desktop-creditcards-btn',
                 'budget-card', 'budget-edit-btn', 'budget-total-bar', 'budget-total-label', 'budget-category-list', 'planning-goals-list', 'planning-alerts',
+                'budget-modal', 'budget-modal-total', 'budget-modal-categories', 'budget-modal-save', 'budget-modal-cancel', 'budget-modal-close',
+                'planning-goal-create-btn', 'planning-goal-modal', 'planning-goal-title', 'planning-goal-type', 'planning-goal-target', 'planning-goal-current', 'planning-goal-deadline', 'planning-goal-save', 'planning-goal-cancel', 'planning-goal-modal-close',
+                'goal-modal', 'goal-form', 'goal-id', 'goal-name', 'goal-amount', 'close-goal-modal-btn',
                 'expenses-filter-btn', 'expenses-filter-popover', 'filter-payment-method', 'filter-spending-type', 'filter-category', 'filter-type', 'filter-recurring', 'filter-installment', 'filter-apply-btn', 'filter-clear-btn',
                 'close-monthly-report-btn', 'close-annual-report-btn', 'add-goal-btn', 'goal-modal', 'close-goal-modal-btn',
                 'goal-form', 'goals-container', 'financing-section'
@@ -8897,86 +8968,15 @@ const firebaseConfig = {
 
         function renderBudgetCard() {
             if (!ui.budgetCard) return;
-            const budget = planning.ensureMonthBudget(state.currentDate);
-            const actuals = planning.getActuals(state.currentDate);
-            const goalsSnapshot = planning.buildGoals(state.currentDate);
-            const alerts = planning.buildAlerts({ budget, actuals, goals: goalsSnapshot });
-
-            // Total budget vs executed
-            if (ui.budgetTotalLabel) ui.budgetTotalLabel.textContent = `${formatCurrency(actuals.total)} / ${formatCurrency(budget.total || 0)}`;
-            if (ui.budgetTotalBar) {
-                const ratio = budget.total > 0 ? (actuals.total / budget.total) : 0;
-                const pct = Math.min(120, Math.max(0, Math.round(ratio * 100)));
-                ui.budgetTotalBar.style.width = `${pct}%`;
-                ui.budgetTotalBar.classList.remove('bg-green-500','bg-yellow-400','bg-red-500','bg-indigo-500');
-                if (ratio >= 1) ui.budgetTotalBar.classList.add('bg-red-500');
-                else if (ratio >= 0.85) ui.budgetTotalBar.classList.add('bg-yellow-400');
-                else ui.budgetTotalBar.classList.add('bg-green-500');
-            }
-
-            // Top 5 categories
-            if (ui.budgetCategoryList) {
-                const entries = planning.topCategories(actuals, 5);
-                if (!entries.length) {
-                    ui.budgetCategoryList.innerHTML = '<p class="text-gray-500 text-xs">Nenhuma despesa registrada.</p>';
-                } else {
-                    ui.budgetCategoryList.innerHTML = entries.map(({ cat, value }) => {
-                        const catBudget = Number((budget.categories || {})[cat] || 0);
-                        const ratio = catBudget > 0 ? (value / catBudget) : 1;
-                        const pct = Math.min(120, Math.max(0, Math.round((catBudget > 0 ? (value / catBudget) : 1) * 100)));
-                        const barClass = ratio >= 1 ? 'bg-red-500' : (ratio >= 0.9 ? 'bg-yellow-400' : 'bg-indigo-500');
-                        const budgetLabel = catBudget > 0 ? `${formatCurrency(value)} / ${formatCurrency(catBudget)}` : `${formatCurrency(value)} (sem orçamento)`;
-                        return `
-                            <div class="space-y-1">
-                                <div class="budget-row">
-                                    <span class="budget-label">${escapeHtml(cat)}</span>
-                                    <span class="budget-value">${budgetLabel}</span>
-                                </div>
-                                <div class="budget-bar">
-                                    <div class="budget-bar-fill ${barClass}" style="width:${pct}%"></div>
-                                </div>
-                            </div>`;
-                    }).join('');
-                }
-            }
-
-            // Goals snapshot
-            if (ui.planningGoalsList) {
-                if (!goalsSnapshot.length) {
-                    ui.planningGoalsList.innerHTML = '<p class="text-gray-500 text-xs">Nenhuma meta automática para este mês.</p>';
-                } else {
-                    ui.planningGoalsList.innerHTML = goalsSnapshot.map(g => {
-                        const pct = g.target > 0 ? Math.min(120, Math.max(0, Math.round((g.current / g.target) * 100))) : 100;
-                        const barClass = g.percent >= 100 ? 'bg-green-500' : (g.percent >= 75 ? 'bg-yellow-400' : 'bg-indigo-500');
-                        return `
-                            <div class="space-y-1">
-                                <div class="budget-row">
-                                    <span class="budget-label">${escapeHtml(g.title)}${g.hint ? ` <span class="text-gray-400">(${escapeHtml(g.hint)})</span>` : ''}</span>
-                                    <span class="budget-value">${formatCurrency(g.current)} / ${formatCurrency(g.target)}</span>
-                                </div>
-                                <div class="budget-bar">
-                                    <div class="budget-bar-fill ${barClass}" style="width:${pct}%"></div>
-                                </div>
-                            </div>`;
-                    }).join('');
-                }
-            }
-
-            // Alerts
-            if (ui.planningAlerts) {
-                if (!alerts.length) {
-                    ui.planningAlerts.innerHTML = '<p class="text-gray-500">Tudo certo com o planejamento deste mês.</p>';
-                } else {
-                    ui.planningAlerts.innerHTML = alerts.map(msg => `<div class="alert-row"><span class="material-symbols-outlined text-xs text-yellow-600" style="font-size:14px">warning</span><span>${escapeHtml(msg)}</span></div>`).join('');
-                }
-            }
+            try { planning.render(); } catch (e) { console.error('renderBudgetCard', e); }
         }
 
         // Lightweight refresh after transaction changes: update KPIs, budget card and just the impacted table
         function refreshAfterTransaction(type) {
             try { aggregates.markDirty(state.currentDate); } catch (_) {}
             updateKPIs();
-            renderBudgetCard();
+            // Fintech refresh: reuse cached budgets/goals and fresh aggregates without extra RTDB reads
+            try { planning.render(); } catch (e) { console.error('planning render after transaction', e); }
             if (type === 'expenses') renderExpenseTable();
             else if (type === 'incomes') renderIncomeTable();
             else if (type === 'savings') renderSavingsTable();
@@ -8986,18 +8986,19 @@ const firebaseConfig = {
 
         async function promptBudgetEdit() {
             try {
-                const current = planning.ensureMonthBudget(state.currentDate);
-                const input = prompt('Orçamento total de despesas para este mês (R$):', current.total || '');
+                const monthKey = planning.monthKey(state.currentDate);
+                const current = planning.getCachedBudget(monthKey) || await planning.loadBudget(monthKey);
+                const input = prompt('Orçamento total de despesas para este mês (R$):', (current && current.totalExpensesBudget) ? current.totalExpensesBudget : '');
                 if (input === null) return;
                 const val = parseLocaleNumber(input);
                 if (!Number.isFinite(val) || val <= 0) {
                     showToast('Valor de orçamento inválido.', 'bg-red-600');
                     return;
                 }
-                await planning.setMonthBudget(state.currentDate, { total: Math.round((val + Number.EPSILON) * 100) / 100 });
-                planning.markDirty(state.currentDate);
+                const totalExpensesBudget = Math.round((val + Number.EPSILON) * 100) / 100;
+                await planning.saveBudget(monthKey, { ...current, totalExpensesBudget, categories: (current && current.categories) || {} });
+                await planning.refresh(state.currentDate);
                 showToast('Orçamento do mês atualizado.', 'bg-green-600');
-                renderBudgetCard();
             } catch (e) {
                 console.error('promptBudgetEdit', e);
                 showToast('Falha ao atualizar orçamento.', 'bg-red-600');
@@ -11697,12 +11698,14 @@ const firebaseConfig = {
         function goToDate(date) {
             state.currentDate = new Date(date.getFullYear(), date.getMonth(), 1);
             render();
+            try { planning.refresh(state.currentDate, { silent: false }); } catch (e) { console.error('planning refresh goToDate', e); }
         }
 
         function changeMonth(direction) {
             state.currentDate.setMonth(state.currentDate.getMonth() + direction);
             render();
-               }
+            try { planning.refresh(state.currentDate, { silent: false }); } catch (e) { console.error('planning refresh changeMonth', e); }
+        }
 
         // Jump to the month of the last installment of a financing/installment group
         function goToLastInstallment({ financingId = null, installmentId = null } = {}) {
@@ -14219,6 +14222,7 @@ const firebaseConfig = {
             state,
             model,
             migrations,
+            planning,
             // VR helpers
             openVRUsageEdit,
             closeVRUsageModal,

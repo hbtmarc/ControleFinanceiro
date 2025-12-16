@@ -2302,8 +2302,6 @@
                 padding: 0 !important;
                 background: transparent !important;
             }
-            /* Each cell inside mobile row should be hidden except the full-width mobile-row-cell (rendered by JS with colspan). */
-            .responsive-table td { display: none !important; }
             .mobile-row-cell { display: block !important; width: 100% !important; padding: 8px 10px !important; box-sizing: border-box !important; background: white !important; border-radius: 8px; border: 1px solid rgba(0,0,0,0.04); }
             .mobile-row { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-width:0; }
             .mobile-row .mobile-left { min-width:0; overflow:hidden; }
@@ -2459,9 +2457,6 @@
             .overflow-x-auto { overflow-x: hidden !important; }
             /* Make action buttons larger for touch (applies in mobile and desktop when table collapses) */
             .responsive-table td.actions-cell button, .responsive-table td.actions-cell .edit-btn, .responsive-table td.actions-cell .delete-btn { width:44px; height:44px; padding:8px; display:inline-flex !important; align-items:center; justify-content:center; }
-            /* Add clearer spacing for table rows on mobile */
-            .responsive-table tr { padding: 0.6rem 0 !important; }
-            .responsive-table td { padding: 0.6rem 0.6rem !important; }
         }
     </style>
     <style>

@@ -3477,6 +3477,31 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Linha do tempo do mês -->
+                        <div class="modern-card p-4 animate-fade-in" id="timeline-card">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-indigo-600">timeline</span>
+                                    <h3 class="font-semibold text-gray-800">Linha do tempo</h3>
+                                </div>
+                                <span class="text-xs text-gray-500">Próximos 14 dias</span>
+                            </div>
+                            <div id="timeline-list" class="space-y-3 text-sm text-gray-800"></div>
+                        </div>
+                        <!-- Alertas de vencimento -->
+                        <div class="modern-card p-4 animate-fade-in" id="due-card">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-amber-600">event_upcoming</span>
+                                    <h3 class="font-semibold text-gray-800">Vencimentos (7 dias)</h3>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-600">
+                                    <span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700 font-semibold" id="due-total-pay">R$ 0,00</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-semibold" id="due-total-receive">R$ 0,00</span>
+                                </div>
+                            </div>
+                            <div id="due-alerts-list" class="space-y-2 text-sm text-gray-800"></div>
+                        </div>
                         <!-- Planejamento mensal: orçamento e metas -->
                         <style id="budget-card-tweaks">
                         #budget-card { --card-gap: 10px; }
@@ -3864,6 +3889,7 @@
                                     <div class="modern-input-group">
                                         <span class="modern-input-icon material-symbols-outlined">credit_card</span>
                                         <select id="payment-method" class="modern-input modern-select">
+                                            <option value="" selected disabled>Selecione...</option>
                                         </select>
                                     </div>
                                     <p class="modern-form-description">Como foi paga a despesa?</p>
@@ -3888,7 +3914,9 @@
                                     </label>
                                     <div class="modern-input-group">
                                         <span class="modern-input-icon material-symbols-outlined">category</span>
-                                        <select id="category-expense" class="modern-input modern-select"></select>
+                                        <select id="category-expense" class="modern-input modern-select">
+                                            <option value="" selected disabled>Selecione...</option>
+                                        </select>
                                     </div>
                                     <p class="modern-form-description">Classifique sua despesa para melhor controle</p>
                                     <p id="category-hint" class="text-xs text-gray-500 mt-1 hidden" aria-hidden="true">&nbsp;</p>
@@ -4615,8 +4643,10 @@
             function populateSelect(selectId, items, iconSpanSelector) {
                 const sel = document.getElementById(selectId);
                 if (!sel) return;
-                // clear
+                // Preserve existing placeholder (e.g., "Selecione...")
+                const placeholderOpt = Array.from(sel.options || []).find(o => o.value === '' || o.disabled);
                 sel.innerHTML = '';
+                if (placeholderOpt) sel.appendChild(placeholderOpt.cloneNode(true));
                 items.forEach(it => {
                     const opt = document.createElement('option');
                     opt.value = it.value;
@@ -5787,15 +5817,6 @@
             }
         };
 
-        function prepareTransaction(type, tx) {
-            const normalized = model.normalizeTransaction({ ...tx }, type);
-            const errors = model.validateTransaction(normalized, type);
-            if (errors.length) {
-                try { setTransactionError(errors.join(' ')); } catch (_) {}
-                return null;
-            }
-            return normalized;
-        }
 
         // auto-calculation and validation wiring
         document.addEventListener('DOMContentLoaded', function(){
@@ -7146,6 +7167,28 @@ const firebaseConfig = {
             },
             markDirty(date = state.currentDate) {
                 aggregates.markDirty(date);
+            },
+            // Lightweight runtime bump to avoid full recompute on every new expense
+            bumpRuntime(date = state.currentDate, category = '', amount = 0, payment = null, kind = 'expenses') {
+                try {
+                    aggregates.markDirty(date);
+                    const key = aggregates.monthKey(date);
+                    const cache = aggregates.runtime[key];
+                    const delta = Number(amount) || 0;
+                    if (!cache || !delta) return;
+                    const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+                    if (kind === 'expenses') {
+                        cache.totalExpenses = round2((cache.totalExpenses || 0) + delta);
+                        const cat = (category || 'Sem categoria').toString();
+                        cache.byCategory = cache.byCategory || {};
+                        cache.byCategory[cat] = round2((cache.byCategory[cat] || 0) + delta);
+                        if (payment) {
+                            const payLabel = (typeof getPaymentLabel === 'function') ? getPaymentLabel(payment) : payment;
+                            cache.byPayment = cache.byPayment || {};
+                            cache.byPayment[payLabel] = round2((cache.byPayment[payLabel] || 0) + delta);
+                        }
+                    }
+                } catch (e) { console.error('planning.bumpRuntime error', e); }
             }
         };
 
@@ -7496,6 +7539,214 @@ const firebaseConfig = {
             clearSimulation() {
                 this.simulation = null;
                 this.refresh(state.currentDate);
+            }
+        };
+
+        // Timeline module: builds day-by-day cashflow view for the next 14 days (or rest of month)
+        const timeline = {
+            horizonDays: 14,
+            lastView: [],
+            normalizeDate(val) {
+                const d = val ? new Date(val) : null;
+                return (d && !isNaN(d.getTime())) ? new Date(d.getFullYear(), d.getMonth(), d.getDate()) : null;
+            },
+            endOfMonth(d = new Date()) {
+                return new Date(d.getFullYear(), d.getMonth() + 1, 0);
+            },
+            build(monthKey = planning.monthKey(state.currentDate), forecastExplain = null) {
+                const md = getCurrentMonthData(state.currentDate) || {};
+                const today = this.normalizeDate(new Date());
+                if (!today) return [];
+                const horizonEnd = new Date(Math.min(
+                    today.getTime() + (this.horizonDays - 1) * 24 * 60 * 60 * 1000,
+                    this.endOfMonth(state.currentDate).getTime()
+                ));
+
+                const dayBuckets = new Map();
+                const addItem = (item, type) => {
+                    const d = this.normalizeDate(item.date || item.createdAt);
+                    if (!d) return;
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    if (d < today || d > horizonEnd) return; // only upcoming window
+                    const isCurrentMonth = key.startsWith(monthKey);
+                    if (!isCurrentMonth) return;
+                    const bucket = dayBuckets.get(key) || { date: d, items: [], dayNet: 0 };
+                    const amount = Number(item.amount) || 0;
+                    const label = (item.description || item.category || item.type || 'Item').toString();
+                    const isPaid = (typeof item.isPaid === 'boolean') ? item.isPaid : (d < today);
+                    const signed = type === 'income' ? amount : -amount;
+                    bucket.items.push({ label, amount: Math.abs(amount), type, isPaid });
+                    bucket.dayNet = Math.round(((bucket.dayNet + signed) + Number.EPSILON) * 100) / 100;
+                    dayBuckets.set(key, bucket);
+                };
+
+                (md.incomes || []).forEach(i => addItem(i, 'income'));
+                (md.expenses || []).forEach(e => addItem(e, 'expense'));
+                (md.savings || []).forEach(s => addItem(s, 'savings'));
+
+                const days = Array.from(dayBuckets.values()).sort((a, b) => a.date - b.date);
+                const startingBalance = forecastExplain && typeof forecastExplain.projectedBalance === 'number'
+                    ? forecastExplain.projectedBalance
+                    : 0;
+                let running = startingBalance;
+                days.forEach(day => {
+                    running = Math.round(((running + day.dayNet) + Number.EPSILON) * 100) / 100;
+                    day.runningBalance = running;
+                    day.items.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+                    day.topItems = day.items.slice(0, 3);
+                });
+                this.lastView = days;
+                return days;
+            },
+            render(view) {
+                const container = document.getElementById('timeline-list');
+                if (!container) return;
+                const list = Array.isArray(view) ? view : [];
+                if (!list.length) {
+                    container.innerHTML = '<p class="text-gray-500 text-xs">Sem lançamentos nos próximos dias.</p>';
+                    return;
+                }
+                const frag = document.createDocumentFragment();
+                list.forEach(day => {
+                    const row = document.createElement('div');
+                    row.className = 'p-3 rounded-lg border border-gray-200 bg-gray-50';
+                    const dateLabel = day.date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                    const impactClass = day.dayNet >= 0 ? 'text-green-700' : 'text-red-700';
+                    const balanceClass = day.runningBalance >= 0 ? 'text-green-700' : 'text-red-700';
+                    const itemsHtml = day.topItems.map(item => {
+                        const badge = item.type === 'income' ? 'Entrada' : 'Saída';
+                        const badgeCls = item.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                        return `<div class="flex items-center justify-between text-xs text-gray-700">
+                            <span class="flex items-center gap-2 truncate"><span class="px-2 py-0.5 rounded-full ${badgeCls}">${badge}</span><span class="truncate">${escapeHtml(item.label)}</span></span>
+                            <span class="font-semibold ${item.type === 'income' ? 'text-green-700' : 'text-red-700'}">${formatCurrency(item.amount)}</span>
+                        </div>`;
+                    }).join('');
+
+                    row.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-gray-600">${dateLabel}</span>
+                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-gray-200 text-gray-700">${day.items.length} itens</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs ${impactClass}">${formatCurrency(day.dayNet)}</div>
+                                <div class="text-[11px] ${balanceClass}">Saldo acumulado ${formatCurrency(day.runningBalance)}</div>
+                            </div>
+                        </div>
+                        <div class="mt-2 space-y-1">${itemsHtml}</div>
+                    `;
+                    frag.appendChild(row);
+                });
+                container.innerHTML = '';
+                container.appendChild(frag);
+            },
+            refresh(date = state.currentDate) {
+                const view = this.build(planning.monthKey(date), forecast.explain());
+                this.render(view);
+                return view;
+            }
+        };
+
+        // Due alerts: upcoming 7-day payables/receivables summary (no persistence)
+        const dueAlerts = {
+            horizonDays: 7,
+            lastView: null,
+            normalizeDate(val) {
+                const d = val ? new Date(val) : null;
+                return (d && !isNaN(d.getTime())) ? new Date(d.getFullYear(), d.getMonth(), d.getDate()) : null;
+            },
+            endOfHorizon(baseDate) {
+                const base = this.normalizeDate(baseDate) || new Date();
+                const end = new Date(base.getTime() + (this.horizonDays - 1) * 24 * 60 * 60 * 1000);
+                const eom = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+                return end < eom ? end : eom;
+            },
+            build(date = state.currentDate, forecastExplain = null) {
+                const md = getCurrentMonthData(date) || {};
+                const monthKey = planning.monthKey(date);
+                const today = this.normalizeDate(new Date());
+                if (!today) return { pay: 0, receive: 0, alerts: [], items: [] };
+                const end = this.endOfHorizon(today);
+
+                const items = [];
+                const pushItem = (src, type) => {
+                    const d = this.normalizeDate(src.date || src.createdAt);
+                    if (!d || d < today || d > end) return;
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    if (!key.startsWith(monthKey)) return;
+                    const amount = Math.abs(Number(src.amount) || 0);
+                    if (!amount) return;
+                    const label = (src.description || src.category || src.type || 'Item').toString();
+                    items.push({ label, amount, type, date: d });
+                };
+
+                (md.incomes || []).forEach(i => pushItem(i, 'income'));
+                (md.expenses || []).forEach(e => pushItem(e, 'expense'));
+                (md.savings || []).forEach(s => pushItem(s, 'expense'));
+
+                const pay = items.filter(i => i.type !== 'income').reduce((s, i) => s + i.amount, 0);
+                const receive = items.filter(i => i.type === 'income').reduce((s, i) => s + i.amount, 0);
+
+                // Top items by absolute amount (capped to 3 for rendering)
+                const topItems = [...items].sort((a, b) => b.amount - a.amount).slice(0, 3);
+
+                const alerts = [];
+                // Tomorrow alerts
+                const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+                const tomorrowKey = `${tomorrow.getFullYear()}-${tomorrow.getMonth()}-${tomorrow.getDate()}`;
+                const dueTomorrow = items.filter(i => {
+                    const d = i.date;
+                    return d && `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}` === tomorrowKey;
+                }).sort((a, b) => b.amount - a.amount);
+                if (dueTomorrow.length) {
+                    const it = dueTomorrow[0];
+                    alerts.push(`Amanhã vence ${it.label} (${formatCurrency(it.amount)})`);
+                }
+
+                if (pay > 0) alerts.push(`Semana pesada: ${formatCurrency(pay)} em saídas`);
+                if (receive > 0 && alerts.length < 3) alerts.push(`Entradas previstas: ${formatCurrency(receive)}`);
+                if (alerts.length < 3 && items.length > 0) {
+                    const endLabel = end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                    alerts.push(`Até ${endLabel}: ${items.length} vencimentos`);
+                }
+
+                const cappedAlerts = alerts.slice(0, 3);
+                this.lastView = { pay, receive, alerts: cappedAlerts, items: topItems, windowEnd: end };
+                return this.lastView;
+            },
+            render(view) {
+                const totalPayEl = document.getElementById('due-total-pay');
+                const totalReceiveEl = document.getElementById('due-total-receive');
+                const listEl = document.getElementById('due-alerts-list');
+                if (totalPayEl) totalPayEl.textContent = formatCurrency(view && view.pay ? view.pay : 0);
+                if (totalReceiveEl) totalReceiveEl.textContent = formatCurrency(view && view.receive ? view.receive : 0);
+                if (!listEl) return;
+
+                if (!view || (!view.alerts && !view.items)) {
+                    listEl.innerHTML = '<p class="text-gray-500 text-xs">Sem vencimentos próximos.</p>';
+                    return;
+                }
+
+                const fragments = [];
+                (view.alerts || []).forEach(msg => {
+                    fragments.push(`<div class="flex items-center gap-2 text-xs text-gray-700"><span class="material-symbols-outlined text-amber-600" style="font-size:16px">notification_important</span><span>${escapeHtml(msg)}</span></div>`);
+                });
+                (view.items || []).forEach(item => {
+                    const badgeCls = item.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                    const badgeLabel = item.type === 'income' ? 'Entrada' : 'Saída';
+                    const dateStr = item.date ? item.date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
+                    fragments.push(`<div class="flex items-center justify-between text-xs text-gray-700 border border-gray-100 rounded-md px-2 py-1">
+                        <span class="flex items-center gap-2 truncate"><span class="px-2 py-0.5 rounded-full ${badgeCls}">${badgeLabel}</span><span class="truncate">${escapeHtml(item.label)}</span></span>
+                        <span class="flex items-center gap-2"><span class="text-[11px] text-gray-500">${dateStr}</span><span class="font-semibold ${item.type === 'income' ? 'text-green-700' : 'text-red-700'}">${formatCurrency(item.amount)}</span></span>
+                    </div>`);
+                });
+
+                listEl.innerHTML = fragments.length ? fragments.join('') : '<p class="text-gray-500 text-xs">Sem vencimentos próximos.</p>';
+            },
+            refresh(date = state.currentDate) {
+                const view = this.build(date, forecast.explain());
+                this.render(view);
+                return view;
             }
         };
 
@@ -11376,6 +11627,8 @@ const firebaseConfig = {
 
                 // Projected balance (consider all expenses but subtract card anticipations so invoice totals are used)
                 try { forecast.refresh(state.currentDate); } catch(e) { console.error('forecast refresh (kpis)', e); }
+                try { timeline.refresh(state.currentDate); } catch(e) { console.error('timeline refresh (kpis)', e); }
+                try { dueAlerts.refresh(state.currentDate); } catch(e) { console.error('dueAlerts refresh (kpis)', e); }
 
                 // Percentual de cada despesa do Mês (agrupado por Descrição, soma valores e conta ocorríªncias)
                 const expenses = monthData.expenses || [];
@@ -12085,10 +12338,13 @@ const firebaseConfig = {
                 try { changeView('actions'); } catch(e) {}
                 // Keep only one Actions panel open at a time
                 hideActionsPanels('transaction-modal');
-                // Reset and populate
-                if (ui.transactionForm) ui.transactionForm.reset();
-                clearTransactionError();
-                if (document.getElementById('transaction-id')) document.getElementById('transaction-id').value = '';
+                // Reset only for new entries so edits keep their data
+                if (!id) {
+                    resetTransactionForm();
+                } else {
+                    try { clearTransactionError(); } catch(_) {}
+                }
+                if (!id && document.getElementById('transaction-id')) document.getElementById('transaction-id').value = '';
                 populateDropdowns();
                 toggleTransactionType(type || 'expenses');
                 // If editing, populate fields
@@ -12097,8 +12353,7 @@ const firebaseConfig = {
                     populateModal(type, id);
                 } else {
                     document.getElementById('modal-title').textContent = 'Nova transação';
-                    // Apply session-aware defaults: prefer last used in-session values when present
-                    if (!prefill) prepareModalForNextEntry();
+                    // Keep fields blank unless caller provides a prefill
                 }
 
                 // Show inline section (no modal/overlay)
@@ -12236,17 +12491,28 @@ const firebaseConfig = {
                 const goalsSorted = sortStrings(goals.map(g => g.name || ''));
                 // Build payment method options from mergedPayments so VR is always present
                 if (ui.paymentMethod) {
-                    ui.paymentMethod.innerHTML = paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
+                    const current = ui.paymentMethod.value || '';
+                    const placeholder = `<option value="" disabled ${current ? '' : 'selected'}>Selecione...</option>`;
+                    ui.paymentMethod.innerHTML = placeholder + paymentsSorted.map(n => `<option value="${n}">${n}</option>`).join('');
+                    // Preserve selection when editing; otherwise keep placeholder selected
+                    if (current) ui.paymentMethod.value = current;
                     // If a visual icon-select overlay exists, refresh its list so the visible UI stays in sync
                     try { if (typeof ui.paymentMethod._refreshIconSelect === 'function') ui.paymentMethod._refreshIconSelect(); } catch(e){}
                     // Ensure recipient visibility reflects the (possibly new) selected payment
                     try { if (window.toggleRecipientForPayment) window.toggleRecipientForPayment(ui.paymentMethod.value); } catch(e){}
                 }
-                if (ui.categoryExpense) ui.categoryExpense.innerHTML = expenseCatsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
+                if (ui.categoryExpense) {
+                    const current = ui.categoryExpense.value || '';
+                    const placeholder = `<option value="" disabled ${current ? '' : 'selected'}>Selecione...</option>`;
+                    ui.categoryExpense.innerHTML = placeholder + expenseCatsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
+                    if (current) ui.categoryExpense.value = current;
+                }
                 if (ui.categorySaving) {
+                    const current = ui.categorySaving.value || '';
                     let savingOptions = savingCatsSorted.map(c => `<option value="${c}">${c}</option>`);
                     if (goalsSorted.length) savingOptions = savingOptions.concat(goalsSorted.map(g => `<option value="${g}">${g} (Meta)</option>`));
-                    ui.categorySaving.innerHTML = savingOptions.join('');
+                    ui.categorySaving.innerHTML = [`<option value="" disabled ${current ? '' : 'selected'}>Selecione...</option>`].concat(savingOptions).join('');
+                    if (current) ui.categorySaving.value = current;
                 }
                 // attempt to refresh other icon-select overlays if present
                 try { if (ui.categoryExpense && typeof ui.categoryExpense._refreshIconSelect === 'function') ui.categoryExpense._refreshIconSelect(); } catch(e){}
@@ -12742,50 +13008,65 @@ const firebaseConfig = {
             } catch (e) { console.error('toggleInstallmentSection', e); }
         }
 
-        // Reset transaction modal inputs to sensible defaults
-        function resetTransactionModalDefaults() {
+        // Reset transaction modal inputs to a clean state (no inherited selections)
+        function resetTransactionForm(options = {}) {
+            const opts = options || {};
+            const keepDate = !!opts.keepDate;
             try {
-                // Default payment: first debit method if available, else first paymentMethod
-                const payments = (state.appData.settings && state.appData.settings.paymentMethods) || [];
-                let defaultPayment = '';
-                try {
-                    const debit = payments.find(p => (p.type || '').toString().toLowerCase() === 'debit');
-                    if (debit) defaultPayment = debit.name;
-                } catch(e) {}
-                if (!defaultPayment && payments.length) defaultPayment = payments[0].name || '';
-                // Fallbacks
-                if (!defaultPayment) defaultPayment = 'Pix';
-                if (document.getElementById('payment-method')) document.getElementById('payment-method').value = defaultPayment;
-                // Default category: Contas if exists, else first expense category
-                const expenseCats = (state.appData.settings && state.appData.settings.expenseCategories) || [];
-                let defaultCat = expenseCats.find(c => (c||'').toString().toLowerCase().includes('conta')) || expenseCats[0] || 'Contas';
-                if (document.getElementById('category-expense')) document.getElementById('category-expense').value = defaultCat;
-                // Reset recurring and hide installment/financing fields but do not force-uncheck the checkboxes
-                const recurring = document.getElementById('is-recurring'); if (recurring) recurring.checked = false;
-                const instFields = document.getElementById('installments-fields'); if (instFields) instFields.classList.remove('active');
-                const financFields = document.getElementById('financing-fields'); if (financFields) financFields.classList.remove('active');
-                // Clear description and amount inputs
-                const desc = document.getElementById('description'); if (desc) desc.value = '';
-                const amt = document.getElementById('amount'); if (amt) amt.value = '';
-                // Reset modal-expanded class
-                try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.remove('modal-expanded'); } catch(e){}
-            } catch (e) { console.error('resetTransactionModalDefaults', e); }
+                if (ui.transactionForm) ui.transactionForm.reset();
+            } catch (e) {}
+            try { clearTransactionError(); } catch(_) {}
+            // Clear basic fields
+            const clearField = (id) => { const el = document.getElementById(id); if (el) el.value = ''; };
+            clearField('transaction-id');
+            clearField('description');
+            clearField('amount');
+            if (!keepDate) clearField('transaction-date');
+
+            // Clear selects and refresh icon overlays if present
+            const clearSelect = (id) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = '';
+                    try { if (typeof el._refreshIconSelect === 'function') el._refreshIconSelect(); } catch(_) {}
+                }
+            };
+            clearSelect('payment-method');
+            clearSelect('category-expense');
+            clearSelect('category-saving');
+
+            // Reset toggles/checkboxes and dependent sections
+            ['is-recurring', 'is-installment', 'is-financing'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && 'checked' in el) el.checked = false;
+            });
+            const instFields = document.getElementById('installments-fields'); if (instFields) instFields.classList.remove('active');
+            const financFields = document.getElementById('financing-fields'); if (financFields) financFields.classList.remove('active');
+            if (ui.applyToFuture) ui.applyToFuture.checked = false;
+
+            // Reset expense type to first option if available
+            try {
+                const expType = document.getElementById('expense-type');
+                if (expType && expType.options && expType.options.length) expType.value = expType.options[0].value;
+            } catch (_) {}
+
+            // Clear recipient and hide hint/section
+            try {
+                const recipientWrapper = document.getElementById('payment-recipient-wrapper');
+                const recipientInput = document.getElementById('payment-recipient');
+                const recipientHint = document.getElementById('payment-recipient-hint');
+                if (recipientInput) recipientInput.value = '';
+                if (recipientWrapper) recipientWrapper.classList.add('hidden');
+                if (recipientHint) recipientHint.classList.add('hidden');
+            } catch (_) {}
+
+            // Reset modal-expanded class
+            try { const modal = document.getElementById('transaction-modal'); if (modal) modal.classList.remove('modal-expanded'); } catch(e){}
         }
 
-        // Prepare modal inputs for the next entry: prefer session last-used values when present
-        function prepareModalForNextEntry() {
-            try {
-                // If session has last defaults, use them
-                if (ui.lastTransactionDefaults && typeof ui.lastTransactionDefaults === 'object') {
-                    const d = ui.lastTransactionDefaults;
-                    if (document.getElementById('payment-method') && d.payment) document.getElementById('payment-method').value = d.payment;
-                    if (document.getElementById('category-expense') && d.category) document.getElementById('category-expense').value = d.category;
-                    return;
-                }
-                // otherwise apply global defaults
-                resetTransactionModalDefaults();
-            } catch (e) { console.error('prepareModalForNextEntry', e); }
-        }
+        // Compatibility wrappers
+        function resetTransactionModalDefaults(opts) { resetTransactionForm(opts); }
+        function prepareModalForNextEntry(opts) { resetTransactionForm(opts); }
 
         function populateModal(type, id) {
             try {
@@ -13113,8 +13394,12 @@ const firebaseConfig = {
         
     // createInstallments(baseTransaction, count, start) - start: current installment number (default 1)
     async function createInstallments(baseTransaction, count, start = 1) {
-            const normalizedBase = prepareTransaction('expenses', baseTransaction);
-            if (!normalizedBase) return;
+            const prep = prepareTransaction('expenses', baseTransaction);
+            if (!prep.ok) {
+                if (prep.errors && prep.errors.length) try { setTransactionError(prep.errors.join(' ')); } catch(_) {}
+                return;
+            }
+            const normalizedBase = prep.tx;
             const installmentId = generateUUID();
             // If a start/current installment > 1 is provided, the user is registering
             // an in-progress parcel and expects the provided amount to be the
@@ -13169,8 +13454,12 @@ const firebaseConfig = {
         }
 
     async function createFinancing(baseTransaction, total, current) {
-            const normalizedBase = prepareTransaction('expenses', baseTransaction);
-            if (!normalizedBase) return;
+            const prep = prepareTransaction('expenses', baseTransaction);
+            if (!prep.ok) {
+                if (prep.errors && prep.errors.length) try { setTransactionError(prep.errors.join(' ')); } catch(_) {}
+                return;
+            }
+            const normalizedBase = prep.tx;
             const financingId = generateUUID();
             for (let i = current; i <= total; i++) {
                 const installmentDate = new Date(state.currentDate);
@@ -13206,8 +13495,12 @@ const firebaseConfig = {
 
         // Create financing entries for incomes (receivables)
         async function createIncomeFinancing(baseTransaction, total, current) {
-                const normalizedBase = prepareTransaction('incomes', baseTransaction);
-                if (!normalizedBase) return;
+                const prep = prepareTransaction('incomes', baseTransaction);
+                if (!prep.ok) {
+                    if (prep.errors && prep.errors.length) try { setTransactionError(prep.errors.join(' ')); } catch(_) {}
+                    return;
+                }
+                const normalizedBase = prep.tx;
             const financingId = generateUUID();
             for (let i = current; i <= total; i++) {
                 const installmentDate = new Date(state.currentDate);
@@ -13221,8 +13514,12 @@ const firebaseConfig = {
 
         // Create income installments (parcelada) across months when user marks an income as installment
         async function createIncomeInstallments(baseTransaction, count, start = 1) {
-                const normalizedBase = prepareTransaction('incomes', baseTransaction);
-                if (!normalizedBase) return;
+                const prep = prepareTransaction('incomes', baseTransaction);
+                if (!prep.ok) {
+                    if (prep.errors && prep.errors.length) try { setTransactionError(prep.errors.join(' ')); } catch(_) {}
+                    return;
+                }
+                const normalizedBase = prep.tx;
             const installmentId = generateUUID();
             // If start > 1, assume provided amount is per-installment; otherwise divide by count
             let installmentAmount;
@@ -13361,9 +13658,12 @@ const firebaseConfig = {
 
         // funçío principal para salvar (adicionar ou editar)
         async function saveTransaction(transaction, type, id) {
-            const prepared = prepareTransaction(type, transaction);
-            if (!prepared) return;
-            const tx = prepared;
+            const prep = prepareTransaction(type, transaction);
+            if (!prep.ok) {
+                if (prep.errors && prep.errors.length) try { setTransactionError(prep.errors.join(' ')); } catch(_) {}
+                return;
+            }
+            const tx = prep.tx;
             const currentMonthData = getCurrentMonthData();
             if (!Array.isArray(currentMonthData[type])) currentMonthData[type] = [];
 
@@ -13588,6 +13888,39 @@ const firebaseConfig = {
         }
 
         // Ponto de entrada do formulí¡rio
+        // Compat wrapper hoisted for submits; relies on canonical normalize/validate
+        function prepareTransaction(type, tx) {
+            const normalizeFn = (typeof App !== 'undefined' && App.model && typeof App.model.normalizeTransaction === 'function')
+                ? App.model.normalizeTransaction
+                : model.normalizeTransaction;
+            const validateFn = (typeof App !== 'undefined' && App.model && typeof App.model.validateTransaction === 'function')
+                ? App.model.validateTransaction
+                : model.validateTransaction;
+
+            const normalized = normalizeFn({ ...tx }, type);
+            const errors = validateFn(normalized, type) || [];
+            const ok = Array.isArray(errors) ? errors.length === 0 : true;
+            return { tx: normalized, errors: Array.isArray(errors) ? errors : [], ok };
+        }
+
+        // Prefer the visible select when duplicates exist (e.g., mobile/desktop)
+        function resolveSelectValue(ids) {
+            const list = Array.isArray(ids) ? ids : [ids];
+            const candidates = [];
+            list.forEach(id => {
+                if (!id) return;
+                const camel = id.replace(/-./g, m => m[1].toUpperCase());
+                const uiEl = ui && ui[camel];
+                if (uiEl) candidates.push(uiEl);
+                const domEl = document.getElementById(id);
+                if (domEl && !candidates.includes(domEl)) candidates.push(domEl);
+            });
+            const visible = candidates.find(el => el && !el.classList.contains('hidden') && el.offsetParent !== null);
+            const target = visible || candidates.find(Boolean);
+            if (!target) return '';
+            return (target.value || '').toString().trim();
+        }
+
         async function handleFormSubmit(e) {
             e.preventDefault();
             if (state.uiFlags.actionLocked) { showToast('Ação em andamento. Aguarde.', 'bg-yellow-600'); return; }
@@ -13602,18 +13935,26 @@ const firebaseConfig = {
                 isRecurring: (getDom('is-recurring') || {}).checked
             };
 
+            if (type === 'expenses') {
+                transactionData.payment = resolveSelectValue('payment-method');
+                transactionData.category = resolveSelectValue('category-expense');
+                transactionData.type = (document.getElementById('expense-type') || {}).value || '';
+                transactionData.isPaid = false;
+            } else if (type === 'savings') {
+                transactionData.category = resolveSelectValue('category-saving');
+                transactionData.type = 'Reserva';
+            }
+
             if (!id) transactionData.id = generateUUID();
 
-            transactionData = prepareTransaction(type, transactionData);
-            if (!transactionData) return;
+            const prep = prepareTransaction(type, transactionData);
+            if (!prep.ok) {
+                if (prep.errors && prep.errors.length) try { setTransactionError(prep.errors.join(' ')); } catch(_) {}
+                return;
+            }
+            transactionData = prep.tx;
 
             if (type === 'expenses') {
-                Object.assign(transactionData, {
-                    payment: document.getElementById('payment-method').value,
-                    category: document.getElementById('category-expense').value,
-                    type: document.getElementById('expense-type').value,
-                    isPaid: false
-                });
                 // Attach recipient when present
                 try {
                     const pmVal = (transactionData.payment || '').toString();
@@ -13766,7 +14107,7 @@ const firebaseConfig = {
                 }
             } else if (type === 'savings') {
                 // Use selected saving category; goal linking removed (not functional)
-                try { transactionData.category = document.getElementById('category-saving').value; } catch(e) { transactionData.category = '' }
+                try { transactionData.category = transactionData.category || resolveSelectValue('category-saving'); } catch(e) { transactionData.category = '' }
                 delete transactionData.goalId;
             }
 
@@ -14448,6 +14789,8 @@ const firebaseConfig = {
             migrations,
             planning,
             forecast,
+            timeline,
+            dueAlerts,
             // VR helpers
             openVRUsageEdit,
             closeVRUsageModal,

@@ -16,137 +16,6 @@
             z-index: 999999;
             animation: fadeIn 0.5s ease;
         }
-        
-        .login-container {
-            background: white;
-            padding: 3rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 90%;
-            max-width: 400px;
-            animation: slideUp 0.5s ease;
-        }
-        
-        .login-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-        
-        .login-subtitle {
-            font-size: 0.95rem;
-            color: #6b7280;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        .login-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.75rem;
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .login-password-wrap {
-            position: relative;
-        }
-
-        .login-password-wrap .login-input {
-            padding-right: 3rem;
-        }
-
-        .login-password-toggle {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: #6b7280;
-            padding: 0.25rem;
-            line-height: 1;
-        }
-
-        .login-password-toggle:focus {
-            outline: none;
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 0.75rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-        
-        .login-btn:active {
-            transform: translateY(0);
-        }
-
-        .login-secondary-actions {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .login-link-btn {
-            background: transparent;
-            border: none;
-            padding: 0;
-            color: #6b7280;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        .login-link-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .login-options {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            margin-top: -0.5rem;
-            margin-bottom: 1.25rem;
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-
-        .login-option {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            user-select: none;
-            cursor: pointer;
-        }
 
         .login-option input[type="checkbox"] {
             width: 1rem;
@@ -3532,6 +3401,10 @@
                                 <h3 class="font-semibold text-gray-800">Projeções</h3>
                             </div>
                             <div class="space-y-3">
+                                <div class="flex items-center justify-between text-xs text-gray-500">
+                                    <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold">Atual</span>
+                                    <span id="forecast-sim-chip" class="hidden px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold">Com simulação</span>
+                                </div>
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
                                         <div class="w-2 h-2 bg-success-500 rounded-full"></div>
@@ -3554,8 +3427,11 @@
                                     <span id="kpi-projected-expenses" class="text-base font-semibold text-error-600">R$ 0,00</span>
                                 </div>
                                 <div class="space-y-1 mt-3">
-                                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                                        <span class="text-gray-500">Risco</span>
                                         <span id="forecast-risk-badge" class="px-2 py-1 rounded-full bg-gray-200 text-gray-700 font-semibold">Risco</span>
+                                        <span id="forecast-risk-badge-base" class="hidden px-2 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold">Atual</span>
+                                        <span id="forecast-risk-context" class="hidden text-indigo-700 font-semibold">Com simulação</span>
                                         <span class="text-gray-500">Alertas</span>
                                     </div>
                                     <div id="forecast-alerts" class="space-y-1 text-sm text-gray-700"></div>
@@ -3565,6 +3441,39 @@
                                         <span class="px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold">Recomendações</span>
                                     </div>
                                     <div id="forecast-recos" class="space-y-1 text-sm text-gray-700"></div>
+                                </div>
+                                <div id="forecast-sim-block" class="space-y-2 mt-3 pt-3 border-t border-gray-200 hidden">
+                                    <div class="flex items-center gap-2 text-xs text-indigo-700">
+                                        <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold">Com simulação</span>
+                                        <span class="text-gray-500">vs Atual</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Saldo projetado</span>
+                                        <span id="kpi-projected-balance-sim" class="text-base font-semibold text-indigo-600">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Receitas projetadas</span>
+                                        <span id="kpi-projected-income-sim" class="text-base font-semibold text-indigo-600">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Despesas projetadas</span>
+                                        <span id="kpi-projected-expenses-sim" class="text-base font-semibold text-indigo-600">R$ 0,00</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-semibold text-gray-700">Simular lançamento</span>
+                                        <button id="forecast-sim-clear" type="button" class="text-xs text-gray-600 hover:text-gray-800">Limpar simulação</button>
+                                    </div>
+                                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                        <input id="forecast-sim-amount" type="number" step="0.01" min="0" class="border rounded px-2 py-2 text-sm" placeholder="Valor (R$)">
+                                        <select id="forecast-sim-type" class="border rounded px-2 py-2 text-sm">
+                                            <option value="expense">Despesa</option>
+                                            <option value="income">Receita</option>
+                                        </select>
+                                        <input id="forecast-sim-category" type="text" class="border rounded px-2 py-2 text-sm" placeholder="Categoria (opcional)">
+                                    </div>
+                                    <p class="text-xs text-gray-500">Sem salvar; afeta apenas as projeções.</p>
                                 </div>
                             </div>
                         </div>
@@ -7328,7 +7237,19 @@ const firebaseConfig = {
 
         // Lightweight forecast module (no extra RTDB reads). Uses aggregates and planning cache only.
         const forecast = {
+            thresholds: {
+                risk: {
+                    balanceHigh: 0,
+                    balanceMediumPctIncome: 0.10,
+                    budgetHighPct: 1.10,
+                    budgetMediumPct: 0.85
+                },
+                maxAlerts: 3,
+                maxRecos: 2
+            },
+            simulation: null,
             lastResult: null,
+            _lastDebugKey: null,
             dedupe(list = []) {
                 const seen = new Set();
                 return (list || []).filter(item => {
@@ -7339,125 +7260,279 @@ const firebaseConfig = {
                     return true;
                 });
             },
-            compute(date = state.currentDate) {
-                const aggs = aggregates.get(date);
+            numbers(val) {
+                const n = Number(val);
+                return Number.isFinite(n) ? n : 0;
+            },
+            topDriversFromCategories(byCategory = {}, limit = 3) {
+                const entries = Object.entries(byCategory || {}).map(([label, amount]) => ({ label, amount: this.numbers(amount) }));
+                entries.sort((a, b) => b.amount - a.amount);
+                return entries.slice(0, limit);
+            },
+            applySimulation(baseAggs = {}, simInput) {
+                if (!simInput) return { aggs: baseAggs, delta: null };
+                const amount = Math.abs(Number(simInput.amount)) || 0;
+                if (!amount) return { aggs: baseAggs, delta: null };
+                const type = simInput.type === 'income' ? 'income' : 'expense';
+                const category = (simInput.category || 'Outros').toString().trim() || 'Outros';
+
+                const clone = {
+                    totalIncome: this.numbers(baseAggs.totalIncome),
+                    totalSavings: this.numbers(baseAggs.totalSavings),
+                    totalExpenses: this.numbers(baseAggs.totalExpenses),
+                    totalExpensesPaid: this.numbers(baseAggs.totalExpensesPaid),
+                    totalAnticipations: this.numbers(baseAggs.totalAnticipations),
+                    byCategory: Object.assign({}, baseAggs.byCategory || {}),
+                    byPayment: Object.assign({}, baseAggs.byPayment || {}),
+                    byType: Object.assign({}, baseAggs.byType || {})
+                };
+
+                if (type === 'income') {
+                    clone.totalIncome = Math.round(((clone.totalIncome + amount) + Number.EPSILON) * 100) / 100;
+                } else {
+                    clone.totalExpenses = Math.round(((clone.totalExpenses + amount) + Number.EPSILON) * 100) / 100;
+                    clone.byCategory[category] = Math.round(((clone.byCategory[category] || 0) + amount + Number.EPSILON) * 100) / 100;
+                }
+
+                return { aggs: clone, delta: { amount, type, category } };
+            },
+            compute(date = state.currentDate, simInput = null) {
+                const aggsBase = aggregates.get(date) || {};
+                const { aggs, delta } = this.applySimulation(aggsBase, simInput);
                 const monthKey = planning.monthKey(date);
                 const budget = planning.getCachedBudget(monthKey) || planning.buildDefaultBudget(date);
-                const projectedIncome = Math.max(0, aggs.totalIncome || 0);
-                const projectedExpenses = Math.max(0, (aggs.totalExpenses || 0) - (aggs.totalAnticipations || 0));
-                const projectedSavings = Math.max(0, aggs.totalSavings || 0);
+
+                const incomeTotal = this.numbers(aggs.totalIncome);
+                const savingsTotal = this.numbers(aggs.totalSavings);
+                const expensesTotal = this.numbers(aggs.totalExpenses);
+                const expensesPaid = this.numbers(aggs.totalExpensesPaid);
+                const anticipations = this.numbers(aggs.totalAnticipations);
+
+                const projectedIncome = Math.max(0, incomeTotal);
+                const projectedExpenses = Math.max(0, expensesTotal - anticipations);
+                const projectedSavings = Math.max(0, savingsTotal);
                 const projectedBalance = Math.round(((projectedIncome - projectedExpenses - projectedSavings) + Number.EPSILON) * 100) / 100;
-                const paidExpenses = aggs.totalExpensesPaid || 0;
-                const openExpenses = Math.max(0, (aggs.totalExpenses || 0) - paidExpenses);
+
+                const openExpenses = Math.max(0, expensesTotal - expensesPaid);
+                const incomeActual = incomeTotal;
+                const expensesActual = expensesPaid;
+                const incomeProjectedRemaining = 0;
+                const expensesProjectedRemaining = openExpenses;
+                const startingBalance = Math.round(((incomeActual - expensesActual - projectedSavings) + Number.EPSILON) * 100) / 100;
 
                 const status = planning.computeBudgetStatus(monthKey, aggs);
                 const ratioBudget = budget && budget.totalExpensesBudget > 0 ? projectedExpenses / budget.totalExpensesBudget : null;
+                const budgetUsedPct = ratioBudget !== null ? Math.round((ratioBudget || 0) * 1000) / 10 : null;
                 const ratioIncome = projectedIncome > 0 ? projectedExpenses / projectedIncome : 0;
 
                 const alerts = [];
                 const recos = [];
+                const drivers = this.topDriversFromCategories(aggs.byCategory || {});
+
                 let riskLevel = 'low';
-
-                if (projectedBalance < 0) {
+                if (projectedBalance < this.thresholds.risk.balanceHigh || (budgetUsedPct !== null && budgetUsedPct > this.thresholds.risk.budgetHighPct * 100)) {
                     riskLevel = 'high';
-                    alerts.push('Saldo projetado negativo.');
-                    recos.push('Reduza gastos variáveis e priorize contas essenciais.');
-                } else if (projectedBalance < projectedIncome * 0.05) {
+                } else if ((projectedIncome > 0 && projectedBalance < projectedIncome * this.thresholds.risk.balanceMediumPctIncome) || (budgetUsedPct !== null && budgetUsedPct > this.thresholds.risk.budgetMediumPct * 100)) {
                     riskLevel = 'medium';
-                    alerts.push('Saldo projetado próximo de zero.');
-                    recos.push('Adie compras não essenciais até aliviar o caixa.');
                 }
 
-                if (ratioBudget !== null) {
-                    if (ratioBudget >= 1.05) {
-                        riskLevel = 'high';
-                        alerts.push('Orçamento de despesas estourado.');
-                        recos.push('Corte categorias não essenciais para voltar ao orçamento.');
-                    } else if (ratioBudget >= 0.9 && riskLevel !== 'high') {
-                        riskLevel = 'medium';
-                        alerts.push(`Uso de ${Math.round(ratioBudget * 100)}% do orçamento de despesas.`);
-                        recos.push('Monitore gastos das próximas semanas para não ultrapassar o limite.');
-                    }
-                }
-
-                if (ratioIncome >= 0.95 && riskLevel !== 'high') {
-                    riskLevel = 'medium';
-                    alerts.push('Despesas projetadas consomem quase toda a receita.');
-                    recos.push('Revise despesas variáveis e renegocie parcelas maiores.');
+                if (budgetUsedPct !== null) {
+                    if (budgetUsedPct > this.thresholds.risk.budgetHighPct * 100) alerts.push(`Orçamento geral em ${budgetUsedPct.toFixed(1)}% (acima do limite).`);
+                    else if (budgetUsedPct > this.thresholds.risk.budgetMediumPct * 100) alerts.push(`Orçamento geral em ${budgetUsedPct.toFixed(1)}% (atenção).`);
                 }
 
                 const overBudgetCats = (status.categories || []).filter(c => c.planned > 0 && c.ratio >= 1);
-                const nearBudgetCats = (status.categories || []).filter(c => c.planned > 0 && c.ratio >= 0.9 && c.ratio < 1);
                 overBudgetCats.slice(0, 2).forEach(c => alerts.push(`${c.cat}: estourou o orçamento.`));
-                nearBudgetCats.slice(0, 2).forEach(c => alerts.push(`${c.cat}: ${Math.round(c.ratio * 100)}% do orçamento.`));
-                if (overBudgetCats.length) recos.push('Ajuste categorias estouradas para evitar saldo negativo.');
-                if (openExpenses > 0) recos.push('Marque despesas pagas e antecipe faturas para baixar risco.');
 
-                const cleanAlerts = this.dedupe(alerts);
-                const cleanRecos = this.dedupe(recos);
+                if (projectedBalance < 0) alerts.push('Saldo projetado negativo.');
+
+                if (overBudgetCats.length) recos.push('Ajuste as categorias estouradas para recuperar o orçamento.');
+                if (projectedBalance < 0 && drivers.length) recos.push(`Corte gastos em ${drivers[0].label} para evitar saldo negativo.`);
+                if (recos.length === 0 && openExpenses > 0) recos.push('Antecipe faturas ou marque pagamentos para reduzir risco.');
+
+                const cleanAlerts = this.dedupe(alerts).slice(0, this.thresholds.maxAlerts);
+                const cleanRecos = this.dedupe(recos).slice(0, this.thresholds.maxRecos);
 
                 return {
                     date,
                     monthKey,
+                    startingBalance,
+                    incomeActual,
+                    expensesActual,
+                    incomeProjectedRemaining,
+                    expensesProjectedRemaining,
                     projectedIncome,
                     projectedExpenses,
                     projectedSavings,
                     projectedBalance,
                     openExpenses,
-                    budgetTotal: budget.totalExpensesBudget || 0,
+                    budgetTotal: this.numbers(budget.totalExpensesBudget),
+                    budgetUsedPct,
                     ratioBudget,
                     ratioIncome,
                     riskLevel,
                     alerts: cleanAlerts,
-                    recommendations: cleanRecos
+                    recommendations: cleanRecos,
+                    topDrivers: drivers,
+                    deltaApplied: delta,
+                    simulation: !!delta
                 };
             },
-            render(view) {
-                if (!view) return;
-                this.lastResult = view;
+            explain(viewOverride = null) {
+                const snapshot = viewOverride || this.lastResult || this.compute(state.currentDate);
+                if (!snapshot) return null;
+                return {
+                    monthKey: snapshot.monthKey,
+                    startingBalance: snapshot.startingBalance,
+                    incomeActual: snapshot.incomeActual,
+                    expensesActual: snapshot.expensesActual,
+                    incomeProjectedRemaining: snapshot.incomeProjectedRemaining,
+                    expensesProjectedRemaining: snapshot.expensesProjectedRemaining,
+                    projectedBalance: snapshot.projectedBalance,
+                    budgetTotal: snapshot.budgetTotal,
+                    budgetUsedPct: snapshot.budgetUsedPct,
+                    topDrivers: snapshot.topDrivers,
+                    simulation: snapshot.simulation,
+                    deltaApplied: snapshot.deltaApplied
+                };
+            },
+            render(baseView, simView = null) {
+                if (!baseView) return;
+                this.lastResult = simView || baseView;
+                const scenarioView = simView || baseView;
+
                 const incomeEl = document.getElementById('kpi-projected-income');
                 const expEl = document.getElementById('kpi-projected-expenses');
                 const balEl = document.getElementById('kpi-projected-balance');
-                if (incomeEl) animateKPINumber('kpi-projected-income', view.projectedIncome);
-                if (expEl) animateKPINumber('kpi-projected-expenses', view.projectedExpenses);
+                if (incomeEl) animateKPINumber('kpi-projected-income', baseView.projectedIncome || 0);
+                if (expEl) animateKPINumber('kpi-projected-expenses', baseView.projectedExpenses || 0);
                 if (balEl) {
-                    animateKPINumber('kpi-projected-balance', view.projectedBalance);
-                    balEl.classList.toggle('text-red-600', view.projectedBalance < 0);
-                    balEl.classList.toggle('text-success-600', view.projectedBalance >= 0);
+                    animateKPINumber('kpi-projected-balance', baseView.projectedBalance || 0);
+                    balEl.classList.toggle('text-red-600', (baseView.projectedBalance || 0) < 0);
+                    balEl.classList.toggle('text-success-600', (baseView.projectedBalance || 0) >= 0);
                 }
 
+                const simBlock = document.getElementById('forecast-sim-block');
+                if (simBlock) {
+                    if (simView) {
+                        simBlock.classList.remove('hidden');
+                        animateKPINumber('kpi-projected-income-sim', simView.projectedIncome || 0);
+                        animateKPINumber('kpi-projected-expenses-sim', simView.projectedExpenses || 0);
+                        animateKPINumber('kpi-projected-balance-sim', simView.projectedBalance || 0);
+                    } else {
+                        simBlock.classList.add('hidden');
+                    }
+                }
+
+                const simChip = document.getElementById('forecast-sim-chip');
+                if (simChip) simChip.classList.toggle('hidden', !simView);
+
                 const badge = document.getElementById('forecast-risk-badge');
-                if (badge) {
-                    const map = {
-                        low: { label: 'Risco baixo', cls: 'bg-green-100 text-green-800' },
-                        medium: { label: 'Atenção', cls: 'bg-yellow-100 text-yellow-800' },
-                        high: { label: 'Risco alto', cls: 'bg-red-100 text-red-700' }
-                    };
-                    const info = map[view.riskLevel] || map.low;
-                    badge.textContent = info.label;
-                    badge.className = `px-2 py-1 rounded-full font-semibold ${info.cls}`;
+                const badgeBase = document.getElementById('forecast-risk-badge-base');
+                const riskContext = document.getElementById('forecast-risk-context');
+                const map = {
+                    low: { label: 'Risco baixo', cls: 'bg-green-100 text-green-800' },
+                    medium: { label: 'Atenção', cls: 'bg-yellow-100 text-yellow-800' },
+                    high: { label: 'Risco alto', cls: 'bg-red-100 text-red-700' }
+                };
+
+                const applyBadge = (el, level, suffix = '') => {
+                    if (!el) return;
+                    const info = map[level] || map.low;
+                    el.textContent = suffix ? `${info.label} ${suffix}` : info.label;
+                    el.className = `px-2 py-1 rounded-full font-semibold ${info.cls}`;
+                };
+
+                if (simView) {
+                    applyBadge(badge, scenarioView.riskLevel, '(simulação)');
+                    if (badgeBase) {
+                        badgeBase.classList.remove('hidden');
+                        applyBadge(badgeBase, baseView.riskLevel, '(atual)');
+                    }
+                    if (riskContext) riskContext.classList.remove('hidden');
+                } else {
+                    applyBadge(badge, scenarioView.riskLevel);
+                    if (badgeBase) badgeBase.classList.add('hidden');
+                    if (riskContext) riskContext.classList.add('hidden');
                 }
 
                 const alertsEl = document.getElementById('forecast-alerts');
                 if (alertsEl) {
-                    alertsEl.innerHTML = (view.alerts && view.alerts.length)
-                        ? view.alerts.map(msg => `<div class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-red-500" style="font-size:16px">warning</span><span>${escapeHtml(msg)}</span></div>`).join('')
+                    alertsEl.innerHTML = (scenarioView.alerts && scenarioView.alerts.length)
+                        ? scenarioView.alerts.map(msg => `<div class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-red-500" style="font-size:16px">warning</span><span>${escapeHtml(msg)}</span></div>`).join('')
                         : '<p class="text-gray-500 text-sm">Sem alertas por enquanto.</p>';
                 }
 
                 const recosEl = document.getElementById('forecast-recos');
                 if (recosEl) {
-                    recosEl.innerHTML = (view.recommendations && view.recommendations.length)
-                        ? view.recommendations.map(msg => `<div class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-green-600" style="font-size:16px">lightbulb</span><span>${escapeHtml(msg)}</span></div>`).join('')
+                    recosEl.innerHTML = (scenarioView.recommendations && scenarioView.recommendations.length)
+                        ? scenarioView.recommendations.map(msg => `<div class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-green-600" style="font-size:16px">lightbulb</span><span>${escapeHtml(msg)}</span></div>`).join('')
                         : '<p class="text-gray-500 text-sm">Nenhuma recomendação no momento.</p>';
                 }
             },
+            debugEnabled() {
+                try {
+                    if (state && state.uiFlags && state.uiFlags.debug) return true;
+                    if (typeof App !== 'undefined' && App.debug && App.debug.enabled === true) return true;
+                } catch(_) {}
+                return false;
+            },
             refresh(date = state.currentDate) {
-                const result = this.compute(date);
-                this.render(result);
-                return result;
+                const base = this.compute(date);
+                const simActive = this.simulation && Number(this.simulation.amount) > 0;
+                const simView = simActive ? this.compute(date, this.simulation) : null;
+                const chosen = simView || base;
+                this.lastResult = chosen;
+                this.render(base, simView);
+                if (this.debugEnabled()) {
+                    const key = `${chosen.monthKey || ''}-${chosen.projectedBalance}-${chosen.budgetUsedPct || 'na'}-${simActive ? 'sim' : 'base'}`;
+                    if (this._lastDebugKey !== key) {
+                        this._lastDebugKey = key;
+                        try { console.debug('[forecast.explain]', this.explain(chosen)); } catch(_) { /* ignore */ }
+                    }
+                }
+                return chosen;
+            },
+            clearSimulation() {
+                this.simulation = null;
+                this.refresh(state.currentDate);
             }
         };
+
+        function initForecastSimulationUI() {
+            const amountInput = document.getElementById('forecast-sim-amount');
+            const typeSelect = document.getElementById('forecast-sim-type');
+            const categoryInput = document.getElementById('forecast-sim-category');
+            const clearBtn = document.getElementById('forecast-sim-clear');
+            if (!amountInput || !typeSelect || !categoryInput) return;
+
+            const applySim = debounce(() => {
+                const amount = Math.abs(Number(amountInput.value));
+                const type = typeSelect.value === 'income' ? 'income' : 'expense';
+                const category = (categoryInput.value || '').trim() || 'Outros';
+                if (!amount || amount <= 0) {
+                    forecast.simulation = null;
+                    forecast.refresh(state.currentDate);
+                    return;
+                }
+                forecast.simulation = { amount, type, category };
+                forecast.refresh(state.currentDate);
+            }, 300);
+
+            amountInput.addEventListener('input', applySim);
+            typeSelect.addEventListener('change', applySim);
+            categoryInput.addEventListener('input', applySim);
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    amountInput.value = '';
+                    categoryInput.value = '';
+                    forecast.clearSimulation();
+                });
+            }
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initForecastSimulationUI); else initForecastSimulationUI();
 
         // Public API: save a VT fuel entry using App's internal state and storage.
         // This avoids callers needing direct access to `state` or to replicate

@@ -87,3 +87,14 @@ $js = Get-Content src\js\app.js -Raw; $js = $js -replace '(?m)^\s+','' -replace 
 ---
 
 Desenvolvido com ❤️ e otimização extrema
+
+## 📅 Roadmap para o novo SPA single-file
+
+Plano para reconstruir a aplicação como um SPA de arquivo único (compatível com GitHub Pages) usando Firebase e suporte a múltiplos usuários autenticados por email/senha.
+
+1. **Ambiente e build**: configurar Vite (ou bundler similar) para gerar um `index.html` único com JS/CSS embutidos. Incluir ESLint/Prettier e scripts de `lint`, `build` e `preview`.
+2. **Design system fintech**: definir tokens de cor/tipografia e componentes base (botões, inputs, cards, tabelas, modais, gráficos) com foco em UX e acessibilidade.
+3. **Autenticação multiusuário**: integrar Firebase Auth (email/senha) e gerenciar sessão global. Cada usuário acessa apenas seus próprios dados financeiros.
+4. **Camada de dados**: usar Firebase Firestore (preferencial) ou Realtime Database para CRUD de lançamentos, categorias, reservas/metas. Aplicar regras de segurança por usuário e validação de campos.
+5. **Fluxos principais**: implementar login, dashboard (saldos/gráficos), lançamentos (CRUD com filtros e paginação), categorias e metas. Incluir estados de carregamento/erro e sincronização em tempo real.
+6. **Qualidade e deploy**: adicionar testes básicos (unitários/e2e leves), configurar workflow do GitHub Actions para lint/build e publicar no GitHub Pages. Documentar variáveis de ambiente do Firebase e checklist de segurança antes do deploy.

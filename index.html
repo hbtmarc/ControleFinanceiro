@@ -3541,10 +3541,30 @@
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
+                                        <span class="text-sm text-gray-600">Receitas Projetadas</span>
+                                    </div>
+                                    <span id="kpi-projected-income" class="text-base font-semibold text-primary-600">R$ 0,00</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
                                         <div class="w-2 h-2 bg-error-500 rounded-full"></div>
                                         <span class="text-sm text-gray-600">Despesas Projetadas</span>
                                     </div>
                                     <span id="kpi-projected-expenses" class="text-base font-semibold text-error-600">R$ 0,00</span>
+                                </div>
+                                <div class="space-y-1 mt-3">
+                                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                                        <span id="forecast-risk-badge" class="px-2 py-1 rounded-full bg-gray-200 text-gray-700 font-semibold">Risco</span>
+                                        <span class="text-gray-500">Alertas</span>
+                                    </div>
+                                    <div id="forecast-alerts" class="space-y-1 text-sm text-gray-700"></div>
+                                </div>
+                                <div class="space-y-1 mt-2">
+                                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                                        <span class="px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold">Recomendações</span>
+                                    </div>
+                                    <div id="forecast-recos" class="space-y-1 text-sm text-gray-700"></div>
                                 </div>
                             </div>
                         </div>
@@ -7130,6 +7150,7 @@ const firebaseConfig = {
                 }
                 this.setStatus('ready');
                 this.render();
+                try { forecast.refresh(date); } catch (e) { console.error('forecast refresh (planning)', e); }
             },
             render() {
                 if (!ui.budgetCard) return;
@@ -7302,6 +7323,139 @@ const firebaseConfig = {
                 this.runtime[key] = fresh;
                 this.dirty[key] = false;
                 return fresh;
+            }
+        };
+
+        // Lightweight forecast module (no extra RTDB reads). Uses aggregates and planning cache only.
+        const forecast = {
+            lastResult: null,
+            dedupe(list = []) {
+                const seen = new Set();
+                return (list || []).filter(item => {
+                    if (!item) return false;
+                    const key = item.toLowerCase();
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+            },
+            compute(date = state.currentDate) {
+                const aggs = aggregates.get(date);
+                const monthKey = planning.monthKey(date);
+                const budget = planning.getCachedBudget(monthKey) || planning.buildDefaultBudget(date);
+                const projectedIncome = Math.max(0, aggs.totalIncome || 0);
+                const projectedExpenses = Math.max(0, (aggs.totalExpenses || 0) - (aggs.totalAnticipations || 0));
+                const projectedSavings = Math.max(0, aggs.totalSavings || 0);
+                const projectedBalance = Math.round(((projectedIncome - projectedExpenses - projectedSavings) + Number.EPSILON) * 100) / 100;
+                const paidExpenses = aggs.totalExpensesPaid || 0;
+                const openExpenses = Math.max(0, (aggs.totalExpenses || 0) - paidExpenses);
+
+                const status = planning.computeBudgetStatus(monthKey, aggs);
+                const ratioBudget = budget && budget.totalExpensesBudget > 0 ? projectedExpenses / budget.totalExpensesBudget : null;
+                const ratioIncome = projectedIncome > 0 ? projectedExpenses / projectedIncome : 0;
+
+                const alerts = [];
+                const recos = [];
+                let riskLevel = 'low';
+
+                if (projectedBalance < 0) {
+                    riskLevel = 'high';
+                    alerts.push('Saldo projetado negativo.');
+                    recos.push('Reduza gastos variáveis e priorize contas essenciais.');
+                } else if (projectedBalance < projectedIncome * 0.05) {
+                    riskLevel = 'medium';
+                    alerts.push('Saldo projetado próximo de zero.');
+                    recos.push('Adie compras não essenciais até aliviar o caixa.');
+                }
+
+                if (ratioBudget !== null) {
+                    if (ratioBudget >= 1.05) {
+                        riskLevel = 'high';
+                        alerts.push('Orçamento de despesas estourado.');
+                        recos.push('Corte categorias não essenciais para voltar ao orçamento.');
+                    } else if (ratioBudget >= 0.9 && riskLevel !== 'high') {
+                        riskLevel = 'medium';
+                        alerts.push(`Uso de ${Math.round(ratioBudget * 100)}% do orçamento de despesas.`);
+                        recos.push('Monitore gastos das próximas semanas para não ultrapassar o limite.');
+                    }
+                }
+
+                if (ratioIncome >= 0.95 && riskLevel !== 'high') {
+                    riskLevel = 'medium';
+                    alerts.push('Despesas projetadas consomem quase toda a receita.');
+                    recos.push('Revise despesas variáveis e renegocie parcelas maiores.');
+                }
+
+                const overBudgetCats = (status.categories || []).filter(c => c.planned > 0 && c.ratio >= 1);
+                const nearBudgetCats = (status.categories || []).filter(c => c.planned > 0 && c.ratio >= 0.9 && c.ratio < 1);
+                overBudgetCats.slice(0, 2).forEach(c => alerts.push(`${c.cat}: estourou o orçamento.`));
+                nearBudgetCats.slice(0, 2).forEach(c => alerts.push(`${c.cat}: ${Math.round(c.ratio * 100)}% do orçamento.`));
+                if (overBudgetCats.length) recos.push('Ajuste categorias estouradas para evitar saldo negativo.');
+                if (openExpenses > 0) recos.push('Marque despesas pagas e antecipe faturas para baixar risco.');
+
+                const cleanAlerts = this.dedupe(alerts);
+                const cleanRecos = this.dedupe(recos);
+
+                return {
+                    date,
+                    monthKey,
+                    projectedIncome,
+                    projectedExpenses,
+                    projectedSavings,
+                    projectedBalance,
+                    openExpenses,
+                    budgetTotal: budget.totalExpensesBudget || 0,
+                    ratioBudget,
+                    ratioIncome,
+                    riskLevel,
+                    alerts: cleanAlerts,
+                    recommendations: cleanRecos
+                };
+            },
+            render(view) {
+                if (!view) return;
+                this.lastResult = view;
+                const incomeEl = document.getElementById('kpi-projected-income');
+                const expEl = document.getElementById('kpi-projected-expenses');
+                const balEl = document.getElementById('kpi-projected-balance');
+                if (incomeEl) animateKPINumber('kpi-projected-income', view.projectedIncome);
+                if (expEl) animateKPINumber('kpi-projected-expenses', view.projectedExpenses);
+                if (balEl) {
+                    animateKPINumber('kpi-projected-balance', view.projectedBalance);
+                    balEl.classList.toggle('text-red-600', view.projectedBalance < 0);
+                    balEl.classList.toggle('text-success-600', view.projectedBalance >= 0);
+                }
+
+                const badge = document.getElementById('forecast-risk-badge');
+                if (badge) {
+                    const map = {
+                        low: { label: 'Risco baixo', cls: 'bg-green-100 text-green-800' },
+                        medium: { label: 'Atenção', cls: 'bg-yellow-100 text-yellow-800' },
+                        high: { label: 'Risco alto', cls: 'bg-red-100 text-red-700' }
+                    };
+                    const info = map[view.riskLevel] || map.low;
+                    badge.textContent = info.label;
+                    badge.className = `px-2 py-1 rounded-full font-semibold ${info.cls}`;
+                }
+
+                const alertsEl = document.getElementById('forecast-alerts');
+                if (alertsEl) {
+                    alertsEl.innerHTML = (view.alerts && view.alerts.length)
+                        ? view.alerts.map(msg => `<div class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-red-500" style="font-size:16px">warning</span><span>${escapeHtml(msg)}</span></div>`).join('')
+                        : '<p class="text-gray-500 text-sm">Sem alertas por enquanto.</p>';
+                }
+
+                const recosEl = document.getElementById('forecast-recos');
+                if (recosEl) {
+                    recosEl.innerHTML = (view.recommendations && view.recommendations.length)
+                        ? view.recommendations.map(msg => `<div class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-green-600" style="font-size:16px">lightbulb</span><span>${escapeHtml(msg)}</span></div>`).join('')
+                        : '<p class="text-gray-500 text-sm">Nenhuma recomendação no momento.</p>';
+                }
+            },
+            refresh(date = state.currentDate) {
+                const result = this.compute(date);
+                this.render(result);
+                return result;
             }
         };
 
@@ -7702,6 +7856,7 @@ const firebaseConfig = {
                 'monthly-report-btn', 'annual-report-btn', 'monthly-report-modal', 'annual-report-modal',
                 'desktop-dashboard-btn', 'desktop-creditcards-btn',
                 'budget-card', 'budget-edit-btn', 'budget-total-bar', 'budget-total-label', 'budget-category-list', 'planning-goals-list', 'planning-alerts',
+                'kpi-projected-income', 'kpi-projected-balance', 'kpi-projected-expenses', 'forecast-alerts', 'forecast-recos', 'forecast-risk-badge',
                 'budget-modal', 'budget-modal-total', 'budget-modal-categories', 'budget-modal-save', 'budget-modal-cancel', 'budget-modal-close',
                 'planning-goal-create-btn', 'planning-goal-modal', 'planning-goal-title', 'planning-goal-type', 'planning-goal-target', 'planning-goal-current', 'planning-goal-deadline', 'planning-goal-save', 'planning-goal-cancel', 'planning-goal-modal-close',
                 'goal-modal', 'goal-form', 'goal-id', 'goal-name', 'goal-amount', 'close-goal-modal-btn',
@@ -11145,13 +11300,7 @@ const firebaseConfig = {
         animateKPINumber('kpi-balance', balance);
 
                 // Projected balance (consider all expenses but subtract card anticipations so invoice totals are used)
-                const totalProjectedExpenses = monthAgg.totalExpenses;
-                const totalAnticipations = monthAgg.totalAnticipations;
-                const adjustedProjectedExpenses = totalProjectedExpenses - totalAnticipations;
-                const projectedBalance = totalIncome - adjustedProjectedExpenses - totalSavings;
-                const projEl = document.getElementById('kpi-projected-balance'); if (projEl) { animateKPINumber('kpi-projected-balance', projectedBalance); projEl.classList.toggle('text-red-600', projectedBalance < 0); projEl.classList.toggle('text-green-600', projectedBalance >= 0); }
-                // Populate Despesas Projetadas KPI (shows total of all expenses minus anticipations so invoice totals are used)
-                const projExpEl = document.getElementById('kpi-projected-expenses'); if (projExpEl) animateKPINumber('kpi-projected-expenses', adjustedProjectedExpenses);
+                try { forecast.refresh(state.currentDate); } catch(e) { console.error('forecast refresh (kpis)', e); }
 
                 // Percentual de cada despesa do Mês (agrupado por Descrição, soma valores e conta ocorríªncias)
                 const expenses = monthData.expenses || [];
@@ -14223,6 +14372,7 @@ const firebaseConfig = {
             model,
             migrations,
             planning,
+            forecast,
             // VR helpers
             openVRUsageEdit,
             closeVRUsageModal,
